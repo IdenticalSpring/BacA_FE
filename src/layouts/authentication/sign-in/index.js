@@ -1,50 +1,50 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 import { useState } from "react";
-
-// react-router-dom components
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-
-// @mui material components
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
 import Grid from "@mui/material/Grid";
 import MuiLink from "@mui/material/Link";
-
-// @mui icons
 import FacebookIcon from "@mui/icons-material/Facebook";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
-
-// Authentication layout components
 import BasicLayout from "layouts/authentication/components/BasicLayout";
-
-// Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+import authService from "services/authService";
+import { Alert } from "@mui/material";
 
 function Basic() {
   const [rememberMe, setRememberMe] = useState(false);
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await authService.login(formData.username, formData.password);
+      console.log("Login successful:", data);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err); // Gán lỗi để hiển thị
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <BasicLayout image={bgImage}>
@@ -61,7 +61,7 @@ function Basic() {
           textAlign="center"
         >
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-            Sign in
+            Sign In
           </MDTypography>
           <Grid container spacing={3} justifyContent="center" sx={{ mt: 1, mb: 2 }}>
             <Grid item xs={2}>
@@ -82,12 +82,34 @@ function Basic() {
           </Grid>
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
-          <MDBox component="form" role="form">
+          <MDBox component="form" role="form" onSubmit={handleSubmit}>
+            {/* Hiển thị thông báo lỗi nếu có */}
+            {error && (
+              <MDBox mb={2}>
+                <Alert severity="error">{error}</Alert>
+              </MDBox>
+            )}
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" fullWidth />
+              <MDInput
+                type="text"
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" fullWidth />
+              <MDInput
+                type="password"
+                label="Password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
@@ -102,8 +124,8 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+              <MDButton type="submit" variant="gradient" color="info" fullWidth disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
@@ -111,13 +133,13 @@ function Basic() {
                 Don&apos;t have an account?{" "}
                 <MDTypography
                   component={Link}
-                  to="/authentication/sign-up"
+                  to="/sign-up"
                   variant="button"
                   color="info"
                   fontWeight="medium"
                   textGradient
                 >
-                  Sign up
+                  Sign Up
                 </MDTypography>
               </MDTypography>
             </MDBox>
