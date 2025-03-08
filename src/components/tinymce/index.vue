@@ -44,7 +44,7 @@ export default {
         if (window.tinymce) {
           this.initTinymce();
         } else {
-          this.$message.error('加载资源失败');
+          this.$message.error('Failed to load resource');
         }
       } catch (error) {
         console.log(error);
@@ -86,7 +86,7 @@ export default {
             that.fullscreen = e.state;
           });
         },
-        images_upload_handler: function(blobInfo, success, failure) {
+        images_upload_handler: function (blobInfo, success, failure) {
           const formData = new FormData();
           formData.append('file', blobInfo.blob());
           //走接口，将线下地址上传到服务器上 ，获取url地址
@@ -106,11 +106,11 @@ export default {
           const image = require('../../assets/nav/' + blob.name);
           success(image);
         },
-        file_picker_callback: function(cb, value, meta) {
+        file_picker_callback: function (cb, value, meta) {
           if (meta.filetype == 'media') {
             let input = document.createElement('input'); //创建一个隐藏的input
             input.setAttribute('type', 'file');
-            input.onchange = function(file) {
+            input.onchange = function (file) {
               //获取本地，然后调接口获取到url地址
             };
             //触发点击

@@ -1,20 +1,20 @@
 <template>
   <div>
     <div class="file-wrapper relative">
-      <input ref="excel-upload" type="file" accept=".xlsx, .xls" @change="handleChange" style="display:none" />
+      <input ref="excel-upload" type="file" accept=".xlsx, .xls" @change="handleChange" style="display: none" />
       <a-button
         type="primary"
         icon="file-excel"
         size="large"
-        style="z-index:99"
+        style="z-index: 99"
         @click="handleUpload"
         :loading="loading"
       >
         上传Excel
       </a-button>
-      <p class="text">请选择Excel上传 支持(xlsx,xls)格式</p>
+      <p class="text">Please select Excel upload Support (xlsx, xls) format</p>
     </div>
-    <a-card :hoverable="true" :bordered="false" v-if="tableHead.length > 0" style="margin-top:30px">
+    <a-card :hoverable="true" :bordered="false" v-if="tableHead.length > 0" style="margin-top: 30px">
       <standard-table :pagination="false" :tableData="tableData" :tableHead="tableHead" />
     </a-card>
   </div>
@@ -37,12 +37,12 @@ export default {
       if (!file) return;
       //判断格式
       if (!this.isExcel(file)) {
-        this.$message.warning('只能选择xlxs,xls文件');
+        this.$message.warning('Only xlxs, xls files can be selected');
         return;
       }
       //判断大小
       if (file.size / 1024 / 1024 > 1) {
-        this.$message.warning('上传文件大小不能超过1M');
+        this.$message.warning('The uploaded file size cannot exceed 1M');
         return;
       }
       this.loading = true;

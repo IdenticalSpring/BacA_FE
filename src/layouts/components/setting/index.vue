@@ -1,7 +1,7 @@
 <template>
   <a-drawer title="个性化配置" placement="right" :visible="settingVisible" @close="settingVisible = false" :width="325">
     <div class="item-setting">
-      <p>主题配置</p>
+      <p>Theme Configuration</p>
       <a-radio-group button-style="solid" :value="theme" @change="changeTheme">
         <a-radio-button :value="item.key" v-for="item in THEME_LIST" :key="item.key">
           {{ item.label }}
@@ -10,7 +10,7 @@
     </div>
 
     <div class="item-setting">
-      <p>布局方式</p>
+      <p>Layout</p>
       <a-radio-group :value="layout" button-style="solid" @change="changeLayout">
         <a-radio-button :value="item.key" v-for="item in LAYOUT_LIST" :key="item.key">
           {{ item.label }}
@@ -19,11 +19,11 @@
     </div>
 
     <div class="item-setting flex justify-between">
-      开启标签页
+      Open Tab
       <a-switch :checked="tagShow" checked-children="开" un-checked-children="关" @change="changeTag" />
     </div>
     <div class="item-setting flex justify-between">
-      固定头部
+      Fixed Head
       <a-switch :checked="fixHeader" checked-children="开" un-checked-children="关" @change="changeHeader" />
     </div>
   </a-drawer>

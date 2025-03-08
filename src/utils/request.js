@@ -35,7 +35,7 @@ let http = {};
  * @param {Object} params [请求时携带的参数]
  */
 
-http.get = function(url, params = null) {
+http.get = function (url, params = null) {
   return new Promise((resolve, reject) => {
     service
       .get(url, { params })
@@ -54,7 +54,7 @@ http.get = function(url, params = null) {
  * @param {Object} params [请求时携带的参数]
  */
 
-http.post = function(url, params) {
+http.post = function (url, params) {
   return new Promise((resolve, reject) => {
     service
       .post(url, qs.stringify(params))

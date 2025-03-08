@@ -1,13 +1,13 @@
 <template>
   <a-card title="html2canvas" :hoverable="true" :bordered="false">
     <a-button type="primary" slot="extra" icon="download" :loading="loading" @click="handleScreen">
-      截屏下载
+      Download screenshots
     </a-button>
-    <div style="height:500px" class="flex" ref="cutScreen">
-      <div style="width:50%;height:100%">
+    <div style="height: 500px" class="flex" ref="cutScreen">
+      <div style="width: 50%; height: 100%">
         <more-bar class="all-container" />
       </div>
-      <div style="width:50%;height:100%" class="all-container">
+      <div style="width: 50%; height: 100%" class="all-container">
         <radius-pie class="all-container" />
       </div>
     </div>
@@ -33,7 +33,7 @@ export default {
       try {
         await remoteLoad(html2canvasCDN);
         if (!window.html2canvas) {
-          this.$message.error('加载资源失败');
+          this.$message.error('Failed to load resource');
         }
       } catch (error) {
         console.log(error);

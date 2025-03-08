@@ -37,3 +37,21 @@ export function getPhoneCode(data) {
 export function getCodeTest(data) {
   return request.post('/user/testCode', data);
 }
+// import axios from 'axios';
+
+// const api = axios.create({
+//   baseURL: 'http://localhost:3000', // Địa chỉ API của NestJS
+//   headers: {
+//     'Content-Type': 'application/json'
+//   }
+// });
+
+// export const login = async (username, password) => {
+//   try {
+//     const response = await api.post('/auth/admin/login', { username, password });
+//     console.log(response);
+//     return response.data; // Trả về dữ liệu từ API
+//   } catch (error) {
+//     throw error.response ? error.response.data : error;
+//   }
+// };

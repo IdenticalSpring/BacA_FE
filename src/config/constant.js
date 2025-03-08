@@ -2,53 +2,53 @@ export default {
   install(Vue) {
     Vue.prototype.THEME_LIST = [
       {
-        label: '混合主题',
+        label: 'Mixed Themes',
         key: 'mixins'
       },
       {
-        label: '浅色主题',
+        label: 'Light theme',
         key: 'white'
       },
       {
-        label: '深色主题',
+        label: 'Dark theme',
         key: 'dark'
       }
     ];
     Vue.prototype.SKILL_LIST = [
       {
-        label: '闪电五连鞭',
+        label: 'Lightning Five Whips',
         key: 1
       },
       {
-        label: '偷袭',
+        label: 'Sneak Attack',
         key: 2
       },
       {
-        label: '耗子尾汁',
+        label: 'Mouse tail juice',
         key: 3
       },
       {
-        label: '乌鸦坐飞机',
+        label: 'Crow on a plane',
         key: 4
       },
       {
-        label: '龙卷风摧毁停车场',
+        label: 'Tornado destroys parking lot',
         key: 5
       },
       {
-        label: '奥利给',
+        label: 'Awesome',
         key: 6
       },
       {
-        label: '好嗨哟',
+        label: 'So hi',
         key: 7
       },
       {
-        label: '是个狼人',
+        label: 'A werewolf',
         key: 8
       },
       {
-        label: '雨女无瓜',
+        label: 'Rain Girl No Melon',
         key: 9
       },
       {
@@ -59,11 +59,11 @@ export default {
 
     Vue.prototype.LAYOUT_LIST = [
       {
-        label: '左侧导航',
+        label: 'Left navigation',
         key: 'inline'
       },
       {
-        label: '头部导航',
+        label: 'Header Navigation',
         key: 'horizontal'
       }
     ];

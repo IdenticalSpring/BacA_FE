@@ -8,15 +8,15 @@ const remoteLoad = url => {
       script.src = url;
       script.async = true;
       document.body.appendChild(script);
-      script.onload = function() {
+      script.onload = function () {
         setTimeout(() => {
           this.onerror = this.onload = null;
           resolve();
         }, 500);
       };
-      script.onerror = function() {
+      script.onerror = function () {
         this.onerror = this.onload = null;
-        reject('加载失败' + url);
+        reject('Loading failed' + url);
       };
     } else {
       setTimeout(() => {

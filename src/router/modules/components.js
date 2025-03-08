@@ -6,7 +6,7 @@ const componentsRouter = {
   component: mainLayout,
   redirect: '/components/vr',
   meta: {
-    title: '组件',
+    title: 'Components',
     icon: 'component',
     role: 36
   },
@@ -15,31 +15,31 @@ const componentsRouter = {
       name: 'vr',
       path: '/components/vr',
       component: () => import('@/views/components/vr/index'),
-      meta: { title: '全景图', role: 23 }
+      meta: { title: 'Panorama', role: 23 }
     },
     {
       name: 'editor',
       path: '/components/editor',
       component: () => import('@/views/components/editor/index'),
-      meta: { title: '富文本编辑器', role: 24 }
+      meta: { title: 'Rich text editor', role: 24 }
     },
     {
       name: 'lottery',
       path: '/components/lottery',
       component: () => import('@/views/components/lottery/index'),
-      meta: { title: '抽奖页', role: 26 }
+      meta: { title: 'Lottery Page', role: 26 }
     },
     {
       name: 'table',
       path: '/components/table',
       component: () => import('@/views/components/table/index'),
-      meta: { title: 'Table表', role: 27 }
+      meta: { title: 'Table', role: 27 }
     },
     {
       name: 'form',
       path: '/components/form',
       component: () => import('@/views/components/form/index'),
-      meta: { title: '表单页', role: 28 }
+      meta: { title: 'Form Page', role: 28 }
     },
     {
       name: 'loading',
@@ -51,13 +51,13 @@ const componentsRouter = {
       name: 'uploadExcel',
       path: '/components/uploadExcel',
       component: () => import('@/views/components/uploadExcel/index'),
-      meta: { title: '上传Excel', role: 30 }
+      meta: { title: 'Upload Excel', role: 30 }
     },
     {
       name: 'uploadAvatar',
       path: '/components/uploadAvatar',
       component: () => import('@/views/components/uploadAvatar/index'),
-      meta: { title: '头像上传', role: 31 }
+      meta: { title: 'Upload avatar', role: 31 }
     },
     {
       name: 'webSocket',
@@ -66,10 +66,10 @@ const componentsRouter = {
       meta: { title: 'webSocket', role: 32 }
     },
     {
-      name: '截屏',
+      name: 'screenshot',
       path: '/components/screenshot',
       component: () => import('@/views/components/screenshot/index'),
-      meta: { title: '截屏', role: 33 }
+      meta: { title: 'screenshot', role: 33 }
     }
   ]
 };

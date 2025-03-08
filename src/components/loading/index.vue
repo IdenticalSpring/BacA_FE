@@ -18,7 +18,7 @@ export default {
     },
     text: {
       type: String,
-      default: '正在加载中...'
+      default: 'Loading...'
     },
     textColor: {
       type: String,

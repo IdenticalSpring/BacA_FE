@@ -8,13 +8,13 @@
         :wrapper-col="{ span: 22 }"
         ref="loginForm"
       >
-        <div class="title">Vue Antd Admin</div>
+        <div class="title">Administrator</div>
         <a-tabs v-model="currentTab" class="tabs" :tabBarGutter="35">
-          <a-tab-pane key="user" tab="账号密码登录">
+          <a-tab-pane key="user" tab="Login with username and password">
             <a-form-model-item prop="username" v-if="currentTab === 'user'">
               <a-input
                 v-model="loginForm.username"
-                placeholder="请输入账号 (admin or test or editor)"
+                placeholder="Please enter your account number"
                 size="large"
                 allow-clear
                 @pressEnter="focusPassword"
@@ -25,7 +25,7 @@
             <a-form-model-item prop="password" v-if="currentTab === 'user'">
               <a-input-password
                 v-model="loginForm.password"
-                placeholder="请输入密码 (任意输入6位数)"
+                placeholder="Please enter your password (Enter any 6 digits)"
                 size="large"
                 allow-clear
                 @pressEnter="toLogin"
@@ -35,11 +35,11 @@
               </a-input-password>
             </a-form-model-item>
           </a-tab-pane>
-          <a-tab-pane key="phone" tab="手机号登录">
+          <a-tab-pane key="phone" tab="Login by mobile phone number">
             <a-form-model-item prop="phone" v-if="currentTab === 'phone'">
               <a-input
                 v-model="loginForm.phone"
-                placeholder="请输入手机号"
+                placeholder="Please enter your phone number"
                 size="large"
                 allow-clear
                 :maxLength="11"
@@ -52,36 +52,34 @@
             <a-form-model-item prop="code" v-if="currentTab === 'phone'">
               <a-input
                 v-model="loginForm.code"
-                placeholder="请输入验证码"
+                placeholder="Please enter the verification code"
                 size="large"
                 :maxLength="6"
-                style="width:58%;"
+                style="width: 58%"
                 ref="code"
                 @pressEnter="toLogin"
               >
               </a-input>
-              <a-button size="large" @click="getCode" :disabled="codeStatus" style="width:35%;margin-left:7%">{{
+              <a-button size="large" @click="getCode" :disabled="codeStatus" style="width: 35%; margin-left: 7%">{{
                 phoneCode
               }}</a-button>
             </a-form-model-item>
           </a-tab-pane>
         </a-tabs>
 
-        <a-form-item style="margin-top:-7px">
-          <a-button type="primary" block size="large" :loading="loading" @click="toLogin">
-            登录
-          </a-button>
+        <a-form-item style="margin-top: -7px">
+          <a-button type="primary" block size="large" :loading="loading" @click="toLogin"> Log in </a-button>
         </a-form-item>
-        <a-form-item style="margin-top:-7px">
-          <a-checkbox v-model="loginForm.remember" v-if="currentTab === 'user'">记住密码</a-checkbox>
-          <span class="forge-password pointer">忘记密码</span>
+        <a-form-item style="margin-top: -7px">
+          <a-checkbox v-model="loginForm.remember" v-if="currentTab === 'user'">Remember Password</a-checkbox>
+          <span class="forge-password pointer">forget the password</span>
         </a-form-item>
-        <a-form-item style="margin-top:-20px">
-          <span style="margin-right:15px">其他登录方式</span>
+        <a-form-item style="margin-top: -20px">
+          <span style="margin-right: 15px">Other login methods</span>
           <svg-icon icon="weixin" :size="25" class="pointer verticalMiddle"></svg-icon>
-          <svg-icon icon="qq" :size="25" style="margin:0 14px" class="pointer verticalMiddle"></svg-icon>
+          <svg-icon icon="qq" :size="25" style="margin: 0 14px" class="pointer verticalMiddle"></svg-icon>
           <svg-icon icon="zhifubao" :size="25" class="pointer verticalMiddle"></svg-icon>
-          <span class="forge-password pointer">注册账户</span>
+          <span class="forge-password pointer">Register an account</span>
         </a-form-item>
       </a-form-model>
     </div>
@@ -97,28 +95,28 @@ export default {
   data() {
     const validateUsername = (rule, value, callback) => {
       if (value.trim().length === 0) {
-        callback(new Error('用户名不能为空'));
+        callback(new Error('Username cannot be empty'));
       } else {
         callback();
       }
     };
     const validatePassword = (rule, value, callback) => {
       if (!isPassWord(value)) {
-        callback(new Error('请正确输入密码'));
+        callback(new Error('Please enter the password correctly'));
       } else {
         callback();
       }
     };
     const validatePhone = (rule, value, callback) => {
       if (!isPhone(value)) {
-        callback(new Error('手机号码有误，请重新填写'));
+        callback(new Error('The mobile phone number is incorrect, please fill in again'));
       } else {
         callback();
       }
     };
     const validateCode = (rule, value, callback) => {
       if (!isCode(value)) {
-        callback(new Error('验证码有误，请重新填写'));
+        callback(new Error('The verification code is incorrect, please fill it in again'));
       } else {
         callback();
       }
@@ -140,7 +138,7 @@ export default {
         code: [{ required: true, trigger: 'blur', validator: validateCode }]
       },
       loading: false,
-      phoneCode: '获取验证码',
+      phoneCode: 'Get verification code',
       codeStatus: false,
       currentCode: null
     };
@@ -164,11 +162,11 @@ export default {
         var getPhoneIntval = setInterval(() => {
           if (time > 0) {
             time--;
-            this.phoneCode = `重新获取(${time}s)`;
+            this.phoneCode = `Re-acquisition(${time}s)`;
           } else {
             clearInterval(getPhoneIntval);
             getPhoneIntval = null;
-            this.phoneCode = '获取验证码';
+            this.phoneCode = 'Get verification code';
             this.codeStatus = false;
           }
         }, 1000);
@@ -179,15 +177,15 @@ export default {
           setTimeout(() => {
             this.$notification.success(
               {
-                message: '提示',
-                description: '验证码获取成功，您的验证码为：' + res.data
+                message: 'hint',
+                description: 'The verification code was obtained successfully. Your verification code is:' + res.data
               },
               12
             );
           }, 1000);
         });
       } else {
-        this.$message.error('请正确输入手机号');
+        this.$message.error('Please enter your phone number correctly');
       }
     },
     //登录
@@ -241,6 +239,48 @@ export default {
   }
 };
 </script>
+<!-- <script>
+import { login } from '@/api/user';
+export default {
+  name: 'login',
+  data() {
+    return {
+      currentTab: 'user',
+      loginForm: {
+        username: '',
+        password: ''
+      },
+      loginRules: {
+        username: [{ required: true, message: 'Username cannot be empty', trigger: 'blur' }],
+        password: [{ required: true, message: 'Password cannot be empty', trigger: 'blur' }]
+      },
+      loading: false
+    };
+  },
+  methods: {
+    focusPassword() {
+      this.$refs.password.focus();
+    },
+    async toLogin() {
+      this.$refs.loginForm.validate(async valid => {
+        if (valid) {
+          this.loading = true;
+          try {
+            const response = await login(this.loginForm.username, this.loginForm.password);
+            this.$message.success('Login successful');
+            localStorage.setItem('token', response.token);
+            this.$router.push('/');
+          } catch (error) {
+            this.$message.error(error.message || 'Login failed');
+          } finally {
+            this.loading = false;
+          }
+        }
+      });
+    }
+  }
+};
+</script> -->
 <style lang="scss" scoped>
 .login-container {
   background-image: url('~@/assets/login/background.jpg');
@@ -254,8 +294,8 @@ export default {
       height: 550px;
       margin: 0 auto;
       margin-right: 0;
-     padding-top: 55%;
-    transform: translateY(-50%);
+      padding-top: 55%;
+      transform: translateY(-50%);
       .title {
         font-weight: 700;
         font-size: 1.8rem;

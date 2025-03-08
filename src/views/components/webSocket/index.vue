@@ -4,7 +4,7 @@
       <div class="status">
         {{ socketStatus }}
       </div>
-      <scroll-bar style="width:100%;height:400px;padding:6px 0 15px" ref="scrollBar">
+      <scroll-bar style="width: 100%; height: 400px; padding: 6px 0 15px" ref="scrollBar">
         <p class="text-center">{{ newsList[newsList.length - 1].date }}</p>
         <div
           class="list-item"
@@ -25,9 +25,7 @@
           <a-textarea :rows="3" @change="changeText" :value="textValue" />
         </a-form-item>
         <a-form-item>
-          <a-button html-type="submit" type="primary" @click="sendNews">
-            发送
-          </a-button>
+          <a-button html-type="submit" type="primary" @click="sendNews"> send </a-button>
         </a-form-item>
       </div>
     </a-comment>

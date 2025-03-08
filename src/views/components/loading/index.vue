@@ -1,25 +1,21 @@
 <template>
   <div class="loading-wrapper">
-    <a-card title="指令方式加载loading" :hoverable="true" :bordered="false">
+    <a-card title="Command mode loading" :hoverable="true" :bordered="false">
       <div
         class="relative"
-        style="width:100%;height:150px"
+        style="width: 100%; height: 150px"
         v-loading="loading"
-        loading-text="自定义指令loading"
+        loading-text="Custom directive loading"
         loading-spin="pulse"
         :loading-full="full"
       >
         <a-space :size="15">
-          <a-button type="primary" @click="startCustomLoading(1)">
-            v-loading指令全屏
-          </a-button>
-          <a-button type="primary" @click="startCustomLoading(2)">
-            v-loading指令非全屏
-          </a-button>
+          <a-button type="primary" @click="startCustomLoading(1)"> v-loading command full screen </a-button>
+          <a-button type="primary" @click="startCustomLoading(2)"> v-loading directive non full screen </a-button>
         </a-space>
       </div>
     </a-card>
-    <a-card title="方法函数加载loading" :hoverable="true" :bordered="false" style="margin-top:15px">
+    <a-card title="Method function loading" :hoverable="true" :bordered="false" style="margin-top: 15px">
       <a-space :size="15">
         <a-button type="primary" v-for="item in utilList" :key="item.type" @click="startLoading(item)">
           {{ item.title }}
@@ -37,7 +33,7 @@ export default {
     return {
       utilList: [
         {
-          title: '默认效果',
+          title: 'Default Effect',
           type: 'loading'
         },
         {

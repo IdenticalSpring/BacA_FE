@@ -3,22 +3,22 @@
     <div>
       <img src="../../../assets/nav/user.gif" class="userImg" alt="" />
       <span class="userTitle">{{ accountInfo.username }}</span>
-      <a-icon type="caret-down" style="margin-left:5px" />
+      <a-icon type="caret-down" style="margin-left: 5px" />
     </div>
 
     <a-menu slot="overlay">
       <a-menu-item>
-        <router-link to="/userSystem/userInfo">个人中心</router-link>
+        <router-link to="/userSystem/userInfo">Personal Center</router-link>
       </a-menu-item>
       <a-menu-item>
-        <router-link to="/userSystem/setting">个人设置</router-link>
+        <router-link to="/userSystem/setting">Personal settings</router-link>
       </a-menu-item>
       <a-menu-item>
-        <a href="https://github.com/biubiubiu01/vue-antd-admin" target="parent">项目地址</a>
+        <a href="https://github.com/biubiubiu01/vue-antd-admin" target="parent">Project gallery</a>
       </a-menu-item>
       <a-menu-divider />
       <a-menu-item>
-        <span @click.self="logout">退出登录 </span>
+        <span @click.self="logout">Log out </span>
       </a-menu-item>
     </a-menu>
   </a-dropdown>

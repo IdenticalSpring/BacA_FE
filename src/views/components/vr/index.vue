@@ -1,5 +1,5 @@
 <template>
-  <div class="PSViewer" ref="psvdbg" style="height:calc(100vh - 148px);"></div>
+  <div class="PSViewer" ref="psvdbg" style="height: calc(100vh - 148px)"></div>
 </template>
 
 <script>
@@ -20,7 +20,7 @@ export default {
     init() {
       var PSV = new Viewer({
         panorama: this.img, //图片
-        caption: '室内',
+        caption: 'indoor',
         container: this.$refs.psvdbg, //id
         size: {
           width: '100%',
@@ -67,7 +67,7 @@ export default {
           ]
         ]
       });
-      PSV.on('click', function(e) {
+      PSV.on('click', function (e) {
         // console.log(e);
         // console.log(MarkersButton);
         // console.log(PSV.buttons.MarkersButton);

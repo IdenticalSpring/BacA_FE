@@ -8,10 +8,10 @@
         :before-upload="beforeUpload"
         :show-upload-list="false"
       >
-        <a-button type="primary" icon="picture" :loading="loading"> 选择图片 </a-button>
+        <a-button type="primary" icon="picture" :loading="loading"> Select image </a-button>
       </a-upload>
     </div>
-    <a-modal title="头像裁剪" :visible="modalShow" :footer="null" :width="800" @cancel="modalShow = false">
+    <a-modal title="Avatar cropping" :visible="modalShow" :footer="null" :width="800" @cancel="modalShow = false">
       <a-row :gutter="24">
         <a-col :span="12" class="cropper-wrapper">
           <vueCropper
@@ -32,12 +32,14 @@
             <a-button icon="minus" />
             <a-button icon="undo" />
             <a-button icon="redo" />
-            <a-button type="primary" icon="picture" :loading="loading"> 重新选择图片 </a-button>
+            <a-button type="primary" icon="picture" :loading="loading"> Reselect image </a-button>
           </a-space>
           <div class="accountImg">
             <img :src="previewsImg.url" alt="" :style="previewsImg.img" />
           </div>
-          <a-button type="primary" icon="upload" style="margin-left:150px" @click="saveHeadImg"> 保存头像 </a-button>
+          <a-button type="primary" icon="upload" style="margin-left: 150px" @click="saveHeadImg">
+            Save Avatar
+          </a-button>
         </a-col>
       </a-row>
     </a-modal>
@@ -68,12 +70,12 @@ export default {
       this.loading = true;
       //判断格式
       if (!this.isImage(file)) {
-        this.$message.warning('只能选择xlxs,xls文件');
+        this.$message.warning('Only xlxs, xls files can be selected');
         return false;
       }
       //判断大小
       if (file.size / 1024 / 1024 > 5) {
-        this.$message.warning('上传图片大小不能超过5M');
+        this.$message.warning('The uploaded image size cannot exceed 5M');
         return false;
       }
       //得先裁剪，然后再走接口上传
@@ -88,7 +90,7 @@ export default {
     },
 
     saveHeadImg() {
-      this.$message.success('上传成功!');
+      this.$message.success('Upload Successfully!');
       this.imgUrl = this.previewsImg.url;
       this.modalShow = false;
     },

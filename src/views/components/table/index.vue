@@ -5,68 +5,69 @@
         <a-button
           type="danger"
           icon="delete"
-          style="margin:0 16px 10px"
+          style="margin: 0 16px 10px"
           :loading="deleteLoading"
           @click="batchDeleteTable"
         >
-          批量删除
+          Batch Deletion
         </a-button>
         <div class="filter-wrapper">
-          <span class="label">付款人：</span>
-          <a-input placeholder="付款人" class="select-width" v-model="filterList.name" />
+          <span class="label">Payee:</span>
+          <a-input placeholder="Payer" class="select-width" v-model="filterList.name" />
         </div>
-        <div class="filter-wrapper" style="margin:0 15px">
-          <span class="label">订单状态：</span>
-          <a-select placeholder="订单状态" class="select-width" allowClear @change="changeStatus">
+        <div class="filter-wrapper" style="margin: 0 15px">
+          <span class="label">Order Status:</span>
+          <a-select placeholder="Order Status" class="select-width" allowClear @change="changeStatus">
             <a-select-option v-for="item in typeOption" :key="item.key" :value="item.key">
               {{ item.label }}
             </a-select-option>
           </a-select>
         </div>
 
-        <a-button type="primary" icon="search" class="select-bottom" style="margin-right:16px" @click="search">
-          查询
+        <a-button type="primary" icon="search" class="select-bottom" style="margin-right: 16px" @click="search">
+          Query
         </a-button>
         <a-button type="primary" icon="export" class="select-bottom" :loading="exportLoading" @click="handleExport">
-          导出
+          Export
         </a-button>
       </div>
-        
-        <standard-table
-          :tableData="tableData"
-          :tableHead="tableHead"
-          :loading="loading"
-          :pagination="{
-            pageSize: filterList.size,
-            current: filterList.page,
-            total: filterList.total,
-            showTotal: total => `${filterList.total} 条`
-          }"
-          :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: handleSelect }"
-          @changeCurrent="handleChangeCurrent"
-        >
-          <div slot="index" slot-scope="{ index }">
-            {{ index + 1 }}
-          </div>
-          <div slot="money" slot-scope="{ text }">¥ {{ text }}</div>
-          <div slot="action" slot-scope="{ text }">
-            <a-button type="primary" size="small" @click="handleEdit(text)">
-              编辑
-            </a-button>
-            <a-popconfirm title="你确定要删除当前列吗?" ok-text="是" cancel-text="否" @confirm="handleDelete(text)">
-              <a-button type="danger" size="small" style="margin-left:8px">
-                删除
-              </a-button>
-            </a-popconfirm>
-          </div>
-        </standard-table>
+
+      <standard-table
+        :tableData="tableData"
+        :tableHead="tableHead"
+        :loading="loading"
+        :pagination="{
+          pageSize: filterList.size,
+          current: filterList.page,
+          total: filterList.total,
+          showTotal: total => `${filterList.total} strip`
+        }"
+        :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: handleSelect }"
+        @changeCurrent="handleChangeCurrent"
+      >
+        <div slot="index" slot-scope="{ index }">
+          {{ index + 1 }}
+        </div>
+        <div slot="money" slot-scope="{ text }">¥ {{ text }}</div>
+        <div slot="action" slot-scope="{ text }">
+          <a-button type="primary" size="small" @click="handleEdit(text)"> 编辑 </a-button>
+          <a-popconfirm
+            title="Are you sure you want to delete the current column?"
+            ok-text="yes"
+            cancel-text="no"
+            @confirm="handleDelete(text)"
+          >
+            <a-button type="danger" size="small" style="margin-left: 8px"> 删除 </a-button>
+          </a-popconfirm>
+        </div>
+      </standard-table>
     </a-card>
 
     <a-modal
-      title="编辑"
+      title="edit"
       :visible="editShow"
-      okText="确认"
-      cancelText="取消"
+      okText="confirm"
+      cancelText="Cancel"
       :width="620"
       @ok="handleOk"
       @cancel="editShow = false"
@@ -75,19 +76,19 @@
         <a-form-model-item prop="id" label="id">
           <a-input v-model="currentEdit.id" disabled />
         </a-form-model-item>
-        <a-form-model-item prop="name" label="付款人">
+        <a-form-model-item prop="name" label="Payer">
           <a-input v-model="currentEdit.name" disabled />
         </a-form-model-item>
-        <a-form-model-item prop="status" label="订单状态">
+        <a-form-model-item prop="status" label="Order Status">
           <a-input v-model="currentEdit.status" disabled />
         </a-form-model-item>
-        <a-form-model-item prop="date" label="下单时间">
+        <a-form-model-item prop="date" label="Order time">
           <a-input v-model="currentEdit.date" disabled />
         </a-form-model-item>
-        <a-form-model-item prop="money" label="付款金额">
+        <a-form-model-item prop="money" label="Payment Amount">
           <a-input v-model="currentEdit.money" disabled />
         </a-form-model-item>
-        <a-form-model-item prop="text" label="备注">
+        <a-form-model-item prop="text" label="Remark">
           <a-input v-model="currentEdit.text" />
         </a-form-model-item>
       </a-form-model>
@@ -108,62 +109,62 @@ export default {
       typeOption: [
         {
           key: '待付款',
-          label: '待付款'
+          label: 'Payment pending'
         },
         {
           key: '待发货',
-          label: '待发货'
+          label: 'Waiting for delivery'
         },
         {
           key: '已发货',
-          label: '已发货'
+          label: 'Shipped'
         },
         {
           key: '已收货',
-          label: '已收货'
+          label: 'Received'
         },
         {
           key: '已评价',
-          label: '已评价'
+          label: 'Rated'
         }
       ],
       tableHead: [
         {
-          title: '序号',
+          title: 'Seri',
           dataIndex: 'index',
           scopedSlots: { customRender: 'index' },
           width: 60
         },
         {
-          title: '用户id',
+          title: 'User ID',
           dataIndex: 'id',
           ellipsis: true
         },
         {
-          title: '付款人',
+          title: 'Payer',
           dataIndex: 'name'
         },
         {
-          title: '订单状态',
+          title: 'Order Status',
           dataIndex: 'status'
         },
         {
-          title: '下单时间',
+          title: 'Order time',
           dataIndex: 'date',
           ellipsis: true
         },
         {
-          title: '付款金额',
+          title: 'Payment Amount',
           dataIndex: 'money',
           scopedSlots: { customRender: 'money' }
         },
         {
-          title: '备注',
+          title: 'Remark',
           dataIndex: 'text',
           ellipsis: true
         },
         {
-          title: '操作',
+          title: 'operate',
           scopedSlots: { customRender: 'action' },
           width: 140
         }

@@ -28,22 +28,22 @@ export default {
     return {
       nineList: [
         {
-          title: '精美大礼包',
+          title: 'Exquisite gift package',
           imgUrl: require('@/assets/lottery/gift.png'),
           index: 0
         },
         {
-          title: '华为手机',
+          title: 'Huawei mobile phone',
           imgUrl: require('@/assets/lottery/phone.png'),
           index: 1
         },
         {
-          title: '保时捷50元代金券',
+          title: 'Porsche 50 yuan voucher',
           imgUrl: require('@/assets/lottery/coupon.png'),
           index: 2
         },
         {
-          title: '谢谢参与',
+          title: 'Thanks for your participation',
           imgUrl: require('@/assets/lottery/sorry.png'),
           index: 7
         },
@@ -53,7 +53,7 @@ export default {
           index: -99
         },
         {
-          title: '劳斯莱斯雨伞',
+          title: 'Rolls Royce Umbrella',
           imgUrl: require('@/assets/lottery/umbrella.png'),
           index: 3
         },

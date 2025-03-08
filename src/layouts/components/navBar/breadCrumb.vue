@@ -25,7 +25,7 @@ export default {
       let home = {
         path: '/index',
         meta: {
-          title: '首页'
+          title: 'Dashboard'
         }
       };
       if (matched[0].path == '/index') {

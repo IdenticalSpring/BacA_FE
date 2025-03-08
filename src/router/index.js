@@ -47,7 +47,7 @@ export const asyncRoutes = [
         component: () => import('@/views/index/index'),
         meta: {
           role: 1,
-          title: '首页',
+          title: 'Dashboard',
           icon: 'dashboard'
         }
       },
@@ -58,38 +58,38 @@ export const asyncRoutes = [
         component: () => import('@/views/icon/index'),
         meta: {
           role: 2,
-          title: '图标',
+          title: 'icon',
           icon: 'icon'
         }
       },
       {
         name: 'drag',
         path: 'http://gist006.gitee.io/vue-visual-drag/#/',
-        component:Layout,
+        component: Layout,
         meta: {
-          title: '可视化拖拽',
+          title: 'Visual drag',
           icon: 'drag',
-          role: 3,
+          role: 3
         }
       },
       {
         name: 'vue3',
         path: 'https://gist006.gitee.io/vue3-bigdata/#/homepage',
-        component:Layout,
+        component: Layout,
         meta: {
-          title: 'vue3大屏',
+          title: 'vue3 big screen',
           icon: 'vue3',
-          role: 3,
+          role: 3
         }
       },
       {
         name: 'music',
         path: 'http://gist006.gitee.io/uni-music/#/',
-        component:Layout,
+        component: Layout,
         meta: {
-          title: '听听音乐',
+          title: 'Listen to music',
           icon: 'music',
-          role: 3,
+          role: 3
         }
       },
       {
@@ -99,7 +99,7 @@ export const asyncRoutes = [
         redirect: '/webGl/ArcGis',
         meta: {
           role: 4,
-          title: '地图',
+          title: 'Map',
           icon: 'webGl'
         },
         children: [
@@ -113,7 +113,7 @@ export const asyncRoutes = [
             name: 'OpenLayers',
             path: '/webGl/OpenLayers',
             component: () => import('@/views/webGl/OpenLayers/index'),
-            meta: { title: '插值分析图', role: 6 }
+            meta: { title: 'Interpolation analysis diagram', role: 6 }
           }
         ]
       },
@@ -125,7 +125,7 @@ export const asyncRoutes = [
         path: '/error',
         component: mainLayout,
         redirect: '/error/403',
-        meta: { title: '错误页面', icon: 'error', role: 7 },
+        meta: { title: 'Error Pages', icon: 'error', role: 7 },
         children: [
           {
             name: '403',
@@ -152,19 +152,19 @@ export const asyncRoutes = [
         component: mainLayout,
         path: '/userSystem',
         redirect: '/userSystem/userInfo',
-        meta: { title: '个人设置', icon: 'user', role: 11 },
+        meta: { title: 'Personal settings', icon: 'user', role: 11 },
         children: [
           {
             name: 'userInfo',
             path: '/userSystem/userInfo',
             component: () => import('@/views/userSystem/userInfo/index'),
-            meta: { title: '个人中心', role: 12 }
+            meta: { title: 'Personal Center', role: 12 }
           },
           {
             name: 'setting',
             path: '/userSystem/setting',
             component: () => import('@/views/userSystem/setting/index'),
-            meta: { title: '个人设置', role: 13 }
+            meta: { title: 'Personal settings', role: 13 }
           }
         ]
       },
@@ -175,7 +175,7 @@ export const asyncRoutes = [
         redirect: '/system/userManage',
         meta: {
           role: 14,
-          title: '后台管理',
+          title: 'Backstage Management',
           icon: 'system'
         },
         children: [
@@ -183,13 +183,13 @@ export const asyncRoutes = [
             name: 'userManage',
             path: '/system/userManage',
             component: () => import('@/views/system/userManage/index'),
-            meta: { title: '用户管理', role: 15 }
+            meta: { title: 'User Management', role: 15 }
           },
           {
             name: 'roleManage',
             path: '/system/roleManage',
             component: () => import('@/views/system/roleManage/index'),
-            meta: { title: '角色管理', role: 16 }
+            meta: { title: 'Role Management', role: 16 }
           }
         ]
       }
@@ -198,7 +198,7 @@ export const asyncRoutes = [
   { path: '*', redirect: '/404', hidden: true }
 ];
 
-const createRouter = function() {
+const createRouter = function () {
   return new VueRouter({
     routes: baseRoute,
     scrollBehavior: () => ({ y: 0 })

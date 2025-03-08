@@ -14,15 +14,13 @@
         <svg-icon :icon="isFullscreen ? 'exit-fullscreen' : 'fullscreen'" :size="18" />
       </div>
       <a-tooltip placement="bottom">
-        <template slot="title">
-          主题配置
-        </template>
+        <template slot="title"> Theme Configuration </template>
         <div class="right-menu-item pointer boxHover" @click="changeVisible">
           <svg-icon icon="color" :size="18" />
         </div>
       </a-tooltip>
 
-      <div class="right-menu-item pointer boxHover" style="margin-right:15px" @click="toNotice">
+      <div class="right-menu-item pointer boxHover" style="margin-right: 15px" @click="toNotice">
         <a-badge :count="count" :overflow-count="99" :offset="[3, -4]">
           <svg-icon icon="bell" :size="18" />
         </a-badge>
@@ -54,7 +52,7 @@ export default {
       breadList: [
         {
           path: '/dashboard',
-          meta: { title: '首页', icon: 'dashboard' }
+          meta: { title: 'Dashboard', icon: 'dashboard' }
         }
       ],
       count: 6,
@@ -67,7 +65,9 @@ export default {
     },
     screenFull() {
       if (!screenfull.isEnabled) {
-        this.$message.warning('不好意思，你的电脑不支持全屏，赶紧换个电脑吧，谢谢~');
+        this.$message.warning(
+          'Sorry, your computer does not support full screen, please change the computer quickly, thank you~'
+        );
         return false;
       }
       screenfull.toggle();

@@ -1,5 +1,5 @@
 <template>
-  <div class="paddingBox-container  border-box">
+  <div class="paddingBox-container border-box">
     <router-view />
   </div>
 </template>

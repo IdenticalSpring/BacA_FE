@@ -37,7 +37,7 @@ router.beforeEach(async (to, from, next) => {
           NProgress.done();
         } catch (error) {
           console.log(error);
-          message.error('获取用户信息失败');
+          message.error('Failed to obtain user information');
           next('/login');
           NProgress.done();
         }

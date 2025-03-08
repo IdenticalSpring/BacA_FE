@@ -1,6 +1,12 @@
 <template>
   <div class="tagView-wrapper relative white">
-    <a-icon type="left" class="absolute pointer tag_btn" style="left:0" @click="handleScroll(240)" v-show="hanldeBtn" />
+    <a-icon
+      type="left"
+      class="absolute pointer tag_btn"
+      style="left: 0"
+      @click="handleScroll(240)"
+      v-show="hanldeBtn"
+    />
     <div class="scroll-outer" ref="scrollOuter" :style="outerWidth" @mousewheel="handleMouseWheel">
       <div class="scroll-body absolute" ref="scrollBody" :style="{ left: tagBodyLeft + 'px' }">
         <router-link
@@ -27,7 +33,7 @@
     <a-icon
       type="right"
       class="absolute pointer tag_btn"
-      style="right:0"
+      style="right: 0"
       @click="handleScroll(-240)"
       v-show="hanldeBtn"
     />
@@ -76,8 +82,8 @@ export default {
       }
     },
 
-    rightEvent(){
-       console.log(1231);
+    rightEvent() {
+      console.log(1231);
     },
     isActive(path) {
       return path == this.$route.path;
@@ -123,7 +129,7 @@ export default {
         const scrollOuterWidth = this.$refs.scrollOuter.offsetWidth;
         //标签在左边
         if (eleLeft == 0 && index == 0) {
-           this.tagBodyLeft=0
+          this.tagBodyLeft = 0;
           return;
         }
         if (eleLeft < -this.tagBodyLeft) {

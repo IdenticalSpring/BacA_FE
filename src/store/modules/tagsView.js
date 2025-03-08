@@ -3,7 +3,7 @@ const state = {
     {
       path: '/index',
       meta: {
-        title: '首页'
+        title: 'Dashboard'
       }
     }
   ]
@@ -27,7 +27,7 @@ const mutations = {
       {
         path: '/index',
         meta: {
-          title: '首页'
+          title: 'Dashboard'
         }
       }
     ];
