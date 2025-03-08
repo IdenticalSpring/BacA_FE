@@ -1,39 +1,47 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// @mui material components
+import { useEffect, useState } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-
-// Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
-
-// Data
-import authorsTableData from "layouts/tables/data/authorsTableData";
-import projectsTableData from "layouts/tables/data/projectsTableData";
+import axios from "axios";
 
 function Teachers() {
-  const { columns, rows } = authorsTableData();
-  const { columns: pColumns, rows: pRows } = projectsTableData();
+  const [columns, setColumns] = useState([
+    { Header: "ID", accessor: "id", width: "10%" },
+    { Header: "Name", accessor: "name", width: "30%" },
+    { Header: "Level", accessor: "level", width: "30%" },
+  ]);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/teachers");
+        const data = response.data;
+
+        // Chuyển dữ liệu thành format của DataTable
+        const formattedRows = data.map((teacher) => ({
+          id: teacher.id,
+          name: teacher.name,
+          level: teacher.level,
+        }));
+
+        setRows(formattedRows);
+      } catch (err) {
+        setError("Lỗi khi tải dữ liệu giáo viên!");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -57,13 +65,23 @@ function Teachers() {
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}>
-                <DataTable
-                  table={{ columns, rows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
+                {loading ? (
+                  <MDTypography variant="h6" color="info" align="center">
+                    Đang tải dữ liệu...
+                  </MDTypography>
+                ) : error ? (
+                  <MDTypography variant="h6" color="error" align="center">
+                    {error}
+                  </MDTypography>
+                ) : (
+                  <DataTable
+                    table={{ columns, rows }}
+                    isSorted={false}
+                    entriesPerPage={false}
+                    showTotalEntries={false}
+                    noEndBorder
+                  />
+                )}
               </MDBox>
             </Card>
           </Grid>
