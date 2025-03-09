@@ -58,7 +58,7 @@ function CreateClass() {
       await classService.createClass(payload);
       navigate("/classes"); // Quay lại trang danh sách lớp
     } catch (err) {
-      alert("Lỗi khi tạo lớp học!");
+      alert("Create class failed!");
     }
   };
 
@@ -66,12 +66,9 @@ function CreateClass() {
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <Grid container justifyContent="center">
-          <Grid item xs={12} md={6}>
-            <Card sx={{ padding: 3 }}>
-              <MDTypography variant="h5" align="center" gutterBottom>
-                Create New Class
-              </MDTypography>
+        <Grid container justifyContent="flex-start">
+          <Grid item xs={12} md={6} sx={{ marginLeft: "20px" }}>
+            <Card sx={{ padding: 3, backgroundColor: "#f0f2f5", boxShadow: "none" }}>
               <TextField
                 label="Class Name"
                 fullWidth

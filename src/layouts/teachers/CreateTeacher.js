@@ -32,12 +32,9 @@ function CreateTeacher() {
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <Grid container justifyContent="center">
-          <Grid item xs={12} md={6}>
-            <Card sx={{ padding: 3 }}>
-              <MDTypography variant="h5" align="center" gutterBottom>
-                Create New Teacher
-              </MDTypography>
+        <Grid container justifyContent="flex-start">
+          <Grid item xs={12} md={6} sx={{ marginLeft: "20px" }}>
+            <Card sx={{ padding: 3, backgroundColor: "#f0f2f5", boxShadow: "none" }}>
               <TextField
                 label="Name"
                 fullWidth
