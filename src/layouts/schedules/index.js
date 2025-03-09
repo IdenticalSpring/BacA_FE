@@ -16,13 +16,13 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
-import teacherService from "services/teacherService";
-function Teachers() {
-  const [columns, setColumns] = useState([
-    { Header: "Name", accessor: "name", width: "30%" },
-    { Header: "Level", accessor: "level", width: "30%" },
-    { Header: "Start Date", accessor: "startDate", width: "30%" },
-    { Header: "End Date", accessor: "endDate", width: "30%" },
+import scheduleService from "services/scheduleService";
+
+function Schedules() {
+  const [columns] = useState([
+    { Header: "Date", accessor: "date", width: "30%" },
+    { Header: "Start Time", accessor: "startTime", width: "30%" },
+    { Header: "End Time", accessor: "endTime", width: "30%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [rows, setRows] = useState([]);
@@ -30,28 +30,27 @@ function Teachers() {
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [teacherData, setTeacherData] = useState({ name: "", level: "" });
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [scheduleData, setScheduleData] = useState({ date: "", startTime: "", endTime: "" });
 
   useEffect(() => {
-    fetchTeachers();
+    fetchSchedules();
   }, []);
 
-  const fetchTeachers = async () => {
+  const fetchSchedules = async () => {
     try {
-      const data = await teacherService.getAllTeachers();
-      const formattedRows = data.map((teacher) => ({
-        id: teacher.id,
-        name: teacher.name,
-        level: teacher.level,
-        startDate: teacher.startDate,
-        endDate: teacher.endDate,
+      const data = await scheduleService.getAllSchedules();
+      const formattedRows = data.map((schedule) => ({
+        id: schedule.id,
+        date: schedule.date,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
         actions: (
           <>
-            <IconButton color="primary" onClick={() => handleEdit(teacher)}>
+            <IconButton color="primary" onClick={() => handleEdit(schedule)}>
               <EditIcon />
             </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(teacher.id)}>
+            <IconButton color="secondary" onClick={() => handleDelete(schedule.id)}>
               <DeleteIcon />
             </IconButton>
           </>
@@ -59,33 +58,30 @@ function Teachers() {
       }));
       setRows(formattedRows);
     } catch (err) {
-      setError("Lỗi khi tải dữ liệu giáo viên!");
+      setError("Lỗi khi tải dữ liệu lịch học!");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (teacher) => {
+  const handleEdit = (schedule) => {
     setEditMode(true);
-    setSelectedTeacher(teacher);
-    setTeacherData({
-      name: teacher.name,
-      username: teacher.username,
-      password: teacher.password,
-      level: teacher.level,
-      startDate: teacher.startDate,
-      endDate: teacher.endDate,
+    setSelectedSchedule(schedule);
+    setScheduleData({
+      date: schedule.date,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
     });
     setOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa giáo viên này?")) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa lịch học này?")) {
       try {
-        await teacherService.deleteTeacher(id);
+        await scheduleService.deleteSchedule(id);
         setRows(rows.filter((row) => row.id !== id));
       } catch (err) {
-        alert("Lỗi khi xóa giáo viên!");
+        alert("Lỗi khi xóa lịch học!");
       }
     }
   };
@@ -93,27 +89,25 @@ function Teachers() {
   const handleSave = async () => {
     try {
       if (editMode) {
-        // Cập nhật giáo viên
-        await teacherService.editTeacher(selectedTeacher.id, teacherData);
+        await scheduleService.editSchedule(selectedSchedule.id, scheduleData);
         setRows(
-          rows.map((row) => (row.id === selectedTeacher.id ? { ...row, ...teacherData } : row))
+          rows.map((row) => (row.id === selectedSchedule.id ? { ...row, ...scheduleData } : row))
         );
       } else {
-        // Tạo giáo viên mới
-        const createdTeacher = await teacherService.createTeacher(teacherData);
+        const createdSchedule = await scheduleService.createSchedule(scheduleData);
         setRows([
           ...rows,
           {
-            id: createdTeacher.id,
-            name: createdTeacher.name,
-            level: createdTeacher.level,
-            startDate: createdTeacher.startDate,
+            id: createdSchedule.id,
+            className: createdSchedule.className,
+            startTime: createdSchedule.startTime,
+            endTime: createdSchedule.endTime,
             actions: (
               <>
-                <IconButton color="primary" onClick={() => handleEdit(createdTeacher)}>
+                <IconButton color="primary" onClick={() => handleEdit(createdSchedule)}>
                   <EditIcon />
                 </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdTeacher.id)}>
+                <IconButton color="secondary" onClick={() => handleDelete(createdSchedule.id)}>
                   <DeleteIcon />
                 </IconButton>
               </>
@@ -123,10 +117,10 @@ function Teachers() {
       }
 
       setOpen(false);
-      setTeacherData({ name: "", level: "" });
+      setScheduleData({ className: "", startTime: "", endTime: "" });
       setEditMode(false);
     } catch (err) {
-      alert(editMode ? "Lỗi khi chỉnh sửa giáo viên!" : "Lỗi khi tạo giáo viên!");
+      alert(editMode ? "Lỗi khi chỉnh sửa lịch học!" : "Lỗi khi tạo lịch học!");
     }
   };
 
@@ -151,7 +145,7 @@ function Teachers() {
                 alignItems="center"
               >
                 <MDTypography variant="h6" color="white">
-                  Teachers Table
+                  Schedule Tables
                 </MDTypography>
                 <Button variant="contained" color="success" onClick={() => setOpen(true)}>
                   Create
@@ -182,51 +176,29 @@ function Teachers() {
       </MDBox>
       <Footer />
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editMode ? "Chỉnh sửa Giáo Viên" : "Thêm Giáo Viên"}</DialogTitle>
+        <DialogTitle>{editMode ? "Edit Scheduel" : "Create"}</DialogTitle>
         <DialogContent>
           <TextField
-            label="Name"
-            fullWidth
-            margin="normal"
-            value={teacherData.name}
-            onChange={(e) => setTeacherData({ ...teacherData, name: e.target.value })}
-          />
-          <TextField
-            label="Username"
-            fullWidth
-            margin="normal"
-            value={teacherData.username}
-            onChange={(e) => setTeacherData({ ...teacherData, username: e.target.value })}
-          />
-          <TextField
-            label="Password"
-            fullWidth
-            margin="normal"
-            value={teacherData.password}
-            onChange={(e) => setTeacherData({ ...teacherData, password: e.target.value })}
-          />
-          <TextField
-            // label="Start Date"
+            // label="Date"
             fullWidth
             margin="normal"
             type="date"
-            value={teacherData.startDate}
-            onChange={(e) => setTeacherData({ ...teacherData, startDate: e.target.value })}
+            value={scheduleData.date}
+            onChange={(e) => setScheduleData({ ...scheduleData, date: e.target.value })}
           />
           <TextField
-            // label="End Date"
+            label="Start Time"
             fullWidth
             margin="normal"
-            type="date"
-            value={teacherData.endDate}
-            onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
+            value={scheduleData.startTime}
+            onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
           />
           <TextField
-            label="Level"
+            label="End Time"
             fullWidth
             margin="normal"
-            value={teacherData.level}
-            onChange={(e) => setTeacherData({ ...teacherData, level: e.target.value })}
+            value={scheduleData.endTime}
+            onChange={(e) => setScheduleData({ ...scheduleData, endTime: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
@@ -240,4 +212,4 @@ function Teachers() {
   );
 }
 
-export default Teachers;
+export default Schedules;

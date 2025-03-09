@@ -40,7 +40,9 @@ import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
 import Users from "layouts/users";
 import Classes from "layouts/classes";
+import Schedules from "layouts/schedules";
 import Teachers from "layouts/teachers";
+import Students from "layouts/students";
 import Billing from "layouts/billing";
 import RTL from "layouts/rtl";
 import Notifications from "layouts/notifications";
@@ -70,11 +72,27 @@ const routes = [
   },
   {
     type: "collapse",
+    name: "Schedules",
+    key: "schedules",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/schedules",
+    component: <Schedules />,
+  },
+  {
+    type: "collapse",
     name: "Teachers",
     key: "teachers",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/teachers",
     component: <Teachers />,
+  },
+  {
+    type: "collapse",
+    name: "Students",
+    key: "students",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/students",
+    component: <Students />,
   },
   {
     type: "collapse",
@@ -93,11 +111,11 @@ const routes = [
     component: <Profile />,
   },
   {
-    type: "collapse",
+    // type: "collapse",
     name: "Sign In",
     key: "sign-in",
     icon: <Icon fontSize="small">login</Icon>,
-    route: "/authentication/sign-in",
+    route: "/sign-in",
     component: <SignIn />,
   },
   // {

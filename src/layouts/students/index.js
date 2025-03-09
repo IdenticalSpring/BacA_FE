@@ -16,13 +16,14 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
-import teacherService from "services/teacherService";
-function Teachers() {
+import studentService from "services/studentService";
+
+function Students() {
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "30%" },
-    { Header: "Level", accessor: "level", width: "30%" },
     { Header: "Start Date", accessor: "startDate", width: "30%" },
     { Header: "End Date", accessor: "endDate", width: "30%" },
+    { Header: "Note", accessor: "note", width: "30%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [rows, setRows] = useState([]);
@@ -30,28 +31,29 @@ function Teachers() {
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [teacherData, setTeacherData] = useState({ name: "", level: "" });
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentData, setStudentData] = useState({ name: "", level: "" });
 
   useEffect(() => {
-    fetchTeachers();
+    fetchStudents();
   }, []);
 
-  const fetchTeachers = async () => {
+  const fetchStudents = async () => {
     try {
-      const data = await teacherService.getAllTeachers();
-      const formattedRows = data.map((teacher) => ({
-        id: teacher.id,
-        name: teacher.name,
-        level: teacher.level,
-        startDate: teacher.startDate,
-        endDate: teacher.endDate,
+      const data = await studentService.getAllStudents();
+      const formattedRows = data.map((student) => ({
+        id: student.id,
+        name: student.name,
+        level: student.level,
+        startDate: student.startDate,
+        endDate: student.endDate,
+        note: student.note,
         actions: (
           <>
-            <IconButton color="primary" onClick={() => handleEdit(teacher)}>
+            <IconButton color="primary" onClick={() => handleEdit(student)}>
               <EditIcon />
             </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(teacher.id)}>
+            <IconButton color="secondary" onClick={() => handleDelete(student.id)}>
               <DeleteIcon />
             </IconButton>
           </>
@@ -59,33 +61,34 @@ function Teachers() {
       }));
       setRows(formattedRows);
     } catch (err) {
-      setError("Lỗi khi tải dữ liệu giáo viên!");
+      setError("Error fetching students!");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (teacher) => {
+  const handleEdit = (student) => {
     setEditMode(true);
-    setSelectedTeacher(teacher);
-    setTeacherData({
-      name: teacher.name,
-      username: teacher.username,
-      password: teacher.password,
-      level: teacher.level,
-      startDate: teacher.startDate,
-      endDate: teacher.endDate,
+    setSelectedStudent(student);
+    setStudentData({
+      name: student.name,
+      username: student.username,
+      password: student.password,
+      level: student.level,
+      startDate: student.startDate,
+      endDate: student.endDate,
+      note: student.note,
     });
     setOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa giáo viên này?")) {
+    if (window.confirm("Are you sure you want to delete this student?")) {
       try {
-        await teacherService.deleteTeacher(id);
+        await studentService.deleteStudent(id);
         setRows(rows.filter((row) => row.id !== id));
       } catch (err) {
-        alert("Lỗi khi xóa giáo viên!");
+        alert("Error deleting student!");
       }
     }
   };
@@ -93,27 +96,26 @@ function Teachers() {
   const handleSave = async () => {
     try {
       if (editMode) {
-        // Cập nhật giáo viên
-        await teacherService.editTeacher(selectedTeacher.id, teacherData);
+        await studentService.editStudent(selectedStudent.id, studentData);
         setRows(
-          rows.map((row) => (row.id === selectedTeacher.id ? { ...row, ...teacherData } : row))
+          rows.map((row) => (row.id === selectedStudent.id ? { ...row, ...studentData } : row))
         );
       } else {
-        // Tạo giáo viên mới
-        const createdTeacher = await teacherService.createTeacher(teacherData);
+        const createdStudent = await studentService.createStudent(studentData);
         setRows([
           ...rows,
           {
-            id: createdTeacher.id,
-            name: createdTeacher.name,
-            level: createdTeacher.level,
-            startDate: createdTeacher.startDate,
+            id: createdStudent.id,
+            name: createdStudent.name,
+            level: createdStudent.level,
+            startDate: createdStudent.startDate,
+            note: createdStudent.note,
             actions: (
               <>
-                <IconButton color="primary" onClick={() => handleEdit(createdTeacher)}>
+                <IconButton color="primary" onClick={() => handleEdit(createdStudent)}>
                   <EditIcon />
                 </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdTeacher.id)}>
+                <IconButton color="secondary" onClick={() => handleDelete(createdStudent.id)}>
                   <DeleteIcon />
                 </IconButton>
               </>
@@ -123,10 +125,10 @@ function Teachers() {
       }
 
       setOpen(false);
-      setTeacherData({ name: "", level: "" });
+      setStudentData({ name: "", level: "" });
       setEditMode(false);
     } catch (err) {
-      alert(editMode ? "Lỗi khi chỉnh sửa giáo viên!" : "Lỗi khi tạo giáo viên!");
+      alert(editMode ? "Error updating student!" : "Error creating student!");
     }
   };
 
@@ -151,7 +153,7 @@ function Teachers() {
                 alignItems="center"
               >
                 <MDTypography variant="h6" color="white">
-                  Teachers Table
+                  Students Table
                 </MDTypography>
                 <Button variant="contained" color="success" onClick={() => setOpen(true)}>
                   Create
@@ -182,51 +184,37 @@ function Teachers() {
       </MDBox>
       <Footer />
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editMode ? "Chỉnh sửa Giáo Viên" : "Thêm Giáo Viên"}</DialogTitle>
+        <DialogTitle>{editMode ? "Edit Student" : "Add Student"}</DialogTitle>
         <DialogContent>
           <TextField
             label="Name"
             fullWidth
             margin="normal"
-            value={teacherData.name}
-            onChange={(e) => setTeacherData({ ...teacherData, name: e.target.value })}
-          />
-          <TextField
-            label="Username"
-            fullWidth
-            margin="normal"
-            value={teacherData.username}
-            onChange={(e) => setTeacherData({ ...teacherData, username: e.target.value })}
-          />
-          <TextField
-            label="Password"
-            fullWidth
-            margin="normal"
-            value={teacherData.password}
-            onChange={(e) => setTeacherData({ ...teacherData, password: e.target.value })}
+            value={studentData.name}
+            onChange={(e) => setStudentData({ ...studentData, name: e.target.value })}
           />
           <TextField
             // label="Start Date"
             fullWidth
             margin="normal"
             type="date"
-            value={teacherData.startDate}
-            onChange={(e) => setTeacherData({ ...teacherData, startDate: e.target.value })}
+            value={studentData.startDate}
+            onChange={(e) => setStudentData({ ...studentData, startDate: e.target.value })}
           />
           <TextField
             // label="End Date"
             fullWidth
-            margin="normal"
             type="date"
-            value={teacherData.endDate}
-            onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
+            margin="normal"
+            value={studentData.endDate}
+            onChange={(e) => setStudentData({ ...studentData, endDate: e.target.value })}
           />
           <TextField
-            label="Level"
+            label="Note"
             fullWidth
             margin="normal"
-            value={teacherData.level}
-            onChange={(e) => setTeacherData({ ...teacherData, level: e.target.value })}
+            value={studentData.note}
+            onChange={(e) => setStudentData({ ...studentData, note: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
@@ -240,4 +228,4 @@ function Teachers() {
   );
 }
 
-export default Teachers;
+export default Students;
