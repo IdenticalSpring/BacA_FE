@@ -20,8 +20,11 @@ import DataTable from "examples/Tables/DataTable";
 import classService from "services/classService";
 import teacherService from "services/teacherService";
 import scheduleService from "services/scheduleService";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function Classes() {
+  const navigate = useNavigate();
+
   const [columns] = useState([
     { Header: "Class Name", accessor: "name", width: "20%" },
     { Header: "Start Date", accessor: "startDate", width: "20%" },
@@ -225,7 +228,14 @@ function Classes() {
                 <MDTypography variant="h6" color="white">
                   Class Tables
                 </MDTypography>
-                <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+                {/* <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+                  Create
+                </Button> */}
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => navigate("/classes/create-class")}
+                >
                   Create
                 </Button>
               </MDBox>

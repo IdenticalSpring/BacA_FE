@@ -17,8 +17,10 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import scheduleService from "services/scheduleService";
+import { useNavigate } from "react-router-dom";
 
 function Schedules() {
+  const navigate = useNavigate();
   const [columns] = useState([
     { Header: "Date", accessor: "date", width: "30%" },
     { Header: "Start Time", accessor: "startTime", width: "30%" },
@@ -147,7 +149,11 @@ function Schedules() {
                 <MDTypography variant="h6" color="white">
                   Schedule Tables
                 </MDTypography>
-                <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => navigate("/schedules/create-schedule")}
+                >
                   Create
                 </Button>
               </MDBox>

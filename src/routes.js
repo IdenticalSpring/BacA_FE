@@ -49,9 +49,13 @@ import Notifications from "layouts/notifications";
 import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
+import CreateClass from "layouts/classes/CreateClass";
 
 // @mui icons
 import Icon from "@mui/material/Icon";
+import CreateSchedule from "layouts/schedules/CreateSchedule";
+import CreateStudent from "layouts/students/CreateStudent";
+import CreateTeacher from "layouts/teachers/CreateTeacher";
 
 const routes = [
   {
@@ -117,6 +121,30 @@ const routes = [
     icon: <Icon fontSize="small">login</Icon>,
     route: "/sign-in",
     component: <SignIn />,
+  },
+  {
+    name: "Create Class",
+    route: "/classes/create-class",
+    key: "create-class",
+    component: <CreateClass />,
+  },
+  {
+    name: "Create Schedule",
+    route: "/schedules/create-schedule",
+    key: "create-schedule",
+    component: <CreateSchedule />,
+  },
+  {
+    name: "Create Student",
+    route: "/students/create-student",
+    key: "create-student",
+    component: <CreateStudent />,
+  },
+  {
+    name: "Create Teacher",
+    route: "/teachers/create-teacher",
+    key: "create-teacher",
+    component: <CreateTeacher />,
   },
   // {
   //   type: "collapse",

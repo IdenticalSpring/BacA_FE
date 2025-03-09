@@ -17,8 +17,10 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import studentService from "services/studentService";
+import { useNavigate } from "react-router-dom";
 
 function Students() {
+  const navigate = useNavigate();
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "30%" },
     { Header: "Start Date", accessor: "startDate", width: "30%" },
@@ -155,7 +157,11 @@ function Students() {
                 <MDTypography variant="h6" color="white">
                   Students Table
                 </MDTypography>
-                <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => navigate("/students/create-student")}
+                >
                   Create
                 </Button>
               </MDBox>

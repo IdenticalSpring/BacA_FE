@@ -17,7 +17,10 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import teacherService from "services/teacherService";
+import { useNavigate } from "react-router-dom";
+
 function Teachers() {
+  const navigate = useNavigate();
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "30%" },
     { Header: "Level", accessor: "level", width: "30%" },
@@ -59,7 +62,7 @@ function Teachers() {
       }));
       setRows(formattedRows);
     } catch (err) {
-      setError("Lỗi khi tải dữ liệu giáo viên!");
+      setError("Load data failed: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -80,12 +83,12 @@ function Teachers() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa giáo viên này?")) {
+    if (window.confirm("Are you sure you want to delete this teacher?")) {
       try {
         await teacherService.deleteTeacher(id);
         setRows(rows.filter((row) => row.id !== id));
       } catch (err) {
-        alert("Lỗi khi xóa giáo viên!");
+        alert("Delete failed");
       }
     }
   };
@@ -153,7 +156,11 @@ function Teachers() {
                 <MDTypography variant="h6" color="white">
                   Teachers Table
                 </MDTypography>
-                <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => navigate("/teachers/create-teacher")}
+                >
                   Create
                 </Button>
               </MDBox>
