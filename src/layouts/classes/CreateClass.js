@@ -68,7 +68,16 @@ function CreateClass() {
       <MDBox pt={6} pb={3}>
         <Grid container justifyContent="flex-start">
           <Grid item xs={12} md={6} sx={{ marginLeft: "20px" }}>
-            <Card sx={{ padding: 3, backgroundColor: "#f0f2f5", boxShadow: "none" }}>
+            <Card
+              sx={{
+                padding: 3,
+                backgroundColor: "rgba(255, 255, 255, 0.1)", // Màu nền trong suốt nhẹ
+                backdropFilter: "blur(10px)", // Hiệu ứng kính mờ
+                boxShadow: "0px 4px 10px rgba(255, 255, 255, 0.2)", // Đổ bóng nhẹ
+                borderRadius: "12px", // Bo góc
+                border: "1px solid rgba(255, 255, 255, 0.3)", // Viền nhẹ
+              }}
+            >
               <TextField
                 label="Class Name"
                 fullWidth
