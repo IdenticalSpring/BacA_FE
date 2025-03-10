@@ -56,19 +56,17 @@ function CreateSchedule() {
                 select
                 label="Day of Week"
                 fullWidth
-                sx={{
-                  "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
-                    {
-                      minHeight: "48px", // Đặt lại chiều cao tối thiểu
-                      display: "flex",
-                      alignItems: "center",
-                    },
+                InputProps={{
+                  sx: {
+                    minHeight: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
                 }}
                 margin="normal"
                 value={scheduleData.dayOfWeek}
                 onChange={(e) => {
                   setScheduleData({ ...scheduleData, dayOfWeek: e.target.value });
-                  console.log(e.target.value, +e.target.value);
                 }}
               >
                 {daysOfWeekArr.map((d, index) => (
@@ -99,7 +97,7 @@ function CreateSchedule() {
                 <Button variant="text" onClick={() => navigate("/schedules")}>
                   Cancel
                 </Button>
-                <Button variant="contained" onClick={handleSave}>
+                <Button variant="contained" style={{ color: "white" }} onClick={handleSave}>
                   Create
                 </Button>
               </MDBox>

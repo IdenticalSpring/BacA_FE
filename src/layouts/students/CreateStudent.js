@@ -79,7 +79,7 @@ function CreateStudent() {
                 <Button variant="text" onClick={() => navigate("/students")}>
                   Cancel
                 </Button>
-                <Button variant="contained" onClick={handleSave}>
+                <Button variant="contained" style={{ color: "white" }} onClick={handleSave}>
                   Create
                 </Button>
               </MDBox>

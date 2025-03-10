@@ -163,13 +163,12 @@ function CreateClass() {
                 select
                 label="Teacher"
                 fullWidth
-                sx={{
-                  "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
-                    {
-                      minHeight: "48px", // Đặt lại chiều cao tối thiểu
-                      display: "flex",
-                      alignItems: "center",
-                    },
+                InputProps={{
+                  sx: {
+                    minHeight: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
                 }}
                 margin="normal"
                 value={classData.teacherId}
@@ -186,13 +185,12 @@ function CreateClass() {
                   select
                   label="Day of Week"
                   fullWidth
-                  sx={{
-                    "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
-                      {
-                        minHeight: "48px", // Đặt lại chiều cao tối thiểu
-                        display: "flex",
-                        alignItems: "center",
-                      },
+                  InputProps={{
+                    sx: {
+                      minHeight: "48px",
+                      display: "flex",
+                      alignItems: "center",
+                    },
                   }}
                   margin="normal"
                   value={dayOfWeek}
@@ -211,13 +209,12 @@ function CreateClass() {
                   select
                   label="Schedule"
                   fullWidth
-                  sx={{
-                    "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
-                      {
-                        minHeight: "48px", // Đặt lại chiều cao tối thiểu
-                        display: "flex",
-                        alignItems: "center",
-                      },
+                  InputProps={{
+                    sx: {
+                      minHeight: "48px",
+                      display: "flex",
+                      alignItems: "center",
+                    },
                   }}
                   margin="normal"
                   value={classData.scheduleId}
