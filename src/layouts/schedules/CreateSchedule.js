@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, TextField, Button, Grid } from "@mui/material";
+import { Card, TextField, Button, Grid, MenuItem } from "@mui/material";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -9,6 +9,16 @@ import Footer from "examples/Footer";
 import scheduleService from "services/scheduleService";
 
 function CreateSchedule() {
+  const daysOfWeekArr = [
+    "Choose day of week",
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   const navigate = useNavigate();
   const [scheduleData, setScheduleData] = useState({
     date: "",
@@ -43,14 +53,30 @@ function CreateSchedule() {
             >
               {" "}
               <TextField
+                select
+                label="Day of Week"
                 fullWidth
+                sx={{
+                  "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                    {
+                      minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                      display: "flex",
+                      alignItems: "center",
+                    },
+                }}
                 margin="normal"
-                type="date"
-                label="Date"
-                InputLabelProps={{ shrink: true }}
-                value={scheduleData.date}
-                onChange={(e) => setScheduleData({ ...scheduleData, date: e.target.value })}
-              />
+                value={scheduleData.dayOfWeek}
+                onChange={(e) => {
+                  setScheduleData({ ...scheduleData, dayOfWeek: e.target.value });
+                  console.log(e.target.value, +e.target.value);
+                }}
+              >
+                {daysOfWeekArr.map((d, index) => (
+                  <MenuItem key={index} value={index}>
+                    {d}
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 fullWidth
                 margin="normal"

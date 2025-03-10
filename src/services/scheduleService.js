@@ -11,7 +11,16 @@ const scheduleService = {
       throw error.response?.data?.message || "Error fetching schedule list";
     }
   },
+  getScheduleByDayOfWeek: async (dayOfWeek) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/schedules/day-of-week`, dayOfWeek);
+      console.log(response.data, "ádasd");
 
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching schedule list";
+    }
+  },
   createSchedule: async (scheduleData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/schedules`, scheduleData);

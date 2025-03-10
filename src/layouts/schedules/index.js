@@ -18,22 +18,33 @@ import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import scheduleService from "services/scheduleService";
 import { useNavigate } from "react-router-dom";
+import { MenuItem } from "@mui/material";
 
 function Schedules() {
   const navigate = useNavigate();
   const [columns] = useState([
-    { Header: "Date", accessor: "date", width: "30%" },
+    { Header: "Day Of Week", accessor: "dayOfWeek", width: "30%" },
     { Header: "Start Time", accessor: "startTime", width: "30%" },
     { Header: "End Time", accessor: "endTime", width: "30%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
+  const daysOfWeekArr = [
+    "Choose day of week",
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [scheduleData, setScheduleData] = useState({ date: "", startTime: "", endTime: "" });
+  const [scheduleData, setScheduleData] = useState({ dayOfWeek: "", startTime: "", endTime: "" });
 
   useEffect(() => {
     fetchSchedules();
@@ -44,7 +55,7 @@ function Schedules() {
       const data = await scheduleService.getAllSchedules();
       const formattedRows = data.map((schedule) => ({
         id: schedule.id,
-        date: schedule.date,
+        dayOfWeek: daysOfWeekArr[schedule.dayOfWeek],
         startTime: schedule.startTime,
         endTime: schedule.endTime,
         actions: (
@@ -70,7 +81,7 @@ function Schedules() {
     setEditMode(true);
     setSelectedSchedule(schedule);
     setScheduleData({
-      date: schedule.date,
+      dayOfWeek: schedule.dayOfWeek,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
     });
@@ -93,7 +104,25 @@ function Schedules() {
       if (editMode) {
         await scheduleService.editSchedule(selectedSchedule.id, scheduleData);
         setRows(
-          rows.map((row) => (row.id === selectedSchedule.id ? { ...row, ...scheduleData } : row))
+          rows.map((row) =>
+            row.id === selectedSchedule.id
+              ? {
+                  ...row,
+                  ...scheduleData,
+                  dayOfWeek: daysOfWeekArr[+scheduleData.dayOfWeek],
+                  actions: (
+                    <>
+                      <IconButton color="primary" onClick={() => handleEdit(scheduleData)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton color="secondary" onClick={() => handleDelete(scheduleData.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </>
+                  ),
+                }
+              : row
+          )
         );
       } else {
         const createdSchedule = await scheduleService.createSchedule(scheduleData);
@@ -101,7 +130,7 @@ function Schedules() {
           ...rows,
           {
             id: createdSchedule.id,
-            className: createdSchedule.className,
+            dayOfWeek: daysOfWeekArr[createdSchedule.dayOfWeek],
             startTime: createdSchedule.startTime,
             endTime: createdSchedule.endTime,
             actions: (
@@ -125,7 +154,7 @@ function Schedules() {
       alert(editMode ? "Lỗi khi chỉnh sửa lịch học!" : "Lỗi khi tạo lịch học!");
     }
   };
-
+  console.log("Schedules -> rows", rows);
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -185,13 +214,30 @@ function Schedules() {
         <DialogTitle>{editMode ? "Edit Scheduel" : "Create"}</DialogTitle>
         <DialogContent>
           <TextField
-            // label="Date"
+            select
+            label="Day of Week"
             fullWidth
+            sx={{
+              "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                {
+                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                  display: "flex",
+                  alignItems: "center",
+                },
+            }}
             margin="normal"
-            type="date"
-            value={scheduleData.date}
-            onChange={(e) => setScheduleData({ ...scheduleData, date: e.target.value })}
-          />
+            value={scheduleData.dayOfWeek}
+            onChange={(e) => {
+              setScheduleData({ ...scheduleData, dayOfWeek: e.target.value });
+              console.log(e.target.value, +e.target.value);
+            }}
+          >
+            {daysOfWeekArr.map((d, index) => (
+              <MenuItem key={index} value={index}>
+                {d}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             label="Start Time"
             fullWidth
