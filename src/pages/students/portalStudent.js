@@ -17,7 +17,7 @@ import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 import authService from "services/authService";
 import { Alert } from "@mui/material";
 
-function Basic() {
+function StudentPortal() {
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -36,20 +36,16 @@ function Basic() {
     setError("");
 
     try {
-      const data = await authService.loginAdmin(formData.username, formData.password);
+      const data = await authService.loginStudent(formData.username, formData.password);
       console.log("Login successful:", data);
-
-      if (data.token) {
-        sessionStorage.setItem("token", data.token);
-      }
-
-      navigate("/dashboard");
+      navigate("/studentpage");
     } catch (err) {
-      setError(err.message || "Login failed");
+      setError(err); // Gán lỗi để hiển thị
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -65,7 +61,7 @@ function Basic() {
           textAlign="center"
         >
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-            Sign In
+            Student Portal
           </MDTypography>
           <Grid container spacing={3} justifyContent="center" sx={{ mt: 1, mb: 2 }}>
             <Grid item xs={2}>
@@ -154,4 +150,4 @@ function Basic() {
   );
 }
 
-export default Basic;
+export default StudentPortal;
