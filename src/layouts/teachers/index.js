@@ -18,7 +18,17 @@ import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import teacherService from "services/teacherService";
 import { useNavigate } from "react-router-dom";
-
+import { MenuItem } from "@mui/material";
+const levels = [
+  "Level Pre-1",
+  "Level 1",
+  "Starters",
+  "Level-KET",
+  "Movers",
+  "Flyers",
+  "Pre-KET",
+  "level-PET",
+];
 function Teachers() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState([
@@ -199,6 +209,31 @@ function Teachers() {
             onChange={(e) => setTeacherData({ ...teacherData, name: e.target.value })}
           />
           <TextField
+            select
+            label="level"
+            fullWidth
+            sx={{
+              "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                {
+                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                  display: "flex",
+                  alignItems: "center",
+                },
+            }}
+            margin="normal"
+            value={teacherData.level}
+            onChange={(e) => {
+              setTeacherData({ ...teacherData, level: e.target.value });
+              // console.log(e.target.value, +e.target.value);
+            }}
+          >
+            {levels.map((d, index) => (
+              <MenuItem key={index} value={d}>
+                {d}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
             label="Username"
             fullWidth
             margin="normal"
@@ -227,13 +262,6 @@ function Teachers() {
             type="date"
             value={teacherData.endDate}
             onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
-          />
-          <TextField
-            label="Level"
-            fullWidth
-            margin="normal"
-            value={teacherData.level}
-            onChange={(e) => setTeacherData({ ...teacherData, level: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
