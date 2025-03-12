@@ -52,6 +52,7 @@ import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "co
 // Images
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
+import PrivateRoute from "privateRoute";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -68,6 +69,8 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
+  const location = useLocation();
+  const hideSidenavPaths = ["/studentportal", "/teacherportal"];
 
   // Cache for the rtl
   useMemo(() => {
@@ -116,7 +119,16 @@ export default function App() {
       }
 
       if (route.route) {
-        return <Route exact path={route.route} element={route.component} key={route.key} />;
+        return (
+          <Route
+            exact
+            path={route.route}
+            element={
+              route.private ? <PrivateRoute>{route.component}</PrivateRoute> : route.component
+            }
+            key={route.key}
+          />
+        );
       }
 
       return null;
@@ -150,7 +162,7 @@ export default function App() {
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
         <CssBaseline />
-        {layout === "dashboard" && (
+        {layout === "dashboard" && !hideSidenavPaths.includes(location.pathname) && (
           <>
             <Sidenav
               color={sidenavColor}
@@ -164,7 +176,7 @@ export default function App() {
             {configsButton}
           </>
         )}
-        {layout === "vr" && <Configurator />}
+        {layout === "vr" && !hideSidenavPaths.includes(location.pathname) && <Configurator />}
         <Routes>
           {getRoutes(routes)}
           <Route path="*" element={<Navigate to="/dashboard" />} />
@@ -174,7 +186,7 @@ export default function App() {
   ) : (
     <ThemeProvider theme={darkMode ? themeDark : theme}>
       <CssBaseline />
-      {layout === "dashboard" && (
+      {layout === "dashboard" && !hideSidenavPaths.includes(location.pathname) && (
         <>
           <Sidenav
             color={sidenavColor}
@@ -188,10 +200,10 @@ export default function App() {
           {configsButton}
         </>
       )}
-      {layout === "vr" && <Configurator />}
+      {layout === "vr" && !hideSidenavPaths.includes(location.pathname) && <Configurator />}
       <Routes>
         {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="/sign-in" />} />
+        <Route path="*" element={<Navigate to="auth/sign-in" />} />
       </Routes>
     </ThemeProvider>
   );

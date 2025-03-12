@@ -56,6 +56,10 @@ import Icon from "@mui/material/Icon";
 import CreateSchedule from "layouts/schedules/CreateSchedule";
 import CreateStudent from "layouts/students/CreateStudent";
 import CreateTeacher from "layouts/teachers/CreateTeacher";
+import StudentPage from "pages/students/studentPage";
+import TeacherPage from "pages/teachers/teacherPage";
+import PrivateRoute from "privateRoute";
+import AuthPortal from "pages/loginAuth/loginAuth";
 
 const routes = [
   {
@@ -64,7 +68,11 @@ const routes = [
     key: "dashboard",
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
-    component: <Dashboard />,
+    component: (
+      <PrivateRoute>
+        <Dashboard />
+      </PrivateRoute>
+    ),
   },
   {
     type: "collapse",
@@ -72,7 +80,11 @@ const routes = [
     key: "classes",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/classes",
-    component: <Classes />,
+    component: (
+      <PrivateRoute>
+        <Classes />
+      </PrivateRoute>
+    ),
   },
   {
     type: "collapse",
@@ -80,7 +92,11 @@ const routes = [
     key: "schedules",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/schedules",
-    component: <Schedules />,
+    component: (
+      <PrivateRoute>
+        <Schedules />
+      </PrivateRoute>
+    ),
   },
   {
     type: "collapse",
@@ -88,7 +104,11 @@ const routes = [
     key: "teachers",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/teachers",
-    component: <Teachers />,
+    component: (
+      <PrivateRoute>
+        <Teachers />
+      </PrivateRoute>
+    ),
   },
   {
     type: "collapse",
@@ -96,7 +116,11 @@ const routes = [
     key: "students",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/students",
-    component: <Students />,
+    component: (
+      <PrivateRoute>
+        <Students />
+      </PrivateRoute>
+    ),
   },
   {
     type: "collapse",
@@ -104,7 +128,11 @@ const routes = [
     key: "users",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/users",
-    component: <Users />,
+    component: (
+      <PrivateRoute>
+        <Users />
+      </PrivateRoute>
+    ),
   },
   {
     type: "collapse",
@@ -112,7 +140,11 @@ const routes = [
     key: "profile",
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",
-    component: <Profile />,
+    component: (
+      <PrivateRoute>
+        <Profile />
+      </PrivateRoute>
+    ),
   },
   {
     // type: "collapse",
@@ -123,28 +155,73 @@ const routes = [
     component: <SignIn />,
   },
   {
+    name: "Student Page",
+    key: "studentPage",
+    icon: <Icon fontSize="small">login</Icon>,
+    route: "/studentpage",
+    component: (
+      <PrivateRoute>
+        <StudentPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Auth Portal",
+    key: "authPortal",
+    icon: <Icon fontSize="small">login</Icon>,
+    route: "/auth/sign-in",
+    component: <AuthPortal />,
+  },
+  {
+    name: "Teacher Page",
+    key: "teacherPage",
+    icon: <Icon fontSize="small">login</Icon>,
+    route: "/teacherpage",
+    component: (
+      <PrivateRoute>
+        <TeacherPage />
+      </PrivateRoute>
+    ),
+  },
+  {
     name: "Create Class",
     route: "/classes/create-class",
     key: "create-class",
-    component: <CreateClass />,
+    component: (
+      <PrivateRoute>
+        <CreateClass />
+      </PrivateRoute>
+    ),
   },
   {
     name: "Create Schedule",
     route: "/schedules/create-schedule",
     key: "create-schedule",
-    component: <CreateSchedule />,
+    component: (
+      <PrivateRoute>
+        <CreateSchedule />
+      </PrivateRoute>
+    ),
   },
   {
     name: "Create Student",
     route: "/students/create-student",
     key: "create-student",
-    component: <CreateStudent />,
+    component: (
+      <PrivateRoute>
+        <CreateStudent />
+      </PrivateRoute>
+    ),
   },
   {
     name: "Create Teacher",
     route: "/teachers/create-teacher",
     key: "create-teacher",
-    component: <CreateTeacher />,
+    component: (
+      <PrivateRoute>
+        <CreateTeacher />
+      </PrivateRoute>
+    ),
   },
   // {
   //   type: "collapse",

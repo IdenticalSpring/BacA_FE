@@ -46,12 +46,14 @@ import {
   setTransparentSidenav,
   setWhiteSidenav,
 } from "context";
+import { useNavigate } from "react-router-dom";
 
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentSidenav, whiteSidenav, darkMode, sidenavColor } = controller;
   const location = useLocation();
   const collapseName = location.pathname.replace("/", "");
+  const navigate = useNavigate();
 
   let textColor = "white";
 
@@ -61,6 +63,10 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
     textColor = "inherit";
   }
 
+  const handleLogout = () => {
+    sessionStorage.removeItem("token"); // Xóa token
+    navigate("/sign-in"); // Chuyển về trang đăng nhập
+  };
   const closeSidenav = () => setMiniSidenav(dispatch, true);
 
   useEffect(() => {
@@ -178,6 +184,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
           (darkMode && !transparentSidenav && whiteSidenav)
         }
       />
+
       <List>{renderRoutes}</List>
       {/* <MDBox p={2} mt="auto">
         <MDButton
@@ -192,6 +199,17 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
           upgrade to pro
         </MDButton>
       </MDBox> */}
+      {/* Thêm nút Logout */}
+      <MDBox p={2} mt="auto" textAlign="center">
+        <MDButton
+          variant="gradient"
+          color="error"
+          fullWidth
+          onClick={handleLogout} // Gọi hàm khi nhấn Logout
+        >
+          Logout
+        </MDButton>
+      </MDBox>
     </SidenavRoot>
   );
 }

@@ -36,16 +36,20 @@ function Basic() {
     setError("");
 
     try {
-      const data = await authService.login(formData.username, formData.password);
+      const data = await authService.loginAdmin(formData.username, formData.password);
       console.log("Login successful:", data);
+
+      if (data.token) {
+        sessionStorage.setItem("token", data.token);
+      }
+
       navigate("/dashboard");
     } catch (err) {
-      setError(err); // Gán lỗi để hiển thị
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -130,16 +134,16 @@ function Basic() {
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
               <MDTypography variant="button" color="text">
-                Don&apos;t have an account?{" "}
+                Are you teacher/student ?{" "}
                 <MDTypography
                   component={Link}
-                  to="/sign-up"
+                  to="/auth/sign-in"
                   variant="button"
                   color="info"
                   fontWeight="medium"
                   textGradient
                 >
-                  Sign Up
+                  Here
                 </MDTypography>
               </MDTypography>
             </MDBox>
