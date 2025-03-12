@@ -24,6 +24,7 @@ import classService from "services/classService";
 import teacherService from "services/teacherService";
 import scheduleService from "services/scheduleService";
 import DeleteIcon from "@mui/icons-material/Delete";
+import lessonByScheduleService from "services/lessonByScheduleService";
 function CreateClass() {
   const navigate = useNavigate();
   const [classData, setClassData] = useState({
@@ -49,7 +50,7 @@ function CreateClass() {
   ];
   useEffect(() => {
     fetchTeachers();
-    fetchSchedules();
+    // fetchSchedules();
   }, []);
   useEffect(() => {
     fetchSchedulesByDayOfWeek(dayOfWeek);
@@ -87,10 +88,13 @@ function CreateClass() {
         startDate: classData.startDate,
         endDate: classData.endDate,
         teacherId: classData.teacherId,
-        scheduleId: classData.scheduleId,
       };
 
-      await classService.createClass(payload);
+      const classEntity = await classService.createClass(payload);
+      const dataForLessonBySchedule = {
+        lessons: getDatesForSelectedSchedules(selectedSchedules, classEntity),
+      };
+      await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
       navigate("/classes"); // Quay lại trang danh sách lớp
     } catch (err) {
       alert("Create class failed!");
@@ -99,24 +103,60 @@ function CreateClass() {
 
   const handleAddSchedule = () => {
     if (!classData.scheduleId) return;
-
     const selectedSchedule = schedules.find((sch) => sch.id === classData.scheduleId);
     if (!selectedSchedule) return;
+
+    if (selectedSchedules.some((sch) => classData.scheduleId === sch.scheduleId)) {
+      return;
+    }
 
     // Thêm schedule mới vào danh sách (tránh trùng lặp)
     setSelectedSchedules((prev) => [
       ...prev,
       {
-        id: selectedSchedule.id,
+        scheduleId: selectedSchedule.id,
         day: daysOfWeek[selectedSchedule.dayOfWeek],
-        time: `${selectedSchedule.startTime} - ${selectedSchedule.endTime}`,
+        startTime: selectedSchedule.startTime,
+        endTime: selectedSchedule.endTime,
       },
     ]);
   };
   const handleRemoveSchedule = (id) => {
-    setSelectedSchedules((prev) => prev.filter((schedule) => schedule.id !== id));
+    setSelectedSchedules((prev) => prev.filter((schedule) => schedule.scheduleId !== id));
   };
-  console.log(classData);
+  const getDatesForSelectedSchedules = (selectedSchedules, classEntity) => {
+    const resultDates = [];
+    let currentDate = new Date(classEntity.startDate);
+    const end = new Date(classEntity.endDate);
+    // console.log(
+    //   `📅 Ngày hiện tại: ${currentDate.toISOString().split("T")[0]} (Thứ: ${currentDate.getDay()})`
+    // );
+    while (currentDate <= end) {
+      selectedSchedules.forEach((schedule) => {
+        if (currentDate.getDay() === daysOfWeek.indexOf(schedule.day) - 1) {
+          // console.log(
+          //   daysOfWeek.indexOf(schedule.day) - 1,
+          //   currentDate.getDay(),
+          //   currentDate.getDate()
+          // );
+
+          resultDates.push({
+            classID: classEntity.id,
+            scheduleID: schedule.scheduleId,
+            lessonID: null,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            date: currentDate.toISOString().split("T")[0], // Format YYYY-MM-DD
+          });
+        }
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1); // Tăng ngày lên 1
+    }
+
+    return resultDates;
+  };
+  // console.log(getDatesForSelectedSchedules(selectedSchedules, classData));
 
   return (
     <DashboardLayout>
@@ -196,7 +236,7 @@ function CreateClass() {
                   value={dayOfWeek}
                   onChange={(e) => {
                     setDayOfWeek(+e.target.value);
-                    console.log(e.target.value, +e.target.value);
+                    // console.log(e.target.value, +e.target.value);
                   }}
                 >
                   {daysOfWeek.map((d, index) => (
@@ -244,9 +284,16 @@ function CreateClass() {
                       {selectedSchedules.map((schedule, index) => (
                         <TableRow key={index}>
                           <TableCell>{schedule.day}</TableCell>
-                          <TableCell>{schedule.time}</TableCell>
                           <TableCell>
-                            <IconButton onClick={() => handleRemoveSchedule(schedule.id)}>
+                            {schedule.startTime} - {schedule.endTime}
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              onClick={() => {
+                                console.log(schedule.scheduleId);
+                                handleRemoveSchedule(schedule.scheduleId);
+                              }}
+                            >
                               <DeleteIcon />
                             </IconButton>
                           </TableCell>

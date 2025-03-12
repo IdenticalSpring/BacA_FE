@@ -14,7 +14,7 @@ const scheduleService = {
   getScheduleByDayOfWeek: async (dayOfWeek) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/schedules/day-of-week`, dayOfWeek);
-      console.log(response.data, "ádasd");
+      // console.log(response.data, "ádasd");
 
       return response.data;
     } catch (error) {

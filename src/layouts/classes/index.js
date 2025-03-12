@@ -21,6 +21,15 @@ import classService from "services/classService";
 import teacherService from "services/teacherService";
 import scheduleService from "services/scheduleService";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 function Classes() {
   const navigate = useNavigate();
@@ -30,9 +39,6 @@ function Classes() {
     { Header: "Start Date", accessor: "startDate", width: "20%" },
     { Header: "End Date", accessor: "endDate", width: "20%" },
     { Header: "Teacher", accessor: "teacher", width: "20%" },
-    { Header: "Date", accessor: "date", width: "20%" },
-    { Header: "Start Time", accessor: "startTime", width: "20%" },
-    { Header: "End Time", accessor: "endTime", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [rows, setRows] = useState([]);
@@ -44,13 +50,35 @@ function Classes() {
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [classData, setClassData] = useState({ className: "", startTime: "", endTime: "" });
-
+  const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [selectedSchedules, setSelectedSchedules] = useState([]);
+  const daysOfWeek = [
+    "Choose day of week",
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   useEffect(() => {
     fetchClasses();
     fetchTeachers();
-    fetchSchedules();
+    // fetchSchedules();
   }, []);
 
+  useEffect(() => {
+    fetchSchedulesByDayOfWeek(dayOfWeek);
+  }, [dayOfWeek]);
+  const fetchSchedulesByDayOfWeek = async (dayOfWeek) => {
+    try {
+      const data = await scheduleService.getScheduleByDayOfWeek({ dayOfWeek: dayOfWeek });
+      setSchedules(data);
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách lịch học theo ngày trong tuần");
+    }
+  };
   const fetchClasses = async () => {
     try {
       const data = await classService.getAllClasses();
@@ -60,9 +88,6 @@ function Classes() {
         startDate: cls.startDate,
         endDate: cls.endDate,
         teacher: cls.teacher?.name || "N/A",
-        date: cls.schedule?.date || "N/A",
-        startTime: cls.schedule?.startTime || "N/A",
-        endTime: cls.schedule?.endTime || "N/A",
         actions: (
           <>
             <IconButton color="primary" onClick={() => handleEdit(cls)}>
@@ -122,7 +147,29 @@ function Classes() {
       }
     }
   };
+  const handleAddSchedule = () => {
+    if (!classData.scheduleId) return;
+    const selectedSchedule = schedules.find((sch) => sch.id === classData.scheduleId);
+    if (!selectedSchedule) return;
 
+    if (selectedSchedules.some((sch) => classData.scheduleId === sch.scheduleId)) {
+      return;
+    }
+
+    // Thêm schedule mới vào danh sách (tránh trùng lặp)
+    setSelectedSchedules((prev) => [
+      ...prev,
+      {
+        scheduleId: selectedSchedule.id,
+        day: daysOfWeek[selectedSchedule.dayOfWeek],
+        startTime: selectedSchedule.startTime,
+        endTime: selectedSchedule.endTime,
+      },
+    ]);
+  };
+  const handleRemoveSchedule = (id) => {
+    setSelectedSchedules((prev) => prev.filter((schedule) => schedule.scheduleId !== id));
+  };
   // const handleSave = async () => {
   //   try {
   //     if (editMode) {
@@ -274,50 +321,129 @@ function Classes() {
             onChange={(e) => setClassData({ ...classData, name: e.target.value })}
           />
           <TextField
-            // label="Start Date"
             fullWidth
             margin="normal"
             type="date"
+            label="Start Date"
+            InputLabelProps={{ shrink: true }}
             value={classData.startDate}
             onChange={(e) => setClassData({ ...classData, startDate: e.target.value })}
           />
           <TextField
-            // label="End Date"
             fullWidth
             margin="normal"
             type="date"
+            label="End Date"
+            InputLabelProps={{ shrink: true }}
             value={classData.endDate}
             onChange={(e) => setClassData({ ...classData, endDate: e.target.value })}
           />
+          <TextField
+            select
+            label="Teacher"
+            fullWidth
+            InputProps={{
+              sx: {
+                minHeight: "48px",
+                display: "flex",
+                alignItems: "center",
+              },
+            }}
+            margin="normal"
+            value={classData.teacherId}
+            onChange={(e) => setClassData({ ...classData, teacherId: e.target.value })}
+          >
+            {teachers.map((teacher) => (
+              <MenuItem key={teacher.id} value={teacher.id}>
+                {teacher.name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <div style={{ width: "100%", display: "flex", gap: "10px", alignItems: "center" }}>
+            <TextField
+              select
+              label="Day of Week"
+              fullWidth
+              InputProps={{
+                sx: {
+                  minHeight: "48px",
+                  display: "flex",
+                  alignItems: "center",
+                },
+              }}
+              margin="normal"
+              value={dayOfWeek}
+              onChange={(e) => {
+                setDayOfWeek(+e.target.value);
+                // console.log(e.target.value, +e.target.value);
+              }}
+            >
+              {daysOfWeek.map((d, index) => (
+                <MenuItem key={index} value={index}>
+                  {d}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="Schedule"
+              fullWidth
+              InputProps={{
+                sx: {
+                  minHeight: "48px",
+                  display: "flex",
+                  alignItems: "center",
+                },
+              }}
+              margin="normal"
+              value={classData.scheduleId}
+              onChange={(e) => setClassData({ ...classData, scheduleId: e.target.value })}
+            >
+              {schedules.map((schedule) => (
+                <MenuItem key={schedule.id} value={schedule.id}>
+                  {daysOfWeek[schedule.dayOfWeek]} - {schedule.startTime} to {schedule.endTime}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Button variant="text" style={{ height: "30px" }} onClick={handleAddSchedule}>
+              Add
+            </Button>
+          </div>
+          {selectedSchedules.length > 0 && (
+            <TableContainer component={Paper} sx={{ marginTop: 2, width: "100%" }}>
+              <Table>
+                <TableHead style={{ display: "table-header-group" }}>
+                  <TableRow>
+                    <TableCell>Day</TableCell>
+                    <TableCell>Time</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedSchedules.map((schedule, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{schedule.day}</TableCell>
+                      <TableCell>
+                        {schedule.startTime} - {schedule.endTime}
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => {
+                            console.log(schedule.scheduleId);
+                            handleRemoveSchedule(schedule.scheduleId);
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </DialogContent>
-        <TextField
-          select
-          label="Teacher"
-          fullWidth
-          margin="normal"
-          value={classData.teacherId}
-          onChange={(e) => setClassData({ ...classData, teacherId: e.target.value })}
-        >
-          {teachers.map((teacher) => (
-            <MenuItem key={teacher.id} value={teacher.id}>
-              {teacher.name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          label="Schedule"
-          fullWidth
-          margin="normal"
-          value={classData.scheduleId}
-          onChange={(e) => setClassData({ ...classData, scheduleId: e.target.value })}
-        >
-          {schedules.map((schedule) => (
-            <MenuItem key={schedule.id} value={schedule.id}>
-              {schedule.date} - {schedule.startTime} to {schedule.endTime}
-            </MenuItem>
-          ))}
-        </TextField>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button onClick={handleSave} color="primary">
