@@ -18,11 +18,22 @@ import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import studentService from "services/studentService";
 import { useNavigate } from "react-router-dom";
-
+import { MenuItem } from "@mui/material";
+const levels = [
+  "Level Pre-1",
+  "Level 1",
+  "Starters",
+  "Level-KET",
+  "Movers",
+  "Flyers",
+  "Pre-KET",
+  "level-PET",
+];
 function Students() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "30%" },
+    { Header: "Level", accessor: "level", width: "30%" },
     { Header: "Start Date", accessor: "startDate", width: "30%" },
     { Header: "End Date", accessor: "endDate", width: "30%" },
     { Header: "Note", accessor: "note", width: "30%" },
@@ -34,7 +45,13 @@ function Students() {
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [studentData, setStudentData] = useState({ name: "", level: "" });
+  const [studentData, setStudentData] = useState({
+    name: "",
+    level: "",
+    startDate: "",
+    endDate: "",
+    note: "",
+  });
 
   useEffect(() => {
     fetchStudents();
@@ -111,6 +128,7 @@ function Students() {
             name: createdStudent.name,
             level: createdStudent.level,
             startDate: createdStudent.startDate,
+            endDate: createdStudent.endDate,
             note: createdStudent.note,
             actions: (
               <>
@@ -199,6 +217,31 @@ function Students() {
             value={studentData.name}
             onChange={(e) => setStudentData({ ...studentData, name: e.target.value })}
           />
+          <TextField
+            select
+            label="level"
+            fullWidth
+            sx={{
+              "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                {
+                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                  display: "flex",
+                  alignItems: "center",
+                },
+            }}
+            margin="normal"
+            value={studentData.level}
+            onChange={(e) => {
+              setStudentData({ ...studentData, level: e.target.value });
+              // console.log(e.target.value, +e.target.value);
+            }}
+          >
+            {levels.map((d, index) => (
+              <MenuItem key={index} value={d}>
+                {d}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             // label="Start Date"
             fullWidth

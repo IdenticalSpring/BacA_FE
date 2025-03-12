@@ -25,13 +25,24 @@ import teacherService from "services/teacherService";
 import scheduleService from "services/scheduleService";
 import DeleteIcon from "@mui/icons-material/Delete";
 import lessonByScheduleService from "services/lessonByScheduleService";
+const levels = [
+  "Level Pre-1",
+  "Level 1",
+  "Starters",
+  "Level-KET",
+  "Movers",
+  "Flyers",
+  "Pre-KET",
+  "level-PET",
+];
 function CreateClass() {
   const navigate = useNavigate();
   const [classData, setClassData] = useState({
     name: "",
+    level: "",
     startDate: "",
     endDate: "",
-    teacherId: "",
+    teacherID: "",
     scheduleId: "",
   });
   const [dayOfWeek, setDayOfWeek] = useState(0);
@@ -85,9 +96,10 @@ function CreateClass() {
     try {
       const payload = {
         name: classData.name,
+        level: classData.level,
         startDate: classData.startDate,
         endDate: classData.endDate,
-        teacherId: classData.teacherId,
+        teacherID: classData.teacherID,
       };
 
       const classEntity = await classService.createClass(payload);
@@ -182,6 +194,31 @@ function CreateClass() {
                 onChange={(e) => setClassData({ ...classData, name: e.target.value })}
               />
               <TextField
+                select
+                label="level"
+                fullWidth
+                sx={{
+                  "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                    {
+                      minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                      display: "flex",
+                      alignItems: "center",
+                    },
+                }}
+                margin="normal"
+                value={classData.level}
+                onChange={(e) => {
+                  setClassData({ ...classData, level: e.target.value });
+                  // console.log(e.target.value, +e.target.value);
+                }}
+              >
+                {levels.map((d, index) => (
+                  <MenuItem key={index} value={d}>
+                    {d}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
                 fullWidth
                 margin="normal"
                 type="date"
@@ -211,8 +248,8 @@ function CreateClass() {
                   },
                 }}
                 margin="normal"
-                value={classData.teacherId}
-                onChange={(e) => setClassData({ ...classData, teacherId: e.target.value })}
+                value={classData.teacherID}
+                onChange={(e) => setClassData({ ...classData, teacherID: e.target.value })}
               >
                 {teachers.map((teacher) => (
                   <MenuItem key={teacher.id} value={teacher.id}>

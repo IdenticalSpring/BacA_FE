@@ -60,6 +60,9 @@ import StudentPage from "pages/students/studentPage";
 import TeacherPage from "pages/teachers/teacherPage";
 import PrivateRoute from "privateRoute";
 import AuthPortal from "pages/loginAuth/loginAuth";
+import CreateLesson from "layouts/lessons/CreateLesson";
+import Lessons from "layouts/lessons";
+import LessonBySchedules from "layouts/lesson_by_schedules";
 
 const routes = [
   {
@@ -95,6 +98,30 @@ const routes = [
     component: (
       <PrivateRoute>
         <Schedules />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Lessons",
+    key: "lessons",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/lessons",
+    component: (
+      <PrivateRoute>
+        <Lessons />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Lesson by schedule",
+    key: "lesson_by_schedules",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/lesson_by_schedules",
+    component: (
+      <PrivateRoute>
+        <LessonBySchedules />
       </PrivateRoute>
     ),
   },
@@ -200,6 +227,16 @@ const routes = [
     component: (
       <PrivateRoute>
         <CreateSchedule />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Create Lesson",
+    route: "/lessons/create-lesson",
+    key: "create-lesson",
+    component: (
+      <PrivateRoute>
+        <CreateLesson />
       </PrivateRoute>
     ),
   },

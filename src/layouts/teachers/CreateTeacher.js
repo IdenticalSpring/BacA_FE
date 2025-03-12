@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, TextField, Button, Grid } from "@mui/material";
+import { Card, TextField, Button, Grid, MenuItem } from "@mui/material";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import teacherService from "services/teacherService";
-
+const levels = [
+  "Level Pre-1",
+  "Level 1",
+  "Starters",
+  "Level-KET",
+  "Movers",
+  "Flyers",
+  "Pre-KET",
+  "level-PET",
+];
 function CreateTeacher() {
   const navigate = useNavigate();
   const [teacherData, setTeacherData] = useState({
@@ -53,6 +62,31 @@ function CreateTeacher() {
                 onChange={(e) => setTeacherData({ ...teacherData, name: e.target.value })}
               />
               <TextField
+                select
+                label="level"
+                fullWidth
+                sx={{
+                  "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                    {
+                      minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                      display: "flex",
+                      alignItems: "center",
+                    },
+                }}
+                margin="normal"
+                value={teacherData.level}
+                onChange={(e) => {
+                  setTeacherData({ ...teacherData, level: e.target.value });
+                  // console.log(e.target.value, +e.target.value);
+                }}
+              >
+                {levels.map((d, index) => (
+                  <MenuItem key={index} value={d}>
+                    {d}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
                 label="Username"
                 fullWidth
                 margin="normal"
@@ -66,13 +100,6 @@ function CreateTeacher() {
                 margin="normal"
                 value={teacherData.password}
                 onChange={(e) => setTeacherData({ ...teacherData, password: e.target.value })}
-              />
-              <TextField
-                label="Level"
-                fullWidth
-                margin="normal"
-                value={teacherData.level}
-                onChange={(e) => setTeacherData({ ...teacherData, level: e.target.value })}
               />
               <TextField
                 fullWidth

@@ -16,54 +16,55 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
-import scheduleService from "services/scheduleService";
 import { useNavigate } from "react-router-dom";
+import lessonService from "services/lessonService";
 import { MenuItem } from "@mui/material";
-
-function Schedules() {
+const levels = [
+  "Level Pre-1",
+  "Level 1",
+  "Starters",
+  "Level-KET",
+  "Movers",
+  "Flyers",
+  "Pre-KET",
+  "level-PET",
+];
+function Lessons() {
   const navigate = useNavigate();
   const [columns] = useState([
-    { Header: "Day Of Week", accessor: "dayOfWeek", width: "30%" },
-    { Header: "Start Time", accessor: "startTime", width: "30%" },
-    { Header: "End Time", accessor: "endTime", width: "30%" },
+    { Header: "Lesson Name", accessor: "name", width: "30%" },
+    { Header: "Level", accessor: "level", width: "10%" },
+    { Header: "Link", accessor: "link", width: "30%" },
+    { Header: "Description", accessor: "description", width: "30%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
-  const daysOfWeekArr = [
-    "Choose day of week",
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [scheduleData, setScheduleData] = useState({ dayOfWeek: "", startTime: "", endTime: "" });
+  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [lessonData, setLessonData] = useState({ name: "", level: "", link: "", description: "" });
 
   useEffect(() => {
-    fetchSchedules();
+    fetchLessons();
   }, []);
 
-  const fetchSchedules = async () => {
+  const fetchLessons = async () => {
     try {
-      const data = await scheduleService.getAllSchedules();
-      const formattedRows = data.map((schedule) => ({
-        id: schedule.id,
-        dayOfWeek: daysOfWeekArr[schedule.dayOfWeek],
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
+      const data = await lessonService.getAllLessons();
+      const formattedRows = data.map((lesson) => ({
+        id: lesson.id,
+        name: lesson.name,
+        level: lesson.level,
+        link: lesson.link,
+        description: lesson.description,
         actions: (
           <>
-            <IconButton color="primary" onClick={() => handleEdit(schedule)}>
+            <IconButton color="primary" onClick={() => handleEdit(lesson)}>
               <EditIcon />
             </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(schedule.id)}>
+            <IconButton color="secondary" onClick={() => handleDelete(lesson.id)}>
               <DeleteIcon />
             </IconButton>
           </>
@@ -71,30 +72,31 @@ function Schedules() {
       }));
       setRows(formattedRows);
     } catch (err) {
-      setError("Lỗi khi tải dữ liệu lịch học!");
+      setError("Lỗi khi tải dữ liệu bài học!");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (schedule) => {
+  const handleEdit = (lesson) => {
     setEditMode(true);
-    setSelectedSchedule(schedule);
-    setScheduleData({
-      dayOfWeek: schedule.dayOfWeek,
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
+    setSelectedLesson(lesson);
+    setLessonData({
+      name: lesson.name,
+      level: lesson.level,
+      link: lesson.link,
+      description: lesson.description,
     });
     setOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa lịch học này?")) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa bài học này?")) {
       try {
-        await scheduleService.deleteSchedule(id);
+        await lessonService.deleteLesson(id);
         setRows(rows.filter((row) => row.id !== id));
       } catch (err) {
-        alert("Lỗi khi xóa lịch học!");
+        alert("Lỗi khi xóa bài học!");
       }
     }
   };
@@ -102,23 +104,20 @@ function Schedules() {
   const handleSave = async () => {
     try {
       if (editMode) {
-        await scheduleService.editSchedule(selectedSchedule.id, scheduleData);
+        await lessonService.editLesson(selectedLesson.id, lessonData);
+
         setRows(
           rows.map((row) =>
-            row.id === selectedSchedule.id
+            row.id === selectedLesson.id
               ? {
                   ...row,
-                  ...scheduleData,
-                  dayOfWeek: daysOfWeekArr[+scheduleData.dayOfWeek],
+                  ...lessonData,
                   actions: (
                     <>
-                      <IconButton color="primary" onClick={() => handleEdit(selectedSchedule)}>
+                      <IconButton color="primary" onClick={() => handleEdit(selectedLesson)}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton
-                        color="secondary"
-                        onClick={() => handleDelete(selectedSchedule.id)}
-                      >
+                      <IconButton color="secondary" onClick={() => handleDelete(selectedLesson.id)}>
                         <DeleteIcon />
                       </IconButton>
                     </>
@@ -128,20 +127,21 @@ function Schedules() {
           )
         );
       } else {
-        const createdSchedule = await scheduleService.createSchedule(scheduleData);
+        const createdLesson = await lessonService.createLesson(lessonData);
         setRows([
           ...rows,
           {
-            id: createdSchedule.id,
-            dayOfWeek: daysOfWeekArr[createdSchedule.dayOfWeek],
-            startTime: createdSchedule.startTime,
-            endTime: createdSchedule.endTime,
+            id: createdLesson.id,
+            name: createdLesson.name,
+            level: createdLesson.level,
+            link: createdLesson.link,
+            description: createdLesson.description,
             actions: (
               <>
-                <IconButton color="primary" onClick={() => handleEdit(createdSchedule)}>
+                <IconButton color="primary" onClick={() => handleEdit(createdLesson)}>
                   <EditIcon />
                 </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdSchedule.id)}>
+                <IconButton color="secondary" onClick={() => handleDelete(createdLesson.id)}>
                   <DeleteIcon />
                 </IconButton>
               </>
@@ -151,13 +151,14 @@ function Schedules() {
       }
 
       setOpen(false);
-      setScheduleData({ className: "", startTime: "", endTime: "" });
+      setLessonData({ name: "", level: "", link: "", description: "" });
       setEditMode(false);
     } catch (err) {
-      alert(editMode ? "Lỗi khi chỉnh sửa lịch học!" : "Lỗi khi tạo lịch học!");
+      alert(editMode ? "Lỗi khi chỉnh sửa bài học!" : "Lỗi khi tạo bài học!");
     }
   };
-  // console.log("Schedules -> rows", rows);
+  //   console.log("Lesson -> rows", rows);
+  //   console.log(selectedLesson, lessonData);
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -179,12 +180,12 @@ function Schedules() {
                 alignItems="center"
               >
                 <MDTypography variant="h6" color="white">
-                  Schedule Tables
+                  Lesson Tables
                 </MDTypography>
                 <Button
                   variant="contained"
                   color="success"
-                  onClick={() => navigate("/schedules/create-schedule")}
+                  onClick={() => navigate("/lessons/create-lesson")}
                 >
                   Create
                 </Button>
@@ -214,11 +215,18 @@ function Schedules() {
       </MDBox>
       <Footer />
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editMode ? "Edit Scheduel" : "Create"}</DialogTitle>
+        <DialogTitle>{editMode ? "Edit Lesson" : "Create"}</DialogTitle>
         <DialogContent>
           <TextField
+            label="Lesson Name"
+            fullWidth
+            margin="normal"
+            value={lessonData.name}
+            onChange={(e) => setLessonData({ ...lessonData, name: e.target.value })}
+          />
+          <TextField
             select
-            label="Day of Week"
+            label="level"
             fullWidth
             sx={{
               "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
@@ -229,33 +237,31 @@ function Schedules() {
                 },
             }}
             margin="normal"
-            value={scheduleData.dayOfWeek}
+            value={lessonData.level}
             onChange={(e) => {
-              setScheduleData({ ...scheduleData, dayOfWeek: e.target.value });
-              console.log(e.target.value, +e.target.value);
+              setLessonData({ ...lessonData, level: e.target.value });
+              // console.log(e.target.value, +e.target.value);
             }}
           >
-            {daysOfWeekArr.map((d, index) => (
-              <MenuItem key={index} value={index}>
+            {levels.map((d, index) => (
+              <MenuItem key={index} value={d}>
                 {d}
               </MenuItem>
             ))}
           </TextField>
           <TextField
-            label="Start Time"
+            label="Lesson Link"
             fullWidth
             margin="normal"
-            type="time"
-            value={scheduleData.startTime}
-            onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
+            value={lessonData.link}
+            onChange={(e) => setLessonData({ ...lessonData, link: e.target.value })}
           />
           <TextField
-            label="End Time"
+            label="Lesson Description"
             fullWidth
             margin="normal"
-            type="time"
-            value={scheduleData.endTime}
-            onChange={(e) => setScheduleData({ ...scheduleData, endTime: e.target.value })}
+            value={lessonData.description}
+            onChange={(e) => setLessonData({ ...lessonData, description: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
@@ -269,4 +275,4 @@ function Schedules() {
   );
 }
 
-export default Schedules;
+export default Lessons;

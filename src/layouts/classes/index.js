@@ -30,12 +30,22 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-
+const levels = [
+  "Level Pre-1",
+  "Level 1",
+  "Starters",
+  "Level-KET",
+  "Movers",
+  "Flyers",
+  "Pre-KET",
+  "level-PET",
+];
 function Classes() {
   const navigate = useNavigate();
 
   const [columns] = useState([
     { Header: "Class Name", accessor: "name", width: "20%" },
+    { Header: "Level", accessor: "level", width: "10%" },
     { Header: "Start Date", accessor: "startDate", width: "20%" },
     { Header: "End Date", accessor: "endDate", width: "20%" },
     { Header: "Teacher", accessor: "teacher", width: "20%" },
@@ -49,7 +59,13 @@ function Classes() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
-  const [classData, setClassData] = useState({ className: "", startTime: "", endTime: "" });
+  const [classData, setClassData] = useState({
+    className: "",
+    level: "",
+    startTime: "",
+    endTime: "",
+    teacherID: "",
+  });
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedSchedules, setSelectedSchedules] = useState([]);
   const daysOfWeek = [
@@ -85,6 +101,7 @@ function Classes() {
       const formattedRows = data.map((cls) => ({
         id: cls.id,
         name: cls.name,
+        level: cls.level,
         startDate: cls.startDate,
         endDate: cls.endDate,
         teacher: cls.teacher?.name || "N/A",
@@ -129,9 +146,10 @@ function Classes() {
     setSelectedClass(cls);
     setClassData({
       name: cls.name,
+      level: cls.level,
       startDate: cls.startDate,
       endDate: cls.endDate,
-      teacherId: cls.teacher?.id || "",
+      teacherID: cls.teacher?.id || "",
       scheduleId: cls.schedule?.id || "",
     });
     setOpen(true);
@@ -210,9 +228,10 @@ function Classes() {
     try {
       const payload = {
         name: classData.name,
+        level: classData.level,
         startDate: classData.startDate,
         endDate: classData.endDate,
-        teacherId: classData.teacherId, // Chỉ gửi teacherId
+        teacherID: classData.teacherID, // Chỉ gửi teacherId
         scheduleId: classData.scheduleId, // Chỉ gửi scheduleId
       };
 
@@ -226,9 +245,10 @@ function Classes() {
           {
             id: createdClass.id,
             name: createdClass.name,
+            level: createdClass.level,
             startDate: createdClass.startDate,
             endDate: createdClass.endDate,
-            teacher: teachers.find((t) => t.id === createdClass.teacherId),
+            teacher: teachers.find((t) => t.id === createdClass.teacherID),
             date: schedules.find((s) => s.id === createdClass.scheduleId),
             actions: (
               <>
@@ -245,7 +265,14 @@ function Classes() {
       }
 
       setOpen(false);
-      setClassData({ name: "", startDate: "", endDate: "", teacherId: "", scheduleId: "" });
+      setClassData({
+        name: "",
+        level: "",
+        startDate: "",
+        endDate: "",
+        teacherId: "",
+        scheduleId: "",
+      });
       setEditMode(false);
     } catch (err) {
       alert(editMode ? "Lỗi khi chỉnh sửa lớp học!" : "Lỗi khi tạo lớp học!");
@@ -321,6 +348,31 @@ function Classes() {
             onChange={(e) => setClassData({ ...classData, name: e.target.value })}
           />
           <TextField
+            select
+            label="level"
+            fullWidth
+            sx={{
+              "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+                {
+                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                  display: "flex",
+                  alignItems: "center",
+                },
+            }}
+            margin="normal"
+            value={classData.level}
+            onChange={(e) => {
+              setClassData({ ...classData, level: e.target.value });
+              // console.log(e.target.value, +e.target.value);
+            }}
+          >
+            {levels.map((d, index) => (
+              <MenuItem key={index} value={d}>
+                {d}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
             fullWidth
             margin="normal"
             type="date"
@@ -350,8 +402,8 @@ function Classes() {
               },
             }}
             margin="normal"
-            value={classData.teacherId}
-            onChange={(e) => setClassData({ ...classData, teacherId: e.target.value })}
+            value={classData.teacherID}
+            onChange={(e) => setClassData({ ...classData, teacherID: e.target.value })}
           >
             {teachers.map((teacher) => (
               <MenuItem key={teacher.id} value={teacher.id}>

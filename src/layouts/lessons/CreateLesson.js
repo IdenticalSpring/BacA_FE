@@ -2,11 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, TextField, Button, Grid, MenuItem } from "@mui/material";
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
-import studentService from "services/studentService";
+import lessonService from "services/lessonService";
 const levels = [
   "Level Pre-1",
   "Level 1",
@@ -17,22 +16,16 @@ const levels = [
   "Pre-KET",
   "level-PET",
 ];
-function CreateStudent() {
+function CreateLesson() {
   const navigate = useNavigate();
-  const [studentData, setStudentData] = useState({
-    name: "",
-    level: "",
-    startDate: "",
-    endDate: "",
-    note: "",
-  });
+  const [lessonData, setLessonData] = useState({ name: "", level: "", link: "", description: "" });
 
   const handleSave = async () => {
     try {
-      await studentService.createStudent(studentData);
-      navigate("/students"); // Quay lại danh sách sinh viên
+      await lessonService.createLesson(lessonData);
+      navigate("/lessons");
     } catch (err) {
-      alert("Create student failed");
+      alert("Lỗi khi tạo lịch học!");
     }
   };
 
@@ -54,11 +47,11 @@ function CreateStudent() {
             >
               {" "}
               <TextField
-                label="Name"
+                label="Lesson Name"
                 fullWidth
                 margin="normal"
-                value={studentData.name}
-                onChange={(e) => setStudentData({ ...studentData, name: e.target.value })}
+                value={lessonData.name}
+                onChange={(e) => setLessonData({ ...lessonData, name: e.target.value })}
               />
               <TextField
                 select
@@ -73,9 +66,9 @@ function CreateStudent() {
                     },
                 }}
                 margin="normal"
-                value={studentData.level}
+                value={lessonData.level}
                 onChange={(e) => {
-                  setStudentData({ ...studentData, level: e.target.value });
+                  setLessonData({ ...lessonData, level: e.target.value });
                   // console.log(e.target.value, +e.target.value);
                 }}
               >
@@ -86,32 +79,21 @@ function CreateStudent() {
                 ))}
               </TextField>
               <TextField
+                label="Lesson Link"
                 fullWidth
                 margin="normal"
-                type="date"
-                label="Start Date"
-                InputLabelProps={{ shrink: true }}
-                value={studentData.startDate}
-                onChange={(e) => setStudentData({ ...studentData, startDate: e.target.value })}
+                value={lessonData.link}
+                onChange={(e) => setLessonData({ ...lessonData, link: e.target.value })}
               />
               <TextField
+                label="Lesson Description"
                 fullWidth
                 margin="normal"
-                type="date"
-                label="End Date"
-                InputLabelProps={{ shrink: true }}
-                value={studentData.endDate}
-                onChange={(e) => setStudentData({ ...studentData, endDate: e.target.value })}
-              />
-              <TextField
-                label="Note"
-                fullWidth
-                margin="normal"
-                value={studentData.note}
-                onChange={(e) => setStudentData({ ...studentData, note: e.target.value })}
+                value={lessonData.description}
+                onChange={(e) => setLessonData({ ...lessonData, description: e.target.value })}
               />
               <MDBox display="flex" justifyContent="space-between" mt={3}>
-                <Button variant="text" onClick={() => navigate("/students")}>
+                <Button variant="text" onClick={() => navigate("/lessons")}>
                   Cancel
                 </Button>
                 <Button variant="contained" style={{ color: "white" }} onClick={handleSave}>
@@ -127,4 +109,4 @@ function CreateStudent() {
   );
 }
 
-export default CreateStudent;
+export default CreateLesson;
