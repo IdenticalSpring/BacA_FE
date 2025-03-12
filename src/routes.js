@@ -72,7 +72,7 @@ const routes = [
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Dashboard />
       </PrivateRoute>
     ),
@@ -84,7 +84,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/classes",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Classes />
       </PrivateRoute>
     ),
@@ -96,7 +96,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/schedules",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Schedules />
       </PrivateRoute>
     ),
@@ -132,7 +132,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/teachers",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Teachers />
       </PrivateRoute>
     ),
@@ -144,7 +144,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/students",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Students />
       </PrivateRoute>
     ),
@@ -156,7 +156,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/users",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Users />
       </PrivateRoute>
     ),
@@ -168,7 +168,7 @@ const routes = [
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Profile />
       </PrivateRoute>
     ),
@@ -187,7 +187,7 @@ const routes = [
     icon: <Icon fontSize="small">login</Icon>,
     route: "/studentpage",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin", "student"]}>
         <StudentPage />
       </PrivateRoute>
     ),
@@ -205,7 +205,7 @@ const routes = [
     icon: <Icon fontSize="small">login</Icon>,
     route: "/teacherpage",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
         <TeacherPage />
       </PrivateRoute>
     ),
@@ -215,7 +215,7 @@ const routes = [
     route: "/classes/create-class",
     key: "create-class",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <CreateClass />
       </PrivateRoute>
     ),
@@ -225,7 +225,7 @@ const routes = [
     route: "/schedules/create-schedule",
     key: "create-schedule",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <CreateSchedule />
       </PrivateRoute>
     ),
@@ -245,7 +245,7 @@ const routes = [
     route: "/students/create-student",
     key: "create-student",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <CreateStudent />
       </PrivateRoute>
     ),
@@ -255,7 +255,7 @@ const routes = [
     route: "/teachers/create-teacher",
     key: "create-teacher",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <CreateTeacher />
       </PrivateRoute>
     ),
