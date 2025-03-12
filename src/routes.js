@@ -56,11 +56,10 @@ import Icon from "@mui/material/Icon";
 import CreateSchedule from "layouts/schedules/CreateSchedule";
 import CreateStudent from "layouts/students/CreateStudent";
 import CreateTeacher from "layouts/teachers/CreateTeacher";
-import StudentPortal from "pages/students/portalStudent";
 import StudentPage from "pages/students/studentPage";
 import TeacherPage from "pages/teachers/teacherPage";
 import PrivateRoute from "privateRoute";
-import TeacherPortal from "pages/teachers/portalTeacher";
+import AuthPortal from "pages/loginAuth/loginAuth";
 
 const routes = [
   {
@@ -156,32 +155,33 @@ const routes = [
     component: <SignIn />,
   },
   {
-    name: "Student Portal",
-    key: "studentportal",
-    icon: <Icon fontSize="small">login</Icon>,
-    route: "/studentportal",
-    component: <StudentPortal />,
-  },
-  {
     name: "Student Page",
     key: "studentPage",
     icon: <Icon fontSize="small">login</Icon>,
     route: "/studentpage",
-    component: <StudentPage />,
+    component: (
+      <PrivateRoute>
+        <StudentPage />
+      </PrivateRoute>
+    ),
   },
   {
-    name: "Teacher Portal",
-    key: "teacherPortal",
+    name: "Auth Portal",
+    key: "authPortal",
     icon: <Icon fontSize="small">login</Icon>,
-    route: "/teacherportal",
-    component: <TeacherPortal />,
+    route: "/auth/sign-in",
+    component: <AuthPortal />,
   },
   {
     name: "Teacher Page",
     key: "teacherPage",
     icon: <Icon fontSize="small">login</Icon>,
     route: "/teacherpage",
-    component: <TeacherPage />,
+    component: (
+      <PrivateRoute>
+        <TeacherPage />
+      </PrivateRoute>
+    ),
   },
   {
     name: "Create Class",
