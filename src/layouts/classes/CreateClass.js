@@ -40,8 +40,8 @@ function CreateClass() {
   const [classData, setClassData] = useState({
     name: "",
     level: "",
-    startDate: "",
-    endDate: "",
+    // startDate: "",
+    // endDate: "",
     teacherID: "",
     scheduleId: "",
   });
@@ -97,8 +97,8 @@ function CreateClass() {
       const payload = {
         name: classData.name,
         level: classData.level,
-        startDate: classData.startDate,
-        endDate: classData.endDate,
+        // startDate: classData.startDate,
+        // endDate: classData.endDate,
         teacherID: classData.teacherID,
       };
 
@@ -106,6 +106,8 @@ function CreateClass() {
       const dataForLessonBySchedule = {
         lessons: getDatesForSelectedSchedules(selectedSchedules, classEntity),
       };
+      console.log(dataForLessonBySchedule);
+
       await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
       navigate("/classes"); // Quay lại trang danh sách lớp
     } catch (err) {
@@ -138,12 +140,13 @@ function CreateClass() {
   };
   const getDatesForSelectedSchedules = (selectedSchedules, classEntity) => {
     const resultDates = [];
-    let currentDate = new Date(classEntity.startDate);
-    const end = new Date(classEntity.endDate);
+    let currentDate = new Date(); // Ngày bắt đầu từ hôm nay
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 6); // 6 tháng sau
     // console.log(
     //   `📅 Ngày hiện tại: ${currentDate.toISOString().split("T")[0]} (Thứ: ${currentDate.getDay()})`
     // );
-    while (currentDate <= end) {
+    while (currentDate <= endDate) {
       selectedSchedules.forEach((schedule) => {
         if (currentDate.getDay() === daysOfWeek.indexOf(schedule.day) - 1) {
           // console.log(
@@ -225,7 +228,7 @@ function CreateClass() {
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
+              {/* <TextField
                 fullWidth
                 margin="normal"
                 type="date"
@@ -242,7 +245,7 @@ function CreateClass() {
                 InputLabelProps={{ shrink: true }}
                 value={classData.endDate}
                 onChange={(e) => setClassData({ ...classData, endDate: e.target.value })}
-              />
+              /> */}
               <TextField
                 select
                 label="Teacher"

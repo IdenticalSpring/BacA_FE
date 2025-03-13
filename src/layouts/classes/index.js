@@ -46,8 +46,8 @@ function Classes() {
   const [columns] = useState([
     { Header: "Class Name", accessor: "name", width: "20%" },
     { Header: "Level", accessor: "level", width: "10%" },
-    { Header: "Start Date", accessor: "startDate", width: "20%" },
-    { Header: "End Date", accessor: "endDate", width: "20%" },
+    // { Header: "Start Date", accessor: "startDate", width: "20%" },
+    // { Header: "End Date", accessor: "endDate", width: "20%" },
     { Header: "Teacher", accessor: "teacher", width: "20%" },
     // { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
@@ -62,9 +62,10 @@ function Classes() {
   const [classData, setClassData] = useState({
     className: "",
     level: "",
-    startTime: "",
-    endTime: "",
+    // startTime: "",
+    // endTime: "",
     teacherID: "",
+    scheduleId: "",
   });
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedSchedules, setSelectedSchedules] = useState([]);
@@ -102,8 +103,8 @@ function Classes() {
         id: cls.id,
         name: cls.name,
         level: cls.level,
-        startDate: cls.startDate,
-        endDate: cls.endDate,
+        // startDate: cls.startDate,
+        // endDate: cls.endDate,
         teacher: cls.teacher?.name || "N/A",
         // actions: (
         //   <>
@@ -147,8 +148,8 @@ function Classes() {
     setClassData({
       name: cls.name,
       level: cls.level,
-      startDate: cls.startDate,
-      endDate: cls.endDate,
+      // startDate: cls.startDate,
+      // endDate: cls.endDate,
       teacherID: cls.teacher?.id || "",
       scheduleId: cls.schedule?.id || "",
     });
@@ -229,8 +230,8 @@ function Classes() {
       const payload = {
         name: classData.name,
         level: classData.level,
-        startDate: classData.startDate,
-        endDate: classData.endDate,
+        // startDate: classData.startDate,
+        // endDate: classData.endDate,
         teacherID: classData.teacherID, // Chỉ gửi teacherId
         scheduleId: classData.scheduleId, // Chỉ gửi scheduleId
       };
@@ -246,8 +247,8 @@ function Classes() {
             id: createdClass.id,
             name: createdClass.name,
             level: createdClass.level,
-            startDate: createdClass.startDate,
-            endDate: createdClass.endDate,
+            // startDate: createdClass.startDate,
+            // endDate: createdClass.endDate,
             teacher: teachers.find((t) => t.id === createdClass.teacherID),
             date: schedules.find((s) => s.id === createdClass.scheduleId),
             // actions: (
@@ -268,8 +269,8 @@ function Classes() {
       setClassData({
         name: "",
         level: "",
-        startDate: "",
-        endDate: "",
+        // startDate: "",
+        // endDate: "",
         teacherId: "",
         scheduleId: "",
       });
@@ -372,7 +373,7 @@ function Classes() {
               </MenuItem>
             ))}
           </TextField>
-          <TextField
+          {/* <TextField
             fullWidth
             margin="normal"
             type="date"
@@ -389,7 +390,7 @@ function Classes() {
             InputLabelProps={{ shrink: true }}
             value={classData.endDate}
             onChange={(e) => setClassData({ ...classData, endDate: e.target.value })}
-          />
+          /> */}
           <TextField
             select
             label="Teacher"
