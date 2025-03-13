@@ -10,6 +10,14 @@ const lessonService = {
       throw error.response?.data?.message || "Error fetching lessons list";
     }
   },
+  getLessonByLevel: async (level) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/lessons/level/${level}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching lessons list";
+    }
+  },
   createLesson: async (lessonData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/lessons`, lessonData);
