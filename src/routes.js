@@ -108,7 +108,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/lessons",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <Lessons />
       </PrivateRoute>
     ),
@@ -120,7 +120,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/lesson_by_schedules",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <LessonBySchedules />
       </PrivateRoute>
     ),
@@ -235,7 +235,7 @@ const routes = [
     route: "/lessons/create-lesson",
     key: "create-lesson",
     component: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={["admin"]}>
         <CreateLesson />
       </PrivateRoute>
     ),
