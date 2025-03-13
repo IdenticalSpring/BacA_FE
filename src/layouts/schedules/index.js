@@ -26,7 +26,7 @@ function Schedules() {
     { Header: "Day Of Week", accessor: "dayOfWeek", width: "30%" },
     { Header: "Start Time", accessor: "startTime", width: "30%" },
     { Header: "End Time", accessor: "endTime", width: "30%" },
-    { Header: "Actions", accessor: "actions", width: "20%" },
+    // { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const daysOfWeekArr = [
     "Choose day of week",
@@ -58,16 +58,16 @@ function Schedules() {
         dayOfWeek: daysOfWeekArr[schedule.dayOfWeek],
         startTime: schedule.startTime,
         endTime: schedule.endTime,
-        actions: (
-          <>
-            <IconButton color="primary" onClick={() => handleEdit(schedule)}>
-              <EditIcon />
-            </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(schedule.id)}>
-              <DeleteIcon />
-            </IconButton>
-          </>
-        ),
+        // actions: (
+        //   <>
+        //     <IconButton color="primary" onClick={() => handleEdit(schedule)}>
+        //       <EditIcon />
+        //     </IconButton>
+        //     <IconButton color="secondary" onClick={() => handleDelete(schedule.id)}>
+        //       <DeleteIcon />
+        //     </IconButton>
+        //   </>
+        // ),
       }));
       setRows(formattedRows);
     } catch (err) {
@@ -110,19 +110,19 @@ function Schedules() {
                   ...row,
                   ...scheduleData,
                   dayOfWeek: daysOfWeekArr[+scheduleData.dayOfWeek],
-                  actions: (
-                    <>
-                      <IconButton color="primary" onClick={() => handleEdit(selectedSchedule)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="secondary"
-                        onClick={() => handleDelete(selectedSchedule.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </>
-                  ),
+                  // actions: (
+                  //   <>
+                  //     <IconButton color="primary" onClick={() => handleEdit(selectedSchedule)}>
+                  //       <EditIcon />
+                  //     </IconButton>
+                  //     <IconButton
+                  //       color="secondary"
+                  //       onClick={() => handleDelete(selectedSchedule.id)}
+                  //     >
+                  //       <DeleteIcon />
+                  //     </IconButton>
+                  //   </>
+                  // ),
                 }
               : row
           )
@@ -136,16 +136,16 @@ function Schedules() {
             dayOfWeek: daysOfWeekArr[createdSchedule.dayOfWeek],
             startTime: createdSchedule.startTime,
             endTime: createdSchedule.endTime,
-            actions: (
-              <>
-                <IconButton color="primary" onClick={() => handleEdit(createdSchedule)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdSchedule.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </>
-            ),
+            // actions: (
+            //   <>
+            //     <IconButton color="primary" onClick={() => handleEdit(createdSchedule)}>
+            //       <EditIcon />
+            //     </IconButton>
+            //     <IconButton color="secondary" onClick={() => handleDelete(createdSchedule.id)}>
+            //       <DeleteIcon />
+            //     </IconButton>
+            //   </>
+            // ),
           },
         ]);
       }

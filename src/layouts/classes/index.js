@@ -49,7 +49,7 @@ function Classes() {
     { Header: "Start Date", accessor: "startDate", width: "20%" },
     { Header: "End Date", accessor: "endDate", width: "20%" },
     { Header: "Teacher", accessor: "teacher", width: "20%" },
-    { Header: "Actions", accessor: "actions", width: "20%" },
+    // { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,16 +105,16 @@ function Classes() {
         startDate: cls.startDate,
         endDate: cls.endDate,
         teacher: cls.teacher?.name || "N/A",
-        actions: (
-          <>
-            <IconButton color="primary" onClick={() => handleEdit(cls)}>
-              <EditIcon />
-            </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(cls.id)}>
-              <DeleteIcon />
-            </IconButton>
-          </>
-        ),
+        // actions: (
+        //   <>
+        //     <IconButton color="primary" onClick={() => handleEdit(cls)}>
+        //       <EditIcon />
+        //     </IconButton>
+        //     <IconButton color="secondary" onClick={() => handleDelete(cls.id)}>
+        //       <DeleteIcon />
+        //     </IconButton>
+        //   </>
+        // ),
       }));
       setRows(formattedRows);
     } catch (err) {
@@ -250,16 +250,16 @@ function Classes() {
             endDate: createdClass.endDate,
             teacher: teachers.find((t) => t.id === createdClass.teacherID),
             date: schedules.find((s) => s.id === createdClass.scheduleId),
-            actions: (
-              <>
-                <IconButton color="primary" onClick={() => handleEdit(createdClass)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdClass.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </>
-            ),
+            // actions: (
+            //   <>
+            //     <IconButton color="primary" onClick={() => handleEdit(createdClass)}>
+            //       <EditIcon />
+            //     </IconButton>
+            //     <IconButton color="secondary" onClick={() => handleDelete(createdClass.id)}>
+            //       <DeleteIcon />
+            //     </IconButton>
+            //   </>
+            // ),
           },
         ]);
       }

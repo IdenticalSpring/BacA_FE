@@ -205,6 +205,13 @@ function CreateClass() {
                       alignItems: "center",
                     },
                 }}
+                InputProps={{
+                  sx: {
+                    minHeight: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                }}
                 margin="normal"
                 value={classData.level}
                 onChange={(e) => {
