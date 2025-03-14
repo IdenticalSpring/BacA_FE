@@ -57,12 +57,13 @@ import CreateSchedule from "layouts/schedules/CreateSchedule";
 import CreateStudent from "layouts/students/CreateStudent";
 import CreateTeacher from "layouts/teachers/CreateTeacher";
 import StudentPage from "pages/students/studentPage";
-import TeacherPage from "pages/teachers/teacherPage";
+import TeacherDashboard from "pages/teachers/teacherDashboard";
 import PrivateRoute from "privateRoute";
 import AuthPortal from "pages/loginAuth/loginAuth";
 import CreateLesson from "layouts/lessons/CreateLesson";
 import Lessons from "layouts/lessons";
 import LessonBySchedules from "layouts/lesson_by_schedules";
+import TeacherPage from "pages/teachers/teacherPage";
 
 const routes = [
   {
@@ -198,6 +199,17 @@ const routes = [
     icon: <Icon fontSize="small">login</Icon>,
     route: "/auth/sign-in",
     component: <AuthPortal />,
+  },
+  {
+    name: "Teacher Dashboard",
+    key: "teacherDashboard",
+    icon: <Icon fontSize="small">login</Icon>,
+    route: "/teacherdashboard",
+    component: (
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
+        <TeacherDashboard />
+      </PrivateRoute>
+    ),
   },
   {
     name: "Teacher Page",

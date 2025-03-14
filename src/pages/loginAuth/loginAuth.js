@@ -197,7 +197,7 @@ function AuthPortal() {
       if (tabIndex === 0) {
         // Login cho giáo viên
         data = await authService.loginTeacher(formData.username, formData.password);
-        navigate("/teacherpage");
+        navigate("/teacherdashboard");
       } else {
         // Login cho học sinh
         data = await authService.loginStudent(formData.username, formData.password);

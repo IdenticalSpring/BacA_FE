@@ -12,6 +12,15 @@ const studentService = {
     }
   },
 
+  getAllStudentsbyClass: async (classID) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/students/class/${classID}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching student list";
+    }
+  },
+
   createStudent: async (studentData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/students`, studentData);
