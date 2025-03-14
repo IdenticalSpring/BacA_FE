@@ -17,6 +17,8 @@ import {
   Button,
   FormControl,
   TextField,
+  Grid,
+  CardContent,
 } from "@mui/material";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox"; // Import Toolbox
@@ -29,6 +31,9 @@ import MDTypography from "components/MDTypography";
 import LessonBySchedules from "layouts/lesson_by_schedules";
 import lessonService from "services/lessonService";
 import lessonByScheduleService from "services/lessonByScheduleService";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import axios from "axios";
 
 const colors = {
   primary: "#FFC107",
@@ -59,6 +64,18 @@ const TeacherPage = () => {
   const userId = jwtDecode(sessionStorage.getItem("token"));
   const teacherId = userId.userId;
   const userName = userId.username || "Teacher";
+
+  const [openHomeworkModal, setOpenHomeworkModal] = useState(false);
+
+  const handleOpenHomeworkModal = () => setOpenHomeworkModal(true);
+  const handleCloseHomeworkModal = () => setOpenHomeworkModal(false);
+
+  const [homeworkTitle, setHomeworkTitle] = useState("");
+  const [homeworkDescription, setHomeworkDescription] = useState("");
+  const [textToSpeech, setTextToSpeech] = useState("");
+  const [youtubeLink, setYoutubeLink] = useState("");
+  const [loadingTTS, setLoadingTTS] = useState(false);
+  const [mp3Url, setMp3Url] = useState(""); // Lưu URL của file MP3
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -125,6 +142,34 @@ const TeacherPage = () => {
     setSelectedClass(classId);
   };
 
+  const handleConvertToSpeech = async () => {
+    if (!textToSpeech) return;
+    setLoadingTTS(true);
+
+    try {
+      const response = await axios.post(
+        "https://viettel-ai-api-url.com/tts", // Thay bằng API thật của Viettel
+        {
+          text: textToSpeech,
+          voice: "banmai", // Chọn giọng đọc
+          speed: 1.0,
+          format: "mp3",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "YOUR_VIETTEL_AI_KEY", // Thay bằng key của bạn
+          },
+        }
+      );
+
+      setMp3Url(response.data.audioUrl);
+    } catch (error) {
+      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+    }
+    setLoadingTTS(false);
+  };
+
   // Các hàm xử lý khi bấm nút trong Toolbox
   const handleAddStudent = () => console.log("Thêm học sinh");
   const handleEditClass = () => console.log("Sửa thông tin lớp");
@@ -188,40 +233,59 @@ const TeacherPage = () => {
             </Menu>
           </Toolbar>
         </AppBar>
+        <Grid
+          container
+          spacing={2} // Giảm khoảng cách giữa các items
+          sx={{ mt: 2, maxWidth: "90%", mx: "auto" }} // Giới hạn độ rộng của danh sách
+        >
+          {students.length > 0 ? (
+            students.map((student) => (
+              <Grid item xs={12} sm={6} md={3} lg={2.5} key={student.id}>
+                {" "}
+                {/* Thu nhỏ item */}
+                <Card
+                  sx={{
+                    p: 1.5,
+                    textAlign: "center",
+                    boxShadow: "0px 3px 8px rgba(0, 0, 0, 0.1)",
+                    borderRadius: 2,
+                    transition: "0.2s",
+                    "&:hover": {
+                      transform: "scale(1.03)",
+                      boxShadow: "0px 5px 12px rgba(0, 0, 0, 0.15)",
+                    },
+                  }}
+                >
+                  {/* Avatar */}
+                  <Avatar
+                    sx={{ bgcolor: colors.primary, width: 48, height: 48, mx: "auto", mb: 1.5 }}
+                  >
+                    {student.name.charAt(0)}
+                  </Avatar>
 
-        {/* DataTable */}
-        <Container sx={{ py: 6 }}>
-          {!selectedClass ? (
-            <Typography variant="h5" align="center" sx={{ mt: 5 }}>
-              Please select a class
-            </Typography>
+                  {/* Thông tin học sinh */}
+                  <CardContent sx={{ p: 1 }}>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {student.name}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Level: {student.level || "N/A"}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Note: {student.note || "N/A"}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
           ) : (
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                borderRadius="lg"
-                sx={{ backgroundColor: colors.primary }}
-              >
-                <MDTypography variant="h6" color="black">
-                  List of students
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3} px={2}>
-                <DataTable
-                  table={{ columns, rows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
-              </MDBox>
-            </Card>
+            <Grid item xs={12}>
+              <Typography align="center" sx={{ fontStyle: "italic", color: "gray", mt: 3 }}>
+                Choose your class
+              </Typography>
+            </Grid>
           )}
-        </Container>
+        </Grid>
       </Box>
 
       {/* Chỉ hiển thị Toolbox nếu đã chọn lớp */}
@@ -239,13 +303,70 @@ const TeacherPage = () => {
         >
           <Toolbox
             onManageLessons={handleOpenDialog}
-            onEditClass={handleEditClass}
+            Homework={handleOpenHomeworkModal}
             onDeleteClass={handleDeleteClass}
             onViewReport={handleViewReport}
           />
         </Box>
       )}
+      <Dialog open={openHomeworkModal} onClose={handleCloseHomeworkModal} maxWidth="md" fullWidth>
+        <DialogTitle>Homework</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Title"
+            fullWidth
+            value={homeworkTitle}
+            onChange={(e) => setHomeworkTitle(e.target.value)}
+            sx={{ mb: 2 }}
+          />
 
+          <Typography variant="subtitle1">Description</Typography>
+          <ReactQuill
+            theme="snow"
+            value={homeworkDescription}
+            onChange={setHomeworkDescription}
+            style={{ height: "150px", marginBottom: "20px" }}
+          />
+
+          <TextField
+            label="Enter text to convert to MP3"
+            fullWidth
+            multiline
+            rows={2}
+            value={textToSpeech}
+            onChange={(e) => setTextToSpeech(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleConvertToSpeech}
+            disabled={loadingTTS}
+          >
+            {loadingTTS ? "Converting..." : "Convert to Speech"}
+          </Button>
+
+          {mp3Url && (
+            <audio controls>
+              <source src={mp3Url} type="audio/mp3" />
+              Your browser does not support the audio element.
+            </audio>
+          )}
+
+          <TextField
+            label="YouTube Link"
+            fullWidth
+            value={youtubeLink}
+            onChange={(e) => setYoutubeLink(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseHomeworkModal} color="secondary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>Lesson By Schedule</DialogTitle>
         <DialogContent>
