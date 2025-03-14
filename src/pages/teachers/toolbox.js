@@ -7,7 +7,7 @@ const colors = {
 };
 
 // eslint-disable-next-line react/prop-types
-const Toolbox = ({ onAddStudent, onEditClass, onDeleteClass, onViewReport }) => {
+const Toolbox = ({ onManageLessons, onEditClass, onDeleteClass, onViewReport }) => {
   return (
     <Box
       sx={{
@@ -26,9 +26,9 @@ const Toolbox = ({ onAddStudent, onEditClass, onDeleteClass, onViewReport }) => 
           color: colors.secondary,
           "&:hover": { backgroundColor: colors.hover },
         }}
-        onClick={onAddStudent}
+        onClick={onManageLessons}
       >
-        Assignment
+        Lesson
       </Button>
       <Button
         variant="contained"
