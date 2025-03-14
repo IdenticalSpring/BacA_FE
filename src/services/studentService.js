@@ -11,7 +11,14 @@ const studentService = {
       throw error.response?.data?.message || "Error fetching student list";
     }
   },
-
+  getStudentById: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/students/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching student";
+    }
+  },
   getAllStudentsbyClass: async (classID) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/students/class/${classID}`);
