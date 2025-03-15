@@ -20,9 +20,9 @@ import { useNavigate } from "react-router-dom";
 
 // Màu sắc
 const colors = {
-  primary: "#FFC107", // Màu vàng chính
-  secondary: "#121212", // Màu nền đen
-  hover: "#FFD54F", // Màu vàng sáng khi hover
+  primary: "rgb(16, 168, 16)", // xanh lá đậm
+  secondary: "rgb(243, 243, 243)", // Màu nền đen
+  hover: "#rgb(213, 213, 208)", // Màu xanh lá sáng khi hover
 };
 
 const TeacherDashboard = () => {
@@ -84,7 +84,7 @@ const TeacherDashboard = () => {
                 backgroundColor: colors.secondary,
                 color: "white",
                 borderRadius: 2,
-                boxShadow: "0px 5px 15px rgba(255, 255, 255, 0.1)",
+                boxShadow: "0px 5px 15px rgba(212, 47, 47, 0.1)",
               },
             }}
           >
@@ -164,7 +164,7 @@ const TeacherDashboard = () => {
       </Container>
 
       {/* Call to Action */}
-      <Box sx={{ textAlign: "center", py: 6, backgroundColor: colors.secondary }}>
+      {/* <Box sx={{ textAlign: "center", py: 6, backgroundColor: colors.secondary }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom color="white">
           Ready to get started?
         </Typography>
@@ -180,7 +180,7 @@ const TeacherDashboard = () => {
         >
           Sign Up Now
         </Button>
-      </Box>
+      </Box> */}
     </>
   );
 };
