@@ -301,7 +301,7 @@ function AuthPortal() {
                 {loading ? "Signing in..." : "Sign In"}
               </MDButton>
             </MDBox>
-            <MDBox mt={3} mb={1} textAlign="center">
+            {/* <MDBox mt={3} mb={1} textAlign="center">
               <MDTypography variant="button" color="text">
                 Are you administrator?{" "}
                 <MDTypography
@@ -315,7 +315,7 @@ function AuthPortal() {
                   Here
                 </MDTypography>
               </MDTypography>
-            </MDBox>
+            </MDBox> */}
           </MDBox>
         </MDBox>
       </Card>

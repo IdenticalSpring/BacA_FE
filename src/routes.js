@@ -47,7 +47,7 @@ import Billing from "layouts/billing";
 import RTL from "layouts/rtl";
 import Notifications from "layouts/notifications";
 import Profile from "layouts/profile";
-import SignIn from "layouts/authentication/sign-in";
+import SignIn from "layouts/authentication/admin-sign-in";
 import SignUp from "layouts/authentication/sign-up";
 import CreateClass from "layouts/classes/CreateClass";
 
