@@ -10,12 +10,12 @@ import studentService from "services/studentService";
 const levels = [
   "Level Pre-1",
   "Level 1",
-  "Starters",
+  "Level Starters",
+  "Level Movers",
+  "Level Flyers",
+  "Level Pre-KET",
   "Level-KET",
-  "Movers",
-  "Flyers",
-  "Pre-KET",
-  "level-PET",
+  "Level-PET",
 ];
 function CreateStudent() {
   const navigate = useNavigate();

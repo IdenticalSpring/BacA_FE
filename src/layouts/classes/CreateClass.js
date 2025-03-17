@@ -28,12 +28,12 @@ import lessonByScheduleService from "services/lessonByScheduleService";
 const levels = [
   "Level Pre-1",
   "Level 1",
-  "Starters",
+  "Level Starters",
+  "Level Movers",
+  "Level Flyers",
+  "Level Pre-KET",
   "Level-KET",
-  "Movers",
-  "Flyers",
-  "Pre-KET",
-  "level-PET",
+  "Level-PET",
 ];
 function CreateClass() {
   const navigate = useNavigate();
@@ -198,7 +198,7 @@ function CreateClass() {
               />
               <TextField
                 select
-                label="level"
+                label="Level"
                 fullWidth
                 sx={{
                   "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
