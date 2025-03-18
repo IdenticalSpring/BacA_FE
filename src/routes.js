@@ -64,8 +64,17 @@ import CreateLesson from "layouts/lessons/CreateLesson";
 import Lessons from "layouts/lessons";
 import LessonBySchedules from "layouts/lesson_by_schedules";
 import TeacherPage from "pages/teachers/teacherPage";
+import Homepage from "pages/Homepage";
 
 const routes = [
+  {
+    type: "collapse",
+    name: "Homepage",
+    key: "homepage",
+    icon: <Icon fontSize="small">homepage</Icon>,
+    route: "/",
+    component: <Homepage />,
+  },
   {
     type: "collapse",
     name: "Dashboard",

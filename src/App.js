@@ -203,7 +203,7 @@ export default function App() {
       {layout === "vr" && !hideSidenavPaths.includes(location.pathname) && <Configurator />}
       <Routes>
         {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="auth/sign-in" />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </ThemeProvider>
   );
