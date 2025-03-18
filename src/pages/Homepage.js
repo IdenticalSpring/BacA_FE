@@ -21,6 +21,7 @@ import {
   ProfileOutlined,
   StarOutlined,
   LikeOutlined,
+  UpOutlined,
 } from "@ant-design/icons";
 import StatCard from "components/LandingPageComponent/StatCard";
 import FeatureCard from "components/LandingPageComponent/FeatureCard";
@@ -28,6 +29,7 @@ import StepCard from "components/LandingPageComponent/StepCard";
 import TestimonialCard from "components/LandingPageComponent/TestimonialCard";
 import PricingCard from "components/LandingPageComponent/PricingCard";
 import FaqItem from "components/LandingPageComponent/FaqItem";
+import { Button } from "antd";
 export default function Homepage() {
   const [visible, setVisible] = useState({
     hero: false,
@@ -110,7 +112,9 @@ export default function Homepage() {
     darkGreen: "#224922",
   };
   // console.log(visible);
-
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   return (
     <div
       style={{
@@ -1186,6 +1190,36 @@ export default function Homepage() {
           </p>
         </div>
       </footer>
+      <div style={{ position: "fixed", bottom: "20px", right: "20px" }}>
+        <Button
+          type="primary"
+          shape="circle"
+          icon={<UpOutlined />}
+          onClick={scrollToTop}
+          style={{
+            width: "50px",
+            height: "50px",
+            backgroundColor: "#52c41a",
+            borderColor: "#52c41a",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+            opacity: window.scrollY + window.innerHeight > 1000 ? 1 : 0,
+            visibility: window.scrollY + window.innerHeight > 1000 ? "visible" : "hidden",
+            transition: " all 0.3s ease",
+            animation: window.scrollY + window.innerHeight > 1000 ? "bounce 1s infinite" : "none",
+          }}
+        />
+        <style>
+          {`
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+        `}
+        </style>
+      </div>
     </div>
   );
 }
