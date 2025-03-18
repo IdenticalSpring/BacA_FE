@@ -17,6 +17,10 @@ import {
   LinkedinOutlined,
   CloseOutlined,
   MenuOutlined,
+  UserOutlined,
+  ProfileOutlined,
+  StarOutlined,
+  LikeOutlined,
 } from "@ant-design/icons";
 import StatCard from "components/LandingPageComponent/StatCard";
 import FeatureCard from "components/LandingPageComponent/FeatureCard";
@@ -71,21 +75,21 @@ export default function Homepage() {
       const scrollPosition = window.scrollY + window.innerHeight;
       const width = window.innerWidth;
       if (width < 768) {
-        if (scrollPosition > 2350) setVisible((prev) => ({ ...prev, features: true }));
-        if (scrollPosition > 1600) setVisible((prev) => ({ ...prev, statistics: true }));
-        if (scrollPosition > 4500) setVisible((prev) => ({ ...prev, howItWorks: true }));
-        if (scrollPosition > 6000) setVisible((prev) => ({ ...prev, testimonials: true }));
-        if (scrollPosition > 7200) setVisible((prev) => ({ ...prev, pricing: true }));
-        if (scrollPosition > 9200) setVisible((prev) => ({ ...prev, faq: true }));
-        if (scrollPosition > 10100) setVisible((prev) => ({ ...prev, cta: true }));
+        if (scrollPosition > 2250) setVisible((prev) => ({ ...prev, features: true }));
+        if (scrollPosition > 1500) setVisible((prev) => ({ ...prev, statistics: true }));
+        if (scrollPosition > 4400) setVisible((prev) => ({ ...prev, howItWorks: true }));
+        if (scrollPosition > 5900) setVisible((prev) => ({ ...prev, testimonials: true }));
+        if (scrollPosition > 7100) setVisible((prev) => ({ ...prev, pricing: true }));
+        if (scrollPosition > 9100) setVisible((prev) => ({ ...prev, faq: true }));
+        if (scrollPosition > 10000) setVisible((prev) => ({ ...prev, cta: true }));
       } else {
-        if (scrollPosition > 1100) setVisible((prev) => ({ ...prev, features: true }));
-        if (scrollPosition > 890) setVisible((prev) => ({ ...prev, statistics: true }));
-        if (scrollPosition > 2100) setVisible((prev) => ({ ...prev, howItWorks: true }));
-        if (scrollPosition > 3300) setVisible((prev) => ({ ...prev, testimonials: true }));
-        if (scrollPosition > 4000) setVisible((prev) => ({ ...prev, pricing: true }));
-        if (scrollPosition > 4700) setVisible((prev) => ({ ...prev, faq: true }));
-        if (scrollPosition > 5500) setVisible((prev) => ({ ...prev, cta: true }));
+        if (scrollPosition > 1000) setVisible((prev) => ({ ...prev, features: true }));
+        if (scrollPosition > 790) setVisible((prev) => ({ ...prev, statistics: true }));
+        if (scrollPosition > 2000) setVisible((prev) => ({ ...prev, howItWorks: true }));
+        if (scrollPosition > 3200) setVisible((prev) => ({ ...prev, testimonials: true }));
+        if (scrollPosition > 3900) setVisible((prev) => ({ ...prev, pricing: true }));
+        if (scrollPosition > 4600) setVisible((prev) => ({ ...prev, faq: true }));
+        if (scrollPosition > 5400) setVisible((prev) => ({ ...prev, cta: true }));
       }
       console.log(scrollPosition);
     };
@@ -103,6 +107,7 @@ export default function Homepage() {
     darkGray: "#333333",
     accent: "#FFD166",
     lightAccent: "#FFEDC2",
+    darkGreen: "#224922",
   };
   // console.log(visible);
 
@@ -167,12 +172,12 @@ export default function Homepage() {
                     href="#home"
                     style={{ color: colors.deepGreen, textDecoration: "none", fontWeight: "bold" }}
                   >
-                    Home
+                    Trang chủ
                   </a>
                 </li>
                 <li>
                   <a href="#features" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Features
+                    Tính năng
                   </a>
                 </li>
                 <li>
@@ -180,12 +185,12 @@ export default function Homepage() {
                     href="#testimonials"
                     style={{ color: colors.darkGray, textDecoration: "none" }}
                   >
-                    Testimonials
+                    Đánh giá
                   </a>
                 </li>
                 <li>
                   <a href="#pricing" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Pricing
+                    Giá cả
                   </a>
                 </li>
                 <li>
@@ -195,12 +200,15 @@ export default function Homepage() {
                 </li>
                 <li>
                   <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Contact
+                    Liên hệ
                   </a>
                 </li>
               </ul>
             </nav>
             <button
+              onClick={() => {
+                window.location.href = "/login";
+              }}
               style={{
                 background: colors.deepGreen,
                 color: colors.white,
@@ -212,7 +220,7 @@ export default function Homepage() {
                 transition: "all 0.3s ease",
               }}
             >
-              Login
+              Đăng nhập
             </button>
           </>
         ) : (
@@ -262,7 +270,7 @@ export default function Homepage() {
                           fontWeight: "bold",
                         }}
                       >
-                        Home
+                        Trang chủ
                       </a>
                     </li>
                     <li style={{ marginBottom: "1rem" }}>
@@ -270,7 +278,7 @@ export default function Homepage() {
                         href="#features"
                         style={{ color: colors.darkGray, textDecoration: "none" }}
                       >
-                        Features
+                        Tính năng
                       </a>
                     </li>
                     <li style={{ marginBottom: "1rem" }}>
@@ -278,12 +286,12 @@ export default function Homepage() {
                         href="#testimonials"
                         style={{ color: colors.darkGray, textDecoration: "none" }}
                       >
-                        Testimonials
+                        Đánh giá
                       </a>
                     </li>
                     <li style={{ marginBottom: "1rem" }}>
                       <a href="#pricing" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                        Pricing
+                        Giá cả
                       </a>
                     </li>
                     <li style={{ marginBottom: "1rem" }}>
@@ -293,12 +301,15 @@ export default function Homepage() {
                     </li>
                     <li style={{ marginBottom: "1rem" }}>
                       <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                        Contact
+                        Liên hệ
                       </a>
                     </li>
                   </ul>
                 </nav>
                 <button
+                  onClick={() => {
+                    window.location.href = "/login";
+                  }}
                   style={{
                     background: colors.deepGreen,
                     color: colors.white,
@@ -311,7 +322,7 @@ export default function Homepage() {
                     marginTop: "1rem",
                   }}
                 >
-                  Login
+                  Đăng nhập
                 </button>
               </div>
             )}
@@ -389,10 +400,11 @@ export default function Homepage() {
                 maxWidth: "600px",
               }}
             >
-              Transform your learning experience with our all-in-one study platform designed to make
-              education enjoyable, effective, and personalized to your unique learning style.
+              Nâng cao trải nghiệm học tập của bạn với nền tảng học tập tất cả trong một, được thiết
+              kế để làm cho việc giáo dục trở nên thú vị, hiệu quả và phù hợp với phong cách học tập
+              độc đáo của bạn.
             </p>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            {/* <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               <button
                 style={{
                   background: colors.white,
@@ -424,7 +436,7 @@ export default function Homepage() {
               >
                 Watch Demo
               </button>
-            </div>
+            </div> */}
           </div>
           <div
             style={{
@@ -480,10 +492,10 @@ export default function Homepage() {
             transition: "all 0.8s ease-out",
           }}
         >
-          <StatCard number="25,000+" label="Happy Students" />
-          <StatCard number="100+" label="Expert Courses" />
-          <StatCard number="94%" label="Success Rate" />
-          <StatCard number="4.9" label="App Rating" />
+          <StatCard number="2,000+" label="Happy Students" icon={<UserOutlined />} />
+          <StatCard number="100+" label="Expert Courses" icon={<ProfileOutlined />} />
+          <StatCard number="94%" label="Success Rate" icon={<LikeOutlined />} />
+          <StatCard number="4.9" label="App Rating" icon={<StarOutlined />} />
         </div>
       </section>
 
@@ -515,7 +527,7 @@ export default function Homepage() {
                 fontWeight: "bold",
               }}
             >
-              WHAT WE OFFER
+              NHỮNG GÌ CHÚNG TÔI CUNG CẤP
             </span>
             <h2
               style={{
@@ -535,8 +547,8 @@ export default function Homepage() {
                 color: "#666",
               }}
             >
-              Our platform offers everything you need to excel in your studies while maintaining a
-              healthy work-life balance.
+              Nền tảng của chúng tôi cung cấp mọi thứ bạn cần để đạt thành tích xuất sắc trong học
+              tập mà vẫn duy trì được sự cân bằng giữa công việc và cuộc sống.
             </p>
           </div>
 
@@ -549,43 +561,43 @@ export default function Homepage() {
           >
             <FeatureCard
               icon={<CalendarOutlined style={{ fontSize: "28px" }} />}
-              title="Smart Scheduling"
-              description="AI-powered study planning that adapts to your learning pace and schedule, optimizing your productivity."
+              title="Lịch Học Thông Minh"
+              description="Tạo lịch học cá nhân hóa dựa trên mục tiêu, thời hạn và thời gian học tập tối ưu của bạn."
               color={colors.lightGreen}
               delay={0.1}
             />
             <FeatureCard
               icon={<FileTextOutlined style={{ fontSize: "28px" }} />}
-              title="Interactive Notes"
-              description="Create dynamic study materials with multimedia integration, mind maps, and collaboration features."
+              title="Tài Liệu Học Tập Đa Phương Tiện"
+              description="Tạo tài liệu học tập linh hoạt với tích hợp đa phương tiện, sơ đồ tư duy và các tính năng cộng tác."
               color={colors.lightGreen}
               delay={0.2}
             />
             <FeatureCard
               icon={<TeamOutlined style={{ fontSize: "28px" }} />}
-              title="Collaborative Learning"
-              description="Connect with classmates, form study groups, and share resources to enhance understanding."
+              title="Cộng Đồng Học Tập"
+              description="Kết nối với bạn cùng lớp, tạo nhóm học tập và chia sẻ tài nguyên để nâng cao hiểu biết."
               color={colors.lightGreen}
               delay={0.3}
             />
             <FeatureCard
               icon={<BellOutlined style={{ fontSize: "28px" }} />}
-              title="Smart Reminders"
-              description="Personalized notification system that helps you stay on track with your study goals and deadlines."
+              title="Thông báo thông minh"
+              description="Hệ thống thông báo cá nhân hóa giúp bạn duy trì lộ trình học tập và hoàn thành đúng hạn."
               color={colors.lightGreen}
               delay={0.4}
             />
             <FeatureCard
               icon={<TrophyOutlined style={{ fontSize: "28px" }} />}
-              title="Achievement System"
-              description="Gamified learning experience with badges, points, and rewards to keep you motivated."
+              title="Hệ Thống Thưởng"
+              description="Trải nghiệm học tập gamified với huy hiệu, điểm và phần thưởng để giữ bạn luôn được động viên."
               color={colors.lightGreen}
               delay={0.5}
             />
             <FeatureCard
               icon={<RocketOutlined style={{ fontSize: "28px" }} />}
-              title="Progress Analytics"
-              description="Detailed insights into your learning patterns, strengths, and areas for improvement."
+              title="Phân Tích Học Tập"
+              description="Cung cấp cái nhìn chi tiết về mẫu học tập, điểm mạnh và điểm yếu của bạn."
               color={colors.lightGreen}
               delay={0.6}
             />
@@ -620,7 +632,7 @@ export default function Homepage() {
                 fontWeight: "bold",
               }}
             >
-              HOW IT WORKS
+              CÁCH HOẠT ĐỘNG
             </span>
             <h2
               style={{
@@ -1039,7 +1051,7 @@ export default function Homepage() {
       <footer
         id="contact"
         style={{
-          background: colors.darkGray,
+          background: colors.darkGreen,
           color: colors.white,
           padding: "4rem 2rem 2rem",
         }}
