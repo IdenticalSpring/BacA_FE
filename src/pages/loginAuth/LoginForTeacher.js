@@ -45,7 +45,7 @@ const LoginForTeacher = () => {
       let data;
       // Login cho học sinh
       data = await authService.loginTeacher(values.username, values.password);
-      navigate("/teacherdashboard");
+      navigate("/teacherPage");
       message.success("Login successful");
     } catch (err) {
       console.log(err);

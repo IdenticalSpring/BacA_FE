@@ -1,70 +1,101 @@
 import React from "react";
-import { Box, Button } from "@mui/material";
+import { Button, Space } from "antd";
+import { BookOutlined, FormOutlined, BarChartOutlined, EditOutlined } from "@ant-design/icons";
+import PropTypes from "prop-types";
 
-const colors = {
-  primary: "#FFC107",
-  secondary: "#121212",
+// Color palette
+export const colors = {
+  deepGreen: "#368A68",
+  white: "#FFFFFF",
+  borderGreen: "#A8E6C3",
+  softShadow: "rgba(0, 128, 96, 0.1)",
+  midGreen: "#5FAE8C",
+  safeGreen: "#27AE60",
+  emerald: "#2ECC71",
 };
 
-// eslint-disable-next-line react/prop-types
-const Toolbox = ({ onManageLessons, Homework, onDeleteClass, onViewReport }) => {
+const Toolbox = ({ onManageLessons, onHomework, onClassReview, onEnterScores }) => {
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         display: "flex",
         justifyContent: "center",
-        gap: 2,
-        p: 2,
-        backgroundColor: "#f5f5f5",
-        borderBottom: "1px solid #ddd",
+        flexWrap: "wrap",
+        gap: 16,
+        padding: "12px",
+        backgroundColor: colors.white,
+        borderTop: `1px solid ${colors.borderGreen}`,
+        boxShadow: `0 -2px 8px ${colors.softShadow}`,
       }}
     >
-      <Button
-        variant="contained"
-        sx={{
-          backgroundColor: colors.primary,
-          color: colors.secondary,
-          "&:hover": { backgroundColor: colors.hover },
-        }}
-        onClick={onManageLessons}
-      >
-        Lesson
-      </Button>
-      <Button
-        variant="contained"
-        sx={{
-          backgroundColor: colors.primary,
-          color: colors.secondary,
-          "&:hover": { backgroundColor: colors.hover },
-        }}
-        onClick={Homework}
-      >
-        Homework
-      </Button>
-      <Button
-        variant="contained"
-        sx={{
-          backgroundColor: colors.primary,
-          color: colors.secondary,
-          "&:hover": { backgroundColor: colors.hover },
-        }}
-        onClick={onDeleteClass}
-      >
-        Class review
-      </Button>
-      <Button
-        variant="contained"
-        sx={{
-          backgroundColor: colors.primary,
-          color: colors.secondary,
-          "&:hover": { backgroundColor: colors.hover },
-        }}
-        onClick={onViewReport}
-      >
-        Enter test scores
-      </Button>
-    </Box>
+      <Space size={12} wrap style={{ justifyContent: "center" }}>
+        <Button
+          type="primary"
+          icon={<BookOutlined />}
+          onClick={onManageLessons}
+          style={{
+            backgroundColor: colors.deepGreen,
+            borderColor: colors.deepGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Lesson</span>
+        </Button>
+        <Button
+          type="primary"
+          icon={<FormOutlined />}
+          onClick={onHomework}
+          style={{
+            backgroundColor: colors.midGreen,
+            borderColor: colors.midGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Homework</span>
+        </Button>
+        <Button
+          type="primary"
+          icon={<BarChartOutlined />}
+          onClick={onClassReview}
+          style={{
+            backgroundColor: colors.safeGreen,
+            borderColor: colors.safeGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Class review</span>
+        </Button>
+        <Button
+          type="primary"
+          icon={<EditOutlined />}
+          onClick={onEnterScores}
+          style={{
+            backgroundColor: colors.emerald,
+            borderColor: colors.emerald,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Enter test scores</span>
+        </Button>
+      </Space>
+
+      <style>{`
+        @media (max-width: 576px) {
+          .button-text {
+            display: none;
+          }
+        }
+      `}</style>
+    </div>
   );
+};
+
+// Add PropTypes validation
+Toolbox.propTypes = {
+  onManageLessons: PropTypes.func.isRequired,
+  onHomework: PropTypes.func.isRequired,
+  onClassReview: PropTypes.func.isRequired,
+  onEnterScores: PropTypes.func.isRequired,
 };
 
 export default Toolbox;
