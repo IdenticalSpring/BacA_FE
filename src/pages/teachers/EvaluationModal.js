@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Modal, Form, Select, Button, Row, Col, Rate, List, Input } from "antd";
+import { Modal, Form, Select, Button, Row, Col, Rate, List, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
+import evaluationStudent from "services/teacherService";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -13,19 +14,7 @@ const colors = {
   white: "#FFFFFF",
   gray: "#F5F5F5",
   darkGray: "#333333",
-  accent: "#FFD166",
-  lightAccent: "#FFEDC2",
-  darkGreen: "#224922",
-  paleGreen: "#E8F5EE",
-  midGreen: "#5FAE8C",
   errorRed: "#FF6B6B",
-  mintGreen: "#C2F0D7",
-  paleBlue: "#E6F7FF",
-  softShadow: "rgba(0, 128, 96, 0.1)",
-  emerald: "#2ECC71",
-  highlightGreen: "#43D183",
-  safeGreen: "#27AE60",
-  borderGreen: "#A8E6C3",
 };
 
 const SKILL_OPTIONS = ["Vocabulary", "Structure", "Listening", "Speaking", "Reading", "Writing"];
@@ -34,6 +23,7 @@ const EvaluationModal = ({ visible, onClose, student }) => {
   const [skills, setSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [evaluation, setEvaluation] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [behaviors, setBehaviors] = useState([
     { name: "Respect", rating: 0 },
@@ -51,8 +41,7 @@ const EvaluationModal = ({ visible, onClose, student }) => {
 
   // ✅ Xóa Skill
   const handleDeleteSkill = (index) => {
-    const updatedSkills = skills.filter((_, i) => i !== index);
-    setSkills(updatedSkills);
+    setSkills(skills.filter((_, i) => i !== index));
   };
 
   // ✅ Cập nhật đánh giá Skill
@@ -69,12 +58,23 @@ const EvaluationModal = ({ visible, onClose, student }) => {
     setBehaviors(updatedBehaviors);
   };
 
-  // ✅ Xử lý lưu Evaluation
-  const handleOk = () => {
-    console.log("Skills:", skills);
-    console.log("Behaviors:", behaviors);
-    console.log("Comment:", evaluation);
-    onClose();
+  // ✅ Gọi API để lưu Evaluation
+  const handleOk = async () => {
+    if (!student?.id) {
+      message.error("Student information is missing.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await evaluationStudent(); // Gọi API từ file service
+      message.success("Evaluation saved successfully!");
+      onClose();
+    } catch (error) {
+      message.error(error || "Error saving evaluation");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,6 +91,7 @@ const EvaluationModal = ({ visible, onClose, student }) => {
           type="primary"
           onClick={handleOk}
           style={{ backgroundColor: colors.deepGreen, color: colors.white }}
+          loading={loading}
         >
           Save
         </Button>,
@@ -181,6 +182,7 @@ EvaluationModal.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   student: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
   }),
 };

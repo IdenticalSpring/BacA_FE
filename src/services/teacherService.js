@@ -38,6 +38,14 @@ const teacherService = {
       throw error.response?.data?.message || "Error deleting teacher";
     }
   },
+  evaluationStudent: async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/teacher-comments`);
+      return { message: "Teacher evaluation successfully" };
+    } catch (error) {
+      throw error.response?.data?.message || "Error evaluating student";
+    }
+  },
 };
 
 export default teacherService;
