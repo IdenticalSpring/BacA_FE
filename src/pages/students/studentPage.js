@@ -1,53 +1,68 @@
 import React, { useEffect, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
+  Layout,
   Typography,
   Avatar,
   Menu,
-  MenuItem,
-  IconButton,
-  Box,
-  Container,
+  Dropdown,
+  Button,
   Card,
-} from "@mui/material";
+  Table,
+  Space,
+  Divider,
+  Drawer,
+  Grid,
+} from "antd";
+import {
+  UserOutlined,
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from "@ant-design/icons";
 import Sidebar from "./sidebar";
-import Toolbox from "./toolbox"; // Import Toolbox
+import Toolbox from "./toolbox";
 import classService from "services/classService";
 import studentService from "services/studentService";
 import { jwtDecode } from "jwt-decode";
-import DataTable from "examples/Tables/DataTable";
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import lessonService from "services/lessonService";
+import { colors } from "assets/theme/color";
 
-const colors = {
-  primary: "#FFC107",
-  secondary: "#121212",
-};
+const { Header, Content } = Layout;
+const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const StudentPage = () => {
   const [classes, setClasses] = useState([]);
   const [selectedLessonBySchedule, setSelectedLessonBySchedule] = useState(null);
   const [lessons, setLessons] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [student, setStudent] = useState(null);
   const userId = jwtDecode(sessionStorage.getItem("token"));
   const studentId = userId.userId;
   const userName = userId.username || "Student";
   const [lessonsBySchedule, setLessonsBySchedule] = useState([]);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+
+  // Use Ant Design's Grid breakpoints
+  const screens = useBreakpoint();
+
+  // Determine if we're on mobile or tablet
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+  const isDesktop = screens.lg;
+
   useEffect(() => {
     const fetchStudentById = async () => {
       try {
         const data = await studentService.getStudentById(studentId);
         setStudent(data);
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin học sinh:", error);
+        console.error("Error fetching student info:", error);
       }
     };
     fetchStudentById();
   }, [studentId]);
+
   useEffect(() => {
     if (student && student.class.id) {
       const fetchLessonByScheduleOfClasses = async () => {
@@ -57,7 +72,7 @@ const StudentPage = () => {
           );
           setLessonsBySchedule(data);
         } catch (error) {
-          console.error("Lỗi khi lấy thông tin bài học theo lịch:", error);
+          console.error("Error fetching lessons by schedule:", error);
         }
       };
       fetchLessonByScheduleOfClasses();
@@ -68,7 +83,6 @@ const StudentPage = () => {
     const findSelectedLessonBySchedule = lessonsBySchedule.find(
       (lessonBySchedule) => lessonBySchedule.id === selectedLessonBySchedule
     );
-    // console.log("findSelectedLessonBySchedule", findSelectedLessonBySchedule);
 
     if (findSelectedLessonBySchedule && findSelectedLessonBySchedule.lessonID) {
       const fetchLessonById = async () => {
@@ -76,7 +90,7 @@ const StudentPage = () => {
           const data = await lessonService.getLessonById(findSelectedLessonBySchedule.lessonID);
           setLessons([data]);
         } catch (error) {
-          console.error("Lỗi khi lấy danh sách học sinh:", error);
+          console.error("Error fetching lesson:", error);
           setLessons([]);
         }
       };
@@ -86,35 +100,90 @@ const StudentPage = () => {
     }
   }, [selectedLessonBySchedule]);
 
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     window.location.href = "/auth/sign-in";
   };
 
   const handleSelectLessonBySchedule = (lessonByScheduleId) => {
-    // console.log("Chọn lớp học", lessonByScheduleId);
-
     setSelectedLessonBySchedule(lessonByScheduleId);
+    if (isMobile) {
+      setSidebarVisible(false);
+    }
   };
 
-  // Các hàm xử lý khi bấm nút trong Toolbox
-  const handleAddStudent = () => console.log("Thêm học sinh");
-  const handleEditClass = () => console.log("Sửa thông tin lớp");
-  const handleDeleteClass = () => console.log("Xóa lớp");
-  const handleViewReport = () => console.log("Xem báo cáo");
+  const toggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
 
-  // Cấu hình DataTable
+  // Toolbox handlers
+  const handleAddStudent = () => console.log("Add assignment");
+  const handleEditClass = () => console.log("Add homework");
+  const handleDeleteClass = () => console.log("Review lesson");
+  const handleViewReport = () => console.log("Enter test scores");
+
+  // Dropdown menu
+  const menu = (
+    <Menu style={{ backgroundColor: colors.paleGreen, borderRadius: "8px" }}>
+      <Menu.Item
+        key="logout"
+        icon={<LogoutOutlined />}
+        onClick={handleLogout}
+        style={{
+          color: colors.darkGreen,
+          "&:hover": { backgroundColor: colors.mintGreen },
+        }}
+      >
+        Log out
+      </Menu.Item>
+    </Menu>
+  );
+
+  // Table columns with responsive adjustments
   const columns = [
-    { Header: "ID", accessor: "id", align: "left" },
-    { Header: "Name", accessor: "name", align: "left" },
-    { Header: "Level", accessor: "level", align: "center" },
-    { Header: "Link", accessor: "link", align: "center" },
-    { Header: "Description", accessor: "description", align: "center" },
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      width: isMobile ? "15%" : "10%",
+      align: "left",
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      width: isMobile ? "40%" : isTablet ? "30%" : "20%",
+      align: "left",
+    },
+    {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+      width: "15%",
+      align: "center",
+      responsive: ["md"],
+    },
+    {
+      title: "Link",
+      dataIndex: "link",
+      key: "link",
+      width: "15%",
+      align: "center",
+      responsive: ["lg"],
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      width: isMobile ? "45%" : isTablet ? "40%" : "40%",
+      align: "left",
+      ellipsis: true,
+    },
   ];
 
-  const rows = lessons.map((lesson) => ({
+  // Table data
+  const tableData = lessons.map((lesson) => ({
+    key: lesson.id,
     id: lesson.id,
     name: lesson.name,
     level: lesson.level || "N/A",
@@ -122,110 +191,211 @@ const StudentPage = () => {
     description: lesson.description || "N/A",
   }));
 
+  const SidebarComponent = () => (
+    <Sidebar
+      lessonsBySchedule={lessonsBySchedule}
+      selectedLessonBySchedule={selectedLessonBySchedule}
+      onSelectLessonBySchedule={handleSelectLessonBySchedule}
+      colors={colors}
+      isMobile={isMobile}
+    />
+  );
+
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "column" }}>
-      <Sidebar
-        lessonsBySchedule={lessonsBySchedule}
-        selectedLessonBySchedule={selectedLessonBySchedule}
-        onSelectLessonBySchedule={handleSelectLessonBySchedule}
-      />
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <div style={{ width: "260px", height: "100%", position: "fixed", zIndex: 1001 }}>
+          <SidebarComponent />
+        </div>
+      )}
 
-      <Box sx={{ flexGrow: 1, paddingLeft: "260px", pb: selectedLessonBySchedule ? "70px" : "0" }}>
-        {/* Navbar */}
-        <AppBar position="static" sx={{ backgroundColor: colors.primary, boxShadow: "none" }}>
-          <Toolbar>
-            <Typography
-              variant="h6"
-              sx={{ flexGrow: 1, fontWeight: "bold", color: colors.secondary }}
-            >
-              STUDENT DASHBOARD
-            </Typography>
-            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-              <Avatar sx={{ bgcolor: colors.secondary, color: colors.primary }}>
-                {userName.charAt(0)}
-              </Avatar>
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              sx={{ mt: 1 }}
-              PaperProps={{
-                sx: {
-                  backgroundColor: colors.secondary,
-                  color: "white",
-                  borderRadius: 2,
-                  boxShadow: "0px 5px 15px rgba(255, 255, 255, 0.1)",
-                },
-              }}
-            >
-              <MenuItem
-                onClick={handleLogout}
-                sx={{ "&:hover": { backgroundColor: colors.hover, color: "black" } }}
-              >
-                Log out
-              </MenuItem>
-            </Menu>
-          </Toolbar>
-        </AppBar>
+      {/* Mobile Drawer Sidebar */}
+      {isMobile && (
+        <Drawer
+          placement="left"
+          closable={true}
+          onClose={() => setSidebarVisible(false)}
+          open={sidebarVisible}
+          width="85%"
+          bodyStyle={{ padding: 0 }}
+          headerStyle={{ display: "none" }}
+        >
+          <SidebarComponent />
+        </Drawer>
+      )}
 
-        {/* DataTable */}
-        <Container sx={{ py: 6 }}>
-          {!selectedLessonBySchedule ? (
-            <Typography variant="h5" align="center" sx={{ mt: 5 }}>
-              Please select a lesson by schedule
-            </Typography>
-          ) : (
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                borderRadius="lg"
-                sx={{ backgroundColor: colors.primary }}
-              >
-                <MDTypography variant="h6" color="black">
-                  List of lessons
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3} px={2}>
-                <DataTable
-                  table={{ columns, rows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
-              </MDBox>
-            </Card>
-          )}
-        </Container>
-      </Box>
-
-      {/* Chỉ hiển thị Toolbox nếu đã chọn lớp */}
-      {selectedLessonBySchedule && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            backgroundColor: "#f5f5f5",
-            borderTop: "1px solid #ddd",
+      <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
+        <Header
+          style={{
+            backgroundColor: colors.lightGreen,
+            padding: "0 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: `0 2px 8px ${colors.softShadow}`,
+            height: 64,
+            position: "sticky",
+            top: 0,
             zIndex: 1000,
           }}
         >
-          <Toolbox
-            onAddStudent={handleAddStudent}
-            onEditClass={handleEditClass}
-            onDeleteClass={handleDeleteClass}
-            onViewReport={handleViewReport}
-          />
-        </Box>
-      )}
-    </Box>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {isMobile && (
+              <Button
+                type="text"
+                icon={sidebarVisible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+                onClick={toggleSidebar}
+                style={{
+                  fontSize: "16px",
+                  marginRight: "12px",
+                  color: colors.darkGreen,
+                }}
+              />
+            )}
+            <Title
+              level={isMobile ? 5 : 4}
+              style={{
+                margin: 0,
+                color: colors.darkGreen,
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              STUDENT DASHBOARD
+            </Title>
+          </div>
+
+          <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+            <Avatar
+              style={{
+                backgroundColor: colors.deepGreen,
+                color: colors.white,
+                cursor: "pointer",
+                border: `2px solid ${colors.borderGreen}`,
+              }}
+              icon={<UserOutlined />}
+            >
+              {userName.charAt(0)}
+            </Avatar>
+          </Dropdown>
+        </Header>
+
+        <Content
+          style={{
+            padding: isMobile ? "16px" : "24px",
+            marginBottom: selectedLessonBySchedule ? (isMobile ? 140 : 70) : 0,
+          }}
+        >
+          {!selectedLessonBySchedule ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "50vh",
+                flexDirection: "column",
+              }}
+            >
+              <Avatar
+                style={{
+                  backgroundColor: colors.mintGreen,
+                  color: colors.deepGreen,
+                  fontSize: isMobile ? 28 : 40,
+                  width: isMobile ? 60 : 80,
+                  height: isMobile ? 60 : 80,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                ?
+              </Avatar>
+              <Text
+                style={{
+                  fontSize: isMobile ? 16 : 18,
+                  color: colors.deepGreen,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >
+                Please select a lesson by schedule
+              </Text>
+            </div>
+          ) : (
+            <Card
+              style={{
+                borderRadius: 12,
+                boxShadow: `0 4px 12px ${colors.softShadow}`,
+                border: `1px solid ${colors.borderGreen}`,
+              }}
+              headStyle={{
+                backgroundColor: colors.lightGreen,
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+                color: colors.darkGreen,
+              }}
+              title={
+                <div
+                  style={{
+                    padding: isMobile ? "12px 0" : "16px 0",
+                    color: colors.darkGreen,
+                    fontWeight: "bold",
+                    fontSize: isMobile ? "16px" : "18px",
+                  }}
+                >
+                  List of lessons
+                </div>
+              }
+            >
+              <div style={{ overflowX: "auto" }}>
+                <Table
+                  columns={columns}
+                  dataSource={tableData}
+                  pagination={false}
+                  style={{
+                    borderRadius: 8,
+                    overflow: "hidden",
+                  }}
+                  rowClassName={() => "lesson-row"}
+                  scroll={{ x: isMobile ? 500 : 800 }}
+                  size={isMobile ? "small" : "middle"}
+                />
+              </div>
+            </Card>
+          )}
+        </Content>
+
+        {selectedLessonBySchedule && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 0,
+              width: isMobile ? "100%" : `calc(100% - 260px)`,
+              right: 0,
+              backgroundColor: colors.white,
+              borderTop: `1px solid ${colors.borderGreen}`,
+              zIndex: 1000,
+              boxShadow: `0 -2px 8px ${colors.softShadow}`,
+              padding: isMobile ? "12px 8px" : "12px 0",
+            }}
+          >
+            <Toolbox
+              onAddStudent={handleAddStudent}
+              onEditClass={handleEditClass}
+              onDeleteClass={handleDeleteClass}
+              onViewReport={handleViewReport}
+              colors={colors}
+              isMobile={isMobile}
+              isTablet={isTablet}
+            />
+          </div>
+        )}
+      </Layout>
+    </Layout>
   );
 };
 
