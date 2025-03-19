@@ -42,6 +42,7 @@ import lessonService from "services/lessonService";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import Toolbox from "./toolbox";
 import Sidebar from "./sidebar";
+import EvaluationModal from "./EvaluationModal";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -116,6 +117,7 @@ const TeacherPage = () => {
 
   //Student information
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
 
   const studentMenu = (student) => (
     <Menu>
@@ -150,19 +152,8 @@ const TeacherPage = () => {
   };
 
   const handleViewEvaluation = (student) => {
-    Modal.confirm({
-      title: `Evaluation for ${student.name}`,
-      content: (
-        <Form>
-          <Form.Item label="Evaluation">
-            <TextArea rows={4} placeholder="Enter evaluation..." />
-          </Form.Item>
-        </Form>
-      ),
-      onOk() {
-        console.log("Evaluation saved!");
-      },
-    });
+    setSelectedStudent(student);
+    setIsEvaluationModalVisible(true);
   };
 
   useEffect(() => {
@@ -450,6 +441,14 @@ const TeacherPage = () => {
             </Col>
           ))}
         </Row>
+        {/* Hiển thị Evaluation Modal khi cần */}
+        {selectedStudent && (
+          <EvaluationModal
+            visible={isEvaluationModalVisible}
+            onClose={() => setIsEvaluationModalVisible(false)}
+            student={selectedStudent}
+          />
+        )}
 
         {selectedClass && (
           <div
