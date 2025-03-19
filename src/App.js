@@ -70,7 +70,18 @@ export default function App() {
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
   const location = useLocation();
-  const hideSidenavPaths = ["/studentportal", "/teacherportal", "/"];
+  const hideSidenavPaths = [
+    "/studentportal",
+    "/teacherportal",
+    "/",
+    "/login",
+    "/login/teacher",
+    "/login/student",
+    "/login/admin",
+    "/studentpage",
+    "/teacherdashboard",
+    "/teacherpage",
+  ];
 
   // Cache for the rtl
   useMemo(() => {
