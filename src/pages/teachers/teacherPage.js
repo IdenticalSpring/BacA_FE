@@ -1,44 +1,75 @@
 import React, { useEffect, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
+  Layout,
   Avatar,
   Menu,
-  MenuItem,
-  IconButton,
-  Box,
-  Container,
-  Card,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Dropdown,
   Button,
-  FormControl,
-  TextField,
+  Typography,
+  Card,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Table,
+  Space,
+  Row,
+  Col,
+  Divider,
+  Spin,
+  Alert,
+  Empty,
   Grid,
-  CardContent,
-} from "@mui/material";
-import Sidebar from "./sidebar";
-import Toolbox from "./toolbox"; // Import Toolbox
-import classService from "services/classService";
-import studentService from "services/studentService";
-import { jwtDecode } from "jwt-decode";
-import DataTable from "examples/Tables/DataTable";
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-import LessonBySchedules from "layouts/lesson_by_schedules";
-import lessonService from "services/lessonService";
-import lessonByScheduleService from "services/lessonByScheduleService";
+} from "antd";
+import {
+  UserOutlined,
+  LogoutOutlined,
+  BookOutlined,
+  FormOutlined,
+  DeleteOutlined,
+  BarChartOutlined,
+  PlusOutlined,
+  EditOutlined,
+  YoutubeOutlined,
+} from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import classService from "services/classService";
+import studentService from "services/studentService";
+import lessonService from "services/lessonService";
+import lessonByScheduleService from "services/lessonByScheduleService";
+import Toolbox from "./toolbox";
+import Sidebar from "./sidebar";
 
-const colors = {
-  primary: "#FFC107",
-  secondary: "#121212",
+const { Header, Sider, Content } = Layout;
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
+const { useBreakpoint } = Grid;
+// Color palette
+export const colors = {
+  lightGreen: "#8ED1B0",
+  deepGreen: "#368A68",
+  white: "#FFFFFF",
+  gray: "#F5F5F5",
+  darkGray: "#333333",
+  accent: "#FFD166",
+  lightAccent: "#FFEDC2",
+  darkGreen: "#224922",
+  paleGreen: "#E8F5EE",
+  midGreen: "#5FAE8C",
+  errorRed: "#FF6B6B",
+  mintGreen: "#C2F0D7",
+  paleBlue: "#E6F7FF",
+  softShadow: "rgba(0, 128, 96, 0.1)",
+  emerald: "#2ECC71",
+  highlightGreen: "#43D183",
+  safeGreen: "#27AE60",
+  borderGreen: "#A8E6C3",
 };
+
 const daysOfWeek = [
   "Choose day of week",
   "Sunday",
@@ -49,33 +80,39 @@ const daysOfWeek = [
   "Friday",
   "Saturday",
 ];
+
+// Main TeacherPage Component
 const TeacherPage = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [students, setStudents] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [lessonsData, setLessonsData] = useState([]);
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
-  const handleOpenDialog = () => setOpenDialog(true);
-  const handleCloseDialog = () => setOpenDialog(false);
-  const userId = jwtDecode(sessionStorage.getItem("token"));
-  const teacherId = userId.userId;
-  const userName = userId.username || "Teacher";
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [openHomeworkModal, setOpenHomeworkModal] = useState(false);
+  // Modals
+  const [lessonModal, setLessonModal] = useState(false);
+  const [homeworkModal, setHomeworkModal] = useState(false);
 
-  const handleOpenHomeworkModal = () => setOpenHomeworkModal(true);
-  const handleCloseHomeworkModal = () => setOpenHomeworkModal(false);
-
+  // Homework form states
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkDescription, setHomeworkDescription] = useState("");
   const [textToSpeech, setTextToSpeech] = useState("");
   const [youtubeLink, setYoutubeLink] = useState("");
   const [loadingTTS, setLoadingTTS] = useState(false);
-  const [mp3Url, setMp3Url] = useState(""); // Lưu URL của file MP3
+  const [mp3Url, setMp3Url] = useState("");
+  // Use Ant Design's Grid breakpoints
+  const screens = useBreakpoint();
+
+  // Determine if we're on mobile or tablet
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+  const isDesktop = screens.lg;
+  // User info
+  const userId = jwtDecode(sessionStorage.getItem("token"));
+  const teacherId = userId.userId;
+  const userName = userId.username || "Teacher";
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -88,12 +125,13 @@ const TeacherPage = () => {
     };
     fetchClasses();
   }, [teacherId]);
+
   useEffect(() => {
     if (selectedClass) {
-      fetchLessonByScheduleAndLessonByLevel(); // Lấy danh sách lesson_by_schedule của lớp học khi selectedClass thay đổi
-      console.log(lessonByScheduleData);
+      fetchLessonByScheduleAndLessonByLevel();
     }
   }, [selectedClass]);
+
   useEffect(() => {
     if (selectedClass) {
       const fetchStudents = async () => {
@@ -108,10 +146,13 @@ const TeacherPage = () => {
       fetchStudents();
     }
   }, [selectedClass]);
+
   const fetchLessonByScheduleAndLessonByLevel = async () => {
     try {
+      setLoading(true);
       const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(selectedClass);
       setLessonByScheduleData(data);
+
       const classData = classes.find((c) => c.id === selectedClass);
       if (classData) {
         const lessons = await lessonService.getLessonByLevel(classData.level);
@@ -123,19 +164,22 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
+
   const handleUpdateLessonBySchedule = async (id, lessonByScheduleData) => {
     try {
       await lessonByScheduleService.updateLessonBySchedule(id, lessonByScheduleData);
-      // alert("Cập nhật lesson_by_schedule thành công!");
+      // Success message
     } catch (err) {
-      alert("Lỗi khi cập nhật lesson_by_schedule!");
+      Modal.error({
+        title: "Error",
+        content: "Lỗi khi cập nhật lesson_by_schedule!",
+      });
     }
   };
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
+
   const handleLogout = () => {
     sessionStorage.removeItem("token");
-    window.location.href = "/auth/sign-in";
+    window.location.href = "/login/teacher";
   };
 
   const handleSelectClass = (classId) => {
@@ -148,17 +192,17 @@ const TeacherPage = () => {
 
     try {
       const response = await axios.post(
-        "https://viettel-ai-api-url.com/tts", // Thay bằng API thật của Viettel
+        "https://viettel-ai-api-url.com/tts", // Replace with actual Viettel API
         {
           text: textToSpeech,
-          voice: "banmai", // Chọn giọng đọc
+          voice: "banmai",
           speed: 1.0,
           format: "mp3",
         },
         {
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": "YOUR_VIETTEL_AI_KEY", // Thay bằng key của bạn
+            "x-api-key": "YOUR_VIETTEL_AI_KEY",
           },
         }
       );
@@ -170,290 +214,327 @@ const TeacherPage = () => {
     setLoadingTTS(false);
   };
 
-  // Các hàm xử lý khi bấm nút trong Toolbox
-  const handleAddStudent = () => console.log("Thêm học sinh");
-  const handleEditClass = () => console.log("Sửa thông tin lớp");
-  const handleDeleteClass = () => console.log("Xóa lớp");
-  const handleViewReport = () => console.log("Xem báo cáo");
-
-  // Cấu hình DataTable
-  const columns = [
-    { Header: "ID", accessor: "id", align: "left" },
-    { Header: "Name", accessor: "name", align: "left" },
-    { Header: "Level", accessor: "level", align: "center" },
-    { Header: "Note", accessor: "note", align: "center" },
-  ];
-
-  const rows = students.map((student) => ({
-    id: student.id,
-    name: student.name,
-    level: student.level || "N/A",
-    note: student.note || "N/A",
-  }));
+  // Menu for user dropdown
+  const userMenu = (
+    <Menu>
+      <Menu.Item key="1" icon={<LogoutOutlined />} onClick={handleLogout}>
+        Log out
+      </Menu.Item>
+    </Menu>
+  );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "column" }}>
+    <Layout style={{ minHeight: "100vh" }}>
       <Sidebar classes={classes} selectedClass={selectedClass} onSelectClass={handleSelectClass} />
 
-      <Box sx={{ flexGrow: 1, paddingLeft: "260px", pb: selectedClass ? "70px" : "0" }}>
-        {/* Navbar */}
-        <AppBar position="static" sx={{ backgroundColor: colors.primary, boxShadow: "none" }}>
-          <Toolbar>
-            <Typography
-              variant="h6"
-              sx={{ flexGrow: 1, fontWeight: "bold", color: colors.secondary }}
-            >
-              TEACHER DASHBOARD
-            </Typography>
-            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-              <Avatar sx={{ bgcolor: colors.secondary, color: colors.primary }}>
-                {userName.charAt(0)}
-              </Avatar>
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              sx={{ mt: 1 }}
-              PaperProps={{
-                sx: {
-                  backgroundColor: colors.secondary,
-                  color: "white",
-                  borderRadius: 2,
-                  boxShadow: "0px 5px 15px rgba(255, 255, 255, 0.1)",
-                },
-              }}
-            >
-              <MenuItem
-                onClick={handleLogout}
-                sx={{ "&:hover": { backgroundColor: colors.hover, color: "black" } }}
-              >
-                Log out
-              </MenuItem>
-            </Menu>
-          </Toolbar>
-        </AppBar>
-        <Grid
-          container
-          spacing={2} // Giảm khoảng cách giữa các items
-          sx={{ mt: 2, maxWidth: "90%", mx: "auto" }} // Giới hạn độ rộng của danh sách
-        >
-          {students.length > 0 ? (
-            students.map((student) => (
-              <Grid item xs={12} sm={6} md={3} lg={2.5} key={student.id}>
-                {" "}
-                {/* Thu nhỏ item */}
-                <Card
-                  sx={{
-                    p: 1.5,
-                    textAlign: "center",
-                    boxShadow: "0px 3px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: 2,
-                    transition: "0.2s",
-                    "&:hover": {
-                      transform: "scale(1.03)",
-                      boxShadow: "0px 5px 12px rgba(0, 0, 0, 0.15)",
-                    },
-                  }}
-                >
-                  {/* Avatar */}
-                  <Avatar
-                    sx={{ bgcolor: colors.primary, width: 48, height: 48, mx: "auto", mb: 1.5 }}
-                  >
-                    {student.name.charAt(0)}
-                  </Avatar>
-
-                  {/* Thông tin học sinh */}
-                  <CardContent sx={{ p: 1 }}>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {student.name}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Level: {student.level || "N/A"}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Note: {student.note || "N/A"}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))
-          ) : (
-            <Grid item xs={12}>
-              <Typography align="center" sx={{ fontStyle: "italic", color: "gray", mt: 3 }}>
-                Choose your class
-              </Typography>
-            </Grid>
-          )}
-        </Grid>
-      </Box>
-
-      {/* Chỉ hiển thị Toolbox nếu đã chọn lớp */}
-      {selectedClass && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            backgroundColor: "#f5f5f5",
-            borderTop: "1px solid #ddd",
-            zIndex: 1000,
+      <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
+        <Header
+          style={{
+            backgroundColor: colors.lightGreen,
+            padding: "0 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            boxShadow: `0 2px 8px ${colors.softShadow}`,
+            zIndex: 10,
+            position: "sticky",
+            top: 0,
+            height: isMobile ? 60 : 64,
           }}
         >
-          <Toolbox
-            onManageLessons={handleOpenDialog}
-            Homework={handleOpenHomeworkModal}
-            onDeleteClass={handleDeleteClass}
-            onViewReport={handleViewReport}
-          />
-        </Box>
-      )}
-      <Dialog open={openHomeworkModal} onClose={handleCloseHomeworkModal} maxWidth="md" fullWidth>
-        <DialogTitle>Homework</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Title"
-            fullWidth
-            value={homeworkTitle}
-            onChange={(e) => setHomeworkTitle(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-
-          <Typography variant="subtitle1">Description</Typography>
-          <ReactQuill
-            theme="snow"
-            value={homeworkDescription}
-            onChange={setHomeworkDescription}
-            style={{ height: "150px", marginBottom: "20px" }}
-          />
-
-          <TextField
-            label="Enter text to convert to MP3"
-            fullWidth
-            multiline
-            rows={2}
-            value={textToSpeech}
-            onChange={(e) => setTextToSpeech(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleConvertToSpeech}
-            disabled={loadingTTS}
+          <Title
+            level={isMobile ? 5 : 4}
+            style={{ margin: 0, color: colors.darkGreen, marginLeft: isMobile ? "25%" : "0" }}
           >
-            {loadingTTS ? "Converting..." : "Convert to Speech"}
-          </Button>
+            TEACHER DASHBOARD
+          </Title>
 
-          {mp3Url && (
-            <audio controls>
-              <source src={mp3Url} type="audio/mp3" />
-              Your browser does not support the audio element.
-            </audio>
-          )}
+          <Dropdown overlay={userMenu} placement="bottomRight">
+            <Avatar
+              style={{
+                backgroundColor: colors.deepGreen,
+                color: colors.white,
+                cursor: "pointer",
+              }}
+            >
+              {userName.charAt(0)}
+            </Avatar>
+          </Dropdown>
+        </Header>
 
-          <TextField
-            label="YouTube Link"
-            fullWidth
-            value={youtubeLink}
-            onChange={(e) => setYoutubeLink(e.target.value)}
-            sx={{ mt: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseHomeworkModal} color="secondary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>Lesson By Schedule</DialogTitle>
-        <DialogContent>
-          {/* <LessonBySchedules /> */}
-          {loading ? (
-            <MDTypography variant="h6" color="info" align="center">
-              Loading...
-            </MDTypography>
-          ) : error ? (
-            <MDTypography variant="h6" color="error" align="center">
-              {error}
-            </MDTypography>
-          ) : (
-            <>
-              {lessonByScheduleData.length > 0 && (
-                <MDBox px={3} py={2}>
-                  {lessonByScheduleData.map((item, index) => (
-                    <MDBox
-                      key={index}
-                      p={1}
-                      mb={1}
-                      border="1px solid #ddd"
-                      borderRadius="8px"
-                      bgcolor="#f9f9f9"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
+        <Content
+          style={{
+            padding: isMobile ? "16px" : "24px",
+            background: colors.white,
+            paddingBottom: selectedClass ? (isMobile ? "70px" : "64px") : "24px",
+          }}
+        >
+          {students.length > 0 ? (
+            <Row gutter={[16, 16]}>
+              {students.map((student) => (
+                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={student.id}>
+                  <Card
+                    style={{
+                      borderRadius: "12px",
+                      boxShadow: `0 2px 8px ${colors.softShadow}`,
+                      border: `1px solid ${colors.borderGreen}`,
+                      transition: "all 0.3s ease",
+                    }}
+                    hoverable
+                    bodyStyle={{ padding: "16px" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                      }}
                     >
-                      {/* Thông tin lịch học */}
-                      <MDTypography
-                        variant="body1"
-                        sx={{
-                          width: "48%",
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          color: "#333",
+                      <Avatar
+                        size={isMobile ? 48 : 64}
+                        style={{
+                          backgroundColor: colors.deepGreen,
+                          color: colors.white,
+                          marginBottom: "12px",
                         }}
                       >
-                        📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
-                        {item.schedule.startTime} - {item.schedule.endTime}
-                      </MDTypography>
-                      {/* Dropdown chọn Lesson */}
-                      <FormControl sx={{ width: "48%" }}>
-                        <TextField
-                          select
-                          label="Lesson"
-                          margin="normal"
-                          InputProps={{
-                            sx: {
-                              minHeight: "48px",
-                              display: "flex",
-                              alignItems: "center",
-                            },
-                          }}
-                          value={
-                            lessonsData.some((lesson) => lesson.id === item.lessonID)
-                              ? item.lessonID
-                              : ""
-                          }
-                          onChange={(e) => {
-                            const newData = [...lessonByScheduleData];
-                            newData[index] = { ...newData[index], lessonID: e.target.value };
-                            setLessonByScheduleData(newData);
-                            handleUpdateLessonBySchedule(item.id, { lessonID: e.target.value });
-                          }}
-                        >
-                          {lessonsData.map((lesson) => (
-                            <MenuItem key={lesson.id} value={lesson.id}>
-                              {lesson.name}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </FormControl>
-                    </MDBox>
-                  ))}
-                </MDBox>
-              )}
-            </>
+                        {student.name.charAt(0)}
+                      </Avatar>
+
+                      <Typography.Title
+                        level={5}
+                        style={{ margin: "0 0 4px 0", color: colors.darkGreen }}
+                      >
+                        {student.name}
+                      </Typography.Title>
+
+                      <Typography.Text type="secondary" style={{ display: "block" }}>
+                        Level: {student.level || "N/A"}
+                      </Typography.Text>
+
+                      <Typography.Text type="secondary" style={{ display: "block" }}>
+                        Note: {student.note || "N/A"}
+                      </Typography.Text>
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: isMobile ? "24px" : "40px",
+                color: colors.darkGray,
+                background: colors.paleGreen,
+                borderRadius: "12px",
+              }}
+            >
+              <Typography.Title level={4} style={{ color: colors.deepGreen }}>
+                Choose your class
+              </Typography.Title>
+              <Typography.Text style={{ color: colors.darkGreen }}>
+                Select a class from the sidebar to view students
+              </Typography.Text>
+            </div>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
+        </Content>
+
+        {selectedClass && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 0,
+              left: isMobile ? 0 : 260,
+              right: 0,
+              zIndex: 10,
+            }}
+          >
+            <Toolbox
+              onManageLessons={() => setLessonModal(true)}
+              onHomework={() => setHomeworkModal(true)}
+              onClassReview={() => console.log("Class review")}
+              onEnterScores={() => console.log("Enter scores")}
+            />
+          </div>
+        )}
+      </Layout>
+
+      {/* Lesson Modal */}
+      <Modal
+        title="Lesson By Schedule"
+        open={lessonModal}
+        onCancel={() => setLessonModal(false)}
+        footer={[
+          <Button key="close" onClick={() => setLessonModal(false)}>
             Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          </Button>,
+        ]}
+        width={isMobile ? "95%" : 800}
+        centered={true}
+        className="lesson-modal"
+        style={{
+          borderRadius: "8px",
+        }}
+      >
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            <Spin />
+            <div style={{ marginTop: "10px" }}>Loading...</div>
+          </div>
+        ) : error ? (
+          <Alert message="Error" description={error} type="error" showIcon />
+        ) : (
+          <div style={{ maxHeight: "70vh", overflow: "auto" }}>
+            {lessonByScheduleData.length > 0 ? (
+              lessonByScheduleData.map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: "16px",
+                    marginBottom: "12px",
+                    border: `1px solid ${colors.borderGreen}`,
+                    borderRadius: "8px",
+                    backgroundColor: colors.paleGreen,
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    justifyContent: "space-between",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: "10px",
+                    height: "100%",
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: colors.darkGreen,
+                      flex: 1,
+                      marginBottom: isMobile ? "10px" : 0,
+                    }}
+                  >
+                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                    {item.schedule.startTime} - {item.schedule.endTime}
+                  </div>
+
+                  <Select
+                    style={{ width: isMobile ? "100%" : "48%" }}
+                    placeholder="Select lesson"
+                    value={
+                      lessonsData.some((lesson) => lesson.id === item.lessonID)
+                        ? item.lessonID
+                        : undefined
+                    }
+                    onChange={(value) => {
+                      const newData = [...lessonByScheduleData];
+                      newData[index] = { ...newData[index], lessonID: value };
+                      setLessonByScheduleData(newData);
+                      handleUpdateLessonBySchedule(item.id, { lessonID: value });
+                    }}
+                  >
+                    {lessonsData.map((lesson) => (
+                      <Option key={lesson.id} value={lesson.id}>
+                        {lesson.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+              ))
+            ) : (
+              <Empty description="No lesson schedules found" />
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Homework Modal */}
+      <Modal
+        title="Homework"
+        open={homeworkModal}
+        onCancel={() => setHomeworkModal(false)}
+        footer={[
+          <Button key="close" onClick={() => setHomeworkModal(false)}>
+            Close
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+          >
+            Save
+          </Button>,
+        ]}
+        width={isMobile ? "95%" : 800}
+        centered={true}
+        className="homework-modal"
+        style={{
+          borderRadius: "8px",
+        }}
+      >
+        <Form layout="vertical" style={{ maxHeight: "70vh", overflow: "auto" }}>
+          <Form.Item label="Title">
+            <Input
+              value={homeworkTitle}
+              onChange={(e) => setHomeworkTitle(e.target.value)}
+              placeholder="Enter homework title"
+            />
+          </Form.Item>
+
+          <Form.Item label="Description">
+            <ReactQuill
+              theme="snow"
+              value={homeworkDescription}
+              onChange={setHomeworkDescription}
+              style={{ height: "150px", marginBottom: "40px" }}
+            />
+          </Form.Item>
+
+          <Form.Item label="Text to Speech">
+            <TextArea
+              rows={3}
+              value={textToSpeech}
+              onChange={(e) => setTextToSpeech(e.target.value)}
+              placeholder="Enter text to convert to speech"
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              onClick={handleConvertToSpeech}
+              loading={loadingTTS}
+              style={{
+                backgroundColor: colors.deepGreen,
+                borderColor: colors.deepGreen,
+              }}
+            >
+              Convert to Speech
+            </Button>
+          </Form.Item>
+
+          {mp3Url && (
+            <Form.Item>
+              <div style={{ marginBottom: "16px" }}>
+                <audio controls style={{ width: "100%" }}>
+                  <source src={mp3Url} type="audio/mp3" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            </Form.Item>
+          )}
+
+          <Form.Item label="YouTube Link">
+            <Input
+              prefix={<YoutubeOutlined style={{ color: colors.errorRed }} />}
+              value={youtubeLink}
+              onChange={(e) => setYoutubeLink(e.target.value)}
+              placeholder="Paste YouTube link here"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </Layout>
   );
 };
 

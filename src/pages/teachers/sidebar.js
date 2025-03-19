@@ -1,123 +1,216 @@
-/* eslint-disable react/prop-types */
-import React from "react";
-import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Divider,
-  Avatar,
-  ListItemIcon,
-} from "@mui/material";
-import SchoolIcon from "@mui/icons-material/School";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { styled } from "@mui/material/styles";
+import React, { useState, useEffect } from "react";
+import { Layout, Menu, Avatar, Typography, Button, Drawer } from "antd";
+import { BookOutlined, MenuOutlined, CloseOutlined } from "@ant-design/icons";
+import PropTypes from "prop-types";
 
-// Container của Sidebar
-const SidebarContainer = styled(Box)({
-  width: 260,
-  height: "100vh",
-  display: "flex",
-  flexDirection: "column",
-  backgroundColor: "#121212",
-  boxShadow: "2px 0px 10px rgba(0, 0, 0, 0.3)",
-  position: "fixed",
-  left: 0,
-  top: 0,
-});
+const { Sider } = Layout;
+const { Text } = Typography;
 
-// Header của Sidebar
-const SidebarHeader = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  padding: "16px",
-  backgroundColor: "#FFC107",
-  color: "#121212",
-  borderRadius: "0px 0px 10px 10px",
-});
-
-// Danh sách lớp học
-const ListWrapper = styled(Box)({
-  flexGrow: 1,
-  overflowY: "auto",
-  padding: "10px",
-});
-
-// Nút chọn lớp học
-const StyledListItem = styled(ListItemButton)({
-  borderRadius: "8px",
-  marginBottom: "8px",
-  padding: "10px",
-  transition: "0.3s",
-  color: "white",
-  "&:hover": {
-    backgroundColor: "#FFD54F",
-    color: "black",
-  },
-  "&.Mui-selected": {
-    backgroundColor: "#FFD54F",
-    color: "black",
-    "& .MuiSvgIcon-root": {
-      color: "black",
-    },
-  },
-});
+// Color palette
+export const colors = {
+  lightGreen: "#8ED1B0",
+  deepGreen: "#368A68",
+  white: "#FFFFFF",
+  paleGreen: "#E8F5EE",
+  darkGreen: "#224922",
+  midGreen: "#5FAE8C",
+  softShadow: "rgba(0, 128, 96, 0.1)",
+  borderGreen: "#A8E6C3",
+};
 
 const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
-  return (
-    <SidebarContainer>
-      {/* Header */}
-      <SidebarHeader>
-        <Avatar sx={{ bgcolor: "#121212", color: "#FFC107", marginRight: 1 }}>
-          <MenuBookIcon />
-        </Avatar>
-        <Typography variant="h6" fontWeight="bold">
-          Lớp học
-        </Typography>
-      </SidebarHeader>
+  const [visible, setVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-      <Divider sx={{ backgroundColor: "#FFC107" }} />
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
 
-      {/* Danh sách lớp học */}
-      <ListWrapper>
-        <List>
-          {classes.length > 0 ? (
-            classes.map((classItem) => (
-              <ListItem key={classItem.id} disablePadding>
-                <StyledListItem
-                  selected={selectedClass === classItem.id}
-                  onClick={() => onSelectClass(classItem.id)}
-                >
-                  <ListItemIcon>
-                    <Avatar
-                      sx={{
-                        bgcolor: selectedClass === classItem.id ? "#FFD54F" : "#FFC107",
-                        color: selectedClass === classItem.id ? "black" : "white",
-                      }}
-                    >
-                      <SchoolIcon />
-                    </Avatar>
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={classItem.name}
-                    primaryTypographyProps={{
-                      fontWeight: selectedClass === classItem.id ? "bold" : "normal",
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
+
+  const showDrawer = () => {
+    setVisible(true);
+  };
+
+  const onClose = () => {
+    setVisible(false);
+  };
+
+  const handleClassSelect = (classId) => {
+    onSelectClass(classId);
+    if (isMobile) {
+      onClose();
+    }
+  };
+
+  const SidebarContent = () => (
+    <>
+      <div
+        style={{
+          padding: "20px 16px",
+          background: colors.deepGreen,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isMobile ? "space-between" : "flex-start",
+          borderBottom: `1px solid ${colors.midGreen}`,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Avatar
+            icon={<BookOutlined />}
+            style={{
+              backgroundColor: colors.lightGreen,
+              color: colors.deepGreen,
+              marginRight: 12,
+            }}
+          />
+          <Text style={{ color: colors.white, fontSize: 18, fontWeight: 600 }}>Lớp học</Text>
+        </div>
+
+        {isMobile && (
+          <Button
+            type="text"
+            icon={<CloseOutlined />}
+            onClick={onClose}
+            style={{ color: colors.white }}
+          />
+        )}
+      </div>
+
+      <div
+        style={{
+          padding: "10px",
+          overflow: "auto",
+          height: isMobile ? "calc(100vh - 70px)" : "calc(100vh - 70px)",
+        }}
+      >
+        {classes.length > 0 ? (
+          <Menu
+            mode="inline"
+            selectedKeys={[selectedClass?.toString() || ""]}
+            style={{
+              background: colors.paleGreen,
+              border: "none",
+            }}
+          >
+            {classes.map((classItem) => (
+              <Menu.Item
+                key={classItem.id}
+                onClick={() => handleClassSelect(classItem.id)}
+                style={{
+                  margin: "8px 0",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  color: colors.darkGreen,
+                  backgroundColor:
+                    selectedClass === classItem.id ? colors.lightGreen : "transparent",
+                }}
+                icon={
+                  <Avatar
+                    size="small"
+                    style={{
+                      backgroundColor:
+                        selectedClass === classItem.id ? colors.deepGreen : colors.midGreen,
+                      color: colors.white,
                     }}
-                  />
-                </StyledListItem>
-              </ListItem>
-            ))
-          ) : (
-            <Typography variant="body2" sx={{ p: 2, textAlign: "center", color: "white" }}>
-              Không có lớp học nào
-            </Typography>
-          )}
-        </List>
-      </ListWrapper>
-    </SidebarContainer>
+                  >
+                    {classItem.name.charAt(0)}
+                  </Avatar>
+                }
+              >
+                <span style={{ fontWeight: selectedClass === classItem.id ? 600 : 400 }}>
+                  {classItem.name}
+                </span>
+              </Menu.Item>
+            ))}
+          </Menu>
+        ) : (
+          <div
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: colors.darkGreen,
+            }}
+          >
+            Không có lớp học nào
+          </div>
+        )}
+      </div>
+    </>
   );
+
+  return (
+    <>
+      {isMobile ? (
+        <>
+          <Button
+            type="primary"
+            icon={<MenuOutlined />}
+            onClick={showDrawer}
+            style={{
+              position: "fixed",
+              left: 20,
+              top: 20,
+              zIndex: 99,
+              backgroundColor: colors.deepGreen,
+              borderColor: colors.deepGreen,
+            }}
+          />
+          <Drawer
+            placement="left"
+            closable={false}
+            onClose={onClose}
+            open={visible}
+            width={260}
+            bodyStyle={{ padding: 0, backgroundColor: colors.paleGreen }}
+            headerStyle={{ display: "none" }}
+          >
+            <SidebarContent />
+          </Drawer>
+        </>
+      ) : (
+        <Sider
+          width={260}
+          style={{
+            background: colors.paleGreen,
+            boxShadow: `0 2px 8px ${colors.softShadow}`,
+            height: "100vh",
+            position: "fixed",
+            left: 0,
+            top: 0,
+            zIndex: 100,
+          }}
+        >
+          <SidebarContent />
+        </Sider>
+      )}
+    </>
+  );
+};
+
+// Add PropTypes validation
+Sidebar.propTypes = {
+  classes: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  selectedClass: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onSelectClass: PropTypes.func.isRequired,
+};
+
+// Add default props
+Sidebar.defaultProps = {
+  classes: [],
+  selectedClass: null,
 };
 
 export default Sidebar;
