@@ -65,6 +65,10 @@ import Lessons from "layouts/lessons";
 import LessonBySchedules from "layouts/lesson_by_schedules";
 import TeacherPage from "pages/teachers/teacherPage";
 import Homepage from "pages/Homepage";
+import MainLogin from "pages/loginAuth/MainLogin";
+import LoginForStudent from "pages/loginAuth/LoginForStudent";
+import LoginForTeacher from "pages/loginAuth/LoginForTeacher";
+import LoginForAdmin from "pages/loginAuth/LoginForAdmin";
 
 const routes = [
   {
@@ -74,6 +78,38 @@ const routes = [
     icon: <Icon fontSize="small">homepage</Icon>,
     route: "/",
     component: <Homepage />,
+  },
+  {
+    type: "collapse",
+    name: "MainLogin",
+    key: "mainLogin",
+    icon: <Icon fontSize="small">login</Icon>,
+    route: "/login",
+    component: <MainLogin />,
+  },
+  {
+    type: "collapse",
+    name: "LoginForStudent",
+    key: "loginForStudent",
+    icon: <Icon fontSize="small">login for student</Icon>,
+    route: "/login/student",
+    component: <LoginForStudent />,
+  },
+  {
+    type: "collapse",
+    name: "LoginForTeacher",
+    key: "loginForTeacher",
+    icon: <Icon fontSize="small">login for teacher</Icon>,
+    route: "/login/teacher",
+    component: <LoginForTeacher />,
+  },
+  {
+    type: "collapse",
+    name: "LoginForAdmin",
+    key: "loginForAdmin",
+    icon: <Icon fontSize="small">login for admin</Icon>,
+    route: "/login/admin",
+    component: <LoginForAdmin />,
   },
   {
     type: "collapse",
