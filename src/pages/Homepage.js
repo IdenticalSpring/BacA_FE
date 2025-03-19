@@ -226,9 +226,10 @@ export default function Homepage() {
                 border: "none",
                 padding: "0.5rem 1.5rem",
                 borderRadius: "4px",
-                fontWeight: "bold",
+                fontWeight: 500,
                 cursor: "pointer",
                 transition: "all 0.3s ease",
+                fontSize: "16px",
               }}
             >
               Đăng nhập
@@ -327,9 +328,10 @@ export default function Homepage() {
                     border: "none",
                     padding: "0.5rem 1.5rem",
                     borderRadius: "4px",
-                    fontWeight: "bold",
+                    fontWeight: "500",
                     cursor: "pointer",
                     width: "100%",
+                    fontSize: "16px",
                     marginTop: "1rem",
                   }}
                 >
