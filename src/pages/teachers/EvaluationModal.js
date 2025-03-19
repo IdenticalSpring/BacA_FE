@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Form, Select, Button, Row, Col, Rate, List, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import evaluationStudent from "services/teacherService";
+import TeacherService from "services/teacherService"; // Import TeacherService
+import { jwtDecode } from "jwt-decode";
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-// ✅ Màu sắc
 const colors = {
   lightGreen: "#8ED1B0",
   deepGreen: "#368A68",
@@ -31,7 +31,6 @@ const EvaluationModal = ({ visible, onClose, student }) => {
     { name: "Cooperation", rating: 0 },
   ]);
 
-  // ✅ Thêm Skill từ dropdown
   const handleAddSkill = () => {
     if (selectedSkill && !skills.some((s) => s.name === selectedSkill)) {
       setSkills([...skills, { name: selectedSkill, rating: 0 }]);
@@ -39,39 +38,64 @@ const EvaluationModal = ({ visible, onClose, student }) => {
     }
   };
 
-  // ✅ Xóa Skill
   const handleDeleteSkill = (index) => {
     setSkills(skills.filter((_, i) => i !== index));
   };
 
-  // ✅ Cập nhật đánh giá Skill
   const handleSkillRating = (index, value) => {
     const updatedSkills = [...skills];
     updatedSkills[index].rating = value;
     setSkills(updatedSkills);
   };
 
-  // ✅ Cập nhật đánh giá Behavior
   const handleBehaviorRating = (index, value) => {
     const updatedBehaviors = [...behaviors];
     updatedBehaviors[index].rating = value;
     setBehaviors(updatedBehaviors);
   };
 
-  // ✅ Gọi API để lưu Evaluation
+  // ✅ Gọi API lưu Evaluation
   const handleOk = async () => {
-    if (!student?.id) {
+    if (!student || !student.id) {
       message.error("Student information is missing.");
       return;
     }
 
-    setLoading(true);
+    const token = sessionStorage.getItem("token");
+    const decoded = jwtDecode(token);
+    const teacherID = decoded?.userId;
+
+    // Chuyển đổi danh sách skills thành object
+    const skillRatings = skills.reduce((acc, skill) => {
+      acc[skill.name.toLowerCase()] = skill.rating; // Biến thành chữ thường để khớp API
+      return acc;
+    }, {});
+
+    // Chuyển đổi danh sách behaviors thành object
+    const behaviorRatings = behaviors.reduce((acc, behavior) => {
+      acc[behavior.name.toLowerCase()] = behavior.rating;
+      return acc;
+    }, {});
+
+    const payload = {
+      teacherID,
+      studentID: student.id,
+      scheduleID: 2,
+      comment: evaluation,
+      ...skillRatings,
+      ...behaviorRatings,
+    };
+
+    console.log("Payload gửi lên:", payload); // 🔍 Debug payload
+
     try {
-      await evaluationStudent(); // Gọi API từ file service
+      setLoading(true);
+      await TeacherService.evaluationStudent(payload);
       message.success("Evaluation saved successfully!");
-      onClose();
+      onClose(); // Đóng modal
     } catch (error) {
-      message.error(error || "Error saving evaluation");
+      console.error("Lỗi khi lưu đánh giá:", error);
+      message.error("Failed to save evaluation. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -99,7 +123,6 @@ const EvaluationModal = ({ visible, onClose, student }) => {
       width={800}
     >
       <Row gutter={16}>
-        {/* ✅ Cột Skill */}
         <Col span={12}>
           <h3>Skills</h3>
           <Select
@@ -142,7 +165,6 @@ const EvaluationModal = ({ visible, onClose, student }) => {
           />
         </Col>
 
-        {/* ✅ Cột Behavior */}
         <Col span={12}>
           <h3>Behaviors</h3>
           <List
@@ -162,7 +184,6 @@ const EvaluationModal = ({ visible, onClose, student }) => {
         </Col>
       </Row>
 
-      {/* ✅ Comment ở dưới cùng */}
       <Form layout="vertical" style={{ marginTop: 20 }}>
         <Form.Item label="Comment">
           <TextArea
@@ -177,7 +198,7 @@ const EvaluationModal = ({ visible, onClose, student }) => {
   );
 };
 
-// ✅ Thêm PropTypes để tránh lỗi
+// ✅ PropTypes
 EvaluationModal.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,

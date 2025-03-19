@@ -38,12 +38,15 @@ const teacherService = {
       throw error.response?.data?.message || "Error deleting teacher";
     }
   },
-  evaluationStudent: async () => {
+  async evaluationStudent(payload) {
     try {
-      await axios.post(`${API_BASE_URL}/teacher-comments`);
-      return { message: "Teacher evaluation successfully" };
+      const response = await axios.post(`${API_BASE_URL}/teacher-comments`, payload);
+      console.log("Payload gửi lên:", payload);
+
+      return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error evaluating student";
+      console.error("Error in evaluationStudent:", error);
+      throw error;
     }
   },
 };
