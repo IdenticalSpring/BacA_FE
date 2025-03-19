@@ -212,7 +212,7 @@ export default function Homepage() {
             </nav>
             <button
               onClick={() => {
-                window.location.href = "/login";
+                window.location.href = "/auth/sign-in";
               }}
               style={{
                 background: colors.deepGreen,
