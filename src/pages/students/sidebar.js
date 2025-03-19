@@ -36,7 +36,7 @@ const Sidebar = ({
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "12px",
+        borderRadius: "0px",
       }}
     >
       {/* Header */}
