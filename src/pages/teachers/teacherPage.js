@@ -114,6 +114,57 @@ const TeacherPage = () => {
   const teacherId = userId.userId;
   const userName = userId.username || "Teacher";
 
+  //Student information
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+  const studentMenu = (student) => (
+    <Menu>
+      <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => handleViewProfile(student)}>
+        Profile
+      </Menu.Item>
+      <Menu.Item
+        key="evaluation"
+        icon={<BarChartOutlined />}
+        onClick={() => handleViewEvaluation(student)}
+      >
+        Evaluation
+      </Menu.Item>
+    </Menu>
+  );
+
+  const handleViewProfile = (student) => {
+    Modal.info({
+      title: `Profile of ${student.name}`,
+      content: (
+        <div>
+          <p>
+            <b>Level:</b> {student.level || "N/A"}
+          </p>
+          <p>
+            <b>Note:</b> {student.note || "N/A"}
+          </p>
+        </div>
+      ),
+      onOk() {},
+    });
+  };
+
+  const handleViewEvaluation = (student) => {
+    Modal.confirm({
+      title: `Evaluation for ${student.name}`,
+      content: (
+        <Form>
+          <Form.Item label="Evaluation">
+            <TextArea rows={4} placeholder="Enter evaluation..." />
+          </Form.Item>
+        </Form>
+      ),
+      onOk() {
+        console.log("Evaluation saved!");
+      },
+    });
+  };
+
   useEffect(() => {
     const fetchClasses = async () => {
       try {
@@ -262,7 +313,7 @@ const TeacherPage = () => {
           </Dropdown>
         </Header>
 
-        <Content
+        {/* <Content
           style={{
             padding: isMobile ? "16px" : "24px",
             background: colors.white,
@@ -339,7 +390,66 @@ const TeacherPage = () => {
               </Typography.Text>
             </div>
           )}
-        </Content>
+        </Content> */}
+
+        <Row
+          gutter={[16, 16]}
+          style={{
+            padding: isMobile ? "16px" : "24px",
+            background: colors.white,
+            paddingBottom: selectedClass ? (isMobile ? "70px" : "64px") : "24px",
+          }}
+        >
+          {students.map((student) => (
+            <Col xs={24} sm={12} md={8} lg={6} xl={4} key={student.id}>
+              <Dropdown overlay={studentMenu(student)} trigger={["click"]}>
+                <Card
+                  style={{
+                    borderRadius: "12px",
+                    boxShadow: `0 2px 8px ${colors.softShadow}`,
+                    border: `1px solid ${colors.borderGreen}`,
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                  hoverable
+                  bodyStyle={{ padding: "16px" }}
+                  onClick={() => setSelectedStudent(student)}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      textAlign: "center",
+                    }}
+                  >
+                    <Avatar
+                      size={isMobile ? 48 : 64}
+                      style={{
+                        backgroundColor: colors.deepGreen,
+                        color: colors.white,
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {student.name.charAt(0)}
+                    </Avatar>
+
+                    <Typography.Title
+                      level={5}
+                      style={{ margin: "0 0 4px 0", color: colors.darkGreen }}
+                    >
+                      {student.name}
+                    </Typography.Title>
+
+                    <Typography.Text type="secondary" style={{ display: "block" }}>
+                      Level: {student.level || "N/A"}
+                    </Typography.Text>
+                  </div>
+                </Card>
+              </Dropdown>
+            </Col>
+          ))}
+        </Row>
 
         {selectedClass && (
           <div
