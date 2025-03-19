@@ -7,17 +7,23 @@ import {
   Dropdown,
   Button,
   Card,
-  Table,
   Space,
   Divider,
   Drawer,
   Grid,
+  Comment,
+  List,
 } from "antd";
 import {
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  LikeOutlined,
+  MessageOutlined,
+  ShareAltOutlined,
+  BookOutlined,
+  LinkOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -29,7 +35,7 @@ import lessonService from "services/lessonService";
 import { colors } from "assets/theme/color";
 
 const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
 
 const StudentPage = () => {
@@ -102,7 +108,7 @@ const StudentPage = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
-    window.location.href = "/auth/sign-in";
+    window.location.href = "/login/student";
   };
 
   const handleSelectLessonBySchedule = (lessonByScheduleId) => {
@@ -134,62 +140,27 @@ const StudentPage = () => {
           "&:hover": { backgroundColor: colors.mintGreen },
         }}
       >
-        Log out
+        Đăng xuất
       </Menu.Item>
     </Menu>
   );
 
-  // Table columns with responsive adjustments
-  const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: isMobile ? "15%" : "10%",
-      align: "left",
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      width: isMobile ? "40%" : isTablet ? "30%" : "20%",
-      align: "left",
-    },
-    {
-      title: "Level",
-      dataIndex: "level",
-      key: "level",
-      width: "15%",
-      align: "center",
-      responsive: ["md"],
-    },
-    {
-      title: "Link",
-      dataIndex: "link",
-      key: "link",
-      width: "15%",
-      align: "center",
-      responsive: ["lg"],
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-      width: isMobile ? "45%" : isTablet ? "40%" : "40%",
-      align: "left",
-      ellipsis: true,
-    },
-  ];
+  // Function to generate a random time for demo purposes
+  const getRandomTime = () => {
+    const hours = Math.floor(Math.random() * 12) + 1;
+    const minutes = Math.floor(Math.random() * 60);
+    const ampm = Math.random() > 0.5 ? "AM" : "PM";
+    return `${hours}:${minutes < 10 ? "0" + minutes : minutes} ${ampm}`;
+  };
 
-  // Table data
-  const tableData = lessons.map((lesson) => ({
-    key: lesson.id,
-    id: lesson.id,
-    name: lesson.name,
-    level: lesson.level || "N/A",
-    link: lesson.link || "N/A",
-    description: lesson.description || "N/A",
-  }));
+  // Function to get random engagement numbers
+  const getRandomEngagement = () => {
+    return {
+      likes: Math.floor(Math.random() * 50),
+      comments: Math.floor(Math.random() * 20),
+      shares: Math.floor(Math.random() * 10),
+    };
+  };
 
   const SidebarComponent = () => (
     <Sidebar
@@ -264,7 +235,7 @@ const StudentPage = () => {
                 textOverflow: "ellipsis",
               }}
             >
-              STUDENT DASHBOARD
+              HỌC SINH
             </Title>
           </div>
 
@@ -322,50 +293,118 @@ const StudentPage = () => {
                   textAlign: "center",
                 }}
               >
-                Please select a lesson by schedule
+                Vui lòng chọn bài học từ lịch học của bạn
               </Text>
             </div>
           ) : (
-            <Card
-              style={{
-                borderRadius: 12,
-                boxShadow: `0 4px 12px ${colors.softShadow}`,
-                border: `1px solid ${colors.borderGreen}`,
-              }}
-              headStyle={{
-                backgroundColor: colors.lightGreen,
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                color: colors.darkGreen,
-              }}
-              title={
-                <div
-                  style={{
-                    padding: isMobile ? "12px 0" : "16px 0",
-                    color: colors.darkGreen,
-                    fontWeight: "bold",
-                    fontSize: isMobile ? "16px" : "18px",
-                  }}
-                >
-                  List of lessons
-                </div>
-              }
-            >
-              <div style={{ overflowX: "auto" }}>
-                <Table
-                  columns={columns}
-                  dataSource={tableData}
-                  pagination={false}
-                  style={{
-                    borderRadius: 8,
-                    overflow: "hidden",
-                  }}
-                  rowClassName={() => "lesson-row"}
-                  scroll={{ x: isMobile ? 500 : 800 }}
-                  size={isMobile ? "small" : "middle"}
-                />
-              </div>
-            </Card>
+            <div>
+              {/* <Title level={3} style={{ color: colors.darkGreen, marginBottom: 24 }}>
+                Lesson Feed
+              </Title> */}
+              <List
+                itemLayout="vertical"
+                size="large"
+                dataSource={lessons}
+                renderItem={(lesson) => {
+                  const engagement = getRandomEngagement();
+                  return (
+                    <Card
+                      style={{
+                        marginBottom: 16,
+                        borderRadius: 12,
+                        boxShadow: `0 2px 8px ${colors.softShadow}`,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                        <Avatar
+                          style={{
+                            backgroundColor: colors.deepGreen,
+                            color: colors.white,
+                          }}
+                          icon={<BookOutlined />}
+                          size={40}
+                        />
+                        <div style={{ marginLeft: 12 }}>
+                          <Text
+                            strong
+                            style={{ fontSize: 16, display: "block", color: colors.darkGreen }}
+                          >
+                            {lesson.name}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
+                          </Text>
+                        </div>
+                      </div>
+
+                      <Paragraph
+                        ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
+                        style={{ marginBottom: 16 }}
+                      >
+                        {lesson.description || " "}
+                      </Paragraph>
+
+                      {lesson.link && (
+                        <div
+                          style={{
+                            backgroundColor: colors.paleGreen,
+                            padding: 12,
+                            borderRadius: 8,
+                            marginBottom: 16,
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {lesson.link.includes("youtube.com") ||
+                          lesson.link.includes("youtu.be") ? (
+                            <iframe
+                              width="100%"
+                              height="315"
+                              src={lesson.link.replace("watch?v=", "embed/")}
+                              title="Lesson Video"
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            ></iframe>
+                          ) : (
+                            <video width="100%" height="auto" controls>
+                              <source src={lesson.link} type="video/mp4" />
+                              Trình duyệt của bạn không hỗ trợ phát video.
+                            </video>
+                          )}
+                        </div>
+                      )}
+
+                      <Divider style={{ margin: "12px 0" }} />
+
+                      {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <Button
+                          type="text"
+                          icon={<LikeOutlined />}
+                          style={{ color: colors.darkGreen }}
+                        >
+                          {engagement.likes} Likes
+                        </Button>
+                        <Button
+                          type="text"
+                          icon={<MessageOutlined />}
+                          style={{ color: colors.darkGreen }}
+                        >
+                          {engagement.comments} Comments
+                        </Button>
+                        <Button
+                          type="text"
+                          icon={<ShareAltOutlined />}
+                          style={{ color: colors.darkGreen }}
+                        >
+                          {engagement.shares} Shares
+                        </Button>
+                      </div> */}
+                    </Card>
+                  );
+                }}
+              />
+            </div>
           )}
         </Content>
 

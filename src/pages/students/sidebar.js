@@ -1,20 +1,21 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Layout, Typography, List, Avatar, Divider } from "antd";
-import { BookOutlined, ScheduleOutlined } from "@ant-design/icons";
+import { Layout, Typography, List, Avatar, Divider, Badge } from "antd";
+import { BookOutlined, ScheduleOutlined, CalendarOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
 const { Sider } = Layout;
 const { Title, Text } = Typography;
 
 const daysOfWeek = [
-  "Choose day of week",
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
+  "Chọn ngày trong tuần",
+  "Chủ nhật",
+  "Thứ hai",
+  "Thứ ba",
+  "Thứ tư",
+  "Thứ năm",
+  "Thứ sáu",
+  "Thứ bảy",
 ];
 
 const Sidebar = ({
@@ -28,13 +29,14 @@ const Sidebar = ({
     <div
       style={{
         backgroundColor: colors.paleGreen,
-        boxShadow: `2px 0px 10px ${colors.softShadow}`,
+        boxShadow: `0 2px 12px ${colors.softShadow}`,
         height: "100%",
         overflowY: "auto",
         overflowX: "hidden",
         width: "100%",
         display: "flex",
         flexDirection: "column",
+        borderRadius: "12px",
       }}
     >
       {/* Header */}
@@ -42,40 +44,78 @@ const Sidebar = ({
         style={{
           display: "flex",
           alignItems: "center",
-          padding: isMobile ? "12px 16px" : "16px",
+          justifyContent: "space-between",
+          padding: isMobile ? "16px" : "20px",
           backgroundColor: colors.midGreen,
           color: colors.white,
-          borderRadius: "0 0 10px 10px",
         }}
       >
-        <Avatar
-          style={{
-            backgroundColor: colors.deepGreen,
-            color: colors.white,
-            marginRight: 10,
-            size: isMobile ? "small" : "default",
-          }}
-          icon={<BookOutlined />}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Avatar
+            style={{
+              backgroundColor: colors.deepGreen,
+              color: colors.white,
+              marginRight: 12,
+              fontSize: isMobile ? 16 : 20,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            icon={<CalendarOutlined />}
+          />
+          <Title
+            level={isMobile ? 5 : 4}
+            style={{
+              margin: 0,
+              color: colors.white,
+              fontWeight: "600",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Lịch học
+          </Title>
+        </div>
+        <Badge
+          count={lessonsBySchedule.length}
+          overflowCount={99}
+          style={{ backgroundColor: colors.deepGreen }}
         />
-        <Title
-          level={isMobile ? 5 : 4}
-          style={{
-            margin: 0,
-            color: colors.white,
-            fontWeight: "bold",
-          }}
-        >
-          Lessons By Schedule
-        </Title>
       </div>
 
-      <Divider style={{ backgroundColor: colors.borderGreen, margin: "0 0 8px 0" }} />
+      <div style={{ padding: "12px 16px", backgroundColor: colors.paleGreen }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 8,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.darkGreen,
+              fontSize: isMobile ? "0.8rem" : "0.9rem",
+              fontWeight: 500,
+            }}
+          >
+            BÀI HỌC SẮP TỚI
+          </Text>
+          <Text
+            style={{
+              color: colors.deepGreen,
+              fontSize: isMobile ? "0.8rem" : "0.9rem",
+              fontWeight: 500,
+            }}
+          >
+            {lessonsBySchedule.length} lessons
+          </Text>
+        </div>
+      </div>
 
       {/* List of lessons by schedule */}
       <div
         style={{
-          padding: isMobile ? "0 6px" : "0 8px",
-          marginTop: 10,
+          padding: "8px 12px",
           flexGrow: 1,
           overflowY: "auto",
         }}
@@ -90,54 +130,85 @@ const Sidebar = ({
                 <List.Item
                   style={{
                     padding: 0,
-                    marginBottom: 8,
+                    marginBottom: 10,
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      padding: isMobile ? "10px 6px" : "12px 8px",
-                      borderRadius: 8,
+                      padding: isMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 12,
                       cursor: "pointer",
-                      backgroundColor: isSelected ? colors.lightGreen : "transparent",
+                      backgroundColor: isSelected ? colors.lightGreen : colors.white,
                       width: "100%",
-                      transition: "all 0.3s ease",
-                      boxShadow: isSelected ? `0 2px 6px ${colors.softShadow}` : "none",
-                      border: isSelected ? `1px solid ${colors.borderGreen}` : "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: isSelected
+                        ? `0 4px 8px ${colors.softShadow}`
+                        : `0 2px 4px ${colors.softShadow}`,
+                      border: `1px solid ${isSelected ? colors.borderGreen : "transparent"}`,
+                      transform: isSelected ? "translateY(-2px)" : "none",
                     }}
                     onClick={() => onSelectLessonBySchedule(item.id)}
                   >
-                    <Avatar
-                      size={isMobile ? "small" : "default"}
+                    <div
                       style={{
-                        backgroundColor: isSelected ? colors.deepGreen : colors.midGreen,
-                        color: colors.white,
-                        marginRight: isMobile ? 8 : 12,
+                        backgroundColor: isSelected ? colors.midGreen : colors.paleGreen,
+                        borderRadius: "10px",
+                        padding: "12px",
+                        marginRight: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minWidth: isMobile ? "40px" : "48px",
                       }}
-                      icon={<ScheduleOutlined />}
-                    />
-                    <div>
+                    >
+                      <Text
+                        style={{
+                          fontSize: isMobile ? "0.9rem" : "1rem",
+                          fontWeight: "700",
+                          color: isSelected ? colors.white : colors.darkGreen,
+                          lineHeight: "1",
+                        }}
+                      >
+                        {dayjs(item.date).format("DD")}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: isMobile ? "0.7rem" : "0.8rem",
+                          fontWeight: "500",
+                          color: isSelected ? colors.white : colors.darkGray,
+                          lineHeight: "1.2",
+                          marginTop: 4,
+                        }}
+                      >
+                        {dayjs(item.date).format("MMM")}
+                      </Text>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
                       <Text
                         style={{
                           color: isSelected ? colors.darkGreen : colors.darkGray,
-                          fontWeight: isSelected ? "bold" : "normal",
-                          fontSize: isMobile ? "0.8rem" : "0.9rem",
+                          fontWeight: "600",
+                          fontSize: isMobile ? "0.9rem" : "1rem",
                           display: "block",
                           lineHeight: "1.2",
                         }}
                       >
-                        {`📅 ${daysOfWeek[item.schedule.dayOfWeek]} | ${item.date}`}
+                        {daysOfWeek[item.schedule.dayOfWeek]}
                       </Text>
                       <Text
                         style={{
-                          color: isSelected ? colors.darkGreen : colors.darkGray,
-                          fontSize: isMobile ? "0.75rem" : "0.85rem",
-                          marginTop: "4px",
-                          display: "block",
+                          color: colors.darkGray,
+                          fontSize: isMobile ? "0.8rem" : "0.9rem",
+                          display: "flex",
+                          alignItems: "center",
+                          marginTop: 6,
                         }}
                       >
-                        {`🕒 ${item.schedule.startTime} - ${item.schedule.endTime}`}
+                        {`${item.schedule.startTime} - ${item.schedule.endTime}`}
                       </Text>
                     </div>
                   </div>
@@ -148,12 +219,21 @@ const Sidebar = ({
         ) : (
           <div
             style={{
-              padding: 16,
+              padding: 24,
               textAlign: "center",
               color: colors.darkGray,
+              backgroundColor: colors.white,
+              borderRadius: 12,
+              boxShadow: `0 2px 6px ${colors.softShadow}`,
             }}
           >
-            <Text>No lessons by schedule available</Text>
+            <CalendarOutlined style={{ fontSize: 28, color: colors.midGreen, marginBottom: 12 }} />
+            <Text style={{ display: "block", fontWeight: 500, color: colors.darkGreen }}>
+              Chưa có bài học nào được lên lịch
+            </Text>
+            <Text style={{ fontSize: "0.9rem", color: colors.darkGray }}>
+              Bài học sẽ xuất hiện ở đây khi được lên lịch
+            </Text>
           </div>
         )}
       </div>

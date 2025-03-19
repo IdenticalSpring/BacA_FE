@@ -37,26 +37,26 @@ const Toolbox = ({
       key: "assignment",
       icon: <FileAddOutlined />,
       onClick: onAddStudent,
-      text: "Assignment",
+      text: "Bài tập về nhà",
     },
     {
       key: "homework",
       icon: <BookOutlined />,
       onClick: onEditClass,
-      text: "Homework",
+      text: "Xem điểm",
     },
     {
       key: "review",
       icon: <CommentOutlined />,
       onClick: onDeleteClass,
-      text: "Lesson review",
+      text: "Đánh giá giáo viên",
     },
-    {
-      key: "scores",
-      icon: <EditOutlined />,
-      onClick: onViewReport,
-      text: "Enter test scores",
-    },
+    // {
+    //   key: "scores",
+    //   icon: <EditOutlined />,
+    //   onClick: onViewReport,
+    //   text: "Enter test scores",
+    // },
   ];
 
   return (
