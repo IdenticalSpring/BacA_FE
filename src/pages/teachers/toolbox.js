@@ -14,7 +14,7 @@ export const colors = {
   emerald: "#2ECC71",
 };
 
-const Toolbox = ({ onManageLessons, onHomework, onClassReview, onEnterScores }) => {
+const Toolbox = ({ onAssignment, onClassReview, onEnterScores }) => {
   return (
     <div
       style={{
@@ -32,26 +32,14 @@ const Toolbox = ({ onManageLessons, onHomework, onClassReview, onEnterScores }) 
         <Button
           type="primary"
           icon={<BookOutlined />}
-          onClick={onManageLessons}
+          onClick={onAssignment}
           style={{
             backgroundColor: colors.deepGreen,
             borderColor: colors.deepGreen,
             color: colors.white,
           }}
         >
-          <span className="button-text">Lesson</span>
-        </Button>
-        <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={onHomework}
-          style={{
-            backgroundColor: colors.midGreen,
-            borderColor: colors.midGreen,
-            color: colors.white,
-          }}
-        >
-          <span className="button-text">Homework</span>
+          <span className="button-text">Assignment</span>
         </Button>
         <Button
           type="primary"
@@ -92,8 +80,7 @@ const Toolbox = ({ onManageLessons, onHomework, onClassReview, onEnterScores }) 
 
 // Add PropTypes validation
 Toolbox.propTypes = {
-  onManageLessons: PropTypes.func.isRequired,
-  onHomework: PropTypes.func.isRequired,
+  onAssignment: PropTypes.func.isRequired,
   onClassReview: PropTypes.func.isRequired,
   onEnterScores: PropTypes.func.isRequired,
 };

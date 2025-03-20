@@ -18,9 +18,17 @@ const lessonService = {
       throw error.response?.data?.message || "Error fetching lesson";
     }
   },
-  getLessonByLevel: async (level) => {
+  getLessonByLevelAndTeacherId: async (levelAndTeacherId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lessons/level/${level}`);
+      const response = await axios.post(`${API_BASE_URL}/lessons/level`, levelAndTeacherId);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching lessons list";
+    }
+  },
+  getLessonByTeacherId: async (TeacherId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/lessons/teacher/${TeacherId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lessons list";

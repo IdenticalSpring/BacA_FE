@@ -25,6 +25,7 @@ import "react-quill/dist/quill.snow.css";
 import { colors } from "../../assets/theme/color";
 import lessonService from "services/lessonService";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 const { useBreakpoint } = Grid;
 const { Title } = Typography;
 const { Option } = Select;
@@ -144,10 +145,19 @@ const ManageLessons = () => {
   const fetchLessons = async () => {
     try {
       setLoading(true);
-      const data = await lessonService.getAllLessons();
+      const token = sessionStorage.getItem("token");
+
+      // Giải mã token để lấy role
+      const decoded = jwtDecode(token);
+      if (!decoded) {
+        return;
+      }
+      const data = await lessonService.getLessonByTeacherId(decoded.userId);
       setLessons(data);
     } catch (err) {
-      message.error("Failed to load lessons!");
+      console.log(err);
+
+      message.error("Failed to load lessons!", err);
     } finally {
       setLoading(false);
     }

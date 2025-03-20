@@ -20,7 +20,7 @@ import {
   Alert,
   Empty,
   Grid,
-  notification,
+  Tabs,
 } from "antd";
 import {
   UserOutlined,
@@ -51,6 +51,7 @@ const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
+const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
 // Color palette
 export const colors = {
@@ -94,8 +95,6 @@ const TeacherPage = () => {
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [hasClassToday, setHasClassToday] = useState(false);
-  const [scheduleID, setScheduleID] = useState([]);
 
   // Modals
   const [lessonModal, setLessonModal] = useState(false);
@@ -123,39 +122,21 @@ const TeacherPage = () => {
   //Student information
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
-
-  // Function to check if there's a class scheduled for today
-  const checkClassScheduleForToday = () => {
-    if (!lessonByScheduleData || lessonByScheduleData.length === 0) return false;
-
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date();
-
-    const todayFormatted = today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
-    console.log("Today is " + todayFormatted);
-    // Check if any lesson schedule matches today's date
-    const todaySchedule = lessonByScheduleData.find((schedule) => schedule.date === todayFormatted);
-    return todaySchedule !== undefined;
+  const [assignmentModal, setAssignmentModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("lesson");
+  const handleSaveHomework = () => {
+    // Implementation here
+    console.log("Saving homework:", {
+      title: homeworkTitle,
+      description: homeworkDescription,
+      audio: mp3Url,
+      youtube: youtubeLink,
+    });
   };
-  const getSchedulesForToday = () => {
-    if (!lessonByScheduleData || lessonByScheduleData.length === 0) return [];
-
-    // Lấy ngày hôm nay theo format YYYY-MM-DD
-    const today = new Date().toISOString().split("T")[0];
-
-    // Lọc danh sách các schedule có ngày trùng với hôm nay
-    const todaySchedules = lessonByScheduleData
-      .filter((schedule) => schedule.date.startsWith(today)) // Lọc đúng ngày
-      .map((schedule) => ({
-        id: schedule.schedule.id,
-        startTime: schedule.schedule.startTime,
-        endTime: schedule.schedule.endTime,
-      }));
-
-    console.log("Schedule IDs for today:", todaySchedules);
-    return todaySchedules;
+  const openAssignmentModal = (tab = "lesson") => {
+    setActiveTab(tab);
+    setAssignmentModal(true);
   };
-  const schedulesForToday = getSchedulesForToday();
 
   const studentMenu = (student) => (
     <Menu>
@@ -190,16 +171,6 @@ const TeacherPage = () => {
   };
 
   const handleViewEvaluation = (student) => {
-    if (!hasClassToday) {
-      notification.warning({
-        message: "No Class Today",
-        description: "Class is scheduled for today",
-        placement: "topRight",
-        duration: 4,
-      });
-      return;
-    }
-
     setSelectedStudent(student);
     setIsEvaluationModalVisible(true);
   };
@@ -237,14 +208,6 @@ const TeacherPage = () => {
     }
   }, [selectedClass]);
 
-  useEffect(() => {
-    // Check for class today whenever lesson schedule data changes
-    if (lessonByScheduleData.length > 0) {
-      const hasClass = checkClassScheduleForToday();
-      setHasClassToday(hasClass);
-    }
-  }, [lessonByScheduleData]);
-
   const fetchLessonByScheduleAndLessonByLevel = async () => {
     try {
       setLoading(true);
@@ -252,8 +215,19 @@ const TeacherPage = () => {
       setLessonByScheduleData(data);
 
       const classData = classes.find((c) => c.id === selectedClass);
+      const token = sessionStorage.getItem("token");
+
+      // Giải mã token để lấy role
+      const decoded = jwtDecode(token);
+      if (!decoded) {
+        return;
+      }
       if (classData) {
-        const lessons = await lessonService.getLessonByLevel(classData.level);
+        const levelAndTeacherId = {
+          level: classData.level,
+          teacherId: decoded.userId,
+        };
+        const lessons = await lessonService.getLessonByLevelAndTeacherId(levelAndTeacherId);
         setLessonsData(lessons);
       }
     } catch (err) {
@@ -365,19 +339,84 @@ const TeacherPage = () => {
           </Dropdown>
         </Header>
 
-        {selectedClass && (
-          <div
-            style={{
-              padding: "12px 24px",
-              backgroundColor: hasClassToday ? colors.mintGreen : colors.lightAccent,
-            }}
-          >
-            <Text style={{ color: hasClassToday ? colors.darkGreen : colors.darkGray }}>
-              <strong>Class Status:</strong>{" "}
-              {hasClassToday ? "Class is scheduled for today" : "Class is scheduled for today"}
-            </Text>
-          </div>
-        )}
+        {/* <Content
+          style={{
+            padding: isMobile ? "16px" : "24px",
+            background: colors.white,
+            paddingBottom: selectedClass ? (isMobile ? "70px" : "64px") : "24px",
+          }}
+        >
+          {students.length > 0 ? (
+            <Row gutter={[16, 16]}>
+              {students.map((student) => (
+                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={student.id}>
+                  <Card
+                    style={{
+                      borderRadius: "12px",
+                      boxShadow: `0 2px 8px ${colors.softShadow}`,
+                      border: `1px solid ${colors.borderGreen}`,
+                      transition: "all 0.3s ease",
+                    }}
+                    hoverable
+                    bodyStyle={{ padding: "16px" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Avatar
+                        size={isMobile ? 48 : 64}
+                        style={{
+                          backgroundColor: colors.deepGreen,
+                          color: colors.white,
+                          marginBottom: "12px",
+                        }}
+                      >
+                        {student.name.charAt(0)}
+                      </Avatar>
+
+                      <Typography.Title
+                        level={5}
+                        style={{ margin: "0 0 4px 0", color: colors.darkGreen }}
+                      >
+                        {student.name}
+                      </Typography.Title>
+
+                      <Typography.Text type="secondary" style={{ display: "block" }}>
+                        Level: {student.level || "N/A"}
+                      </Typography.Text>
+
+                      <Typography.Text type="secondary" style={{ display: "block" }}>
+                        Note: {student.note || "N/A"}
+                      </Typography.Text>
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: isMobile ? "24px" : "40px",
+                color: colors.darkGray,
+                background: colors.paleGreen,
+                borderRadius: "12px",
+              }}
+            >
+              <Typography.Title level={4} style={{ color: colors.deepGreen }}>
+                Choose your class
+              </Typography.Title>
+              <Typography.Text style={{ color: colors.darkGreen }}>
+                Select a class from the sidebar to view students
+              </Typography.Text>
+            </div>
+          )}
+        </Content> */}
 
         <Row
           gutter={[16, 16]}
@@ -443,7 +482,6 @@ const TeacherPage = () => {
             visible={isEvaluationModalVisible}
             onClose={() => setIsEvaluationModalVisible(false)}
             student={selectedStudent}
-            schedules={schedulesForToday}
           />
         )}
 
@@ -458,8 +496,7 @@ const TeacherPage = () => {
             }}
           >
             <Toolbox
-              onManageLessons={() => setLessonModal(true)}
-              onHomework={() => setHomeworkModal(true)}
+              onAssignment={() => openAssignmentModal()}
               onClassReview={() => console.log("Class review")}
               onEnterScores={() => console.log("Enter scores")}
             />
@@ -469,176 +506,186 @@ const TeacherPage = () => {
 
       {/* Lesson Modal */}
       <Modal
-        title="Lesson By Schedule"
-        open={lessonModal}
-        onCancel={() => setLessonModal(false)}
-        footer={[
-          <Button key="close" onClick={() => setLessonModal(false)}>
-            Close
-          </Button>,
-        ]}
+        title="Assignment Management"
+        open={assignmentModal}
+        onCancel={() => setAssignmentModal(false)}
+        footer={
+          activeTab === "homework"
+            ? [
+                <Button key="close" onClick={() => setAssignmentModal(false)}>
+                  Close
+                </Button>,
+                <Button
+                  key="submit"
+                  type="primary"
+                  onClick={handleSaveHomework}
+                  style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                >
+                  Save
+                </Button>,
+              ]
+            : [
+                <Button key="close" onClick={() => setAssignmentModal(false)}>
+                  Close
+                </Button>,
+              ]
+        }
         width={isMobile ? "95%" : 800}
         centered={true}
-        className="lesson-modal"
+        className="assignment-modal"
         style={{
           borderRadius: "8px",
         }}
       >
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "20px" }}>
-            <Spin />
-            <div style={{ marginTop: "10px" }}>Loading...</div>
-          </div>
-        ) : error ? (
-          <Alert message="Error" description={error} type="error" showIcon />
-        ) : (
-          <div style={{ maxHeight: "70vh", overflow: "auto" }}>
-            {lessonByScheduleData.length > 0 ? (
-              lessonByScheduleData.map((item, index) => (
-                <div
-                  key={index}
+        <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" className="assignment-tabs">
+          <TabPane
+            tab={
+              <span>
+                <BookOutlined /> Lesson
+              </span>
+            }
+            key="lesson"
+          >
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "20px" }}>
+                <Spin />
+                <div style={{ marginTop: "10px" }}>Loading...</div>
+              </div>
+            ) : error ? (
+              <Alert message="Error" description={error} type="error" showIcon />
+            ) : (
+              <div style={{ maxHeight: "60vh", overflow: "auto" }}>
+                {lessonByScheduleData.length > 0 ? (
+                  lessonByScheduleData.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "16px",
+                        marginBottom: "12px",
+                        border: `1px solid ${colors.borderGreen}`,
+                        borderRadius: "8px",
+                        backgroundColor: colors.paleGreen,
+                        display: "flex",
+                        flexDirection: isMobile ? "column" : "row",
+                        justifyContent: "space-between",
+                        alignItems: isMobile ? "flex-start" : "center",
+                        gap: "10px",
+                        height: "100%",
+                        width: "100%",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          color: colors.darkGreen,
+                          flex: 1,
+                          marginBottom: isMobile ? "10px" : 0,
+                        }}
+                      >
+                        📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                        {item.schedule.startTime} - {item.schedule.endTime}
+                      </div>
+
+                      <Select
+                        style={{ width: isMobile ? "100%" : "48%" }}
+                        placeholder="Select lesson"
+                        value={
+                          lessonsData.some((lesson) => lesson.id === item.lessonID)
+                            ? item.lessonID
+                            : undefined
+                        }
+                        onChange={(value) => {
+                          const newData = [...lessonByScheduleData];
+                          newData[index] = { ...newData[index], lessonID: value };
+                          setLessonByScheduleData(newData);
+                          handleUpdateLessonBySchedule(item.id, { lessonID: value });
+                        }}
+                      >
+                        {lessonsData.map((lesson) => (
+                          <Option key={lesson.id} value={lesson.id}>
+                            {lesson.name}
+                          </Option>
+                        ))}
+                      </Select>
+                    </div>
+                  ))
+                ) : (
+                  <Empty description="No lesson schedules found" />
+                )}
+              </div>
+            )}
+          </TabPane>
+          <TabPane
+            tab={
+              <span>
+                <FormOutlined /> Homework
+              </span>
+            }
+            key="homework"
+          >
+            <Form layout="vertical" style={{ maxHeight: "60vh", overflow: "auto" }}>
+              <Form.Item label="Title">
+                <Input
+                  value={homeworkTitle}
+                  onChange={(e) => setHomeworkTitle(e.target.value)}
+                  placeholder="Enter homework title"
+                />
+              </Form.Item>
+
+              <Form.Item label="Description">
+                <ReactQuill
+                  theme="snow"
+                  value={homeworkDescription}
+                  onChange={setHomeworkDescription}
+                  style={{ height: "150px", marginBottom: "40px" }}
+                />
+              </Form.Item>
+
+              <Form.Item label="Text to Speech">
+                <TextArea
+                  rows={3}
+                  value={textToSpeech}
+                  onChange={(e) => setTextToSpeech(e.target.value)}
+                  placeholder="Enter text to convert to speech"
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  onClick={handleConvertToSpeech}
+                  loading={loadingTTS}
                   style={{
-                    padding: "16px",
-                    marginBottom: "12px",
-                    border: `1px solid ${colors.borderGreen}`,
-                    borderRadius: "8px",
-                    backgroundColor: colors.paleGreen,
-                    display: "flex",
-                    flexDirection: isMobile ? "column" : "row",
-                    justifyContent: "space-between",
-                    alignItems: isMobile ? "flex-start" : "center",
-                    gap: "10px",
-                    height: "100%",
-                    width: "100%",
+                    backgroundColor: colors.deepGreen,
+                    borderColor: colors.deepGreen,
                   }}
                 >
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      color: colors.darkGreen,
-                      flex: 1,
-                      marginBottom: isMobile ? "10px" : 0,
-                    }}
-                  >
-                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
-                    {item.schedule.startTime} - {item.schedule.endTime}
+                  Convert to Speech
+                </Button>
+              </Form.Item>
+
+              {mp3Url && (
+                <Form.Item>
+                  <div style={{ marginBottom: "16px" }}>
+                    <audio controls style={{ width: "100%" }}>
+                      <source src={mp3Url} type="audio/mp3" />
+                      Your browser does not support the audio element.
+                    </audio>
                   </div>
+                </Form.Item>
+              )}
 
-                  <Select
-                    style={{ width: isMobile ? "100%" : "48%" }}
-                    placeholder="Select lesson"
-                    value={
-                      lessonsData.some((lesson) => lesson.id === item.lessonID)
-                        ? item.lessonID
-                        : undefined
-                    }
-                    onChange={(value) => {
-                      const newData = [...lessonByScheduleData];
-                      newData[index] = { ...newData[index], lessonID: value };
-                      setLessonByScheduleData(newData);
-                      handleUpdateLessonBySchedule(item.id, { lessonID: value });
-                    }}
-                  >
-                    {lessonsData.map((lesson) => (
-                      <Option key={lesson.id} value={lesson.id}>
-                        {lesson.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-              ))
-            ) : (
-              <Empty description="No lesson schedules found" />
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Homework Modal */}
-      <Modal
-        title="Homework"
-        open={homeworkModal}
-        onCancel={() => setHomeworkModal(false)}
-        footer={[
-          <Button key="close" onClick={() => setHomeworkModal(false)}>
-            Close
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-          >
-            Save
-          </Button>,
-        ]}
-        width={isMobile ? "95%" : 800}
-        centered={true}
-        className="homework-modal"
-        style={{
-          borderRadius: "8px",
-        }}
-      >
-        <Form layout="vertical" style={{ maxHeight: "70vh", overflow: "auto" }}>
-          <Form.Item label="Title">
-            <Input
-              value={homeworkTitle}
-              onChange={(e) => setHomeworkTitle(e.target.value)}
-              placeholder="Enter homework title"
-            />
-          </Form.Item>
-
-          <Form.Item label="Description">
-            <ReactQuill
-              theme="snow"
-              value={homeworkDescription}
-              onChange={setHomeworkDescription}
-              style={{ height: "150px", marginBottom: "40px" }}
-            />
-          </Form.Item>
-
-          <Form.Item label="Text to Speech">
-            <TextArea
-              rows={3}
-              value={textToSpeech}
-              onChange={(e) => setTextToSpeech(e.target.value)}
-              placeholder="Enter text to convert to speech"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              onClick={handleConvertToSpeech}
-              loading={loadingTTS}
-              style={{
-                backgroundColor: colors.deepGreen,
-                borderColor: colors.deepGreen,
-              }}
-            >
-              Convert to Speech
-            </Button>
-          </Form.Item>
-
-          {mp3Url && (
-            <Form.Item>
-              <div style={{ marginBottom: "16px" }}>
-                <audio controls style={{ width: "100%" }}>
-                  <source src={mp3Url} type="audio/mp3" />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            </Form.Item>
-          )}
-
-          <Form.Item label="YouTube Link">
-            <Input
-              prefix={<YoutubeOutlined style={{ color: colors.errorRed }} />}
-              value={youtubeLink}
-              onChange={(e) => setYoutubeLink(e.target.value)}
-              placeholder="Paste YouTube link here"
-            />
-          </Form.Item>
-        </Form>
+              <Form.Item label="YouTube Link">
+                <Input
+                  prefix={<YoutubeOutlined style={{ color: colors.errorRed }} />}
+                  value={youtubeLink}
+                  onChange={(e) => setYoutubeLink(e.target.value)}
+                  placeholder="Paste YouTube link here"
+                />
+              </Form.Item>
+            </Form>
+          </TabPane>
+        </Tabs>
       </Modal>
     </Layout>
   );
