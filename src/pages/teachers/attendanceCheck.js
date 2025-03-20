@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   Layout,
   Typography,
-  Table,
   Button,
   Select,
   Space,
   Card,
   Avatar,
-  Checkbox,
   DatePicker,
   Row,
   Col,
@@ -23,10 +21,8 @@ import {
 import {
   UserOutlined,
   ArrowLeftOutlined,
-  CalendarOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  ExclamationCircleOutlined,
   EditOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -34,7 +30,6 @@ import { jwtDecode } from "jwt-decode";
 import studentService from "services/studentService";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import teacherService from "services/teacherService";
-// import attendanceService from "services/attendanceService"; // Giả định có service này
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -76,6 +71,7 @@ const AttendanceCheck = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [scheduleOptions, setScheduleOptions] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedLessonByScheduleId, setSelectedLessonByScheduleId] = useState(null);
   const [attendance, setAttendance] = useState([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
@@ -107,8 +103,7 @@ const AttendanceCheck = () => {
         // Khởi tạo trạng thái điểm danh
         const initialAttendance = studentsData.map((student) => ({
           studentId: student.id,
-          name: student.name,
-          status: "present", // Mặc định là có mặt
+          present: 1, // Mặc định là có mặt (1)
           note: "",
         }));
         setAttendance(initialAttendance);
@@ -124,6 +119,7 @@ const AttendanceCheck = () => {
           .filter((schedule) => schedule.date === todayFormatted)
           .map((schedule) => ({
             id: schedule.schedule.id,
+            lessonByScheduleId: schedule.id, // Lưu lại lessonByScheduleId
             time: `${schedule.schedule.startTime} - ${schedule.schedule.endTime}`,
             fullData: schedule,
           }));
@@ -131,6 +127,7 @@ const AttendanceCheck = () => {
         setScheduleOptions(todaySchedules);
         if (todaySchedules.length > 0) {
           setSelectedSchedule(todaySchedules[0].id);
+          setSelectedLessonByScheduleId(todaySchedules[0].lessonByScheduleId);
         }
       }
 
@@ -154,8 +151,7 @@ const AttendanceCheck = () => {
       // Khởi tạo trạng thái điểm danh
       const initialAttendance = data.map((student) => ({
         studentId: student.id,
-        name: student.name,
-        status: "present",
+        present: 1, // Mặc định là có mặt (1)
         note: "",
       }));
       setAttendance(initialAttendance);
@@ -183,6 +179,7 @@ const AttendanceCheck = () => {
         .filter((schedule) => schedule.date === formattedDate)
         .map((schedule) => ({
           id: schedule.schedule.id,
+          lessonByScheduleId: schedule.id, // Lưu lại lessonByScheduleId
           time: `${schedule.schedule.startTime} - ${schedule.schedule.endTime}`,
           fullData: schedule,
         }));
@@ -190,8 +187,10 @@ const AttendanceCheck = () => {
       setScheduleOptions(dateSchedules);
       if (dateSchedules.length > 0) {
         setSelectedSchedule(dateSchedules[0].id);
+        setSelectedLessonByScheduleId(dateSchedules[0].lessonByScheduleId);
       } else {
         setSelectedSchedule(null);
+        setSelectedLessonByScheduleId(null);
         message.info("No classes scheduled for selected date");
       }
     } catch (error) {
@@ -216,8 +215,7 @@ const AttendanceCheck = () => {
   const resetAttendance = () => {
     const initialAttendance = students.map((student) => ({
       studentId: student.id,
-      name: student.name,
-      status: "present",
+      present: 1, // Mặc định là có mặt (1)
       note: "",
     }));
     setAttendance(initialAttendance);
@@ -225,10 +223,20 @@ const AttendanceCheck = () => {
   };
 
   // Handle status change
-  const handleStatusChange = (studentId, status) => {
+  const handleStatusChange = (studentId, present) => {
     setAttendance((prev) =>
-      prev.map((item) => (item.studentId === studentId ? { ...item, status } : item))
+      prev.map((item) => (item.studentId === studentId ? { ...item, present } : item))
     );
+  };
+
+  // Handle schedule change
+  const handleScheduleChange = (scheduleId) => {
+    setSelectedSchedule(scheduleId);
+    // Tìm lessonByScheduleId tương ứng
+    const schedule = scheduleOptions.find((s) => s.id === scheduleId);
+    if (schedule) {
+      setSelectedLessonByScheduleId(schedule.lessonByScheduleId);
+    }
   };
 
   // Open note modal
@@ -256,18 +264,19 @@ const AttendanceCheck = () => {
 
   // Submit attendance
   const handleSubmitAttendance = async () => {
-    if (!selectedSchedule) {
+    if (!selectedSchedule || !selectedLessonByScheduleId) {
       message.warning("Please select a schedule");
       return;
     }
 
     try {
       setLoading(true);
-      // Giả định có API endpoint để lưu điểm danh
+      // Gửi dữ liệu điểm danh đã chỉnh sửa
       await teacherService.attendanceStudent({
-        scheduleId: selectedSchedule,
-        date: selectedDate.toISOString().split("T")[0],
-        attendanceData: attendance,
+        // scheduleId: selectedSchedule,
+        lessonByScheduleId: selectedLessonByScheduleId,
+        // date: selectedDate.toISOString().split("T")[0],
+        attendanceData: attendance, // Đã chỉnh sửa với format mới: studentId, present (1/0), note
       });
 
       // Giả lập lưu thành công
@@ -358,7 +367,7 @@ const AttendanceCheck = () => {
                   style={{ width: "100%" }}
                   placeholder="Select schedule"
                   value={selectedSchedule}
-                  onChange={setSelectedSchedule}
+                  onChange={handleScheduleChange}
                   disabled={scheduleOptions.length === 0}
                 >
                   {scheduleOptions.map((schedule) => (
@@ -421,7 +430,7 @@ const AttendanceCheck = () => {
                     const studentAttendance = attendance.find(
                       (a) => a.studentId === student.id
                     ) || {
-                      status: "present",
+                      present: 1,
                       note: "",
                     };
 
@@ -432,14 +441,12 @@ const AttendanceCheck = () => {
                             borderRadius: 8,
                             boxShadow: `0 2px 8px ${colors.softShadow}`,
                             backgroundColor: hasSubmitted
-                              ? studentAttendance.status === "present"
+                              ? studentAttendance.present === 1
                                 ? colors.paleGreen
                                 : colors.lightAccent
                               : colors.white,
                             border: `1px solid ${
-                              studentAttendance.status === "present"
-                                ? colors.borderGreen
-                                : colors.accent
+                              studentAttendance.present === 1 ? colors.borderGreen : colors.accent
                             }`,
                           }}
                           bodyStyle={{ padding: 16 }}
@@ -468,27 +475,21 @@ const AttendanceCheck = () => {
                             }}
                           >
                             <Select
-                              value={studentAttendance.status}
+                              value={studentAttendance.present}
                               onChange={(value) => handleStatusChange(student.id, value)}
                               style={{ width: "75%" }}
                               disabled={hasSubmitted}
                             >
-                              <Option value="present">
+                              <Option value={1}>
                                 <Space>
                                   <CheckCircleOutlined style={{ color: colors.safeGreen }} />
                                   Present
                                 </Space>
                               </Option>
-                              <Option value="absent">
+                              <Option value={0}>
                                 <Space>
                                   <CloseCircleOutlined style={{ color: colors.errorRed }} />
                                   Absent
-                                </Space>
-                              </Option>
-                              <Option value="late">
-                                <Space>
-                                  <ExclamationCircleOutlined style={{ color: colors.accent }} />
-                                  Late
                                 </Space>
                               </Option>
                             </Select>
