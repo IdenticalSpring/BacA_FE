@@ -157,6 +157,27 @@ const TeacherPage = () => {
   };
   const schedulesForToday = getSchedulesForToday();
 
+  const handleAttendanceCheck = () => {
+    if (!selectedClass) {
+      notification.warning({
+        message: "Warning",
+        description: "Please select a class first",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
+
+    // Chuyển hướng sang trang AttendanceCheck và truyền dữ liệu qua state
+    navigate("/teacherpage/attendanceCheck", {
+      state: {
+        classId: selectedClass,
+        students: students,
+        lessonByScheduleData: lessonByScheduleData,
+      },
+    });
+  };
+
   const studentMenu = (student) => (
     <Menu>
       <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => handleViewProfile(student)}>
@@ -462,6 +483,7 @@ const TeacherPage = () => {
               onHomework={() => setHomeworkModal(true)}
               onClassReview={() => console.log("Class review")}
               onEnterScores={() => console.log("Enter scores")}
+              onAttendanceCheck={handleAttendanceCheck}
             />
           </div>
         )}
