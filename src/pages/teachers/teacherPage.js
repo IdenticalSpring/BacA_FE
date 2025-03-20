@@ -158,10 +158,10 @@ const TeacherPage = () => {
   const schedulesForToday = getSchedulesForToday();
 
   const handleAttendanceCheck = () => {
-    if (!selectedClass) {
+    if (!hasClassToday) {
       notification.warning({
         message: "Warning",
-        description: "Please select a class first",
+        description: "Class is scheduled for today",
         placement: "topRight",
         duration: 4,
       });
