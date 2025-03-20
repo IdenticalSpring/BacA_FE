@@ -60,7 +60,7 @@ import StudentPage from "pages/students/studentPage";
 import TeacherDashboard from "pages/teachers/teacherDashboard";
 import PrivateRoute from "privateRoute";
 import AuthPortal from "pages/loginAuth/loginAuth";
-import CreateLesson from "layouts/lessons/CreateLesson";
+// import CreateLesson from "layouts/lessons/CreateLesson";
 import Lessons from "layouts/lessons";
 import LessonBySchedules from "layouts/lesson_by_schedules";
 import TeacherPage from "pages/teachers/teacherPage";
@@ -69,6 +69,8 @@ import MainLogin from "pages/loginAuth/MainLogin";
 import LoginForStudent from "pages/loginAuth/LoginForStudent";
 import LoginForTeacher from "pages/loginAuth/LoginForTeacher";
 import LoginForAdmin from "pages/loginAuth/LoginForAdmin";
+import ManageLessons from "pages/teachers/ManageLessons";
+import CreateLesson from "pages/teachers/CreateLesson";
 
 const routes = [
   {
@@ -264,6 +266,28 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin", "teacher"]}>
         <TeacherPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Manage Lessons Page",
+    key: "ManageLessons",
+    icon: <Icon fontSize="small">Manage Lessons</Icon>,
+    route: "/teacherpage/manageLessons",
+    component: (
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
+        <ManageLessons />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Create Lesson Page",
+    key: "CreateLesson",
+    icon: <Icon fontSize="small">Create Lesson</Icon>,
+    route: "/teacherpage/createLesson",
+    component: (
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
+        <CreateLesson />
       </PrivateRoute>
     ),
   },

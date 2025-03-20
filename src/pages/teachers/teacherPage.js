@@ -31,6 +31,7 @@ import {
   PlusOutlined,
   EditOutlined,
   YoutubeOutlined,
+  FolderOpenOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -43,6 +44,7 @@ import lessonByScheduleService from "services/lessonByScheduleService";
 import Toolbox from "./toolbox";
 import Sidebar from "./sidebar";
 import EvaluationModal from "./EvaluationModal";
+import { useNavigate } from "react-router-dom";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -114,7 +116,7 @@ const TeacherPage = () => {
   const userId = jwtDecode(sessionStorage.getItem("token"));
   const teacherId = userId.userId;
   const userName = userId.username || "Teacher";
-
+  const navigate = useNavigate();
   //Student information
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
@@ -221,7 +223,7 @@ const TeacherPage = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
-    window.location.href = "/login/teacher";
+    navigate("/login/teacher");
   };
 
   const handleSelectClass = (classId) => {
@@ -255,12 +257,17 @@ const TeacherPage = () => {
     }
     setLoadingTTS(false);
   };
-
+  const handleManageLessons = () => {
+    navigate("/teacherpage/manageLessons");
+  };
   // Menu for user dropdown
   const userMenu = (
     <Menu>
       <Menu.Item key="1" icon={<LogoutOutlined />} onClick={handleLogout}>
         Log out
+      </Menu.Item>
+      <Menu.Item key="2" icon={<FolderOpenOutlined />} onClick={handleManageLessons}>
+        Manage my lessons
       </Menu.Item>
     </Menu>
   );

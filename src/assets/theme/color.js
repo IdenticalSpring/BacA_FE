@@ -18,4 +18,12 @@ export const colors = {
   highlightGreen: "#43D183",
   safeGreen: "#27AE60",
   borderGreen: "#A8E6C3",
+  // New colors
+  cardBg: "#FFFFFF",
+  headerBg: "#368A68",
+  buttonHover: "#43D183",
+  tableHeaderBg: "#E8F5EE",
+  tableRowHover: "#F2FBF6",
+  inputBorder: "#C2F0D7",
+  inputFocus: "#5FAE8C",
 };
