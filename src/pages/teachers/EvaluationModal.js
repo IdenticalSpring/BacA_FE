@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Modal, Form, Select, Button, Row, Col, Rate, List, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
@@ -19,17 +19,31 @@ const colors = {
 
 const SKILL_OPTIONS = ["Vocabulary", "Structure", "Listening", "Speaking", "Reading", "Writing"];
 
-const EvaluationModal = ({ visible, onClose, student }) => {
+const EvaluationModal = ({ visible, onClose, student, schedules }) => {
   const [skills, setSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [evaluation, setEvaluation] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
 
   const [behaviors, setBehaviors] = useState([
     { name: "Respect", rating: 0 },
     { name: "Discipline", rating: 0 },
     { name: "Cooperation", rating: 0 },
   ]);
+  useEffect(() => {
+    if (!visible) {
+      setSkills([]);
+      setSelectedSkill("");
+      setEvaluation("");
+      setSelectedSchedule(null);
+      setBehaviors([
+        { name: "Respect", rating: 0 },
+        { name: "Discipline", rating: 0 },
+        { name: "Cooperation", rating: 0 },
+      ]);
+    }
+  }, [visible]);
 
   const handleAddSkill = () => {
     if (selectedSkill && !skills.some((s) => s.name === selectedSkill)) {
@@ -80,7 +94,7 @@ const EvaluationModal = ({ visible, onClose, student }) => {
     const payload = {
       teacherID,
       studentID: student.id,
-      scheduleID: 2,
+      scheduleID: selectedSchedule,
       comment: evaluation,
       ...skillRatings,
       ...behaviorRatings,
@@ -185,6 +199,24 @@ const EvaluationModal = ({ visible, onClose, student }) => {
       </Row>
 
       <Form layout="vertical" style={{ marginTop: 20 }}>
+        <Form.Item label="Select Schedule">
+          <Select
+            value={selectedSchedule}
+            onChange={(value) => setSelectedSchedule(value)}
+            placeholder="Choose a schedule"
+            style={{ width: "100%" }}
+          >
+            {schedules.length > 0 ? (
+              schedules.map((schedule) => (
+                <Option key={schedule.id} value={schedule.id}>
+                  {schedule.startTime} - {schedule.endTime}
+                </Option>
+              ))
+            ) : (
+              <Option disabled>No schedules available</Option>
+            )}
+          </Select>
+        </Form.Item>
         <Form.Item label="Comment">
           <TextArea
             rows={4}
@@ -206,6 +238,12 @@ EvaluationModal.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
   }),
+  schedules: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      name: PropTypes.string,
+    })
+  ).isRequired,
 };
 
 export default EvaluationModal;

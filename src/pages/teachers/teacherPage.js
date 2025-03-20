@@ -93,6 +93,7 @@ const TeacherPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hasClassToday, setHasClassToday] = useState(false);
+  const [scheduleID, setScheduleID] = useState([]);
 
   // Modals
   const [lessonModal, setLessonModal] = useState(false);
@@ -134,6 +135,25 @@ const TeacherPage = () => {
     const todaySchedule = lessonByScheduleData.find((schedule) => schedule.date === todayFormatted);
     return todaySchedule !== undefined;
   };
+  const getSchedulesForToday = () => {
+    if (!lessonByScheduleData || lessonByScheduleData.length === 0) return [];
+
+    // Lấy ngày hôm nay theo format YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
+
+    // Lọc danh sách các schedule có ngày trùng với hôm nay
+    const todaySchedules = lessonByScheduleData
+      .filter((schedule) => schedule.date.startsWith(today)) // Lọc đúng ngày
+      .map((schedule) => ({
+        id: schedule.schedule.id,
+        startTime: schedule.schedule.startTime,
+        endTime: schedule.schedule.endTime,
+      }));
+
+    console.log("Schedule IDs for today:", todaySchedules);
+    return todaySchedules;
+  };
+  const schedulesForToday = getSchedulesForToday();
 
   const studentMenu = (student) => (
     <Menu>
@@ -416,6 +436,7 @@ const TeacherPage = () => {
             visible={isEvaluationModalVisible}
             onClose={() => setIsEvaluationModalVisible(false)}
             student={selectedStudent}
+            schedules={schedulesForToday}
           />
         )}
 
