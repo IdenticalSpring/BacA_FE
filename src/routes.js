@@ -71,6 +71,7 @@ import LoginForTeacher from "pages/loginAuth/LoginForTeacher";
 import LoginForAdmin from "pages/loginAuth/LoginForAdmin";
 import ManageLessons from "pages/teachers/ManageLessons";
 import CreateLesson from "pages/teachers/CreateLesson";
+import AttendancePage from "pages/teachers/attendanceCheck";
 
 const routes = [
   {
@@ -288,6 +289,17 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin", "teacher"]}>
         <CreateLesson />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Attendance Check",
+    key: "attendanceCheck",
+    icon: <Icon fontSize="small">Create Lesson</Icon>,
+    route: "/teacherpage/attendanceCheck",
+    component: (
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
+        <AttendancePage />
       </PrivateRoute>
     ),
   },

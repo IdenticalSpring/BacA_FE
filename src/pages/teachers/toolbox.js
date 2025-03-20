@@ -1,6 +1,12 @@
 import React from "react";
-import { Button, Space } from "antd";
-import { BookOutlined, FormOutlined, BarChartOutlined, EditOutlined } from "@ant-design/icons";
+import { Button, Space, Dropdown, Menu } from "antd";
+import {
+  BookOutlined,
+  FormOutlined,
+  BarChartOutlined,
+  EditOutlined,
+  EllipsisOutlined,
+} from "@ant-design/icons";
 import PropTypes from "prop-types";
 
 // Color palette
@@ -14,7 +20,7 @@ export const colors = {
   emerald: "#2ECC71",
 };
 
-const Toolbox = ({ onAssignment, onClassReview, onEnterScores }) => {
+const Toolbox = ({ onManageLessons, onHomework, onClassReview, onEnterScores }) => {
   return (
     <div
       style={{
@@ -65,6 +71,17 @@ const Toolbox = ({ onAssignment, onClassReview, onEnterScores }) => {
         >
           <span className="button-text">Enter test scores</span>
         </Button>
+        <Dropdown overlay={menu} trigger={["click"]}>
+          <Button
+            shape="circle"
+            icon={<EllipsisOutlined />}
+            style={{
+              borderColor: colors.borderGreen,
+              backgroundColor: colors.midGreen,
+              color: colors.white,
+            }}
+          />
+        </Dropdown>
       </Space>
 
       <style>{`
@@ -83,6 +100,7 @@ Toolbox.propTypes = {
   onAssignment: PropTypes.func.isRequired,
   onClassReview: PropTypes.func.isRequired,
   onEnterScores: PropTypes.func.isRequired,
+  onAttendanceCheck: PropTypes.func.isRequired,
 };
 
 export default Toolbox;

@@ -49,6 +49,17 @@ const teacherService = {
       throw error;
     }
   },
+  async attendanceStudent(payload) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/checkins`, payload);
+      console.log("Payload gửi lên:", payload);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in attendanceStudent:", error);
+      throw error;
+    }
+  },
 };
 
 export default teacherService;
