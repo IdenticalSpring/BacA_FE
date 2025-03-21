@@ -21,6 +21,7 @@ import {
   Empty,
   Grid,
   Tabs,
+  notification,
 } from "antd";
 import {
   UserOutlined,
@@ -95,6 +96,8 @@ const TeacherPage = () => {
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hasClassToday, setHasClassToday] = useState(false);
+  const [scheduleID, setScheduleID] = useState([]);
 
   // Modals
   const [lessonModal, setLessonModal] = useState(false);
@@ -137,6 +140,47 @@ const TeacherPage = () => {
     setActiveTab(tab);
     setAssignmentModal(true);
   };
+
+  const checkClassScheduleForToday = () => {
+    if (!lessonByScheduleData || lessonByScheduleData.length === 0) return false;
+
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+
+    const todayFormatted = today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    console.log("Today is " + todayFormatted);
+    // Check if any lesson schedule matches today's date
+    const todaySchedule = lessonByScheduleData.find((schedule) => schedule.date === todayFormatted);
+    return todaySchedule !== undefined;
+  };
+  const getSchedulesForToday = () => {
+    if (!lessonByScheduleData || lessonByScheduleData.length === 0) return [];
+
+    // Lấy ngày hôm nay theo format YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
+
+    // Lọc danh sách các schedule có ngày trùng với hôm nay
+    const todaySchedules = lessonByScheduleData
+      .filter((schedule) => schedule.date.startsWith(today)) // Lọc đúng ngày
+      .map((schedule) => ({
+        id: schedule.schedule.id,
+        startTime: schedule.schedule.startTime,
+        endTime: schedule.schedule.endTime,
+      }));
+
+    console.log("Schedule IDs for today:", todaySchedules);
+    return todaySchedules;
+  };
+
+  useEffect(() => {
+    // Check for class today whenever lesson schedule data changes
+    if (lessonByScheduleData.length > 0) {
+      const hasClass = checkClassScheduleForToday();
+      setHasClassToday(hasClass);
+    }
+  }, [lessonByScheduleData]);
+
+  const schedulesForToday = getSchedulesForToday();
 
   const handleAttendanceCheck = () => {
     if (!hasClassToday) {
@@ -192,6 +236,15 @@ const TeacherPage = () => {
   };
 
   const handleViewEvaluation = (student) => {
+    if (!hasClassToday) {
+      notification.warning({
+        message: "No Class Today",
+        description: "Class is scheduled for today",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
     setSelectedStudent(student);
     setIsEvaluationModalVisible(true);
   };
@@ -277,6 +330,8 @@ const TeacherPage = () => {
 
   const handleSelectClass = (classId) => {
     setSelectedClass(classId);
+    setHasClassToday(false); // Reset state
+    setLoading(true); // Hiển thị trạng thái loading
   };
 
   const handleConvertToSpeech = async () => {
@@ -360,84 +415,19 @@ const TeacherPage = () => {
           </Dropdown>
         </Header>
 
-        {/* <Content
-          style={{
-            padding: isMobile ? "16px" : "24px",
-            background: colors.white,
-            paddingBottom: selectedClass ? (isMobile ? "70px" : "64px") : "24px",
-          }}
-        >
-          {students.length > 0 ? (
-            <Row gutter={[16, 16]}>
-              {students.map((student) => (
-                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={student.id}>
-                  <Card
-                    style={{
-                      borderRadius: "12px",
-                      boxShadow: `0 2px 8px ${colors.softShadow}`,
-                      border: `1px solid ${colors.borderGreen}`,
-                      transition: "all 0.3s ease",
-                    }}
-                    hoverable
-                    bodyStyle={{ padding: "16px" }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Avatar
-                        size={isMobile ? 48 : 64}
-                        style={{
-                          backgroundColor: colors.deepGreen,
-                          color: colors.white,
-                          marginBottom: "12px",
-                        }}
-                      >
-                        {student.name.charAt(0)}
-                      </Avatar>
-
-                      <Typography.Title
-                        level={5}
-                        style={{ margin: "0 0 4px 0", color: colors.darkGreen }}
-                      >
-                        {student.name}
-                      </Typography.Title>
-
-                      <Typography.Text type="secondary" style={{ display: "block" }}>
-                        Level: {student.level || "N/A"}
-                      </Typography.Text>
-
-                      <Typography.Text type="secondary" style={{ display: "block" }}>
-                        Note: {student.note || "N/A"}
-                      </Typography.Text>
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          ) : (
-            <div
-              style={{
-                textAlign: "center",
-                padding: isMobile ? "24px" : "40px",
-                color: colors.darkGray,
-                background: colors.paleGreen,
-                borderRadius: "12px",
-              }}
-            >
-              <Typography.Title level={4} style={{ color: colors.deepGreen }}>
-                Choose your class
-              </Typography.Title>
-              <Typography.Text style={{ color: colors.darkGreen }}>
-                Select a class from the sidebar to view students
-              </Typography.Text>
-            </div>
-          )}
-        </Content> */}
+        {selectedClass && (
+          <div
+            style={{
+              padding: "12px 24px",
+              backgroundColor: hasClassToday ? colors.mintGreen : colors.lightAccent,
+            }}
+          >
+            <Text style={{ color: hasClassToday ? colors.darkGreen : colors.darkGray }}>
+              <strong>Class Status:</strong>{" "}
+              {hasClassToday ? "Class is scheduled for today" : "Class is scheduled for today"}
+            </Text>
+          </div>
+        )}
 
         <Row
           gutter={[16, 16]}
@@ -503,6 +493,7 @@ const TeacherPage = () => {
             visible={isEvaluationModalVisible}
             onClose={() => setIsEvaluationModalVisible(false)}
             student={selectedStudent}
+            schedules={schedulesForToday}
           />
         )}
 
