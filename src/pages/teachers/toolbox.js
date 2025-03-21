@@ -20,7 +20,14 @@ export const colors = {
   emerald: "#2ECC71",
 };
 
-const Toolbox = ({ onAssignment, onClassReview, onEnterScores }) => {
+const Toolbox = ({ onAssignment, onClassReview, onEnterScores, onAttendanceCheck }) => {
+  const menu = (
+    <Menu>
+      <Menu.Item key="attendance" onClick={onAttendanceCheck}>
+        Attendance Check
+      </Menu.Item>
+    </Menu>
+  );
   return (
     <div
       style={{
