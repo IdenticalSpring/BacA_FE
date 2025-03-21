@@ -73,6 +73,7 @@ import ManageLessons from "pages/teachers/ManageLessons";
 import CreateLesson from "pages/teachers/CreateLesson";
 import AttendancePage from "pages/teachers/attendanceCheck";
 import TestManagement from "pages/admin/testManagement";
+import EnterTestScore from "pages/teachers/enterTestScore";
 
 const routes = [
   {
@@ -280,6 +281,17 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin", "teacher"]}>
         <TeacherPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Enter Test Score",
+    key: "enterTestScore",
+    icon: <Icon fontSize="small">login</Icon>,
+    route: "/teacherpage/entertestscore",
+    component: (
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
+        <EnterTestScore />
       </PrivateRoute>
     ),
   },
