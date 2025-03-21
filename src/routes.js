@@ -72,10 +72,11 @@ import LoginForAdmin from "pages/loginAuth/LoginForAdmin";
 import ManageLessons from "pages/teachers/ManageLessons";
 import CreateLesson from "pages/teachers/CreateLesson";
 import AttendancePage from "pages/teachers/attendanceCheck";
+import TestManagement from "pages/admin/testManagement";
 
 const routes = [
   {
-    type: "collapse",
+    // type: "collapse",
     name: "Homepage",
     key: "homepage",
     icon: <Icon fontSize="small">homepage</Icon>,
@@ -83,7 +84,7 @@ const routes = [
     component: <Homepage />,
   },
   {
-    type: "collapse",
+    // type: "collapse",
     name: "MainLogin",
     key: "mainLogin",
     icon: <Icon fontSize="small">login</Icon>,
@@ -91,7 +92,7 @@ const routes = [
     component: <MainLogin />,
   },
   {
-    type: "collapse",
+    // type: "collapse",
     name: "LoginForStudent",
     key: "loginForStudent",
     icon: <Icon fontSize="small">login for student</Icon>,
@@ -99,7 +100,7 @@ const routes = [
     component: <LoginForStudent />,
   },
   {
-    type: "collapse",
+    // type: "collapse",
     name: "LoginForTeacher",
     key: "loginForTeacher",
     icon: <Icon fontSize="small">login for teacher</Icon>,
@@ -107,7 +108,7 @@ const routes = [
     component: <LoginForTeacher />,
   },
   {
-    type: "collapse",
+    // type: "collapse",
     name: "LoginForAdmin",
     key: "loginForAdmin",
     icon: <Icon fontSize="small">login for admin</Icon>,
@@ -183,6 +184,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <Teachers />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Test Management",
+    key: "testManagement",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/testManagement",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <TestManagement />
       </PrivateRoute>
     ),
   },
