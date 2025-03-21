@@ -5,7 +5,7 @@ import { FileAddOutlined, BookOutlined, CommentOutlined, EditOutlined } from "@a
 
 const Toolbox = ({
   onAddStudent,
-  onEditClass,
+  viewScores,
   onDeleteClass,
   onViewReport,
   colors,
@@ -42,7 +42,7 @@ const Toolbox = ({
     {
       key: "homework",
       icon: <BookOutlined />,
-      onClick: onEditClass,
+      onClick: viewScores,
       text: "Xem điểm",
     },
     {
@@ -128,7 +128,7 @@ const Toolbox = ({
 // Define PropTypes
 Toolbox.propTypes = {
   onAddStudent: PropTypes.func.isRequired,
-  onEditClass: PropTypes.func.isRequired,
+  viewScores: PropTypes.func.isRequired,
   onDeleteClass: PropTypes.func.isRequired,
   onViewReport: PropTypes.func.isRequired,
   colors: PropTypes.shape({
