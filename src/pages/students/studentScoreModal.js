@@ -14,6 +14,7 @@ import {
   Col,
   Card,
   Progress,
+  Statistic,
 } from "antd";
 import {
   TrophyOutlined,
@@ -78,6 +79,12 @@ const StudentScoreModal = ({ visible, onCancel, studentId, colors }) => {
 
     fetchData();
   }, [visible, studentId]);
+
+  // Get the most recent test scores
+  const getMostRecentScores = () => {
+    if (!scoreData || scoreData.length === 0) return null;
+    return scoreData[0]; // First item is the most recent due to our sorting
+  };
 
   // Calculate average score using only the most recent test
   const calculateAverage = () => {
@@ -189,6 +196,9 @@ const StudentScoreModal = ({ visible, onCancel, studentId, colors }) => {
     return Math.min(Math.round((avg / 10) * 100), 100);
   };
 
+  // Get most recent scores for display
+  const recentScores = getMostRecentScores();
+
   return (
     <Modal
       title={
@@ -282,10 +292,134 @@ const StudentScoreModal = ({ visible, onCancel, studentId, colors }) => {
             </Row>
           </Card>
 
+          {/* Chi tiết điểm của bài thi gần nhất */}
+          {recentScores && (
+            <Card
+              title={
+                <Space>
+                  <TrophyOutlined />
+                  <span>Chi tiết điểm bài thi gần nhất</span>
+                </Space>
+              }
+              style={{
+                marginBottom: 16,
+                borderRadius: 8,
+                boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
+              }}
+            >
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} md={6}>
+                  <Card
+                    size="small"
+                    style={{
+                      textAlign: "center",
+                      backgroundColor: colors.paleGreen || "#f6ffed",
+                    }}
+                  >
+                    <Statistic
+                      title={
+                        <Space>
+                          <EditOutlined />
+                          <Text strong>Viết</Text>
+                        </Space>
+                      }
+                      value={recentScores.writingScore || "N/A"}
+                      valueStyle={{
+                        color: getScoreColor(recentScores.writingScore),
+                        fontWeight: "bold",
+                      }}
+                      suffix="/9"
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                  <Card
+                    size="small"
+                    style={{
+                      textAlign: "center",
+                      backgroundColor: colors.paleGreen || "#f6ffed",
+                    }}
+                  >
+                    <Statistic
+                      title={
+                        <Space>
+                          <ReadOutlined />
+                          <Text strong>Đọc</Text>
+                        </Space>
+                      }
+                      value={recentScores.readingScore || "N/A"}
+                      valueStyle={{
+                        color: getScoreColor(recentScores.readingScore),
+                        fontWeight: "bold",
+                      }}
+                      suffix="/9"
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                  <Card
+                    size="small"
+                    style={{
+                      textAlign: "center",
+                      backgroundColor: colors.paleGreen || "#f6ffed",
+                    }}
+                  >
+                    <Statistic
+                      title={
+                        <Space>
+                          <SoundOutlined />
+                          <Text strong>Nói</Text>
+                        </Space>
+                      }
+                      value={recentScores.speakingScore || "N/A"}
+                      valueStyle={{
+                        color: getScoreColor(recentScores.speakingScore),
+                        fontWeight: "bold",
+                      }}
+                      suffix="/9"
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                  <Card
+                    size="small"
+                    style={{
+                      textAlign: "center",
+                      backgroundColor: colors.paleGreen || "#f6ffed",
+                    }}
+                  >
+                    <Statistic
+                      title={
+                        <Space>
+                          <AudioOutlined />
+                          <Text strong>Nghe</Text>
+                        </Space>
+                      }
+                      value={recentScores.listeningScore || "N/A"}
+                      valueStyle={{
+                        color: getScoreColor(recentScores.listeningScore),
+                        fontWeight: "bold",
+                      }}
+                      suffix="/9"
+                    />
+                  </Card>
+                </Col>
+              </Row>
+              {recentScores.classTestSchedule?.date && (
+                <div style={{ marginTop: 12, textAlign: "center" }}>
+                  <Text type="secondary">
+                    Bài thi: {recentScores.testName || recentScores.examName || "Bài kiểm tra"} |
+                    Ngày thi: {recentScores.classTestSchedule.date}
+                  </Text>
+                </div>
+              )}
+            </Card>
+          )}
+
           <Divider style={{ margin: "16px 0" }} orientation="left">
             <Space>
               <TrophyOutlined />
-              <span>Chi tiết điểm số</span>
+              <span>Lịch sử điểm số</span>
             </Space>
           </Divider>
 
