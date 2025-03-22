@@ -33,6 +33,7 @@ import { jwtDecode } from "jwt-decode";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import lessonService from "services/lessonService";
 import { colors } from "assets/theme/color";
+import StudentScoreModal from "./studentScoreModal";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -124,7 +125,17 @@ const StudentPage = () => {
 
   // Toolbox handlers
   const handleAddStudent = () => console.log("Add assignment");
-  const handleEditClass = () => console.log("Add homework");
+  const [scoreModalVisible, setScoreModalVisible] = useState(false);
+
+  // Update the handleViewScore function
+  const handleViewScore = () => {
+    setScoreModalVisible(true);
+  };
+
+  // Add this right before the return statement
+  const handleCloseScoreModal = () => {
+    setScoreModalVisible(false);
+  };
   const handleDeleteClass = () => console.log("Review lesson");
   const handleViewReport = () => console.log("Enter test scores");
 
@@ -424,7 +435,7 @@ const StudentPage = () => {
           >
             <Toolbox
               onAddStudent={handleAddStudent}
-              onEditClass={handleEditClass}
+              viewScores={handleViewScore}
               onDeleteClass={handleDeleteClass}
               onViewReport={handleViewReport}
               colors={colors}
@@ -433,6 +444,12 @@ const StudentPage = () => {
             />
           </div>
         )}
+        <StudentScoreModal
+          visible={scoreModalVisible}
+          onCancel={handleCloseScoreModal}
+          studentId={studentId}
+          colors={colors}
+        />
       </Layout>
     </Layout>
   );

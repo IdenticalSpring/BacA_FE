@@ -400,6 +400,12 @@ const TeacherPage = () => {
       </Menu.Item> */}
     </Menu>
   );
+
+  // Enter Test Score
+  const handleEnterTestScores = () => {
+    navigate("/teacherpage/entertestscore");
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar classes={classes} selectedClass={selectedClass} onSelectClass={handleSelectClass} />
@@ -534,7 +540,7 @@ const TeacherPage = () => {
             <Toolbox
               onAssignment={() => openAssignmentModal()}
               onClassReview={() => console.log("Class review")}
-              onEnterScores={() => console.log("Enter scores")}
+              onEnterScores={handleEnterTestScores}
               onAttendanceCheck={handleAttendanceCheck}
             />
           </div>
