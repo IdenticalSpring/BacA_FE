@@ -30,37 +30,53 @@ export default function LessonMangement({
   modalVisible,
   editingLesson,
   loading,
-  setLoading,
+  lessons,
+  setLessons,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
-  const [lessons, setLessons] = useState(null);
-  useEffect(() => {
-    fetchLessons();
-  }, []);
 
-  const fetchLessons = async () => {
+  const handleDelete = async (id) => {
     try {
-      setLoading(true);
-      const token = sessionStorage.getItem("token");
-
-      // Giải mã token để lấy role
-      const decoded = jwtDecode(token);
-      if (!decoded) {
-        return;
-      }
-      const data = await lessonService.getLessonByTeacherId(decoded.userId);
-      setLessons(data);
+      await lessonService.deleteLesson(id);
+      setLessons(lessons.filter((lesson) => lesson.id !== id));
+      message.success("Lesson deleted successfully");
     } catch (err) {
-      console.log(err);
-
-      message.error("Failed to load lessons!", err);
-    } finally {
-      setLoading(false);
+      message.error("Error deleting lesson!");
     }
   };
+  const handleEdit = (lesson) => {
+    setEditingLesson(lesson);
+    form.setFieldsValue({
+      name: lesson.name,
+      level: lesson.level,
+      linkYoutube: lesson.linkYoutube,
+      linkGame: lesson.linkGame,
+      description: lesson.description,
+    });
+    setModalVisible(true);
+  };
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
 
+      if (editingLesson) {
+        await lessonService.editLesson(editingLesson.id, values);
+        setLessons(
+          lessons?.map((lesson) =>
+            lesson.id === editingLesson.id ? { ...lesson, ...values } : lesson
+          )
+        );
+        message.success("Lesson updated successfully");
+      }
+      setModalVisible(false);
+      form.resetFields();
+      setEditingLesson(null);
+    } catch (err) {
+      message.error("Please check your input and try again");
+    }
+  };
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -112,46 +128,7 @@ export default function LessonMangement({
       },
     },
   };
-  const handleDelete = async (id) => {
-    try {
-      await lessonService.deleteLesson(id);
-      setLessons(lessons.filter((lesson) => lesson.id !== id));
-      message.success("Lesson deleted successfully");
-    } catch (err) {
-      message.error("Error deleting lesson!");
-    }
-  };
-  const handleEdit = (lesson) => {
-    setEditingLesson(lesson);
-    form.setFieldsValue({
-      name: lesson.name,
-      level: lesson.level,
-      linkYoutube: lesson.linkYoutube,
-      linkGame: lesson.linkGame,
-      description: lesson.description,
-    });
-    setModalVisible(true);
-  };
-  const handleSave = async () => {
-    try {
-      const values = await form.validateFields();
 
-      if (editingLesson) {
-        await lessonService.editLesson(editingLesson.id, values);
-        setLessons(
-          lessons?.map((lesson) =>
-            lesson.id === editingLesson.id ? { ...lesson, ...values } : lesson
-          )
-        );
-        message.success("Lesson updated successfully");
-      }
-      setModalVisible(false);
-      form.resetFields();
-      setEditingLesson(null);
-    } catch (err) {
-      message.error("Please check your input and try again");
-    }
-  };
   const columns = [
     {
       title: "Lesson Name",
@@ -384,5 +361,6 @@ LessonMangement.propTypes = {
   modalVisible: PropTypes.func.isRequired,
   editingLesson: PropTypes.func.isRequired,
   loading: PropTypes.func.isRequired,
-  setLoading: PropTypes.func.isRequired,
+  lessons: PropTypes.func.isRequired,
+  setLessons: PropTypes.func.isRequired,
 };

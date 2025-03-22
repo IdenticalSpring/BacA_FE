@@ -25,16 +25,7 @@ import teacherService from "services/teacherService";
 import scheduleService from "services/scheduleService";
 import DeleteIcon from "@mui/icons-material/Delete";
 import lessonByScheduleService from "services/lessonByScheduleService";
-const levels = [
-  "Level Pre-1",
-  "Level 1",
-  "Level Starters",
-  "Level Movers",
-  "Level Flyers",
-  "Level Pre-KET",
-  "Level-KET",
-  "Level-PET",
-];
+import levelService from "services/levelService";
 function CreateClass() {
   const navigate = useNavigate();
   const [classData, setClassData] = useState({
@@ -49,6 +40,7 @@ function CreateClass() {
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedules, setSelectedSchedules] = useState([]);
+  const [levels, setLevels] = useState([]);
   const daysOfWeek = [
     "Choose day of week",
     "Sunday",
@@ -61,6 +53,7 @@ function CreateClass() {
   ];
   useEffect(() => {
     fetchTeachers();
+    fetchLevels();
     // fetchSchedules();
   }, []);
   useEffect(() => {
@@ -80,6 +73,14 @@ function CreateClass() {
       setTeachers(data);
     } catch (err) {
       console.error("Lỗi khi tải danh sách giáo viên");
+    }
+  };
+  const fetchLevels = async () => {
+    try {
+      const data = await levelService.getAllLevels();
+      setLevels(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách level:", error);
     }
   };
 
@@ -223,8 +224,8 @@ function CreateClass() {
                 }}
               >
                 {levels.map((d, index) => (
-                  <MenuItem key={index} value={d}>
-                    {d}
+                  <MenuItem key={index} value={d.id}>
+                    {d.name}
                   </MenuItem>
                 ))}
               </TextField>

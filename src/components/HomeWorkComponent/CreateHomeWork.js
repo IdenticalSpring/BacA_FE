@@ -6,6 +6,8 @@ import ReactQuill from "react-quill";
 import { colors } from "assets/theme/color";
 import axios from "axios";
 import lessonService from "services/lessonService";
+import TextArea from "antd/es/input/TextArea";
+import homeWorkService from "services/homeWorkService";
 const { Title } = Typography;
 const { Option } = Select;
 export default function CreateHomeWork({
@@ -16,6 +18,9 @@ export default function CreateHomeWork({
   loading,
   setLoading,
   teacherId,
+  handleConvertToSpeech,
+  loadingTTS,
+  mp3Url,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -79,13 +84,13 @@ export default function CreateHomeWork({
       // if (videoFile) {
       //   values.link = videoFile.response?.url || videoFile.name;
       // }
-      const dataLesson = {
+      const dataHomeWork = {
         ...values,
         teacherId: teacherId,
       };
-      console.log(dataLesson);
+      // console.log(dataLesson);
 
-      await lessonService.createLesson(dataLesson);
+      await homeWorkService.createHomeWork(dataHomeWork);
       message.success("Lesson created successfully!");
       // navigate("/teacherpage/manageLessons");
       form.resetFields();
@@ -96,25 +101,18 @@ export default function CreateHomeWork({
     }
   };
   return (
-    <div
-      style={{
-        maxHeight: "35vh",
-        width: isMobile ? "100%" : "49%",
-        height: "40vh",
-      }}
-    >
-      <div style={{ maxHeight: "35vh", overflow: "auto" }}>
-        <Card
-          style={{
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px " + colors.softShadow,
-            background: colors.white,
-            maxWidth: "800px",
-            margin: "0 auto",
-          }}
-        >
-          <div style={{ marginBottom: isMobile ? "" : "14px" }}>
-            {/* <Button
+    <div style={{ maxHeight: "35vh", overflow: "auto" }}>
+      <Card
+        style={{
+          borderRadius: "12px",
+          boxShadow: "0 4px 12px " + colors.softShadow,
+          background: colors.white,
+          maxWidth: "800px",
+          margin: "0 auto",
+        }}
+      >
+        <div style={{ marginBottom: isMobile ? "" : "14px" }}>
+          {/* <Button
                           icon={<ArrowLeftOutlined />}
                           onClick={() => navigate("/teacherpage/manageLessons")}
                           style={{
@@ -126,112 +124,136 @@ export default function CreateHomeWork({
                         >
                           Back to Lessons
                         </Button> */}
-            <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
-              Create New Homework
-            </Title>
-            <Divider style={{ borderColor: colors.paleGreen }} />
-          </div>
+          <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
+            Create New Homework
+          </Title>
+          <Divider style={{ borderColor: colors.paleGreen }} />
+        </div>
 
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            initialValues={{
-              name: "",
-              level: "",
-              linkYoutube: "",
-              linkGame: "",
-              description: "",
-            }}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            name: "",
+            level: "",
+            linkYoutube: "",
+            linkGame: "",
+            description: "",
+          }}
+        >
+          <Form.Item
+            name="title"
+            label="Homework Title"
+            rules={[
+              { required: true, message: "Please enter the homework name" },
+              { max: 100, message: "Title cannot be longer than 100 characters" },
+            ]}
           >
-            <Form.Item
-              name="title"
-              label="Homework Title"
-              rules={[
-                { required: true, message: "Please enter the homework name" },
-                { max: 100, message: "Title cannot be longer than 100 characters" },
-              ]}
-            >
-              <Input
-                placeholder="Enter homework name"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
+            <Input
+              placeholder="Enter homework name"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
 
-            <Form.Item
-              name="level"
-              label="Level"
-              rules={[{ required: true, message: "Please select a level" }]}
+          <Form.Item
+            name="level"
+            label="Level"
+            rules={[{ required: true, message: "Please select a level" }]}
+          >
+            <Select
+              placeholder="Select level"
+              style={{
+                borderRadius: "6px",
+              }}
             >
-              <Select
-                placeholder="Select level"
-                style={{
-                  borderRadius: "6px",
-                }}
-              >
-                {levels?.map((level, index) => (
-                  <Option key={index} value={level.id}>
-                    {level.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name="linkYoutube"
-              label="Homework Youtube Link"
-              rules={[{ required: true, message: "Please enter the homework link" }]}
+              {levels?.map((level, index) => (
+                <Option key={index} value={level.id}>
+                  {level.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="linkYoutube"
+            label="Homework Youtube Link"
+            rules={[{ required: true, message: "Please enter the homework link" }]}
+          >
+            <Input
+              placeholder="Enter homework youtube link"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="linkGame" label="Homework Game Link">
+            <Input
+              placeholder="Enter homework game link"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="textToSpeech" label="Tech to speech">
+            <TextArea
+              rows={3}
+              placeholder="Enter text to convert to speech"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              type="primary"
+              onClick={handleConvertToSpeech}
+              loading={loadingTTS}
+              style={{
+                backgroundColor: colors.deepGreen,
+                borderColor: colors.deepGreen,
+              }}
             >
-              <Input
-                placeholder="Enter homework youtube link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
+              Convert to Speech
+            </Button>
+          </Form.Item>
+          {mp3Url && (
+            <Form.Item>
+              <div style={{ marginBottom: "16px" }}>
+                <audio controls style={{ width: "100%" }}>
+                  <source src={mp3Url} type="audio/mp3" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
             </Form.Item>
-            <Form.Item name="linkGame" label="Homework Game Link">
-              <Input
-                placeholder="Enter homework game link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-            <Form.Item name="linkGame" label="Homework Game Link">
-              <Audio
-                placeholder="Enter homework game link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="description"
-              label="Description"
-              rules={[{ required: true, message: "Please enter a description" }]}
-            >
-              <ReactQuill
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRef}
-                style={{
-                  height: "250px",
-                  marginBottom: "60px", // Consider reducing this
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
-                }}
-              />
-            </Form.Item>
+          )}
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: "Please enter a description" }]}
+          >
+            <ReactQuill
+              theme="snow"
+              modules={modules}
+              formats={quillFormats}
+              ref={quillRef}
+              style={{
+                height: "250px",
+                marginBottom: "60px", // Consider reducing this
+                borderRadius: "6px",
+                border: `1px solid ${colors.inputBorder}`,
+              }}
+            />
+          </Form.Item>
 
-            <Form.Item style={{ marginTop: isMobile ? "40px" : "" }}>
-              <Space style={{ display: "flex", justifyContent: "flex-end" }}>
-                {/* <Button
+          <Form.Item style={{ marginTop: isMobile ? "40px" : "" }}>
+            <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+              {/* <Button
                               onClick={() => navigate("/teacherpage/manageLessons")}
                               style={{
                                 borderRadius: "6px",
@@ -241,25 +263,24 @@ export default function CreateHomeWork({
                             >
                               Cancel
                             </Button> */}
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  icon={<SaveOutlined />}
-                  style={{
-                    borderRadius: "6px",
-                    backgroundColor: colors.emerald,
-                    borderColor: colors.emerald,
-                    boxShadow: "0 2px 0 " + colors.softShadow,
-                  }}
-                >
-                  Create Lesson
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
-      </div>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                icon={<SaveOutlined />}
+                style={{
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  boxShadow: "0 2px 0 " + colors.softShadow,
+                }}
+              >
+                Create Lesson
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   );
 }
@@ -271,4 +292,7 @@ CreateHomeWork.propTypes = {
   loading: PropTypes.func.isRequired,
   setLoading: PropTypes.func.isRequired,
   teacherId: PropTypes.func.isRequired,
+  handleConvertToSpeech: PropTypes.func.isRequired,
+  loadingTTS: PropTypes.func.isRequired,
+  mp3Url: PropTypes.func.isRequired,
 };

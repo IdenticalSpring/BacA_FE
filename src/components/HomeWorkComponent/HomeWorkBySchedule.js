@@ -72,7 +72,7 @@ export default function HomeWorkBySchedule({
             >
               {homeWorksData?.map((homeWork) => (
                 <Option key={homeWork.id} value={homeWork.id}>
-                  {homeWork.name}
+                  {homeWork.title}
                 </Option>
               ))}
             </Select>

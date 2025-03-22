@@ -17,6 +17,7 @@ import {
   Grid,
   Tabs,
   notification,
+  message,
 } from "antd";
 import {
   UserOutlined,
@@ -43,7 +44,8 @@ import CreateLesson from "components/TeacherPageComponent/CreateLesson";
 import LessonBySchedule from "components/TeacherPageComponent/LessonBySchedule";
 import LessonMangement from "components/TeacherPageComponent/LessonMangement";
 import homeWorkService from "services/homeWorkService";
-import LessonByScheduleForHomeWork from "components/HomeWorkComponent/HomeWorkBySchedule";
+import HomeWorkBySchedule from "components/HomeWorkComponent/HomeWorkBySchedule";
+import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -89,6 +91,7 @@ const TeacherPage = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [students, setStudents] = useState([]);
   const [lessonsData, setLessonsData] = useState([]);
+  const [lessons, setLessons] = useState(null);
   const [homeWorksData, setHomeWorksData] = useState([]);
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,6 +154,30 @@ const TeacherPage = () => {
     "background",
     "align",
   ];
+  useEffect(() => {
+    fetchLessons();
+  }, []);
+
+  const fetchLessons = async () => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem("token");
+
+      // Giải mã token để lấy role
+      const decoded = jwtDecode(token);
+      if (!decoded) {
+        return;
+      }
+      const data = await lessonService.getLessonByTeacherId(decoded.userId);
+      setLessons(data);
+    } catch (err) {
+      console.log(err);
+
+      message.error("Failed to load lessons!", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveHomework = () => {
     // Implementation here
@@ -558,14 +585,14 @@ const TeacherPage = () => {
                 <Button key="close" onClick={() => setAssignmentModal(false)}>
                   Close
                 </Button>,
-                <Button
-                  key="submit"
-                  type="primary"
-                  onClick={handleSaveHomework}
-                  style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-                >
-                  Save
-                </Button>,
+                // <Button
+                //   key="submit"
+                //   type="primary"
+                //   onClick={handleSaveHomework}
+                //   style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                // >
+                //   Save
+                // </Button>,
               ]
             : [
                 <Button
@@ -656,7 +683,8 @@ const TeacherPage = () => {
                     setEditingLesson={setEditingLesson}
                     modalVisible={modalVisible}
                     editingLesson={editingLesson}
-                    setLoading={setLoading}
+                    lessons={lessons}
+                    setLessons={setLessons}
                     loading={loading}
                   />
                 </div>
@@ -697,7 +725,7 @@ const TeacherPage = () => {
                     height: "40vh",
                   }}
                 >
-                  <div style={{ maxHeight: "35vh", overflow: "auto" }}>
+                  {/* <div style={{ maxHeight: "35vh", overflow: "auto" }}>
                     <Form layout="vertical">
                       <Form.Item label="Title">
                         <Input
@@ -706,7 +734,6 @@ const TeacherPage = () => {
                           placeholder="Enter homework title"
                         />
                       </Form.Item>
-
                       <Form.Item label="Description">
                         <ReactQuill
                           theme="snow"
@@ -715,7 +742,6 @@ const TeacherPage = () => {
                           style={{ height: "150px", marginBottom: "40px" }}
                         />
                       </Form.Item>
-
                       <Form.Item label="Text to Speech">
                         <TextArea
                           rows={3}
@@ -724,7 +750,6 @@ const TeacherPage = () => {
                           placeholder="Enter text to convert to speech"
                         />
                       </Form.Item>
-
                       <Form.Item>
                         <Button
                           type="primary"
@@ -738,7 +763,6 @@ const TeacherPage = () => {
                           Convert to Speech
                         </Button>
                       </Form.Item>
-
                       {mp3Url && (
                         <Form.Item>
                           <div style={{ marginBottom: "16px" }}>
@@ -749,7 +773,6 @@ const TeacherPage = () => {
                           </div>
                         </Form.Item>
                       )}
-
                       <Form.Item label="YouTube Link">
                         <Input
                           prefix={<YoutubeOutlined style={{ color: colors.errorRed }} />}
@@ -759,7 +782,19 @@ const TeacherPage = () => {
                         />
                       </Form.Item>
                     </Form>
-                  </div>
+                  </div> */}
+                  <CreateHomeWork
+                    toolbar={toolbar}
+                    quillFormats={quillFormats}
+                    levels={levels}
+                    isMobile={isMobile}
+                    loading={loading}
+                    setLoading={setLoading}
+                    teacherId={teacherId}
+                    handleConvertToSpeech={handleConvertToSpeech}
+                    loadingTTS={loadingTTS}
+                    mp3Url={mp3Url}
+                  />
                 </div>
                 <div
                   style={{
@@ -768,7 +803,7 @@ const TeacherPage = () => {
                     width: isMobile ? "100%" : "49%",
                   }}
                 >
-                  <LessonByScheduleForHomeWork
+                  <HomeWorkBySchedule
                     lessonByScheduleData={lessonByScheduleData}
                     daysOfWeek={daysOfWeek}
                     homeWorksData={homeWorksData}
