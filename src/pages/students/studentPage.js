@@ -13,6 +13,8 @@ import {
   Grid,
   Comment,
   List,
+  Tabs,
+  Empty,
 } from "antd";
 import {
   UserOutlined,
@@ -24,6 +26,8 @@ import {
   ShareAltOutlined,
   BookOutlined,
   LinkOutlined,
+  FileTextOutlined,
+  SoundOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -34,21 +38,26 @@ import lessonByScheduleService from "services/lessonByScheduleService";
 import lessonService from "services/lessonService";
 import { colors } from "assets/theme/color";
 import StudentScoreModal from "./studentScoreModal";
+import homeWorkService from "services/homeWorkService";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
+const { TabPane } = Tabs;
 
 const StudentPage = () => {
   const [classes, setClasses] = useState([]);
   const [selectedLessonBySchedule, setSelectedLessonBySchedule] = useState(null);
   const [lessons, setLessons] = useState([]);
+  const [homework, setHomework] = useState([]);
   const [student, setStudent] = useState(null);
   const userId = jwtDecode(sessionStorage.getItem("token"));
   const studentId = userId.userId;
   const userName = userId.username || "Student";
   const [lessonsBySchedule, setLessonsBySchedule] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("lesson");
+  const [loadingHomework, setLoadingHomework] = useState(false);
 
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
@@ -96,16 +105,43 @@ const StudentPage = () => {
         try {
           const data = await lessonService.getLessonById(findSelectedLessonBySchedule.lessonID);
           setLessons([data]);
+
+          console.log("data", findSelectedLessonBySchedule);
+
+          // Kiểm tra xem có homeworkId trong lessonBySchedule không
+          if (findSelectedLessonBySchedule.homeWorkId) {
+            // Gọi API để lấy bài tập sử dụng homeworkId từ lessonBySchedule
+            fetchHomeworkByLesson(findSelectedLessonBySchedule.homeWorkId);
+          } else {
+            // Sử dụng lessonBySchedule ID nếu không có homeworkId
+            fetchHomeworkByLesson(findSelectedLessonBySchedule.id);
+          }
         } catch (error) {
           console.error("Error fetching lesson:", error);
           setLessons([]);
+          setHomework([]);
         }
       };
       fetchLessonById();
     } else {
       setLessons([]);
+      setHomework([]);
     }
   }, [selectedLessonBySchedule]);
+
+  // Hàm lấy dữ liệu bài tập từ API
+  const fetchHomeworkByLesson = async (homeworkId) => {
+    try {
+      setLoadingHomework(true);
+      const homeworkData = await homeWorkService.getHomeWorkById(homeworkId);
+      setHomework(Array.isArray(homeworkData) ? homeworkData : [homeworkData]);
+    } catch (error) {
+      console.error("Error fetching homework:", error);
+      setHomework([]);
+    } finally {
+      setLoadingHomework(false);
+    }
+  };
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
@@ -164,15 +200,6 @@ const StudentPage = () => {
     return `${hours}:${minutes < 10 ? "0" + minutes : minutes} ${ampm}`;
   };
 
-  // Function to get random engagement numbers
-  const getRandomEngagement = () => {
-    return {
-      likes: Math.floor(Math.random() * 50),
-      comments: Math.floor(Math.random() * 20),
-      shares: Math.floor(Math.random() * 10),
-    };
-  };
-
   const SidebarComponent = () => (
     <Sidebar
       lessonsBySchedule={lessonsBySchedule}
@@ -181,6 +208,208 @@ const StudentPage = () => {
       colors={colors}
       isMobile={isMobile}
     />
+  );
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+  };
+
+  // Xử lý nộp bài tập
+  const handleSubmitHomework = (homeworkId) => {
+    console.log("Nộp bài tập ID:", homeworkId);
+    // Thêm logic xử lý nộp bài ở đây
+  };
+
+  const renderLessonContent = () => (
+    <List
+      itemLayout="vertical"
+      size="large"
+      dataSource={lessons}
+      renderItem={(lesson) => (
+        <Card
+          style={{
+            marginBottom: 16,
+            borderRadius: 12,
+            boxShadow: `0 2px 8px ${colors.softShadow}`,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+            <Avatar
+              style={{
+                backgroundColor: colors.deepGreen,
+                color: colors.white,
+              }}
+              icon={<BookOutlined />}
+              size={40}
+            />
+            <div style={{ marginLeft: 12 }}>
+              <Text strong style={{ fontSize: 16, display: "block", color: colors.darkGreen }}>
+                {lesson.name}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
+              </Text>
+            </div>
+          </div>
+
+          <Paragraph
+            ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
+            style={{ marginBottom: 16 }}
+          >
+            {lesson.description || " "}
+          </Paragraph>
+
+          {lesson.link && (
+            <div
+              style={{
+                backgroundColor: colors.paleGreen,
+                padding: 12,
+                borderRadius: 8,
+                marginBottom: 16,
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              {lesson.link.includes("youtube.com") || lesson.link.includes("youtu.be") ? (
+                <iframe
+                  width="100%"
+                  height="315"
+                  src={lesson.link.replace("watch?v=", "embed/")}
+                  title="Lesson Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <video width="100%" height="auto" controls>
+                  <source src={lesson.link} type="video/mp4" />
+                  Trình duyệt của bạn không hỗ trợ phát video.
+                </video>
+              )}
+            </div>
+          )}
+
+          <Divider style={{ margin: "12px 0" }} />
+        </Card>
+      )}
+    />
+  );
+
+  const renderHomeworkContent = () => (
+    <div>
+      {loadingHomework ? (
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <div>Đang tải dữ liệu bài tập...</div>
+        </div>
+      ) : homework.length > 0 ? (
+        <List
+          itemLayout="vertical"
+          size="large"
+          dataSource={homework}
+          renderItem={(hw) => (
+            <Card
+              style={{
+                marginBottom: 16,
+                borderRadius: 12,
+                boxShadow: `0 2px 8px ${colors.softShadow}`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                <Avatar
+                  style={{
+                    backgroundColor: colors.mintGreen,
+                    color: colors.deepGreen,
+                  }}
+                  icon={<FileTextOutlined />}
+                  size={40}
+                />
+                <div style={{ marginLeft: 12 }}>
+                  <Text strong style={{ fontSize: 16, display: "block", color: colors.darkGreen }}>
+                    {hw.title || "Bài tập"}
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Hạn nộp: {hw.dueDate || "Chưa có hạn nộp"} · Trạng thái:{" "}
+                    {hw.status || "Chưa nộp"} · ID: {hw.id}
+                  </Text>
+                </div>
+              </div>
+
+              <Paragraph
+                ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
+                style={{ marginBottom: 16 }}
+              >
+                {hw.description || "Chưa có mô tả cho bài tập này."}
+              </Paragraph>
+
+              {hw.linkSpeech && (
+                <div
+                  style={{
+                    marginBottom: 16,
+                    backgroundColor: colors.paleGreen,
+                    padding: 16,
+                    borderRadius: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                    <SoundOutlined style={{ marginRight: 8, color: colors.deepGreen }} />
+                    <Text strong style={{ color: colors.deepGreen }}>
+                      Audio bài tập:
+                    </Text>
+                  </div>
+                  <audio
+                    controls
+                    style={{
+                      width: "100%",
+                      height: 40,
+                      backgroundColor: colors.white,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <source src={hw.linkSpeech} />
+                    Trình duyệt của bạn không hỗ trợ phát audio.
+                  </audio>
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                    <Button
+                      type="link"
+                      icon={<LinkOutlined />}
+                      href={hw.linkSpeech}
+                      target="_blank"
+                      style={{ color: colors.deepGreen, padding: 0 }}
+                    >
+                      Tải xuống audio
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  type="primary"
+                  onClick={() => handleSubmitHomework(hw.id)}
+                  style={{
+                    backgroundColor: colors.deepGreen,
+                    borderColor: colors.deepGreen,
+                  }}
+                >
+                  {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
+                </Button>
+              </div>
+            </Card>
+          )}
+        />
+      ) : (
+        <Empty
+          description="Không có bài tập nào cho bài học này"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          style={{
+            margin: "40px 0",
+            padding: "20px",
+            backgroundColor: colors.paleGreen,
+            borderRadius: "12px",
+          }}
+        />
+      )}
+    </div>
   );
 
   return (
@@ -309,112 +538,35 @@ const StudentPage = () => {
             </div>
           ) : (
             <div>
-              {/* <Title level={3} style={{ color: colors.darkGreen, marginBottom: 24 }}>
-                Lesson Feed
-              </Title> */}
-              <List
-                itemLayout="vertical"
-                size="large"
-                dataSource={lessons}
-                renderItem={(lesson) => {
-                  const engagement = getRandomEngagement();
-                  return (
-                    <Card
-                      style={{
-                        marginBottom: 16,
-                        borderRadius: 12,
-                        boxShadow: `0 2px 8px ${colors.softShadow}`,
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-                        <Avatar
-                          style={{
-                            backgroundColor: colors.deepGreen,
-                            color: colors.white,
-                          }}
-                          icon={<BookOutlined />}
-                          size={40}
-                        />
-                        <div style={{ marginLeft: 12 }}>
-                          <Text
-                            strong
-                            style={{ fontSize: 16, display: "block", color: colors.darkGreen }}
-                          >
-                            {lesson.name}
-                          </Text>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
-                          </Text>
-                        </div>
-                      </div>
-
-                      <Paragraph
-                        ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-                        style={{ marginBottom: 16 }}
-                      >
-                        {lesson.description || " "}
-                      </Paragraph>
-
-                      {lesson.link && (
-                        <div
-                          style={{
-                            backgroundColor: colors.paleGreen,
-                            padding: 12,
-                            borderRadius: 8,
-                            marginBottom: 16,
-                            display: "flex",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {lesson.link.includes("youtube.com") ||
-                          lesson.link.includes("youtu.be") ? (
-                            <iframe
-                              width="100%"
-                              height="315"
-                              src={lesson.link.replace("watch?v=", "embed/")}
-                              title="Lesson Video"
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            ></iframe>
-                          ) : (
-                            <video width="100%" height="auto" controls>
-                              <source src={lesson.link} type="video/mp4" />
-                              Trình duyệt của bạn không hỗ trợ phát video.
-                            </video>
-                          )}
-                        </div>
-                      )}
-
-                      <Divider style={{ margin: "12px 0" }} />
-
-                      {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <Button
-                          type="text"
-                          icon={<LikeOutlined />}
-                          style={{ color: colors.darkGreen }}
-                        >
-                          {engagement.likes} Likes
-                        </Button>
-                        <Button
-                          type="text"
-                          icon={<MessageOutlined />}
-                          style={{ color: colors.darkGreen }}
-                        >
-                          {engagement.comments} Comments
-                        </Button>
-                        <Button
-                          type="text"
-                          icon={<ShareAltOutlined />}
-                          style={{ color: colors.darkGreen }}
-                        >
-                          {engagement.shares} Shares
-                        </Button>
-                      </div> */}
-                    </Card>
-                  );
+              <Tabs
+                activeKey={activeTab}
+                onChange={handleTabChange}
+                type="card"
+                style={{
+                  marginBottom: 16,
                 }}
-              />
+              >
+                <TabPane
+                  tab={
+                    <span>
+                      <BookOutlined /> Bài Học
+                    </span>
+                  }
+                  key="lesson"
+                >
+                  {renderLessonContent()}
+                </TabPane>
+                <TabPane
+                  tab={
+                    <span>
+                      <FileTextOutlined /> Bài Tập
+                    </span>
+                  }
+                  key="homework"
+                >
+                  {renderHomeworkContent()}
+                </TabPane>
+              </Tabs>
             </div>
           )}
         </Content>

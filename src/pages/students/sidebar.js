@@ -25,6 +25,18 @@ const Sidebar = ({
   colors,
   isMobile,
 }) => {
+  // Lọc ra các bài học của ngày hiện tại và ngày đã qua
+  const today = dayjs().startOf("day");
+  const filteredLessons = lessonsBySchedule
+    .filter((lesson) => {
+      const lessonDate = dayjs(lesson.date).startOf("day");
+      return lessonDate.isSame(today) || lessonDate.isBefore(today);
+    })
+    // Sắp xếp theo thứ tự ngày tháng (mới nhất lên đầu)
+    .sort((a, b) => {
+      return dayjs(b.date).valueOf() - dayjs(a.date).valueOf();
+    });
+
   return (
     <div
       style={{
@@ -76,7 +88,7 @@ const Sidebar = ({
           </Title>
         </div>
         <Badge
-          count={lessonsBySchedule.length}
+          count={filteredLessons.length}
           overflowCount={99}
           style={{ backgroundColor: colors.deepGreen }}
         />
@@ -98,7 +110,7 @@ const Sidebar = ({
               fontWeight: 500,
             }}
           >
-            BÀI HỌC SẮP TỚI
+            BÀI HỌC HIỆN TẠI VÀ ĐÃ QUA
           </Text>
           <Text
             style={{
@@ -107,7 +119,7 @@ const Sidebar = ({
               fontWeight: 500,
             }}
           >
-            {lessonsBySchedule.length} lessons
+            {filteredLessons.length} lessons
           </Text>
         </div>
       </div>
@@ -120,10 +132,10 @@ const Sidebar = ({
           overflowY: "auto",
         }}
       >
-        {lessonsBySchedule.length > 0 ? (
+        {filteredLessons.length > 0 ? (
           <List
             itemLayout="horizontal"
-            dataSource={lessonsBySchedule}
+            dataSource={filteredLessons}
             renderItem={(item) => {
               const isSelected = selectedLessonBySchedule === item.id;
               return (
@@ -229,10 +241,10 @@ const Sidebar = ({
           >
             <CalendarOutlined style={{ fontSize: 28, color: colors.midGreen, marginBottom: 12 }} />
             <Text style={{ display: "block", fontWeight: 500, color: colors.darkGreen }}>
-              Chưa có bài học nào được lên lịch
+              Không có bài học nào
             </Text>
             <Text style={{ fontSize: "0.9rem", color: colors.darkGray }}>
-              Bài học sẽ xuất hiện ở đây khi được lên lịch
+              Hiện không có bài học nào của ngày hiện tại hoặc ngày đã qua
             </Text>
           </div>
         )}
