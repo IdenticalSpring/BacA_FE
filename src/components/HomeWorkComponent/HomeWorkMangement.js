@@ -18,49 +18,113 @@ const { Title } = Typography;
 const { Option } = Select;
 import PropTypes from "prop-types";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import lessonService from "services/lessonService";
 import { jwtDecode } from "jwt-decode";
+import homeWorkService from "services/homeWorkService";
+import TextArea from "antd/es/input/TextArea";
 export default function HomeWorkMangement({
   toolbar,
   quillFormats,
   levels,
   isMobile,
-  setModalVisible,
-  setEditingLesson,
-  modalVisible,
-  editingLesson,
+  setModalUpdateHomeWorkVisible,
+  setEditingHomeWork,
+  modalUpdateHomeWorkVisible,
+  editingHomeWork,
   loading,
-  setLoading,
+  homeWorks,
+  setHomeWorks,
+  loadingTTSForUpdate,
+  setLoadingTTSForUpdate,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
-  const [lessons, setLessons] = useState(null);
-  useEffect(() => {
-    fetchLessons();
-  }, []);
-
-  const fetchLessons = async () => {
+  const [mp3Url, setMp3Url] = useState("");
+  const [mp3file, setMp3file] = useState(null);
+  const handleDelete = async (id) => {
     try {
-      setLoading(true);
-      const token = sessionStorage.getItem("token");
-
-      // Giải mã token để lấy role
-      const decoded = jwtDecode(token);
-      if (!decoded) {
-        return;
-      }
-      const data = await lessonService.getLessonByTeacherId(decoded.userId);
-      setLessons(data);
+      await homeWorkService.deleteHomeWork(id);
+      setHomeWorks(homeWorks.filter((homeWork) => homeWork.id !== id));
+      message.success("Homework deleted successfully");
     } catch (err) {
-      console.log(err);
-
-      message.error("Failed to load lessons!", err);
-    } finally {
-      setLoading(false);
+      message.error("Error deleting homework!");
     }
   };
+  const handleEdit = (homeWork) => {
+    setEditingHomeWork(homeWork);
+    form.setFieldsValue({
+      name: homeWork.name,
+      level: homeWork.level,
+      linkYoutube: homeWork.linkYoutube,
+      linkGame: homeWork.linkGame,
+      linkSpeech: homeWork.linkSpeech,
+      description: homeWork.description,
+    });
+    setModalUpdateHomeWorkVisible(true);
+  };
+  const handleConvertToSpeech = async () => {
+    if (!textToSpeech) return;
+    setLoadingTTSForUpdate(true);
 
+    try {
+      const response = await axios.post(
+        "https://ttsfree.com/api/v1/tts", // Replace with actual Viettel API
+        {
+          text: "Convert text to speech",
+          voiceService: "servicebin",
+          voiceID: "en-US",
+          voiceSpeed: "0",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            apikey: process.env.REACT_APP_API_TTS_KEY,
+          },
+        }
+      );
+      let base64String = response.data.audioData;
+
+      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
+      function base64ToBlob(base64, mimeType) {
+        let byteCharacters = atob(base64); // Giải mã base64
+        let byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        let byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+      }
+
+      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
+      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      setMp3file(audioBlob);
+      let audioUrl = URL.createObjectURL(audioBlob);
+      setMp3Url(audioUrl);
+    } catch (error) {
+      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+    }
+    setLoadingTTSForUpdate(false);
+  };
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+
+      if (editingHomeWork) {
+        await homeWorkService.editHomeWork(editingHomeWork.id, values);
+        setHomeWorks(
+          homeWorks?.map((homeWork) =>
+            homeWork.id === editingHomeWork.id ? { ...homeWork, ...values } : homeWork
+          )
+        );
+        message.success("HomeWork updated successfully");
+      }
+      setModalUpdateHomeWorkVisible(false);
+      form.resetFields();
+      setEditingHomeWork(null);
+    } catch (err) {
+      message.error("Please check your input and try again");
+    }
+  };
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -112,51 +176,12 @@ export default function HomeWorkMangement({
       },
     },
   };
-  const handleDelete = async (id) => {
-    try {
-      await lessonService.deleteLesson(id);
-      setLessons(lessons.filter((lesson) => lesson.id !== id));
-      message.success("Lesson deleted successfully");
-    } catch (err) {
-      message.error("Error deleting lesson!");
-    }
-  };
-  const handleEdit = (lesson) => {
-    setEditingLesson(lesson);
-    form.setFieldsValue({
-      name: lesson.name,
-      level: lesson.level,
-      linkYoutube: lesson.linkYoutube,
-      linkGame: lesson.linkGame,
-      description: lesson.description,
-    });
-    setModalVisible(true);
-  };
-  const handleSave = async () => {
-    try {
-      const values = await form.validateFields();
 
-      if (editingLesson) {
-        await lessonService.editLesson(editingLesson.id, values);
-        setLessons(
-          lessons?.map((lesson) =>
-            lesson.id === editingLesson.id ? { ...lesson, ...values } : lesson
-          )
-        );
-        message.success("Lesson updated successfully");
-      }
-      setModalVisible(false);
-      form.resetFields();
-      setEditingLesson(null);
-    } catch (err) {
-      message.error("Please check your input and try again");
-    }
-  };
   const columns = [
     {
-      title: "Lesson Name",
-      dataIndex: "name",
-      key: "name",
+      title: "Homework title",
+      dataIndex: "title",
+      key: "title",
       width: "20%",
     },
     {
@@ -164,6 +189,7 @@ export default function HomeWorkMangement({
       dataIndex: "level",
       key: "level",
       width: "15%",
+      render: (text) => levels?.find((level) => level.id === text)?.name,
     },
     {
       title: "Link Youtube",
@@ -176,6 +202,13 @@ export default function HomeWorkMangement({
       title: "Link Game",
       dataIndex: "linkGame",
       key: "linkGame",
+      width: "20%",
+      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+    },
+    {
+      title: "Link Speech",
+      dataIndex: "linkSpeech",
+      key: "linkSpeech",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
@@ -206,7 +239,7 @@ export default function HomeWorkMangement({
             }}
           />
           <Popconfirm
-            title="Are you sure you want to delete this lesson?"
+            title="Are you sure you want to delete this homeWork?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -239,12 +272,12 @@ export default function HomeWorkMangement({
           }}
         >
           <Title level={4} style={{ margin: 0, color: colors.darkGreen }}>
-            Lessons Management
+            HomeWork Management
           </Title>
         </div>
 
         <Table
-          dataSource={lessons}
+          dataSource={homeWorks}
           columns={columns}
           rowKey="id"
           loading={loading}
@@ -259,21 +292,21 @@ export default function HomeWorkMangement({
 
       <Modal
         centered
-        title={editingLesson ? "Edit Lesson" : "Create New Lesson"}
-        open={modalVisible}
+        title={editingHomeWork ? "Edit HomeWork" : "Create New HomeWork"}
+        open={modalUpdateHomeWorkVisible}
         onCancel={() => {
-          setModalVisible(false);
+          setModalUpdateHomeWorkVisible(false);
           form.resetFields();
-          setEditingLesson(null);
+          setEditingHomeWork(null);
         }}
         footer={[
           <Button
             style={{ marginTop: isMobile ? "20px" : "" }}
             key="cancel"
             onClick={() => {
-              setModalVisible(false);
+              setModalUpdateHomeWorkVisible(false);
               form.resetFields();
-              setEditingLesson(null);
+              setEditingHomeWork(null);
             }}
           >
             Cancel
@@ -287,7 +320,7 @@ export default function HomeWorkMangement({
               borderColor: colors.emerald,
             }}
           >
-            {editingLesson ? "Save" : "Create"}
+            {editingHomeWork ? "Save" : "Create"}
           </Button>,
         ]}
         width={720}
@@ -295,20 +328,30 @@ export default function HomeWorkMangement({
         <Form
           form={form}
           layout="vertical"
-          name="lessonForm"
+          name="HomeWorkForm"
           initialValues={{
-            name: "",
+            title: "",
             level: "",
-            link: "",
+            linkYoutube: "",
+            linkGame: "",
             description: "",
           }}
         >
           <Form.Item
-            name="name"
-            label="Lesson Name"
-            rules={[{ required: true, message: "Please enter the lesson name" }]}
+            name="title"
+            label="Homework Title"
+            rules={[
+              { required: true, message: "Please enter the homework name" },
+              { max: 100, message: "Title cannot be longer than 100 characters" },
+            ]}
           >
-            <Input placeholder="Enter lesson name" />
+            <Input
+              placeholder="Enter homework name"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -316,38 +359,86 @@ export default function HomeWorkMangement({
             label="Level"
             rules={[{ required: true, message: "Please select a level" }]}
           >
-            <Select placeholder="Select level">
+            <Select
+              placeholder="Select level"
+              style={{
+                borderRadius: "6px",
+              }}
+            >
               {levels?.map((level, index) => (
-                <Option key={index} value={level}>
-                  {level}
+                <Option key={index} value={level.id}>
+                  {level.name}
                 </Option>
               ))}
             </Select>
           </Form.Item>
-
           <Form.Item
             name="linkYoutube"
-            label="Lesson Youtube Link"
-            rules={[{ required: true, message: "Please enter the lesson link" }]}
+            label="Homework Youtube Link"
+            rules={[{ required: true, message: "Please enter the homework link" }]}
           >
             <Input
-              placeholder="Enter lesson youtube link"
+              placeholder="Enter homework youtube link"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
               }}
             />
           </Form.Item>
-          <Form.Item name="linkGame" label="Lesson Game Link">
+          <Form.Item name="linkGame" label="Homework Game Link">
             <Input
-              placeholder="Enter lesson game link"
+              placeholder="Enter homework game link"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
               }}
             />
           </Form.Item>
-
+          <Form.Item name="textToSpeech" label="Tech to speech">
+            <TextArea
+              rows={3}
+              placeholder="Enter text to convert to speech"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              type="primary"
+              onClick={handleConvertToSpeech}
+              loading={loadingTTSForUpdate}
+              style={{
+                backgroundColor: colors.deepGreen,
+                borderColor: colors.deepGreen,
+              }}
+            >
+              Convert to Speech
+            </Button>
+          </Form.Item>
+          {mp3Url ||
+            (form.getFieldValue("linkSpeech") && (
+              <Form.Item>
+                <div style={{ marginBottom: "16px" }}>
+                  <audio controls style={{ width: "100%" }}>
+                    <source src={mp3Url || form.getFieldValue("linkSpeech")} type="audio/mp3" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </Form.Item>
+            ))}
+          {/* <div style={{ marginBottom: "16px" }}>
+            <audio controls style={{ width: "100%" }}>
+              <source
+                src={
+                  "https://res.cloudinary.com/ddd1hxsx0/video/upload/v1742718873/o7o1ouv3el4w72s4rxnc.mp3"
+                }
+                type="audio/mp3"
+              />
+              Your browser does not support the audio element.
+            </audio>
+          </div> */}
           <Form.Item
             name="description"
             label="Description"
@@ -377,11 +468,12 @@ HomeWorkMangement.propTypes = {
   levels: PropTypes.func.isRequired,
   isMobile: PropTypes.func.isRequired,
   loading: PropTypes.func.isRequired,
-  setLoading: PropTypes.func.isRequired,
-  setModalVisible: PropTypes.func.isRequired,
-  setEditingLesson: PropTypes.func.isRequired,
-  modalVisible: PropTypes.func.isRequired,
-  editingLesson: PropTypes.func.isRequired,
-  loading: PropTypes.func.isRequired,
-  setLoading: PropTypes.func.isRequired,
+  setModalUpdateHomeWorkVisible: PropTypes.func.isRequired,
+  setEditingHomeWork: PropTypes.func.isRequired,
+  modalUpdateHomeWorkVisible: PropTypes.func.isRequired,
+  editingHomeWork: PropTypes.func.isRequired,
+  homeWorks: PropTypes.func.isRequired,
+  setHomeWorks: PropTypes.func.isRequired,
+  loadingTTSForUpdate: PropTypes.func.isRequired,
+  setLoadingTTSForUpdate: PropTypes.func.isRequired,
 };

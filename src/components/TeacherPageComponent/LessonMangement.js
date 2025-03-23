@@ -25,9 +25,9 @@ export default function LessonMangement({
   quillFormats,
   levels,
   isMobile,
-  setModalVisible,
+  setModalUpdateLessonVisible,
   setEditingLesson,
-  modalVisible,
+  modalUpdateLessonVisible,
   editingLesson,
   loading,
   lessons,
@@ -55,7 +55,7 @@ export default function LessonMangement({
       linkGame: lesson.linkGame,
       description: lesson.description,
     });
-    setModalVisible(true);
+    setModalUpdateLessonVisible(true);
   };
   const handleSave = async () => {
     try {
@@ -70,7 +70,7 @@ export default function LessonMangement({
         );
         message.success("Lesson updated successfully");
       }
-      setModalVisible(false);
+      setModalUpdateLessonVisible(false);
       form.resetFields();
       setEditingLesson(null);
     } catch (err) {
@@ -238,9 +238,9 @@ export default function LessonMangement({
       <Modal
         centered
         title={editingLesson ? "Edit Lesson" : "Create New Lesson"}
-        open={modalVisible}
+        open={modalUpdateLessonVisible}
         onCancel={() => {
-          setModalVisible(false);
+          setModalUpdateLessonVisible(false);
           form.resetFields();
           setEditingLesson(null);
         }}
@@ -249,7 +249,7 @@ export default function LessonMangement({
             style={{ marginTop: isMobile ? "20px" : "" }}
             key="cancel"
             onClick={() => {
-              setModalVisible(false);
+              setModalUpdateLessonVisible(false);
               form.resetFields();
               setEditingLesson(null);
             }}
@@ -277,7 +277,8 @@ export default function LessonMangement({
           initialValues={{
             name: "",
             level: "",
-            link: "",
+            linkYoutube: "",
+            linkGame: "",
             description: "",
           }}
         >
@@ -355,12 +356,10 @@ LessonMangement.propTypes = {
   levels: PropTypes.func.isRequired,
   isMobile: PropTypes.func.isRequired,
   loading: PropTypes.func.isRequired,
-  setLoading: PropTypes.func.isRequired,
-  setModalVisible: PropTypes.func.isRequired,
+  setModalUpdateLessonVisible: PropTypes.func.isRequired,
   setEditingLesson: PropTypes.func.isRequired,
-  modalVisible: PropTypes.func.isRequired,
+  modalUpdateLessonVisible: PropTypes.func.isRequired,
   editingLesson: PropTypes.func.isRequired,
-  loading: PropTypes.func.isRequired,
   lessons: PropTypes.func.isRequired,
   setLessons: PropTypes.func.isRequired,
 };

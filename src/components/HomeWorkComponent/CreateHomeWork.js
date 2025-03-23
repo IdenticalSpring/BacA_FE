@@ -15,16 +15,17 @@ export default function CreateHomeWork({
   quillFormats,
   levels,
   isMobile,
-  loading,
-  setLoading,
+  loadingCreateHomeWork,
+  setLoadingCreateHomeWork,
   teacherId,
-  handleConvertToSpeech,
   loadingTTS,
-  mp3Url,
+  setLoadingTTS,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
+  const [mp3Url, setMp3Url] = useState("");
+  const [mp3file, setMp3file] = useState(null);
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -78,28 +79,78 @@ export default function CreateHomeWork({
   };
   const handleSubmit = async (values) => {
     try {
-      setLoading(true);
+      setLoadingCreateHomeWork(true);
 
-      // If we have a video file, we need to update the link field
-      // if (videoFile) {
-      //   values.link = videoFile.response?.url || videoFile.name;
-      // }
-      const dataHomeWork = {
-        ...values,
-        teacherId: teacherId,
-      };
-      // console.log(dataLesson);
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("level", values.level);
+      formData.append("linkYoutube", values.linkYoutube);
+      formData.append("linkGame", values.linkGame);
+      formData.append("description", values.description);
+      formData.append("teacherId", teacherId);
 
-      await homeWorkService.createHomeWork(dataHomeWork);
+      // Nếu có mp3Url thì fetch dữ liệu và append vào formData
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
+      console.log(formData);
+
+      await homeWorkService.createHomeWork(formData);
       message.success("Lesson created successfully!");
-      // navigate("/teacherpage/manageLessons");
       form.resetFields();
     } catch (err) {
       message.error("Failed to create lesson. Please try again.");
     } finally {
-      setLoading(false);
+      setLoadingCreateHomeWork(false);
     }
   };
+
+  const handleConvertToSpeech = async () => {
+    if (!textToSpeech) return;
+    setLoadingTTS(true);
+
+    try {
+      const response = await axios.post(
+        "https://ttsfree.com/api/v1/tts", // Replace with actual Viettel API
+        {
+          text: "Convert text to speech",
+          voiceService: "servicebin",
+          voiceID: "en-US",
+          voiceSpeed: "0",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            apikey: process.env.REACT_APP_API_TTS_KEY,
+          },
+        }
+      );
+      let base64String = response.data.audioData;
+
+      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
+      function base64ToBlob(base64, mimeType) {
+        let byteCharacters = atob(base64); // Giải mã base64
+        let byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        let byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+      }
+
+      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
+      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      setMp3file(audioBlob);
+      let audioUrl = URL.createObjectURL(audioBlob);
+      setMp3Url(audioUrl);
+    } catch (error) {
+      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+    }
+    setLoadingTTS(false);
+  };
+  // console.log(mp3Url);
+
   return (
     <div style={{ maxHeight: "35vh", overflow: "auto" }}>
       <Card
@@ -135,7 +186,7 @@ export default function CreateHomeWork({
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
-            name: "",
+            title: "",
             level: "",
             linkYoutube: "",
             linkGame: "",
@@ -232,6 +283,17 @@ export default function CreateHomeWork({
               </div>
             </Form.Item>
           )}
+          {/* <div style={{ marginBottom: "16px" }}>
+            <audio controls style={{ width: "100%" }}>
+              <source
+                src={
+                  "https://res.cloudinary.com/ddd1hxsx0/video/upload/v1742718873/o7o1ouv3el4w72s4rxnc.mp3"
+                }
+                type="audio/mp3"
+              />
+              Your browser does not support the audio element.
+            </audio>
+          </div> */}
           <Form.Item
             name="description"
             label="Description"
@@ -266,7 +328,7 @@ export default function CreateHomeWork({
               <Button
                 type="primary"
                 htmlType="submit"
-                loading={loading}
+                loading={loadingCreateHomeWork}
                 icon={<SaveOutlined />}
                 style={{
                   borderRadius: "6px",
@@ -289,10 +351,9 @@ CreateHomeWork.propTypes = {
   quillFormats: PropTypes.func.isRequired,
   levels: PropTypes.func.isRequired,
   isMobile: PropTypes.func.isRequired,
-  loading: PropTypes.func.isRequired,
-  setLoading: PropTypes.func.isRequired,
+  loadingCreateHomeWork: PropTypes.func.isRequired,
+  setLoadingCreateHomeWork: PropTypes.func.isRequired,
   teacherId: PropTypes.func.isRequired,
-  handleConvertToSpeech: PropTypes.func.isRequired,
   loadingTTS: PropTypes.func.isRequired,
-  mp3Url: PropTypes.func.isRequired,
+  setLoadingTTS: PropTypes.func.isRequired,
 };
