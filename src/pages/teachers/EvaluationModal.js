@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Modal, Form, Select, Button, Row, Col, Rate, List, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import TeacherService from "services/teacherService"; // Import TeacherService
+import TeacherService from "services/teacherService";
 import { jwtDecode } from "jwt-decode";
 
 const { TextArea } = Input;
@@ -19,7 +19,7 @@ const colors = {
 
 const SKILL_OPTIONS = ["Vocabulary", "Structure", "Listening", "Speaking", "Reading", "Writing"];
 
-const EvaluationModal = ({ visible, onClose, student, schedules }) => {
+const EvaluationModal = ({ visible, onClose, students, schedules }) => {
   const [skills, setSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
   const [evaluation, setEvaluation] = useState("");
@@ -31,6 +31,7 @@ const EvaluationModal = ({ visible, onClose, student, schedules }) => {
     { name: "Discipline", rating: 0 },
     { name: "Cooperation", rating: 0 },
   ]);
+
   useEffect(() => {
     if (!visible) {
       setSkills([]);
@@ -68,10 +69,9 @@ const EvaluationModal = ({ visible, onClose, student, schedules }) => {
     setBehaviors(updatedBehaviors);
   };
 
-  // ✅ Gọi API lưu Evaluation
   const handleOk = async () => {
-    if (!student || !student.id) {
-      message.error("Student information is missing.");
+    if (!students || students.length === 0) {
+      message.error("No students selected for evaluation.");
       return;
     }
 
@@ -79,37 +79,36 @@ const EvaluationModal = ({ visible, onClose, student, schedules }) => {
     const decoded = jwtDecode(token);
     const teacherID = decoded?.userId;
 
-    // Chuyển đổi danh sách skills thành object
     const skillRatings = skills.reduce((acc, skill) => {
-      acc[skill.name.toLowerCase()] = skill.rating; // Biến thành chữ thường để khớp API
+      acc[skill.name.toLowerCase()] = skill.rating;
       return acc;
     }, {});
 
-    // Chuyển đổi danh sách behaviors thành object
     const behaviorRatings = behaviors.reduce((acc, behavior) => {
       acc[behavior.name.toLowerCase()] = behavior.rating;
       return acc;
     }, {});
 
-    const payload = {
-      teacherID,
-      studentID: student.id,
-      scheduleID: selectedSchedule,
-      comment: evaluation,
-      ...skillRatings,
-      ...behaviorRatings,
-    };
-
-    console.log("Payload gửi lên:", payload); // 🔍 Debug payload
-
+    setLoading(true);
     try {
-      setLoading(true);
-      await TeacherService.evaluationStudent(payload);
-      message.success("Evaluation saved successfully!");
-      onClose(); // Đóng modal
+      const evaluationPromises = students.map((student) => {
+        const payload = {
+          teacherID,
+          studentID: student.id,
+          scheduleID: selectedSchedule,
+          comment: evaluation,
+          ...skillRatings,
+          ...behaviorRatings,
+        };
+        return TeacherService.evaluationStudent(payload);
+      });
+
+      await Promise.all(evaluationPromises);
+      message.success(`Evaluations saved successfully for ${students.length} students!`);
+      onClose();
     } catch (error) {
-      console.error("Lỗi khi lưu đánh giá:", error);
-      message.error("Failed to save evaluation. Please try again.");
+      console.error("Error saving evaluations:", error);
+      message.error("Failed to save evaluations. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -117,7 +116,9 @@ const EvaluationModal = ({ visible, onClose, student, schedules }) => {
 
   return (
     <Modal
-      title={`Evaluation for ${student?.name || "Unknown"}`}
+      title={`Evaluation for ${
+        students.length > 1 ? `${students.length} Students` : students[0]?.name || "Unknown"
+      }`}
       open={visible}
       onCancel={onClose}
       footer={[
@@ -230,14 +231,15 @@ const EvaluationModal = ({ visible, onClose, student, schedules }) => {
   );
 };
 
-// ✅ PropTypes
 EvaluationModal.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  student: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-  }),
+  students: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
   schedules: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

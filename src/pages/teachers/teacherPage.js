@@ -118,7 +118,7 @@ const TeacherPage = () => {
   const userName = userId.username || "Teacher";
   const navigate = useNavigate();
   //Student information
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudents, setSelectedStudents] = useState([]);
   const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
   const [assignmentModal, setAssignmentModal] = useState(false);
   const [activeTab, setActiveTab] = useState("lesson");
@@ -260,15 +260,27 @@ const TeacherPage = () => {
       <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => handleViewProfile(student)}>
         Profile
       </Menu.Item>
-      <Menu.Item
+      {/* <Menu.Item
         key="evaluation"
         icon={<BarChartOutlined />}
         onClick={() => handleViewEvaluation(student)}
       >
         Evaluation
-      </Menu.Item>
+      </Menu.Item> */}
     </Menu>
   );
+
+  const handleSelectStudent = (student) => {
+    setSelectedStudents((prev) => {
+      if (prev.some((s) => s.id === student.id)) {
+        // Nếu học sinh đã được chọn, xóa khỏi danh sách
+        return prev.filter((s) => s.id !== student.id);
+      } else {
+        // Nếu chưa được chọn, thêm vào danh sách
+        return [...prev, student];
+      }
+    });
+  };
 
   const handleViewProfile = (student) => {
     Modal.info({
@@ -287,19 +299,19 @@ const TeacherPage = () => {
     });
   };
 
-  const handleViewEvaluation = (student) => {
-    if (!hasClassToday) {
-      notification.warning({
-        message: "No Class Today",
-        description: "Class is scheduled for today",
-        placement: "topRight",
-        duration: 4,
-      });
-      return;
-    }
-    setSelectedStudent(student);
-    setIsEvaluationModalVisible(true);
-  };
+  // const handleViewEvaluation = (student) => {
+  //   if (!hasClassToday) {
+  //     notification.warning({
+  //       message: "No Class Today",
+  //       description: "Class is scheduled for today",
+  //       placement: "topRight",
+  //       duration: 4,
+  //     });
+  //     return;
+  //   }
+  //   setSelectedStudent(student);
+  //   setIsEvaluationModalVisible(true);
+  // };
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -433,6 +445,28 @@ const TeacherPage = () => {
     navigate("/teacherpage/entertestscore");
   };
 
+  const handleOpenEvaluationModal = () => {
+    if (selectedStudents.length === 0) {
+      notification.warning({
+        message: "No Students Selected",
+        description: "Please select at least one student to evaluate.",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
+    if (!hasClassToday) {
+      notification.warning({
+        message: "No Class Today",
+        description: "You can only evaluate students on a scheduled class day.",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
+    setIsEvaluationModalVisible(true);
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar classes={classes} selectedClass={selectedClass} onSelectClass={handleSelectClass} />
@@ -483,6 +517,15 @@ const TeacherPage = () => {
               <strong>Class Status:</strong>{" "}
               {hasClassToday ? "Class is scheduled for today" : "Class is scheduled for today"}
             </Text>
+            <div style={{ float: "right" }}>
+              <Button
+                type="primary"
+                onClick={handleOpenEvaluationModal}
+                style={{ backgroundColor: colors.deepGreen, color: colors.white }}
+              >
+                Evaluate Selected Students
+              </Button>
+            </div>
           </div>
         )}
 
@@ -496,7 +539,7 @@ const TeacherPage = () => {
         >
           {students?.map((student) => (
             <Col xs={24} sm={12} md={8} lg={6} xl={4} key={student.id}>
-              <Dropdown overlay={studentMenu(student)} trigger={["click"]}>
+              <Dropdown overlay={studentMenu(student)} trigger={["contextMenu"]}>
                 <Card
                   style={{
                     borderRadius: "12px",
@@ -504,10 +547,13 @@ const TeacherPage = () => {
                     border: `1px solid ${colors.borderGreen}`,
                     transition: "all 0.3s ease",
                     cursor: "pointer",
+                    backgroundColor: selectedStudents.some((s) => s.id === student.id)
+                      ? colors.paleGreen
+                      : colors.white, // Thay đổi màu nền khi được chọn
                   }}
                   hoverable
                   bodyStyle={{ padding: "16px" }}
-                  onClick={() => setSelectedStudent(student)}
+                  onClick={() => handleSelectStudent(student)} // Thay đổi sự kiện nhấp
                 >
                   <div
                     style={{
@@ -527,14 +573,12 @@ const TeacherPage = () => {
                     >
                       {student.name.charAt(0)}
                     </Avatar>
-
                     <Typography.Title
                       level={5}
                       style={{ margin: "0 0 4px 0", color: colors.darkGreen }}
                     >
                       {student.name}
                     </Typography.Title>
-
                     <Typography.Text type="secondary" style={{ display: "block" }}>
                       Level: {student.level || "N/A"}
                     </Typography.Text>
@@ -545,11 +589,11 @@ const TeacherPage = () => {
           ))}
         </Row>
         {/* Hiển thị Evaluation Modal khi cần */}
-        {selectedStudent && (
+        {selectedStudents.length > 0 && (
           <EvaluationModal
             visible={isEvaluationModalVisible}
             onClose={() => setIsEvaluationModalVisible(false)}
-            student={selectedStudent}
+            students={selectedStudents} // Truyền danh sách học sinh
             schedules={schedulesForToday}
           />
         )}
