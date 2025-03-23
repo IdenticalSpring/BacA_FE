@@ -13,8 +13,8 @@ export default function CreateLesson({
   quillFormats,
   levels,
   isMobile,
-  loading,
-  setLoading,
+  loadingCreateLesson,
+  setLoadingCreateLesson,
   teacherId,
 }) {
   const [form] = Form.useForm();
@@ -73,7 +73,7 @@ export default function CreateLesson({
   };
   const handleSubmit = async (values) => {
     try {
-      setLoading(true);
+      setLoadingCreateLesson(true);
 
       // If we have a video file, we need to update the link field
       // if (videoFile) {
@@ -92,7 +92,7 @@ export default function CreateLesson({
     } catch (err) {
       message.error("Failed to create lesson. Please try again.");
     } finally {
-      setLoading(false);
+      setLoadingCreateLesson(false);
     }
   };
   return (
@@ -256,7 +256,7 @@ export default function CreateLesson({
               <Button
                 type="primary"
                 htmlType="submit"
-                loading={loading}
+                loading={loadingCreateLesson}
                 icon={<SaveOutlined />}
                 style={{
                   borderRadius: "6px",
@@ -279,7 +279,7 @@ CreateLesson.propTypes = {
   quillFormats: PropTypes.func.isRequired,
   levels: PropTypes.func.isRequired,
   isMobile: PropTypes.func.isRequired,
-  loading: PropTypes.func.isRequired,
-  setLoading: PropTypes.func.isRequired,
+  loadingCreateLesson: PropTypes.func.isRequired,
+  setLoadingCreateLesson: PropTypes.func.isRequired,
   teacherId: PropTypes.func.isRequired,
 };

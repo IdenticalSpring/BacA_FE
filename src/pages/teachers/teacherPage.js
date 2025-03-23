@@ -46,6 +46,7 @@ import LessonMangement from "components/TeacherPageComponent/LessonMangement";
 import homeWorkService from "services/homeWorkService";
 import HomeWorkBySchedule from "components/HomeWorkComponent/HomeWorkBySchedule";
 import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
+import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -93,8 +94,11 @@ const TeacherPage = () => {
   const [lessonsData, setLessonsData] = useState([]);
   const [lessons, setLessons] = useState(null);
   const [homeWorksData, setHomeWorksData] = useState([]);
+  const [homeWorks, setHomeWorks] = useState(null);
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingCreateHomeWork, setLoadingCreateHomeWork] = useState(false);
+  const [loadingCreateLesson, setLoadingCreateLesson] = useState(false);
   const [error, setError] = useState("");
   const [hasClassToday, setHasClassToday] = useState(false);
 
@@ -104,6 +108,7 @@ const TeacherPage = () => {
   const [textToSpeech, setTextToSpeech] = useState("");
   const [youtubeLink, setYoutubeLink] = useState("");
   const [loadingTTS, setLoadingTTS] = useState(false);
+  const [loadingTTSForUpdate, setLoadingTTSForUpdate] = useState(false);
   const [mp3Url, setMp3Url] = useState("");
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
@@ -123,8 +128,10 @@ const TeacherPage = () => {
   const [assignmentModal, setAssignmentModal] = useState(false);
   const [activeTab, setActiveTab] = useState("lesson");
   const [levels, setLevels] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalUpdateHomeWorkVisible, setModalUpdateHomeWorkVisible] = useState(false);
+  const [modalUpdateLessonVisible, setModalUpdateLessonVisible] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
+  const [editingHomeWork, setEditingHomeWork] = useState(null);
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -174,6 +181,30 @@ const TeacherPage = () => {
       console.log(err);
 
       message.error("Failed to load lessons!", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchHomeWork();
+  }, []);
+
+  const fetchHomeWork = async () => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem("token");
+
+      // Giải mã token để lấy role
+      const decoded = jwtDecode(token);
+      if (!decoded) {
+        return;
+      }
+      const data = await homeWorkService.getHomeWorkByTeacherId(decoded.userId);
+      setHomeWorks(data);
+    } catch (err) {
+      console.log(err);
+
+      message.error("Failed to load homeworks!", err);
     } finally {
       setLoading(false);
     }
@@ -338,7 +369,7 @@ const TeacherPage = () => {
     if (selectedClass) {
       fetchLessonByScheduleAndLessonByLevel();
     }
-  }, [selectedClass]);
+  }, [selectedClass, loadingCreateHomeWork, loadingCreateLesson]);
 
   useEffect(() => {
     if (selectedClass) {
@@ -407,22 +438,22 @@ const TeacherPage = () => {
 
     try {
       const response = await axios.post(
-        "https://viettel-ai-api-url.com/tts", // Replace with actual Viettel API
+        "https://ttsfree.com/api/v1/tts", // Replace with actual Viettel API
         {
-          text: textToSpeech,
-          voice: "banmai",
-          speed: 1.0,
-          format: "mp3",
+          text: "Convert text to speech with natural-sounding using an API powered by AI technologies",
+          voiceService: "servicebin",
+          voiceID: "en-US",
+          voiceSpeed: "0",
         },
         {
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": "YOUR_VIETTEL_AI_KEY",
+            apikey: process.env.REACT_APP_API_TTS_KEY,
           },
         }
       );
 
-      setMp3Url(response.data.audioUrl);
+      setMp3Url(response.data.audioData);
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
@@ -626,7 +657,11 @@ const TeacherPage = () => {
         footer={
           activeTab === "homework"
             ? [
-                <Button key="close" onClick={() => setAssignmentModal(false)}>
+                <Button
+                  style={{ marginTop: "20px" }}
+                  key="close"
+                  onClick={() => setAssignmentModal(false)}
+                >
                   Close
                 </Button>,
                 // <Button
@@ -695,8 +730,8 @@ const TeacherPage = () => {
                     quillFormats={quillFormats}
                     levels={levels}
                     isMobile={isMobile}
-                    loading={loading}
-                    setLoading={setLoading}
+                    loadingCreateLesson={loadingCreateLesson}
+                    setLoadingCreateLesson={setLoadingCreateLesson}
                     teacherId={teacherId}
                   />
                 </div>
@@ -723,9 +758,9 @@ const TeacherPage = () => {
                     quillFormats={quillFormats}
                     levels={levels}
                     isMobile={isMobile}
-                    setModalVisible={setModalVisible}
+                    setModalUpdateLessonVisible={setModalUpdateLessonVisible}
                     setEditingLesson={setEditingLesson}
-                    modalVisible={modalVisible}
+                    modalUpdateLessonVisible={modalUpdateLessonVisible}
                     editingLesson={editingLesson}
                     lessons={lessons}
                     setLessons={setLessons}
@@ -832,20 +867,15 @@ const TeacherPage = () => {
                     quillFormats={quillFormats}
                     levels={levels}
                     isMobile={isMobile}
-                    loading={loading}
-                    setLoading={setLoading}
+                    loadingCreateHomeWork={loadingCreateHomeWork}
+                    setLoadingCreateHomeWork={setLoadingCreateHomeWork}
                     teacherId={teacherId}
-                    handleConvertToSpeech={handleConvertToSpeech}
                     loadingTTS={loadingTTS}
-                    mp3Url={mp3Url}
+                    setLoadingTTS={setLoadingTTS}
                   />
                 </div>
                 <div
-                  style={{
-                    maxHeight: "35vh",
-                    overflow: "auto",
-                    width: isMobile ? "100%" : "49%",
-                  }}
+                  style={{ maxHeight: "35vh", overflow: "auto", width: isMobile ? "100%" : "49%" }}
                 >
                   <HomeWorkBySchedule
                     lessonByScheduleData={lessonByScheduleData}
@@ -858,10 +888,26 @@ const TeacherPage = () => {
                 <div
                   style={{
                     maxHeight: "35vh",
-                    overflow: "auto",
-                    width: isMobile ? "100%" : "49%",
+                    width: "100%",
+                    height: "35vh",
                   }}
-                ></div>
+                >
+                  <HomeWorkMangement
+                    toolbar={toolbar}
+                    quillFormats={quillFormats}
+                    levels={levels}
+                    isMobile={isMobile}
+                    setModalUpdateHomeWorkVisible={setModalUpdateHomeWorkVisible}
+                    setEditingHomeWork={setEditingHomeWork}
+                    modalUpdateHomeWorkVisible={modalUpdateHomeWorkVisible}
+                    editingHomeWork={editingHomeWork}
+                    loading={loading}
+                    homeWorks={homeWorks}
+                    setHomeWorks={setHomeWorks}
+                    loadingTTSForUpdate={loadingTTSForUpdate}
+                    setLoadingTTSForUpdate={setLoadingTTSForUpdate}
+                  />
+                </div>
               </div>
             )}
           </TabPane>
