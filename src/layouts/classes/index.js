@@ -30,6 +30,8 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import { colors } from "assets/theme/color";
+
 const levels = [
   "Level Pre-1",
   "Level 1",
@@ -293,12 +295,11 @@ function Classes() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
               >
                 <MDTypography variant="h6" color="white">
                   Class Tables
@@ -308,7 +309,11 @@ function Classes() {
                 </Button> */}
                 <Button
                   variant="contained"
-                  color="success"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
                   onClick={() => navigate("/classes/create-class")}
                 >
                   Create
@@ -498,8 +503,20 @@ function Classes() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} color="primary">
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            sx={{
+              backgroundColor: colors.midGreen,
+              color: colors.white,
+              " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+          >
             {editMode ? "Save" : "Create"}
           </Button>
         </DialogActions>

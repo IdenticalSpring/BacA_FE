@@ -6,6 +6,8 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import lessonService from "services/lessonService";
+import { colors } from "assets/theme/color";
+
 const levels = [
   "Level Pre-1",
   "Level 1",
@@ -34,7 +36,12 @@ function CreateLesson() {
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
         <Grid container justifyContent="flex-start">
-          <Grid item xs={12} md={6} sx={{ marginLeft: "20px" }}>
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{ marginLeft: "20px", borderRadius: "20px", backgroundColor: colors.white }}
+          >
             <Card
               sx={{
                 padding: 3,
@@ -93,10 +100,22 @@ function CreateLesson() {
                 onChange={(e) => setLessonData({ ...lessonData, description: e.target.value })}
               />
               <MDBox display="flex" justifyContent="space-between" mt={3}>
-                <Button variant="text" onClick={() => navigate("/lessons")}>
+                <Button
+                  variant="text"
+                  sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+                  onClick={() => navigate("/lessons")}
+                >
                   Cancel
                 </Button>
-                <Button variant="contained" style={{ color: "white" }} onClick={handleSave}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={handleSave}
+                >
                   Create
                 </Button>
               </MDBox>

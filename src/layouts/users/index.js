@@ -31,6 +31,8 @@ import DataTable from "examples/Tables/DataTable";
 import authorsTableData from "layouts/tables/data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
 
+import { colors } from "assets/theme/color";
+
 function Users() {
   const { columns, rows } = authorsTableData();
   const { columns: pColumns, rows: pRows } = projectsTableData();
@@ -48,9 +50,8 @@ function Users() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
+                sx={{ backgroundColor: colors.deepGreen }}
               >
                 <MDTypography variant="h6" color="white">
                   Users Table

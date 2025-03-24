@@ -8,6 +8,7 @@ import Footer from "examples/Footer";
 import classService from "services/classService";
 import lessonService from "services/lessonService";
 import lessonByScheduleService from "services/lessonByScheduleService";
+import { colors } from "assets/theme/color";
 const daysOfWeek = [
   "Choose day of week",
   "Sunday",
@@ -93,12 +94,11 @@ function LessonBySchedules() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
               >
                 <MDTypography variant="h6" color="white">
                   Lesson By Schedule

@@ -19,6 +19,7 @@ import DataTable from "examples/Tables/DataTable";
 import { useNavigate } from "react-router-dom";
 import lessonService from "services/lessonService";
 import { MenuItem } from "@mui/material";
+import { colors } from "assets/theme/color";
 const levels = [
   "Level Pre-1",
   "Level 1",
@@ -61,10 +62,17 @@ function Lessons() {
         description: lesson.description,
         actions: (
           <>
-            <IconButton color="primary" onClick={() => handleEdit(lesson)}>
+            <IconButton
+              sx={{
+                backgroundColor: colors.midGreen,
+                color: colors.white,
+                " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+              }}
+              onClick={() => handleEdit(lesson)}
+            >
               <EditIcon />
             </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(lesson.id)}>
+            <IconButton color="error" onClick={() => handleDelete(lesson.id)}>
               <DeleteIcon />
             </IconButton>
           </>
@@ -138,10 +146,17 @@ function Lessons() {
             description: createdLesson.description,
             actions: (
               <>
-                <IconButton color="primary" onClick={() => handleEdit(createdLesson)}>
+                <IconButton
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={() => handleEdit(createdLesson)}
+                >
                   <EditIcon />
                 </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdLesson.id)}>
+                <IconButton color="error" onClick={() => handleDelete(createdLesson.id)}>
                   <DeleteIcon />
                 </IconButton>
               </>
@@ -172,19 +187,22 @@ function Lessons() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
               >
                 <MDTypography variant="h6" color="white">
                   Lesson Tables
                 </MDTypography>
                 <Button
                   variant="contained"
-                  color="success"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
                   onClick={() => navigate("/lessons/create-lesson")}
                 >
                   Create
@@ -265,8 +283,20 @@ function Lessons() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} color="primary">
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            sx={{
+              backgroundColor: colors.midGreen,
+              color: colors.white,
+              " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+          >
             {editMode ? "Save" : "Create"}
           </Button>
         </DialogActions>

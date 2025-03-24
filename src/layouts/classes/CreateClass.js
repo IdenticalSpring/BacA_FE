@@ -26,6 +26,8 @@ import scheduleService from "services/scheduleService";
 import DeleteIcon from "@mui/icons-material/Delete";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import levelService from "services/levelService";
+import { colors } from "assets/theme/color";
+
 function CreateClass() {
   const navigate = useNavigate();
   const [classData, setClassData] = useState({
@@ -179,7 +181,12 @@ function CreateClass() {
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
         <Grid container justifyContent="flex-start">
-          <Grid item xs={12} md={6} sx={{ marginLeft: "20px" }}>
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{ marginLeft: "20px", borderRadius: "20px", backgroundColor: colors.white }}
+          >
             <Card
               sx={{
                 padding: 3,
@@ -314,7 +321,16 @@ function CreateClass() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="text" style={{ height: "30px" }} onClick={handleAddSchedule}>
+                <Button
+                  variant="text"
+                  style={{ height: "30px" }}
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={handleAddSchedule}
+                >
                   Add
                 </Button>
               </div>
@@ -352,10 +368,22 @@ function CreateClass() {
                 </TableContainer>
               )}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
-                <Button variant="text" onClick={() => navigate("/classes")}>
+                <Button
+                  variant="text"
+                  sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+                  onClick={() => navigate("/classes")}
+                >
                   Cancel
                 </Button>
-                <Button variant="contained" style={{ color: "white" }} onClick={handleSave}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={handleSave}
+                >
                   Create
                 </Button>
               </MDBox>

@@ -236,14 +236,14 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    // type: "collapse",
-    name: "Sign In",
-    key: "sign-in",
-    icon: <Icon fontSize="small">login</Icon>,
-    route: "/sign-in",
-    component: <SignIn />,
-  },
+  // {
+  //   // type: "collapse",
+  //   name: "Sign In",
+  //   key: "sign-in",
+  //   icon: <Icon fontSize="small">login</Icon>,
+  //   route: "/sign-in",
+  //   component: <SignIn />,
+  // },
   {
     name: "Student Page",
     key: "studentPage",
@@ -255,13 +255,13 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    name: "Auth Portal",
-    key: "authPortal",
-    icon: <Icon fontSize="small">login</Icon>,
-    route: "/auth/sign-in",
-    component: <AuthPortal />,
-  },
+  // {
+  //   name: "Auth Portal",
+  //   key: "authPortal",
+  //   icon: <Icon fontSize="small">login</Icon>,
+  //   route: "/auth/sign-in",
+  //   component: <AuthPortal />,
+  // },
   {
     name: "Teacher Dashboard",
     key: "teacherDashboard",

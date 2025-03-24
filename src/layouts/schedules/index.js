@@ -19,6 +19,7 @@ import DataTable from "examples/Tables/DataTable";
 import scheduleService from "services/scheduleService";
 import { useNavigate } from "react-router-dom";
 import { MenuItem } from "@mui/material";
+import { colors } from "assets/theme/color";
 
 function Schedules() {
   const navigate = useNavigate();
@@ -171,19 +172,22 @@ function Schedules() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
               >
                 <MDTypography variant="h6" color="white">
                   Schedule Tables
                 </MDTypography>
                 <Button
                   variant="contained"
-                  color="success"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
                   onClick={() => navigate("/schedules/create-schedule")}
                 >
                   Create
@@ -214,7 +218,9 @@ function Schedules() {
       </MDBox>
       <Footer />
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editMode ? "Edit Scheduel" : "Create"}</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: colors.deepGreen, color: colors.white }}>
+          {editMode ? "Edit Scheduel" : "Create"}
+        </DialogTitle>
         <DialogContent>
           <TextField
             select
@@ -259,8 +265,20 @@ function Schedules() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} color="primary">
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            sx={{
+              backgroundColor: colors.midGreen,
+              color: colors.white,
+              " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+          >
             {editMode ? "Save" : "Create"}
           </Button>
         </DialogActions>

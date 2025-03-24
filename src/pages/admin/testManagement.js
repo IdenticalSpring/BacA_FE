@@ -30,6 +30,7 @@ import DataTable from "examples/Tables/DataTable";
 import testService from "services/testService";
 import classTestScheduleService from "services/classTestScheduleService";
 import classService from "services/classService";
+import { colors } from "assets/theme/color";
 
 function TestManagement() {
   // State for form inputs
@@ -224,7 +225,11 @@ function TestManagement() {
     className: test.className,
     actions: (
       <MDBox display="flex" gap={2}>
-        <MDButton variant="text" color="info" onClick={() => handleEditTestClick(test)}>
+        <MDButton
+          variant="text"
+          sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+          onClick={() => handleEditTestClick(test)}
+        >
           Edit
         </MDButton>
         <MDButton variant="text" color="error" onClick={() => handleDeleteTestClick(test)}>
@@ -239,7 +244,11 @@ function TestManagement() {
     name: type.name,
     actions: (
       <MDBox display="flex" gap={2}>
-        <MDButton variant="text" color="info" onClick={() => handleEditTestTypeClick(type)}>
+        <MDButton
+          variant="text"
+          sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+          onClick={() => handleEditTestTypeClick(type)}
+        >
           Edit
         </MDButton>
         <MDButton variant="text" color="error" onClick={() => handleDeleteTestTypeClick(type)}>
@@ -573,22 +582,23 @@ function TestManagement() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
+      <MDBox pt={6} pb={3} bgColor={colors.gray}>
         <Grid container spacing={6}>
           {/* Left Column - Test Schedule */}
           <Grid item xs={12} md={6}>
-            <Card>
+            <Card
+              sx={{ backgroundColor: colors.cardBg, boxShadow: `0 4px 12px ${colors.softShadow}` }}
+            >
               <MDBox
                 mx={2}
                 mt={-3}
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
+                sx={{ backgroundColor: colors.deepGreen }}
               >
-                <MDTypography variant="h6" color="white">
+                <MDTypography variant="h6" sx={{ color: colors.white }}>
                   Test Schedule
                 </MDTypography>
               </MDBox>
@@ -600,6 +610,12 @@ function TestManagement() {
                       variant={errors.selectedClass ? "outlined" : "contained"}
                       color={errors.selectedClass ? "error" : "info"}
                       onClick={handleClassMenuOpen}
+                      sx={{
+                        backgroundColor: errors.selectedClass ? "transparent" : colors.deepGreen,
+                        color: errors.selectedClass ? colors.errorRed : colors.white,
+                        borderColor: errors.selectedClass ? colors.errorRed : colors.borderGreen,
+                        "&:hover": { backgroundColor: colors.buttonHover },
+                      }}
                     >
                       {selectedClassLabel}
                     </MDButton>
@@ -607,9 +623,17 @@ function TestManagement() {
                       anchorEl={classMenuAnchor}
                       open={Boolean(classMenuAnchor)}
                       onClose={handleClassMenuClose}
+                      PaperProps={{ sx: { backgroundColor: colors.cardBg } }}
                     >
                       {classes.map((cls) => (
-                        <MenuItem key={cls.id} onClick={() => handleClassSelect(cls.id, cls.name)}>
+                        <MenuItem
+                          key={cls.id}
+                          onClick={() => handleClassSelect(cls.id, cls.name)}
+                          sx={{
+                            "&:hover": { backgroundColor: colors.tableRowHover },
+                            color: colors.darkGray,
+                          }}
+                        >
                           {cls.name}
                         </MenuItem>
                       ))}
@@ -621,6 +645,12 @@ function TestManagement() {
                       variant={errors.selectedTestType ? "outlined" : "contained"}
                       color={errors.selectedTestType ? "error" : "info"}
                       onClick={handleTestTypeMenuOpen}
+                      sx={{
+                        backgroundColor: errors.selectedTestType ? "transparent" : colors.deepGreen,
+                        color: errors.selectedTestType ? colors.errorRed : colors.white,
+                        borderColor: errors.selectedTestType ? colors.errorRed : colors.borderGreen,
+                        "&:hover": { backgroundColor: colors.buttonHover },
+                      }}
                     >
                       {selectedTestTypeLabel}
                     </MDButton>
@@ -628,11 +658,16 @@ function TestManagement() {
                       anchorEl={testTypeMenuAnchor}
                       open={Boolean(testTypeMenuAnchor)}
                       onClose={handleTestTypeMenuClose}
+                      PaperProps={{ sx: { backgroundColor: colors.cardBg } }}
                     >
                       {testTypes.map((type) => (
                         <MenuItem
                           key={type.id}
                           onClick={() => handleTestTypeSelect(type.id, type.name)}
+                          sx={{
+                            "&:hover": { backgroundColor: colors.tableRowHover },
+                            color: colors.darkGray,
+                          }}
                         >
                           {type.name}
                         </MenuItem>
@@ -651,11 +686,28 @@ function TestManagement() {
                       }}
                       InputLabelProps={{ shrink: true }}
                       error={errors.selectedDate}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": { borderColor: colors.inputBorder },
+                          "&:hover fieldset": { borderColor: colors.midGreen },
+                          "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                        },
+                        "& .MuiInputLabel-root": { color: colors.darkGray },
+                        "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                      }}
                     />
                   </Grid>
                 </Grid>
                 <MDBox mb={3} display="flex" justifyContent="flex-end">
-                  <MDButton variant="gradient" color="info" onClick={handleCreateTest}>
+                  <MDButton
+                    variant="gradient"
+                    sx={{
+                      backgroundColor: colors.safeGreen,
+                      color: colors.white,
+                      "&:hover": { backgroundColor: colors.highlightGreen },
+                    }}
+                    onClick={handleCreateTest}
+                  >
                     Create
                   </MDButton>
                 </MDBox>
@@ -665,6 +717,10 @@ function TestManagement() {
                   entriesPerPage={false}
                   showTotalEntries={false}
                   noEndBorder
+                  sx={{
+                    "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
+                    "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
+                  }}
                 />
               </MDBox>
             </Card>
@@ -672,18 +728,19 @@ function TestManagement() {
 
           {/* Right Column - Test Types */}
           <Grid item xs={12} md={6}>
-            <Card>
+            <Card
+              sx={{ backgroundColor: colors.cardBg, boxShadow: `0 4px 12px ${colors.softShadow}` }}
+            >
               <MDBox
                 mx={2}
                 mt={-3}
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
+                sx={{ backgroundColor: colors.deepGreen }}
               >
-                <MDTypography variant="h6" color="white">
+                <MDTypography variant="h6" sx={{ color: colors.white }}>
                   Test Types
                 </MDTypography>
               </MDBox>
@@ -699,10 +756,28 @@ function TestManagement() {
                         setErrors({ ...errors, newTestTypeName: false });
                       }}
                       error={errors.newTestTypeName}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": { borderColor: colors.inputBorder },
+                          "&:hover fieldset": { borderColor: colors.midGreen },
+                          "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                        },
+                        "& .MuiInputLabel-root": { color: colors.darkGray },
+                        "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <MDButton variant="gradient" color="info" onClick={handleAddTestType} fullWidth>
+                    <MDButton
+                      variant="gradient"
+                      sx={{
+                        backgroundColor: colors.safeGreen,
+                        color: colors.white,
+                        "&:hover": { backgroundColor: colors.highlightGreen },
+                      }}
+                      onClick={handleAddTestType}
+                      fullWidth
+                    >
                       Add
                     </MDButton>
                   </Grid>
@@ -713,6 +788,10 @@ function TestManagement() {
                   entriesPerPage={false}
                   showTotalEntries={false}
                   noEndBorder
+                  sx={{
+                    "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
+                    "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
+                  }}
                 />
               </MDBox>
             </Card>
@@ -722,14 +801,20 @@ function TestManagement() {
 
       {/* Edit Test Dialog */}
       <Dialog open={editTestDialogOpen} onClose={() => setEditTestDialogOpen(false)}>
-        <DialogTitle>Edit Test</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: colors.headerBg, color: colors.white }}>
+          Edit Test
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: colors.paleGreen }}>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <MDButton
                 fullWidth
                 variant="contained"
-                color="info"
+                sx={{
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.buttonHover },
+                }}
                 onClick={handleEditClassMenuOpen}
               >
                 {currentEditItem?.className || "Choose Class"}
@@ -738,9 +823,17 @@ function TestManagement() {
                 anchorEl={editClassMenuAnchor}
                 open={Boolean(editClassMenuAnchor)}
                 onClose={handleEditClassMenuClose}
+                PaperProps={{ sx: { backgroundColor: colors.cardBg } }}
               >
                 {classes.map((cls) => (
-                  <MenuItem key={cls.id} onClick={() => handleEditClassSelect(cls.id, cls.name)}>
+                  <MenuItem
+                    key={cls.id}
+                    onClick={() => handleEditClassSelect(cls.id, cls.name)}
+                    sx={{
+                      "&:hover": { backgroundColor: colors.tableRowHover },
+                      color: colors.darkGray,
+                    }}
+                  >
                     {cls.name}
                   </MenuItem>
                 ))}
@@ -750,7 +843,11 @@ function TestManagement() {
               <MDButton
                 fullWidth
                 variant="contained"
-                color="info"
+                sx={{
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.buttonHover },
+                }}
                 onClick={handleEditTestTypeMenuOpen}
               >
                 {currentEditItem?.name || "Choose Test Type"}
@@ -759,11 +856,16 @@ function TestManagement() {
                 anchorEl={editTestTypeMenuAnchor}
                 open={Boolean(editTestTypeMenuAnchor)}
                 onClose={handleEditTestTypeMenuClose}
+                PaperProps={{ sx: { backgroundColor: colors.cardBg } }}
               >
                 {testTypes.map((type) => (
                   <MenuItem
                     key={type.id}
                     onClick={() => handleEditTestTypeSelect(type.id, type.name)}
+                    sx={{
+                      "&:hover": { backgroundColor: colors.tableRowHover },
+                      color: colors.darkGray,
+                    }}
                   >
                     {type.name}
                   </MenuItem>
@@ -778,13 +880,31 @@ function TestManagement() {
                 value={currentEditItem?.date || ""}
                 onChange={(e) => setCurrentEditItem({ ...currentEditItem, date: e.target.value })}
                 InputLabelProps={{ shrink: true }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditTestDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditTestSave} color="primary">
+        <DialogActions sx={{ backgroundColor: colors.paleGreen }}>
+          <Button onClick={() => setEditTestDialogOpen(false)} sx={{ color: colors.darkGray }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditTestSave}
+            sx={{
+              color: colors.white,
+              backgroundColor: colors.safeGreen,
+              "&:hover": { backgroundColor: colors.highlightGreen },
+            }}
+          >
             Save
           </Button>
         </DialogActions>
@@ -792,16 +912,27 @@ function TestManagement() {
 
       {/* Delete Test Dialog */}
       <Dialog open={deleteTestDialogOpen} onClose={() => setDeleteTestDialogOpen(false)}>
-        <DialogTitle>Delete Test</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+        <DialogTitle sx={{ backgroundColor: colors.headerBg, color: colors.white }}>
+          Delete Test
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: colors.paleGreen }}>
+          <DialogContentText sx={{ color: colors.darkGray }}>
             Are you sure you want to delete the test &ldquo;{currentEditItem?.name}&rdquo; scheduled
             for {currentEditItem?.date} in {currentEditItem?.className}?
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTestDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteTestConfirm} color="error">
+        <DialogActions sx={{ backgroundColor: colors.paleGreen }}>
+          <Button onClick={() => setDeleteTestDialogOpen(false)} sx={{ color: colors.darkGray }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteTestConfirm}
+            sx={{
+              color: colors.white,
+              backgroundColor: colors.errorRed,
+              "&:hover": { backgroundColor: "#FF8787" },
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
@@ -809,8 +940,10 @@ function TestManagement() {
 
       {/* Edit Test Type Dialog */}
       <Dialog open={editTestTypeDialogOpen} onClose={() => setEditTestTypeDialogOpen(false)}>
-        <DialogTitle>Edit Test Type</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: colors.headerBg, color: colors.white }}>
+          Edit Test Type
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: colors.paleGreen }}>
           <TextField
             autoFocus
             margin="dense"
@@ -820,11 +953,29 @@ function TestManagement() {
             value={currentEditItem?.name || ""}
             onChange={(e) => setCurrentEditItem({ ...currentEditItem, name: e.target.value })}
             error={errors.editTestTypeName}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: colors.inputBorder },
+                "&:hover fieldset": { borderColor: colors.midGreen },
+                "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+              },
+              "& .MuiInputLabel-root": { color: colors.darkGray },
+              "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditTestTypeDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditTestTypeSave} color="primary">
+        <DialogActions sx={{ backgroundColor: colors.paleGreen }}>
+          <Button onClick={() => setEditTestTypeDialogOpen(false)} sx={{ color: colors.darkGray }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditTestTypeSave}
+            sx={{
+              color: colors.white,
+              backgroundColor: colors.safeGreen,
+              "&:hover": { backgroundColor: colors.highlightGreen },
+            }}
+          >
             Save
           </Button>
         </DialogActions>
@@ -832,16 +983,30 @@ function TestManagement() {
 
       {/* Delete Test Type Dialog */}
       <Dialog open={deleteTestTypeDialogOpen} onClose={() => setDeleteTestTypeDialogOpen(false)}>
-        <DialogTitle>Delete Test Type</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+        <DialogTitle sx={{ backgroundColor: colors.headerBg, color: colors.white }}>
+          Delete Test Type
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: colors.paleGreen }}>
+          <DialogContentText sx={{ color: colors.darkGray }}>
             Are you sure you want to delete the test type &ldquo;{currentEditItem?.name}&rdquo;?
             This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTestTypeDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteTestTypeConfirm} color="error">
+        <DialogActions sx={{ backgroundColor: colors.paleGreen }}>
+          <Button
+            onClick={() => setDeleteTestTypeDialogOpen(false)}
+            sx={{ color: colors.darkGray }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteTestTypeConfirm}
+            sx={{
+              color: colors.white,
+              backgroundColor: colors.errorRed,
+              "&:hover": { backgroundColor: "#FF8787" },
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
@@ -857,7 +1022,12 @@ function TestManagement() {
         <Alert
           onClose={handleNotificationClose}
           severity={notification.severity}
-          sx={{ width: "100%" }}
+          sx={{
+            width: "100%",
+            backgroundColor:
+              notification.severity === "success" ? colors.safeGreen : colors.errorRed,
+            color: colors.white,
+          }}
         >
           {notification.message}
         </Alert>

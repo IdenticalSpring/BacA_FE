@@ -21,7 +21,50 @@ Coded by www.creative-tim.com
 
 const colors = {
   background: {
-    default: "#f0f2f5",
+    default: "#8ED1B0",
+  },
+
+  lightGreen: {
+    main: "#8ED1B0",
+  },
+  deepGreen: {
+    main: "#368A68",
+  },
+  white: {
+    main: "#FFFFFF",
+  },
+  gray: {
+    main: "#F5F5F5",
+  },
+  darkGray: {
+    main: "#333333",
+  },
+  accent: {
+    main: "#FFD166",
+  },
+  lightAccent: {
+    main: "#FFEDC2",
+  },
+  darkGreen: {
+    main: "#224922",
+  },
+  paleGreen: {
+    main: "#E8F5EE",
+  },
+  midGreen: {
+    main: "#5FAE8C",
+  },
+  errorRed: {
+    main: "#FF6B6B",
+  },
+  mintGreen: {
+    main: "#C2F0D7",
+  },
+  paleBlue: {
+    main: "#E6F7FF",
+  },
+  highlightGreen: {
+    main: "#43D183",
   },
 
   text: {
@@ -108,8 +151,8 @@ const colors = {
     },
 
     info: {
-      main: "#49a3f1",
-      state: "#1A73E8",
+      main: "#368A68",
+      state: "#368A68",
     },
 
     success: {
@@ -133,8 +176,8 @@ const colors = {
     },
 
     dark: {
-      main: "#42424a",
-      state: "#191919",
+      main: "#224922",
+      state: "#224922",
     },
   },
 

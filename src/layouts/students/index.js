@@ -19,6 +19,7 @@ import DataTable from "examples/Tables/DataTable";
 import studentService from "services/studentService";
 import { useNavigate } from "react-router-dom";
 import { MenuItem } from "@mui/material";
+import { colors } from "assets/theme/color";
 const levels = [
   "Level Pre-1",
   "Level 1",
@@ -69,10 +70,17 @@ function Students() {
         note: student.note,
         actions: (
           <>
-            <IconButton color="primary" onClick={() => handleEdit(student)}>
+            <IconButton
+              sx={{
+                backgroundColor: colors.midGreen,
+                color: colors.white,
+                " &:hover": { backgroundColor: colors.highlightGreen },
+              }}
+              onClick={() => handleEdit(student)}
+            >
               <EditIcon />
             </IconButton>
-            <IconButton color="secondary" onClick={() => handleDelete(student.id)}>
+            <IconButton color="error" onClick={() => handleDelete(student.id)}>
               <DeleteIcon />
             </IconButton>
           </>
@@ -132,10 +140,17 @@ function Students() {
             note: createdStudent.note,
             actions: (
               <>
-                <IconButton color="primary" onClick={() => handleEdit(createdStudent)}>
+                <IconButton
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen },
+                  }}
+                  onClick={() => handleEdit(createdStudent)}
+                >
                   <EditIcon />
                 </IconButton>
-                <IconButton color="secondary" onClick={() => handleDelete(createdStudent.id)}>
+                <IconButton color="error" onClick={() => handleDelete(createdStudent.id)}>
                   <DeleteIcon />
                 </IconButton>
               </>
@@ -165,19 +180,22 @@ function Students() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="info"
                 borderRadius="lg"
-                coloredShadow="info"
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
               >
                 <MDTypography variant="h6" color="white">
                   Students Table
                 </MDTypography>
                 <Button
                   variant="contained"
-                  color="success"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
                   onClick={() => navigate("/students/create-student")}
                 >
                   Create
@@ -208,7 +226,9 @@ function Students() {
       </MDBox>
       <Footer />
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editMode ? "Edit Student" : "Add Student"}</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: colors.deepGreen, color: colors.white }}>
+          {editMode ? "Edit Student" : "Add Student"}
+        </DialogTitle>
         <DialogContent>
           <TextField
             label="Name"
@@ -267,8 +287,20 @@ function Students() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} color="primary">
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            sx={{
+              backgroundColor: colors.midGreen,
+              color: colors.white,
+              " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+          >
             {editMode ? "Save" : "Create"}
           </Button>
         </DialogActions>

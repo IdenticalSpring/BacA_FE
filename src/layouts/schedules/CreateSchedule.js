@@ -7,6 +7,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import scheduleService from "services/scheduleService";
+import { colors } from "assets/theme/color";
 
 function CreateSchedule() {
   const daysOfWeekArr = [
@@ -40,7 +41,12 @@ function CreateSchedule() {
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
         <Grid container justifyContent="flex-start">
-          <Grid item xs={12} md={6} sx={{ marginLeft: "20px" }}>
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{ marginLeft: "20px", borderRadius: "20px", backgroundColor: colors.white }}
+          >
             <Card
               sx={{
                 padding: 3,
@@ -94,10 +100,22 @@ function CreateSchedule() {
                 onChange={(e) => setScheduleData({ ...scheduleData, endTime: e.target.value })}
               />
               <MDBox display="flex" justifyContent="space-between" mt={3}>
-                <Button variant="text" onClick={() => navigate("/schedules")}>
+                <Button
+                  variant="text"
+                  sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+                  onClick={() => navigate("/schedules")}
+                >
                   Cancel
                 </Button>
-                <Button variant="contained" style={{ color: "white" }} onClick={handleSave}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={handleSave}
+                >
                   Create
                 </Button>
               </MDBox>
