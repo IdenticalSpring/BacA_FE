@@ -32,11 +32,12 @@ export default function LessonMangement({
   loading,
   lessons,
   setLessons,
+  teacherId,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
-
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
   const handleDelete = async (id) => {
     try {
       await lessonService.deleteLesson(id);
@@ -59,10 +60,15 @@ export default function LessonMangement({
   };
   const handleSave = async () => {
     try {
+      setLoadingUpdate(true);
       const values = await form.validateFields();
 
       if (editingLesson) {
-        await lessonService.editLesson(editingLesson.id, values);
+        const dataLesson = {
+          ...values,
+          teacherId: teacherId,
+        };
+        await lessonService.editLesson(editingLesson.id, dataLesson);
         setLessons(
           lessons?.map((lesson) =>
             lesson.id === editingLesson.id ? { ...lesson, ...values } : lesson
@@ -75,6 +81,8 @@ export default function LessonMangement({
       setEditingLesson(null);
     } catch (err) {
       message.error("Please check your input and try again");
+    } finally {
+      setLoadingUpdate(false);
     }
   };
   useEffect(() => {
@@ -257,6 +265,7 @@ export default function LessonMangement({
             Cancel
           </Button>,
           <Button
+            loading={loadingUpdate}
             key="submit"
             type="primary"
             onClick={handleSave}
@@ -362,4 +371,5 @@ LessonMangement.propTypes = {
   editingLesson: PropTypes.func.isRequired,
   lessons: PropTypes.func.isRequired,
   setLessons: PropTypes.func.isRequired,
+  teacherId: PropTypes.func.isRequired,
 };

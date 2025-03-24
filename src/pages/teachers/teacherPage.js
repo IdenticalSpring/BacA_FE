@@ -163,7 +163,7 @@ const TeacherPage = () => {
   ];
   useEffect(() => {
     fetchLessons();
-  }, []);
+  }, [loadingCreateLesson]);
 
   const fetchLessons = async () => {
     try {
@@ -187,7 +187,7 @@ const TeacherPage = () => {
   };
   useEffect(() => {
     fetchHomeWork();
-  }, []);
+  }, [loadingCreateHomeWork]);
 
   const fetchHomeWork = async () => {
     try {
@@ -392,7 +392,7 @@ const TeacherPage = () => {
       const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(selectedClass);
       setLessonByScheduleData(data);
 
-      const classData = classes.find((c) => c.id === selectedClass);
+      const classData = classes?.find((c) => c.id === selectedClass);
       const token = sessionStorage.getItem("token");
 
       // Giải mã token để lấy role
@@ -765,6 +765,7 @@ const TeacherPage = () => {
                     lessons={lessons}
                     setLessons={setLessons}
                     loading={loading}
+                    teacherId={teacherId}
                   />
                 </div>
               </div>
@@ -906,6 +907,7 @@ const TeacherPage = () => {
                     setHomeWorks={setHomeWorks}
                     loadingTTSForUpdate={loadingTTSForUpdate}
                     setLoadingTTSForUpdate={setLoadingTTSForUpdate}
+                    teacherId={teacherId}
                   />
                 </div>
               </div>

@@ -5,7 +5,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const StudentScoreService = {
   getAllStudentScore: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/studentScore`);
+      const response = await axios.get(`${API_BASE_URL}/studentScore`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching levels list";
@@ -13,7 +17,11 @@ const StudentScoreService = {
   },
   getScorebyStudentID: async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/studentScore/student/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/studentScore/student/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching level";
@@ -21,7 +29,11 @@ const StudentScoreService = {
   },
   createScoreStudent: async (levelData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/studentScore`, levelData);
+      const response = await axios.post(`${API_BASE_URL}/studentScore`, levelData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error creating Score";
@@ -30,7 +42,11 @@ const StudentScoreService = {
 
   editScoreStudent: async (id, levelData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/studentScore/${id}`, levelData);
+      const response = await axios.put(`${API_BASE_URL}/studentScore/${id}`, levelData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error updating Score";
@@ -39,7 +55,11 @@ const StudentScoreService = {
 
   deleteScoreStudent: async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/studentScore/${id}`);
+      await axios.delete(`${API_BASE_URL}/studentScore/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return { message: "Score deleted successfully" };
     } catch (error) {
       throw error.response?.data?.message || "Error deleting Score";

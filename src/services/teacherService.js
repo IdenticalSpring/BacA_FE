@@ -5,7 +5,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const teacherService = {
   getAllTeachers: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/teachers`);
+      const response = await axios.get(`${API_BASE_URL}/teachers`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching teacher list";
@@ -14,7 +18,11 @@ const teacherService = {
 
   createTeacher: async (teacherData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/teachers`, teacherData);
+      const response = await axios.post(`${API_BASE_URL}/teachers`, teacherData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error creating teacher";
@@ -23,7 +31,11 @@ const teacherService = {
 
   editTeacher: async (id, teacherData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, teacherData);
+      const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, teacherData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error updating teacher";
@@ -32,7 +44,11 @@ const teacherService = {
 
   deleteTeacher: async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/teachers/${id}`);
+      await axios.delete(`${API_BASE_URL}/teachers/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return { message: "Teacher deleted successfully" };
     } catch (error) {
       throw error.response?.data?.message || "Error deleting teacher";
@@ -40,7 +56,11 @@ const teacherService = {
   },
   async evaluationStudent(payload) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/teacher-comments`, payload);
+      const response = await axios.post(`${API_BASE_URL}/teacher-comments`, payload, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       console.log("Payload gửi lên:", payload);
 
       return response.data;
@@ -51,7 +71,11 @@ const teacherService = {
   },
   async attendanceStudent(payload) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/checkins`, payload);
+      const response = await axios.post(`${API_BASE_URL}/checkins`, payload, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       console.log("Payload gửi lên:", payload);
 
       return response.data;

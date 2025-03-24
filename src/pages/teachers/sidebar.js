@@ -91,7 +91,7 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
           height: isMobile ? "calc(100vh - 70px)" : "calc(100vh - 70px)",
         }}
       >
-        {classes.length > 0 ? (
+        {classes?.length > 0 ? (
           <Menu
             mode="inline"
             selectedKeys={[selectedClass?.toString() || ""]}
@@ -100,7 +100,7 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
               border: "none",
             }}
           >
-            {classes.map((classItem) => (
+            {classes?.map((classItem) => (
               <Menu.Item
                 key={classItem.id}
                 onClick={() => handleClassSelect(classItem.id)}

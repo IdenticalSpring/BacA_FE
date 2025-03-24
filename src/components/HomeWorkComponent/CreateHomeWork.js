@@ -26,6 +26,7 @@ export default function CreateHomeWork({
   const [quill, setQuill] = useState(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
+  const [textToSpeech, setTextToSpeech] = useState("");
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -99,6 +100,9 @@ export default function CreateHomeWork({
       await homeWorkService.createHomeWork(formData);
       message.success("Lesson created successfully!");
       form.resetFields();
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
     } catch (err) {
       message.error("Failed to create lesson. Please try again.");
     } finally {
@@ -111,22 +115,15 @@ export default function CreateHomeWork({
     setLoadingTTS(true);
 
     try {
-      const response = await axios.post(
-        "https://ttsfree.com/api/v1/tts", // Replace with actual Viettel API
-        {
-          text: "Convert text to speech",
-          voiceService: "servicebin",
-          voiceID: "en-US",
-          voiceSpeed: "0",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            apikey: process.env.REACT_APP_API_TTS_KEY,
-          },
-        }
-      );
-      let base64String = response.data.audioData;
+      const response = await homeWorkService.textToSpeech(textToSpeech);
+
+      let base64String = response;
+      // console.log(response);
+
+      // base64String = btoa(
+      //   new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), "")
+      // );
+      // console.log(base64String);
 
       // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
       function base64ToBlob(base64, mimeType) {
@@ -142,6 +139,18 @@ export default function CreateHomeWork({
       // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
       let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
       setMp3file(audioBlob);
+      console.log(audioBlob);
+
+      // if (mp3Url) {
+      //   const audioElement = document.getElementById("audio-player");
+      //   if (audioElement) {
+      //     audioElement.src = ""; // Xóa src trước khi revoke
+      //     audioElement.load(); // Yêu cầu cập nhật
+      //   }
+      //   URL.revokeObjectURL(mp3Url);
+      // }
+      // console.log("mémaeseaseas");
+
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
     } catch (error) {
@@ -150,7 +159,17 @@ export default function CreateHomeWork({
     setLoadingTTS(false);
   };
   // console.log(mp3Url);
-
+  useEffect(() => {
+    if (mp3Url) {
+      // console.log("🔄 Cập nhật audio URL:", mp3Url);
+      const audioElement = document.getElementById("audio-player");
+      if (audioElement) {
+        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
+        audioElement.load(); // Tải lại audio
+        audioElement.src = mp3Url;
+      }
+    }
+  }, [mp3Url]);
   return (
     <div style={{ maxHeight: "35vh", overflow: "auto" }}>
       <Card
@@ -250,8 +269,10 @@ export default function CreateHomeWork({
               }}
             />
           </Form.Item>
-          <Form.Item name="textToSpeech" label="Tech to speech">
+          <Form.Item label="Tech to speech">
             <TextArea
+              value={textToSpeech}
+              onChange={(e) => setTextToSpeech(e.target.value)}
               rows={3}
               placeholder="Enter text to convert to speech"
               style={{
@@ -276,7 +297,7 @@ export default function CreateHomeWork({
           {mp3Url && (
             <Form.Item>
               <div style={{ marginBottom: "16px" }}>
-                <audio controls style={{ width: "100%" }}>
+                <audio id="audio-player" controls style={{ width: "100%" }}>
                   <source src={mp3Url} type="audio/mp3" />
                   Your browser does not support the audio element.
                 </audio>

@@ -6,7 +6,12 @@ const lessonByScheduleService = {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/lesson-by-schedule/bulk-create`,
-        lessonByScheduleData
+        lessonByScheduleData,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -15,7 +20,11 @@ const lessonByScheduleService = {
   },
   getAllLessonBySchedules: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lesson-by-schedule`);
+      const response = await axios.get(`${API_BASE_URL}/lesson-by-schedule`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lesson by schedule list";
@@ -23,7 +32,11 @@ const lessonByScheduleService = {
   },
   getAllLessonBySchedulesOfClass: async (classId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lesson-by-schedule/class/${classId}`);
+      const response = await axios.get(`${API_BASE_URL}/lesson-by-schedule/class/${classId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lesson by schedule list";
@@ -33,7 +46,12 @@ const lessonByScheduleService = {
     try {
       const response = await axios.put(
         `${API_BASE_URL}/lesson-by-schedule/${id}`,
-        lessonByScheduleData
+        lessonByScheduleData,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
       );
       return response.data;
     } catch (error) {

@@ -4,7 +4,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const homeWorkService = {
   getAllHomeWork: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/homeworks`);
+      const response = await axios.get(`${API_BASE_URL}/homeworks`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching homeWork list";
@@ -12,7 +16,11 @@ const homeWorkService = {
   },
   getHomeWorkById: async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/homeworks/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/homeworks/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching homeworks";
@@ -20,7 +28,11 @@ const homeWorkService = {
   },
   getHomeWorkByLevelAndTeacherId: async (levelAndTeacherId) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/homeworks/level`, levelAndTeacherId);
+      const response = await axios.post(`${API_BASE_URL}/homeworks/level`, levelAndTeacherId, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching homeworks list";
@@ -28,7 +40,11 @@ const homeWorkService = {
   },
   getHomeWorkByTeacherId: async (TeacherId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/homeworks/teacher/${TeacherId}`);
+      const response = await axios.get(`${API_BASE_URL}/homeworks/teacher/${TeacherId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching homeworks list";
@@ -36,7 +52,11 @@ const homeWorkService = {
   },
   createHomeWork: async (homeWorkData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/homeworks`, homeWorkData);
+      const response = await axios.post(`${API_BASE_URL}/homeworks`, homeWorkData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error creating homeWork";
@@ -45,7 +65,11 @@ const homeWorkService = {
 
   editHomeWork: async (id, homeWorkData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/homeworks/${id}`, homeWorkData);
+      const response = await axios.put(`${API_BASE_URL}/homeworks/${id}`, homeWorkData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error updating homeWork";
@@ -54,8 +78,32 @@ const homeWorkService = {
 
   deleteHomeWork: async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/homeworks/${id}`);
+      await axios.delete(`${API_BASE_URL}/homeworks/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return { message: "HomeWork deleted successfully" };
+    } catch (error) {
+      throw error.response?.data?.message || "Error deleting homework";
+    }
+  },
+  textToSpeech: async (text) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/homeworks/textToSpeech`,
+        {
+          textToSpeech: text,
+        },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      // console.log(response);
+
+      return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error deleting homework";
     }

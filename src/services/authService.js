@@ -49,7 +49,15 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL; // Lấy URL từ .env
 const authService = {
   loginAdmin: async (username, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/admin/login`, { username, password });
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/admin/login`,
+        { username, password },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
       const token = response.data.token;
 
       sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
@@ -66,10 +74,18 @@ const authService = {
 
   loginTeacher: async (username, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/teacher/login`, {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/teacher/login`,
+        {
+          username,
+          password,
+        },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
       const token = response.data.token;
 
       sessionStorage.setItem("token", token);
@@ -85,10 +101,18 @@ const authService = {
 
   loginStudent: async (username, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/student/login`, {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/student/login`,
+        {
+          username,
+          password,
+        },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
       const token = response.data.token;
 
       sessionStorage.setItem("token", token);

@@ -4,7 +4,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const lessonService = {
   getAllLessons: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lessons`);
+      const response = await axios.get(`${API_BASE_URL}/lessons`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lessons list";
@@ -12,7 +16,11 @@ const lessonService = {
   },
   getLessonById: async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lessons/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/lessons/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lesson";
@@ -20,7 +28,11 @@ const lessonService = {
   },
   getLessonByLevelAndTeacherId: async (levelAndTeacherId) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/lessons/level`, levelAndTeacherId);
+      const response = await axios.post(`${API_BASE_URL}/lessons/level`, levelAndTeacherId, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lessons list";
@@ -28,7 +40,11 @@ const lessonService = {
   },
   getLessonByTeacherId: async (TeacherId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lessons/teacher/${TeacherId}`);
+      const response = await axios.get(`${API_BASE_URL}/lessons/teacher/${TeacherId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching lessons list";
@@ -36,7 +52,11 @@ const lessonService = {
   },
   createLesson: async (lessonData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/lessons`, lessonData);
+      const response = await axios.post(`${API_BASE_URL}/lessons`, lessonData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error creating lesson";
@@ -45,7 +65,11 @@ const lessonService = {
 
   editLesson: async (id, lessonData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/lessons/${id}`, lessonData);
+      const response = await axios.put(`${API_BASE_URL}/lessons/${id}`, lessonData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error updating lesson";
@@ -54,7 +78,11 @@ const lessonService = {
 
   deleteLesson: async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/lessons/${id}`);
+      await axios.delete(`${API_BASE_URL}/lessons/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return { message: "Lesson deleted successfully" };
     } catch (error) {
       throw error.response?.data?.message || "Error deleting lesson";

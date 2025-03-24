@@ -21,6 +21,7 @@ import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { jwtDecode } from "jwt-decode";
 import homeWorkService from "services/homeWorkService";
 import TextArea from "antd/es/input/TextArea";
+import axios from "axios";
 export default function HomeWorkMangement({
   toolbar,
   quillFormats,
@@ -35,12 +36,15 @@ export default function HomeWorkMangement({
   setHomeWorks,
   loadingTTSForUpdate,
   setLoadingTTSForUpdate,
+  teacherId,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
+  const [textToSpeech, setTextToSpeech] = useState("");
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
   const handleDelete = async (id) => {
     try {
       await homeWorkService.deleteHomeWork(id);
@@ -53,36 +57,28 @@ export default function HomeWorkMangement({
   const handleEdit = (homeWork) => {
     setEditingHomeWork(homeWork);
     form.setFieldsValue({
-      name: homeWork.name,
+      title: homeWork.title,
       level: homeWork.level,
       linkYoutube: homeWork.linkYoutube,
       linkGame: homeWork.linkGame,
       linkSpeech: homeWork.linkSpeech,
       description: homeWork.description,
     });
+    setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
   };
+  console.log(textToSpeech);
+
   const handleConvertToSpeech = async () => {
-    if (!textToSpeech) return;
+    if (!textToSpeech) {
+      return;
+    }
     setLoadingTTSForUpdate(true);
 
     try {
-      const response = await axios.post(
-        "https://ttsfree.com/api/v1/tts", // Replace with actual Viettel API
-        {
-          text: "Convert text to speech",
-          voiceService: "servicebin",
-          voiceID: "en-US",
-          voiceSpeed: "0",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            apikey: process.env.REACT_APP_API_TTS_KEY,
-          },
-        }
-      );
-      let base64String = response.data.audioData;
+      const response = await homeWorkService.textToSpeech(textToSpeech);
+
+      let base64String = response;
 
       // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
       function base64ToBlob(base64, mimeType) {
@@ -105,24 +101,53 @@ export default function HomeWorkMangement({
     }
     setLoadingTTSForUpdate(false);
   };
+  useEffect(() => {
+    if (mp3Url) {
+      // console.log("🔄 Cập nhật audio URL:", mp3Url);
+      const audioElement = document.getElementById("audio-player");
+      if (audioElement) {
+        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
+        audioElement.load(); // Tải lại audio
+        audioElement.src = mp3Url;
+      }
+    }
+  }, [mp3Url]);
   const handleSave = async () => {
     try {
+      setLoadingUpdate(true);
       const values = await form.validateFields();
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("level", values.level);
+      formData.append("linkYoutube", values.linkYoutube);
+      formData.append("linkGame", values.linkGame);
+      formData.append("description", values.description);
+      formData.append("teacherId", teacherId);
 
+      // Nếu có mp3Url thì fetch dữ liệu và append vào formData
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
       if (editingHomeWork) {
-        await homeWorkService.editHomeWork(editingHomeWork.id, values);
+        const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
         setHomeWorks(
           homeWorks?.map((homeWork) =>
-            homeWork.id === editingHomeWork.id ? { ...homeWork, ...values } : homeWork
+            homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
           )
         );
         message.success("HomeWork updated successfully");
       }
       setModalUpdateHomeWorkVisible(false);
       form.resetFields();
+      setTextToSpeech("");
       setEditingHomeWork(null);
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
     } catch (err) {
-      message.error("Please check your input and try again");
+      message.error("Please check your input and try again" + err);
+    } finally {
+      setLoadingUpdate(false);
     }
   };
   useEffect(() => {
@@ -253,6 +278,7 @@ export default function HomeWorkMangement({
       ),
     },
   ];
+  console.log(mp3Url == true);
 
   return (
     <div style={{ padding: "14px" }}>
@@ -312,6 +338,7 @@ export default function HomeWorkMangement({
             Cancel
           </Button>,
           <Button
+            loading={loadingUpdate}
             key="submit"
             type="primary"
             onClick={handleSave}
@@ -394,8 +421,10 @@ export default function HomeWorkMangement({
               }}
             />
           </Form.Item>
-          <Form.Item name="textToSpeech" label="Tech to speech">
+          <Form.Item label="Tech to speech">
             <TextArea
+              value={textToSpeech}
+              onChange={(e) => setTextToSpeech(e.target.value)}
               rows={3}
               placeholder="Enter text to convert to speech"
               style={{
@@ -417,17 +446,28 @@ export default function HomeWorkMangement({
               Convert to Speech
             </Button>
           </Form.Item>
-          {mp3Url ||
+          {mp3Url && (
+            <Form.Item>
+              <div style={{ marginBottom: "16px" }}>
+                <audio id="audio-player" controls style={{ width: "100%" }}>
+                  <source src={mp3Url} type="audio/mp3" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            </Form.Item>
+          )}
+          {/* {
+          ||
             (form.getFieldValue("linkSpeech") && (
               <Form.Item>
                 <div style={{ marginBottom: "16px" }}>
-                  <audio controls style={{ width: "100%" }}>
-                    <source src={mp3Url || form.getFieldValue("linkSpeech")} type="audio/mp3" />
+                  <audio id="audio-player" controls style={{ width: "100%" }}>
+                    <source src={form.getFieldValue("linkSpeech")} type="audio/mp3" />
                     Your browser does not support the audio element.
                   </audio>
                 </div>
               </Form.Item>
-            ))}
+            ))} */}
           {/* <div style={{ marginBottom: "16px" }}>
             <audio controls style={{ width: "100%" }}>
               <source
@@ -476,4 +516,5 @@ HomeWorkMangement.propTypes = {
   setHomeWorks: PropTypes.func.isRequired,
   loadingTTSForUpdate: PropTypes.func.isRequired,
   setLoadingTTSForUpdate: PropTypes.func.isRequired,
+  teacherId: PropTypes.func.isRequired,
 };

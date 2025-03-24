@@ -7,7 +7,11 @@ const getAuthToken = () => sessionStorage.getItem("token");
 const classService = {
   getAllClasses: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/classes`);
+      const response = await axios.get(`${API_BASE_URL}/classes`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching class list";
@@ -16,7 +20,11 @@ const classService = {
 
   getAllClassesByTeacher: async (teacherid) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/classes/teacher/${teacherid}`);
+      const response = await axios.get(`${API_BASE_URL}/classes/teacher/${teacherid}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching class list";
@@ -26,7 +34,10 @@ const classService = {
   createClass: async (classData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/classes`, classData, {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       });
       return response.data;
     } catch (error) {
@@ -37,7 +48,10 @@ const classService = {
   editClass: async (id, classData) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/classes/${id}`, classData, {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       });
       return response.data;
     } catch (error) {
@@ -48,7 +62,10 @@ const classService = {
   deleteClass: async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/classes/${id}`, {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       });
       return { message: "Class deleted successfully" };
     } catch (error) {
