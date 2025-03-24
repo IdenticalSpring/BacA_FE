@@ -212,30 +212,30 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Users",
-    key: "users",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/users",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <Users />
-      </PrivateRoute>
-    ),
-  },
-  {
-    type: "collapse",
-    name: "Profile",
-    key: "profile",
-    icon: <Icon fontSize="small">person</Icon>,
-    route: "/profile",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <Profile />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Users",
+  //   key: "users",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/users",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <Users />
+  //     </PrivateRoute>
+  //   ),
+  // },
+  // {
+  //   type: "collapse",
+  //   name: "Profile",
+  //   key: "profile",
+  //   icon: <Icon fontSize="small">person</Icon>,
+  //   route: "/profile",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <Profile />
+  //     </PrivateRoute>
+  //   ),
+  // },
   // {
   //   // type: "collapse",
   //   name: "Sign In",

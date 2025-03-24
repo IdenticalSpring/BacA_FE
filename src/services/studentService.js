@@ -39,24 +39,37 @@ const studentService = {
       throw error.response?.data?.message || "Error fetching student list";
     }
   },
-
-  createStudent: async (studentData) => {
+  createStudentWithFile: async (formData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/students`, studentData, {
+      const response = await axios.post(`${API_BASE_URL}/students`, formData, {
         headers: {
           "ngrok-skip-browser-warning": "true",
+          // Note: Don't use formData.getHeaders() in browser code
         },
       });
+
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error creating student";
     }
   },
-
-  editStudent: async (id, studentData) => {
+  editStudent: async (id, studentData, file) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/students/${id}`, studentData, {
+      const formData = new FormData();
+
+      // Append student data to formData
+      Object.keys(studentData).forEach((key) => {
+        formData.append(key, studentData[key]);
+      });
+
+      // Append file to formData if provided
+      if (file) {
+        formData.append("file", file);
+      }
+
+      const response = await axios.put(`${API_BASE_URL}/students/${id}`, formData, {
         headers: {
+          "Content-Type": "multipart/form-data",
           "ngrok-skip-browser-warning": "true",
         },
       });
