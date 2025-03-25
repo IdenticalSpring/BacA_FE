@@ -26,6 +26,8 @@ import {
   FormOutlined,
   BarChartOutlined,
   YoutubeOutlined,
+  ExclamationCircleOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -47,7 +49,6 @@ import homeWorkService from "services/homeWorkService";
 import HomeWorkBySchedule from "components/HomeWorkComponent/HomeWorkBySchedule";
 import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
 import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
-
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -464,8 +465,21 @@ const TeacherPage = () => {
     setLoadingTTS(false);
   };
   // Menu for user dropdown
+  const showComingSoon = () => {
+    message.info("Coming soon!");
+  };
+
   const userMenu = (
     <Menu>
+      <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
+        Profile
+      </Menu.Item>
+      <Menu.Item key="policy" icon={<ExclamationCircleOutlined />} onClick={showComingSoon}>
+        Policy
+      </Menu.Item>
+      <Menu.Item key="feedback" icon={<MessageOutlined />} onClick={showComingSoon}>
+        Feedback
+      </Menu.Item>
       <Menu.Item key="1" icon={<LogoutOutlined />} onClick={handleLogout}>
         Log out
       </Menu.Item>
