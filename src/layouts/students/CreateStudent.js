@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -19,6 +19,7 @@ import studentService from "services/studentService";
 import { colors } from "assets/theme/color";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import classService from "services/classService";
 
 // Thêm id vào mỗi level
 const levels = [
@@ -37,6 +38,7 @@ function CreateStudent() {
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [classSchedules, setClassSchedules] = useState([]);
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
@@ -48,8 +50,65 @@ function CreateStudent() {
     startDate: "",
     endDate: "",
     note: "",
+    classID: "",
+    schedule: "",
   });
 
+  useEffect(() => {
+    const fetchClassSchedules = async () => {
+      try {
+        const schedules = await classService.getAllClassSchedule();
+        setClassSchedules(schedules);
+      } catch (error) {
+        console.error("Failed to fetch class schedules", error);
+        // Optionally show an error message to the user
+      }
+    };
+
+    fetchClassSchedules();
+  }, []);
+
+  const renderClassScheduleLabel = (scheduleId) => {
+    const selectedSchedule = classSchedules.find((schedule) => schedule.id === scheduleId);
+
+    if (!selectedSchedule) return "Chọn lớp học";
+
+    const { class: classInfo, schedule: scheduleInfo } = selectedSchedule;
+
+    // Chuyển đổi số ngày sang tên ngày
+    const dayNames = {
+      1: "Thứ Hai",
+      2: "Thứ Ba",
+      3: "Thứ Tư",
+      4: "Thứ Năm",
+      5: "Thứ Sáu",
+      6: "Thứ Bảy",
+      7: "Chủ Nhật",
+    };
+
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column" }}>
+        <Typography sx={{ fontWeight: "bold", color: colors.midGreen }}>
+          {classInfo.name}
+        </Typography>
+        <Typography sx={{ color: colors.darkGreen }}>
+          {dayNames[scheduleInfo.dayOfWeek]} •{scheduleInfo.startTime.substring(0, 5)} -{" "}
+          {scheduleInfo.endTime.substring(0, 5)}
+        </Typography>
+      </Box>
+    );
+  };
+
+  const handleClassScheduleChange = (event) => {
+    const selectedScheduleId = event.target.value;
+    const selectedSchedule = classSchedules.find((schedule) => schedule.id === selectedScheduleId);
+
+    setStudentData((prevData) => ({
+      ...prevData,
+      classID: selectedSchedule.class.id,
+      schedule: selectedSchedule.schedule.id,
+    }));
+  };
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -211,6 +270,23 @@ function CreateStudent() {
                   Upload Photo
                 </Button>
               </Box>
+
+              {/* New Class Schedule Dropdown */}
+              <TextField
+                select
+                label="Class Schedule"
+                fullWidth
+                margin="normal"
+                value={studentData.classScheduleId}
+                onChange={handleClassScheduleChange}
+                renderValue={() => renderClassScheduleLabel(studentData.classScheduleId)}
+              >
+                {classSchedules.map((scheduleItem) => (
+                  <MenuItem key={scheduleItem.id} value={scheduleItem.id}>
+                    {renderClassScheduleLabel(scheduleItem.id)}
+                  </MenuItem>
+                ))}
+              </TextField>
 
               <TextField
                 label="User name"

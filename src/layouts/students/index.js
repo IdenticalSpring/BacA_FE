@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { MenuItem, Box, Typography, CircularProgress } from "@mui/material";
 import { colors } from "assets/theme/color";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import classService from "services/classService";
 
 const levels = [
   { id: 1, name: "Level Pre-1" },
@@ -61,11 +62,14 @@ function Students() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [classSchedules, setClassSchedules] = useState([]);
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
     age: "",
     phone: "",
+    classID: "",
+    schedule: "",
     imgUrl: "",
     startDate: "",
     endDate: "",
@@ -74,7 +78,24 @@ function Students() {
 
   useEffect(() => {
     fetchStudents();
+    fetchClassSchedules();
   }, []);
+
+  const fetchClassSchedules = async () => {
+    try {
+      const schedules = await classService.getAllClassSchedule();
+      setClassSchedules(schedules);
+    } catch (error) {
+      console.error("Failed to fetch class schedules", error);
+      // Optionally show an error message to the user
+    }
+  };
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const fetchStudents = async () => {
     try {
@@ -144,7 +165,7 @@ function Students() {
       const { startTime, endTime, dayOfWeek } = student.schedule;
 
       // Định dạng ngày trong tuần (1-Thứ Hai, 2-Thứ Ba, vv.)
-      const dayNames = ["", "T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+      const dayNames = ["", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
       const dayName = dayNames[dayOfWeek] || "";
 
       // Nếu đã có thông tin lớp thì thêm dòng mới
@@ -167,6 +188,8 @@ function Students() {
       age: student.age,
       phone: student.phone,
       imgUrl: student.imgUrl,
+      classID: student.classID,
+      schedule: student.schedule,
       level: student.rawLevel || student.level,
       startDate: student.startDate,
       endDate: student.endDate,
@@ -186,148 +209,140 @@ function Students() {
       }
     }
   };
-
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Kiểm tra xem file có phải là hình ảnh không
-    if (!file.type.match("image.*")) {
-      alert("Please select an image file");
-      return;
-    }
-
-    try {
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
       setUploadingImage(true);
-      // Tạo URL cho preview
-      const previewURL = URL.createObjectURL(file);
-      setPreviewImage(previewURL);
+      try {
+        // Create a preview of the image
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewImage(reader.result);
+        };
+        reader.readAsDataURL(file);
 
-      // Gọi API để upload ảnh
-      const formData = new FormData();
-      formData.append("image", file);
-
-      // Giả định bạn có service để upload ảnh
-      const uploadedImageUrl = await studentService.uploadImage(formData);
-
-      // Cập nhật state với URL ảnh mới
-      setStudentData((prev) => ({
-        ...prev,
-        imgUrl: uploadedImageUrl,
-      }));
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Failed to upload image. Please try again.");
-    } finally {
-      setUploadingImage(false);
+        // Set the file in studentData
+        setStudentData((prev) => ({
+          ...prev,
+          file: file,
+        }));
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        setSnackbar({
+          open: true,
+          message: "Error uploading image",
+          severity: "error",
+        });
+      } finally {
+        setUploadingImage(false);
+      }
     }
   };
 
+  // Updated handleSave method to support edit and file upload
   const handleSave = async () => {
     try {
-      if (editMode) {
-        await studentService.editStudent(selectedStudent.id, studentData);
+      // Prepare student data for submission
+      const dataToSubmit = {
+        name: studentData.name,
+        username: studentData.username,
+        password: studentData.password,
+        age: studentData.age,
+        classID: studentData.classID,
+        schedule: studentData.schedule,
+        phone: studentData.phone,
+        level: studentData.level,
+        startDate: studentData.startDate,
+        endDate: studentData.endDate,
+        note: studentData.note,
+      };
 
-        const levelName = getLevelNameById(parseInt(studentData.level));
+      if (editMode && selectedStudent) {
+        // If editing an existing student
+        const updatedStudent = await studentService.editStudent(
+          selectedStudent.id,
+          dataToSubmit,
+          studentData.file
+        );
 
+        // Update the rows state
         setRows(
           rows.map((row) =>
             row.id === selectedStudent.id
               ? {
                   ...row,
-                  name: studentData.name,
-                  age: studentData.age,
-                  phone: studentData.phone,
+                  name: updatedStudent.name,
+                  level:
+                    typeof updatedStudent.level === "number"
+                      ? getLevelNameById(updatedStudent.level)
+                      : updatedStudent.level,
+                  age: updatedStudent.age,
+                  phone: updatedStudent.phone,
                   avatar: (
                     <Box display="flex" justifyContent="center">
                       <Avatar
-                        src={studentData.imgUrl}
-                        alt={studentData.name}
+                        src={updatedStudent.imgUrl}
+                        alt={updatedStudent.name}
                         sx={{
                           width: 50,
                           height: 50,
                           border: `1px solid ${colors.lightGrey}`,
                         }}
                       >
-                        {studentData.name.charAt(0)}
+                        {updatedStudent.name.charAt(0)}
                       </Avatar>
                     </Box>
                   ),
-                  imgUrl: studentData.imgUrl,
-                  startDate: studentData.startDate,
-                  endDate: studentData.endDate,
-                  note: studentData.note,
-                  level: levelName,
-                  rawLevel: parseInt(studentData.level),
+                  imgUrl: updatedStudent.imgUrl,
+                  note: formatSchedule(updatedStudent),
                 }
               : row
           )
         );
-      } else {
-        const createdStudent = await studentService.createStudent(studentData);
 
-        const levelName = getLevelNameById(parseInt(createdStudent.level));
-
-        setRows([
-          ...rows,
-          {
-            id: createdStudent.id,
-            name: createdStudent.name,
-            age: createdStudent.age,
-            phone: createdStudent.phone,
-            avatar: (
-              <Box display="flex" justifyContent="center">
-                <Avatar
-                  src={createdStudent.imgUrl}
-                  alt={createdStudent.name}
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    border: `1px solid ${colors.lightGrey}`,
-                  }}
-                >
-                  {createdStudent.name.charAt(0)}
-                </Avatar>
-              </Box>
-            ),
-            imgUrl: createdStudent.imgUrl,
-            username: createdStudent.username,
-            password: createdStudent.password,
-            startDate: createdStudent.startDate,
-            endDate: createdStudent.endDate,
-            note: createdStudent.note,
-            level: levelName,
-            rawLevel: parseInt(createdStudent.level),
-            actions: (
-              <>
-                <IconButton
-                  sx={{
-                    backgroundColor: colors.midGreen,
-                    color: colors.white,
-                    " &:hover": { backgroundColor: colors.highlightGreen },
-                  }}
-                  onClick={() => handleEdit(createdStudent)}
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton color="error" onClick={() => handleDelete(createdStudent.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </>
-            ),
-          },
-        ]);
+        setSnackbar({
+          open: true,
+          message: "Student updated successfully",
+          severity: "success",
+        });
       }
 
+      // Close the dialog
       setOpen(false);
-      setStudentData({ name: "", level: "" });
-      setEditMode(false);
+
+      // Reset form
+      setStudentData({
+        name: "",
+        level: "",
+        age: "",
+        phone: "",
+        classID: "",
+        schedule: "",
+        imgUrl: "",
+        startDate: "",
+        endDate: "",
+        note: "",
+      });
       setPreviewImage(null);
-    } catch (err) {
-      alert(editMode ? "Error updating student!" : "Error creating student!");
+      setEditMode(false);
+      setSelectedStudent(null);
+    } catch (error) {
+      console.error("Error saving student:", error);
+      setSnackbar({
+        open: true,
+        message: error.toString(),
+        severity: "error",
+      });
     }
   };
 
+  // Handle closing the snackbar
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -499,6 +514,40 @@ function Students() {
             </Box>
           </Box>
 
+          <TextField
+            select
+            label="Class Schedule"
+            fullWidth
+            margin="normal"
+            value={studentData.classID}
+            onChange={(e) => {
+              const selectedClassSchedule = classSchedules.find((cs) => cs.id === e.target.value);
+              setStudentData({
+                ...studentData,
+                classID: selectedClassSchedule.class.id,
+                schedule: selectedClassSchedule.schedule.id,
+              });
+            }}
+            renderValue={(selectedValue) => {
+              const selectedClass = classSchedules.find((cs) => cs.id === selectedValue);
+              return selectedClass ? formatSchedule(selectedClass) : "Chọn lớp học";
+            }}
+          >
+            {classSchedules.map((classSchedule) => (
+              <MenuItem
+                key={classSchedule.id}
+                value={classSchedule.id}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  padding: "10px",
+                }}
+              >
+                {formatSchedule(classSchedule)}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             label="User name"
             fullWidth
