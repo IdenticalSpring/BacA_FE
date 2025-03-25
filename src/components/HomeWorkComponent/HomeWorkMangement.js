@@ -34,9 +34,10 @@ export default function HomeWorkMangement({
   loading,
   homeWorks,
   setHomeWorks,
-  loadingTTSForUpdate,
-  setLoadingTTSForUpdate,
+  setLoadingTTSForUpdateHomeWork,
+  loadingTTSForUpdateHomeWork,
   teacherId,
+  level,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -58,7 +59,6 @@ export default function HomeWorkMangement({
     setEditingHomeWork(homeWork);
     form.setFieldsValue({
       title: homeWork.title,
-      level: homeWork.level,
       linkYoutube: homeWork.linkYoutube,
       linkGame: homeWork.linkGame,
       linkSpeech: homeWork.linkSpeech,
@@ -67,13 +67,13 @@ export default function HomeWorkMangement({
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
   };
-  console.log(textToSpeech);
+  // console.log(textToSpeech);
 
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) {
       return;
     }
-    setLoadingTTSForUpdate(true);
+    setLoadingTTSForUpdateHomeWork(true);
 
     try {
       const response = await homeWorkService.textToSpeech(textToSpeech);
@@ -99,7 +99,7 @@ export default function HomeWorkMangement({
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
-    setLoadingTTSForUpdate(false);
+    setLoadingTTSForUpdateHomeWork(false);
   };
   useEffect(() => {
     if (mp3Url) {
@@ -118,7 +118,7 @@ export default function HomeWorkMangement({
       const values = await form.validateFields();
       const formData = new FormData();
       formData.append("title", values.title);
-      formData.append("level", values.level);
+      formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
       formData.append("description", values.description);
@@ -139,7 +139,6 @@ export default function HomeWorkMangement({
       }
       setModalUpdateHomeWorkVisible(false);
       form.resetFields();
-      setTextToSpeech("");
       setEditingHomeWork(null);
       setTextToSpeech("");
       setMp3file(null);
@@ -381,7 +380,7 @@ export default function HomeWorkMangement({
             />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="level"
             label="Level"
             rules={[{ required: true, message: "Please select a level" }]}
@@ -398,7 +397,7 @@ export default function HomeWorkMangement({
                 </Option>
               ))}
             </Select>
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item
             name="linkYoutube"
             label="Homework Youtube Link"
@@ -437,7 +436,7 @@ export default function HomeWorkMangement({
             <Button
               type="primary"
               onClick={handleConvertToSpeech}
-              loading={loadingTTSForUpdate}
+              loading={loadingTTSForUpdateHomeWork}
               style={{
                 backgroundColor: colors.deepGreen,
                 borderColor: colors.deepGreen,
@@ -514,7 +513,8 @@ HomeWorkMangement.propTypes = {
   editingHomeWork: PropTypes.func.isRequired,
   homeWorks: PropTypes.func.isRequired,
   setHomeWorks: PropTypes.func.isRequired,
-  loadingTTSForUpdate: PropTypes.func.isRequired,
-  setLoadingTTSForUpdate: PropTypes.func.isRequired,
+  loadingTTSForUpdateHomeWork: PropTypes.func.isRequired,
+  setLoadingTTSForUpdateHomeWork: PropTypes.func.isRequired,
   teacherId: PropTypes.func.isRequired,
+  level: PropTypes.func.isRequired,
 };

@@ -1,6 +1,6 @@
 import { Empty, Modal, Select } from "antd";
 import { colors } from "assets/theme/color";
-import React from "react";
+import React, { useState } from "react";
 import lessonByScheduleService from "services/lessonByScheduleService";
 const { Option } = Select;
 import PropTypes from "prop-types";
@@ -10,6 +10,8 @@ export default function LessonBySchedule({
   lessonsData,
   setLessonByScheduleData,
   isMobile,
+  selected,
+  setSelected,
 }) {
   const handleUpdateLessonBySchedule = async (id, lessonByScheduleData) => {
     try {
@@ -22,40 +24,79 @@ export default function LessonBySchedule({
       });
     }
   };
+  const handleSelect = (index) => {
+    setSelected((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
   return (
-    <>
-      {lessonByScheduleData.length > 0 ? (
-        lessonByScheduleData?.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              padding: "16px",
-              marginBottom: "12px",
-              border: `1px solid ${colors.borderGreen}`,
-              borderRadius: "8px",
-              backgroundColor: colors.paleGreen,
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              justifyContent: "space-between",
-              alignItems: isMobile ? "flex-start" : "center",
-              gap: "10px",
-              height: isMobile ? "40%" : "25%",
-              width: "100%",
-            }}
-          >
+    <div style={{ width: "90%", margin: "15px 0" }}>
+      {lessonByScheduleData?.length > 0 ? (
+        lessonByScheduleData?.map((item, index) => {
+          return !item.lessonID ? (
             <div
-              style={{
-                fontWeight: 600,
-                color: colors.darkGreen,
-                flex: 1,
-                marginBottom: isMobile ? "10px" : 0,
-              }}
-            >
-              📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒 {item.schedule.startTime}{" "}
-              - {item.schedule.endTime}
-            </div>
+              key={index}
+              style={
+                selected.has(item.id)
+                  ? {
+                      padding: "16px",
+                      marginBottom: "12px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      borderRadius: "8px",
+                      backgroundColor: colors.paleGreen,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      justifyContent: "space-between",
+                      alignItems: isMobile ? "flex-start" : "center",
+                      gap: "10px",
+                      height: isMobile ? "15%" : "15%",
+                      width: "100%",
+                      transition: "all 0.3s ease-in-out",
+                      cursor: "pointer",
+                      border: "2px solid #2ECC71" /* Xanh lá cây sáng */,
+                      backgroundColor: "#27AE60" /* Xanh lá cây đậm */,
+                      boxShadow: "0 4px 10px rgba(194, 240, 215, 0.8)" /* Xanh lá pastel nhẹ */,
 
-            <Select
+                      transform: "scale(1.1)",
+                    }
+                  : {
+                      padding: "16px",
+                      marginBottom: "12px",
+                      border: `1px solid ${colors.lightGreen}`,
+                      borderRadius: "8px",
+                      backgroundColor: colors.paleGreen,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      justifyContent: "space-between",
+                      alignItems: isMobile ? "flex-start" : "center",
+                      gap: "10px",
+                      height: isMobile ? "15%" : "15%",
+                      width: "100%",
+                      transition: "all 0.3s ease-in-out",
+                      cursor: "pointer",
+                    }
+              }
+              onClick={() => handleSelect(item.id)}
+            >
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: selected.has(index) ? "#fff" : colors.darkGreen,
+                  flex: 1,
+                  marginBottom: isMobile ? "10px" : 0,
+                }}
+              >
+                📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                {item.schedule.startTime} - {item.schedule.endTime}
+              </div>
+
+              {/* <Select
               style={{ width: isMobile ? "100%" : "48%" }}
               placeholder="Select lesson"
               value={
@@ -75,13 +116,70 @@ export default function LessonBySchedule({
                   {lesson.name}
                 </Option>
               ))}
-            </Select>
-          </div>
-        ))
+            </Select> */}
+            </div>
+          ) : (
+            <div
+              key={index}
+              style={{
+                padding: "16px",
+                marginBottom: "12px",
+                border: `2px solid #BDC3C7`, // Màu xám nhạt
+                borderRadius: "8px",
+                backgroundColor: "#ECF0F1", // Xám sáng
+                color: "#7F8C8D", // Chữ xám nhạt
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                justifyContent: "space-between",
+                alignItems: isMobile ? "flex-start" : "center",
+                gap: "10px",
+                height: "15%",
+                width: "100%",
+                transition: "all 0.3s ease-in-out",
+                opacity: 0.6, // Làm mờ
+                cursor: "not-allowed", // Hiển thị chuột không thể click
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: "#7F8C8D",
+                  flex: 1,
+                  marginBottom: isMobile ? "10px" : 0,
+                }}
+              >
+                📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                {item.schedule.startTime} - {item.schedule.endTime}
+              </div>
+
+              {/* <Select
+              style={{ width: isMobile ? "100%" : "48%" }}
+              placeholder="Select lesson"
+              value={
+                lessonsData.some((lesson) => lesson.id === item.lessonID)
+                  ? item.lessonID
+                  : undefined
+              }
+              onChange={(value) => {
+                const newData = [...lessonByScheduleData];
+                newData[index] = { ...newData[index], lessonID: value };
+                setLessonByScheduleData(newData);
+                handleUpdateLessonBySchedule(item.id, { lessonID: value });
+              }}
+            >
+              {lessonsData?.map((lesson) => (
+                <Option key={lesson.id} value={lesson.id}>
+                  {lesson.name}
+                </Option>
+              ))}
+            </Select> */}
+            </div>
+          );
+        })
       ) : (
         <Empty description="No lesson schedules found" />
       )}
-    </>
+    </div>
   );
 }
 LessonBySchedule.propTypes = {
@@ -90,4 +188,6 @@ LessonBySchedule.propTypes = {
   lessonsData: PropTypes.func.isRequired,
   setLessonByScheduleData: PropTypes.func.isRequired,
   isMobile: PropTypes.func.isRequired,
+  selected: PropTypes.func.isRequired,
+  setSelected: PropTypes.func.isRequired,
 };

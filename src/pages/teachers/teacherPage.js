@@ -101,14 +101,16 @@ const TeacherPage = () => {
   const [loadingCreateLesson, setLoadingCreateLesson] = useState(false);
   const [error, setError] = useState("");
   const [hasClassToday, setHasClassToday] = useState(false);
-
+  const [classData, setClassData] = useState(null);
   // Homework form states
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkDescription, setHomeworkDescription] = useState("");
   const [textToSpeech, setTextToSpeech] = useState("");
   const [youtubeLink, setYoutubeLink] = useState("");
-  const [loadingTTS, setLoadingTTS] = useState(false);
-  const [loadingTTSForUpdate, setLoadingTTSForUpdate] = useState(false);
+  const [loadingTTSHomeWork, setLoadingTTSHomeWork] = useState(false);
+  const [loadingTTSLesson, setLoadingTTSLesson] = useState(false);
+  const [loadingTTSForUpdateHomeWork, setLoadingTTSForUpdateHomeWork] = useState(false);
+  const [loadingTTSForUpdateLesson, setLoadingTTSForUpdateLesson] = useState(false);
   const [mp3Url, setMp3Url] = useState("");
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
@@ -387,6 +389,16 @@ const TeacherPage = () => {
         }
       };
       fetchStudents();
+      const fetchClass = async () => {
+        try {
+          const data = await classService.getClassById(selectedClass);
+          setClassData(data);
+        } catch (error) {
+          console.error("Lỗi khi lấy danh sách học sinh:", error);
+          setClassData(null);
+        }
+      };
+      fetchClass();
     }
   }, [selectedClass]);
 
@@ -436,33 +448,6 @@ const TeacherPage = () => {
     setLoading(true); // Hiển thị trạng thái loading
   };
 
-  const handleConvertToSpeech = async () => {
-    if (!textToSpeech) return;
-    setLoadingTTS(true);
-
-    try {
-      const response = await axios.post(
-        "https://ttsfree.com/api/v1/tts", // Replace with actual Viettel API
-        {
-          text: "Convert text to speech with natural-sounding using an API powered by AI technologies",
-          voiceService: "servicebin",
-          voiceID: "en-US",
-          voiceSpeed: "0",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            apikey: process.env.REACT_APP_API_TTS_KEY,
-          },
-        }
-      );
-
-      setMp3Url(response.data.audioData);
-    } catch (error) {
-      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
-    }
-    setLoadingTTS(false);
-  };
   // Menu for user dropdown
   const userMenu = (
     <Menu>
@@ -908,9 +893,9 @@ const TeacherPage = () => {
           >
             <div
               style={{
-                maxHeight: "35vh",
-                width: isMobile ? "100%" : "49%",
-                height: "40vh",
+                maxHeight: "60vh",
+                width: "100%",
+                height: "60vh",
               }}
             >
               <CreateLesson
@@ -921,9 +906,16 @@ const TeacherPage = () => {
                 loadingCreateLesson={loadingCreateLesson}
                 setLoadingCreateLesson={setLoadingCreateLesson}
                 teacherId={teacherId}
+                lessonByScheduleData={lessonByScheduleData}
+                daysOfWeek={daysOfWeek}
+                lessonsData={lessonsData}
+                setLessonByScheduleData={setLessonByScheduleData}
+                loadingTTSLesson={loadingTTSLesson}
+                setLoadingTTSLesson={setLoadingTTSLesson}
+                level={classData?.level}
               />
             </div>
-            <div
+            {/* <div
               style={{
                 maxHeight: "35vh",
                 overflow: "auto",
@@ -937,7 +929,7 @@ const TeacherPage = () => {
                 setLessonByScheduleData={setLessonByScheduleData}
                 isMobile={isMobile}
               />
-            </div>
+            </div> */}
             <div
               style={{
                 maxHeight: "35vh",
@@ -958,6 +950,9 @@ const TeacherPage = () => {
                 setLessons={setLessons}
                 loading={loading}
                 teacherId={teacherId}
+                loadingTTSForUpdateLesson={loadingTTSForUpdateLesson}
+                setLoadingTTSForUpdateLesson={setLoadingTTSForUpdateLesson}
+                level={classData?.level}
               />
             </div>
           </div>
@@ -1001,9 +996,9 @@ const TeacherPage = () => {
           >
             <div
               style={{
-                maxHeight: "35vh",
-                width: isMobile ? "100%" : "49%",
-                height: "40vh",
+                maxHeight: "60vh",
+                width: "100%",
+                height: "60vh",
               }}
             >
               <CreateHomeWork
@@ -1014,11 +1009,16 @@ const TeacherPage = () => {
                 loadingCreateHomeWork={loadingCreateHomeWork}
                 setLoadingCreateHomeWork={setLoadingCreateHomeWork}
                 teacherId={teacherId}
-                loadingTTS={loadingTTS}
-                setLoadingTTS={setLoadingTTS}
+                loadingTTSHomeWork={loadingTTSHomeWork}
+                setLoadingTTSHomeWork={setLoadingTTSHomeWork}
+                lessonByScheduleData={lessonByScheduleData}
+                daysOfWeek={daysOfWeek}
+                homeWorksData={homeWorksData}
+                setLessonByScheduleData={setLessonByScheduleData}
+                level={classData?.level}
               />
             </div>
-            <div
+            {/* <div
               style={{
                 maxHeight: "35vh",
                 overflow: "auto",
@@ -1032,7 +1032,7 @@ const TeacherPage = () => {
                 setLessonByScheduleData={setLessonByScheduleData}
                 isMobile={isMobile}
               />
-            </div>
+            </div> */}
             <div
               style={{
                 maxHeight: "35vh",
@@ -1052,9 +1052,10 @@ const TeacherPage = () => {
                 loading={loading}
                 homeWorks={homeWorks}
                 setHomeWorks={setHomeWorks}
-                loadingTTSForUpdate={loadingTTSForUpdate}
-                setLoadingTTSForUpdate={setLoadingTTSForUpdate}
+                loadingTTSForUpdateHomeWork={loadingTTSForUpdateHomeWork}
+                setLoadingTTSForUpdateHomeWork={setLoadingTTSForUpdateHomeWork}
                 teacherId={teacherId}
+                level={classData?.level}
               />
             </div>
           </div>

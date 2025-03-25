@@ -58,5 +58,37 @@ const lessonByScheduleService = {
       throw error.response?.data?.message || "Error updating lesson by schedule";
     }
   },
+  updateLessonOfLessonBySchedule: async (id, lessonID) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/lesson-by-schedule/updateLesson/${id}`,
+        { lessonID },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating lesson by schedule";
+    }
+  },
+  updateHomeWorkLessonBySchedule: async (id, homeWorkId) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/lesson-by-schedule/updateHomework/${id}`,
+        { homeWorkId },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating lesson by schedule";
+    }
+  },
 };
 export default lessonByScheduleService;

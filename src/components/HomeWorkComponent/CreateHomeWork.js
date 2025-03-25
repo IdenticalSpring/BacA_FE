@@ -8,6 +8,8 @@ import axios from "axios";
 import lessonService from "services/lessonService";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
+import HomeWorkBySchedule from "./HomeWorkBySchedule";
+import lessonByScheduleService from "services/lessonByScheduleService";
 const { Title } = Typography;
 const { Option } = Select;
 export default function CreateHomeWork({
@@ -18,8 +20,13 @@ export default function CreateHomeWork({
   loadingCreateHomeWork,
   setLoadingCreateHomeWork,
   teacherId,
-  loadingTTS,
-  setLoadingTTS,
+  loadingTTSHomeWork,
+  setLoadingTTSHomeWork,
+  level,
+  lessonByScheduleData,
+  daysOfWeek,
+  homeWorksData,
+  setLessonByScheduleData,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -27,6 +34,7 @@ export default function CreateHomeWork({
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
+  const [selected, setSelected] = useState(new Set());
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -85,7 +93,7 @@ export default function CreateHomeWork({
       // Tạo FormData
       const formData = new FormData();
       formData.append("title", values.title);
-      formData.append("level", values.level);
+      formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
       formData.append("description", values.description);
@@ -95,10 +103,12 @@ export default function CreateHomeWork({
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
       }
-      console.log(formData);
 
-      await homeWorkService.createHomeWork(formData);
-      message.success("Lesson created successfully!");
+      const homeworkData = await homeWorkService.createHomeWork(formData);
+      for (const item of selected) {
+        await lessonByScheduleService.updateHomeWorkLessonBySchedule(item, homeworkData.id);
+      }
+      message.success("Homework created successfully!");
       form.resetFields();
       setTextToSpeech("");
       setMp3file(null);
@@ -112,7 +122,7 @@ export default function CreateHomeWork({
 
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
-    setLoadingTTS(true);
+    setLoadingTTSHomeWork(true);
 
     try {
       const response = await homeWorkService.textToSpeech(textToSpeech);
@@ -156,7 +166,7 @@ export default function CreateHomeWork({
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
-    setLoadingTTS(false);
+    setLoadingTTSHomeWork(false);
   };
   // console.log(mp3Url);
   useEffect(() => {
@@ -171,18 +181,29 @@ export default function CreateHomeWork({
     }
   }, [mp3Url]);
   return (
-    <div style={{ maxHeight: "35vh", overflow: "auto" }}>
-      <Card
-        style={{
-          borderRadius: "12px",
-          boxShadow: "0 4px 12px " + colors.softShadow,
-          background: colors.white,
-          maxWidth: "800px",
-          margin: "0 auto",
-        }}
-      >
-        <div style={{ marginBottom: isMobile ? "" : "14px" }}>
-          {/* <Button
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "right",
+        gap: "10px",
+        maxHeight: "60vh",
+        overflow: "auto",
+      }}
+    >
+      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "59%" }}>
+        <Card
+          style={{
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px " + colors.softShadow,
+            background: colors.white,
+            maxWidth: "800px",
+            margin: "0 auto",
+          }}
+        >
+          <div style={{ marginBottom: isMobile ? "" : "14px" }}>
+            {/* <Button
                           icon={<ArrowLeftOutlined />}
                           onClick={() => navigate("/teacherpage/manageLessons")}
                           style={{
@@ -194,42 +215,42 @@ export default function CreateHomeWork({
                         >
                           Back to Lessons
                         </Button> */}
-          <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
-            Create New Homework
-          </Title>
-          <Divider style={{ borderColor: colors.paleGreen }} />
-        </div>
+            <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
+              Create New Homework
+            </Title>
+            <Divider style={{ borderColor: colors.paleGreen }} />
+          </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            title: "",
-            level: "",
-            linkYoutube: "",
-            linkGame: "",
-            description: "",
-          }}
-        >
-          <Form.Item
-            name="title"
-            label="Homework Title"
-            rules={[
-              { required: true, message: "Please enter the homework name" },
-              { max: 100, message: "Title cannot be longer than 100 characters" },
-            ]}
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            initialValues={{
+              title: "",
+              level: "",
+              linkYoutube: "",
+              linkGame: "",
+              description: "",
+            }}
           >
-            <Input
-              placeholder="Enter homework name"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
+            <Form.Item
+              name="title"
+              label="Homework Title"
+              rules={[
+                { required: true, message: "Please enter the homework name" },
+                { max: 100, message: "Title cannot be longer than 100 characters" },
+              ]}
+            >
+              <Input
+                placeholder="Enter homework name"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
 
-          <Form.Item
+            {/* <Form.Item
             name="level"
             label="Level"
             rules={[{ required: true, message: "Please select a level" }]}
@@ -246,65 +267,65 @@ export default function CreateHomeWork({
                 </Option>
               ))}
             </Select>
-          </Form.Item>
-          <Form.Item
-            name="linkYoutube"
-            label="Homework Youtube Link"
-            rules={[{ required: true, message: "Please enter the homework link" }]}
-          >
-            <Input
-              placeholder="Enter homework youtube link"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
-          <Form.Item name="linkGame" label="Homework Game Link">
-            <Input
-              placeholder="Enter homework game link"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
-          <Form.Item label="Tech to speech">
-            <TextArea
-              value={textToSpeech}
-              onChange={(e) => setTextToSpeech(e.target.value)}
-              rows={3}
-              placeholder="Enter text to convert to speech"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              onClick={handleConvertToSpeech}
-              loading={loadingTTS}
-              style={{
-                backgroundColor: colors.deepGreen,
-                borderColor: colors.deepGreen,
-              }}
+          </Form.Item> */}
+            <Form.Item
+              name="linkYoutube"
+              label="Homework Youtube Link"
+              rules={[{ required: true, message: "Please enter the homework link" }]}
             >
-              Convert to Speech
-            </Button>
-          </Form.Item>
-          {mp3Url && (
-            <Form.Item>
-              <div style={{ marginBottom: "16px" }}>
-                <audio id="audio-player" controls style={{ width: "100%" }}>
-                  <source src={mp3Url} type="audio/mp3" />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
+              <Input
+                placeholder="Enter homework youtube link"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
             </Form.Item>
-          )}
-          {/* <div style={{ marginBottom: "16px" }}>
+            <Form.Item name="linkGame" label="Homework Game Link">
+              <Input
+                placeholder="Enter homework game link"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item label="Tech to speech">
+              <TextArea
+                value={textToSpeech}
+                onChange={(e) => setTextToSpeech(e.target.value)}
+                rows={3}
+                placeholder="Enter text to convert to speech"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                onClick={handleConvertToSpeech}
+                loading={loadingTTSHomeWork}
+                style={{
+                  backgroundColor: colors.deepGreen,
+                  borderColor: colors.deepGreen,
+                }}
+              >
+                Convert to Speech
+              </Button>
+            </Form.Item>
+            {mp3Url && (
+              <Form.Item>
+                <div style={{ marginBottom: "16px" }}>
+                  <audio id="audio-player" controls style={{ width: "100%" }}>
+                    <source src={mp3Url} type="audio/mp3" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </Form.Item>
+            )}
+            {/* <div style={{ marginBottom: "16px" }}>
             <audio controls style={{ width: "100%" }}>
               <source
                 src={
@@ -315,55 +336,84 @@ export default function CreateHomeWork({
               Your browser does not support the audio element.
             </audio>
           </div> */}
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[{ required: true, message: "Please enter a description" }]}
-          >
-            <ReactQuill
-              theme="snow"
-              modules={modules}
-              formats={quillFormats}
-              ref={quillRef}
-              style={{
-                height: "250px",
-                marginBottom: "60px", // Consider reducing this
-                borderRadius: "6px",
-                border: `1px solid ${colors.inputBorder}`,
-              }}
-            />
-          </Form.Item>
-
-          <Form.Item style={{ marginTop: isMobile ? "40px" : "" }}>
-            <Space style={{ display: "flex", justifyContent: "flex-end" }}>
-              {/* <Button
-                              onClick={() => navigate("/teacherpage/manageLessons")}
-                              style={{
-                                borderRadius: "6px",
-                                borderColor: colors.deepGreen,
-                                color: colors.deepGreen,
-                              }}
-                            >
-                              Cancel
-                            </Button> */}
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loadingCreateHomeWork}
-                icon={<SaveOutlined />}
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={[{ required: true, message: "Please enter a description" }]}
+            >
+              <ReactQuill
+                theme="snow"
+                modules={modules}
+                formats={quillFormats}
+                ref={quillRef}
                 style={{
+                  height: "250px",
+                  marginBottom: "60px", // Consider reducing this
                   borderRadius: "6px",
-                  backgroundColor: colors.emerald,
-                  borderColor: colors.emerald,
-                  boxShadow: "0 2px 0 " + colors.softShadow,
+                  border: `1px solid ${colors.inputBorder}`,
                 }}
-              >
-                Create Lesson
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Card>
+              />
+            </Form.Item>
+          </Form>
+        </Card>
+      </div>
+      {isMobile && (
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loadingCreateHomeWork}
+          icon={<SaveOutlined />}
+          style={{
+            borderRadius: "6px",
+            backgroundColor: colors.emerald,
+            borderColor: colors.emerald,
+            boxShadow: "0 2px 0 " + colors.softShadow,
+          }}
+          onClick={() => {
+            form.submit();
+          }}
+        >
+          Create HomeWork
+        </Button>
+      )}
+      <div
+        style={{
+          maxHeight: "50vh",
+          overflow: "auto",
+          width: isMobile ? "100%" : "39%",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <HomeWorkBySchedule
+          lessonByScheduleData={lessonByScheduleData}
+          daysOfWeek={daysOfWeek}
+          homeWorksData={homeWorksData}
+          setLessonByScheduleData={setLessonByScheduleData}
+          isMobile={isMobile}
+          selected={selected}
+          setSelected={setSelected}
+        />
+      </div>
+      {!isMobile && (
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loadingCreateHomeWork}
+          icon={<SaveOutlined />}
+          style={{
+            borderRadius: "6px",
+            backgroundColor: colors.emerald,
+            borderColor: colors.emerald,
+            boxShadow: "0 2px 0 " + colors.softShadow,
+          }}
+          onClick={() => {
+            form.submit();
+          }}
+        >
+          Create HomeWork
+        </Button>
+      )}
     </div>
   );
 }
@@ -375,6 +425,11 @@ CreateHomeWork.propTypes = {
   loadingCreateHomeWork: PropTypes.func.isRequired,
   setLoadingCreateHomeWork: PropTypes.func.isRequired,
   teacherId: PropTypes.func.isRequired,
-  loadingTTS: PropTypes.func.isRequired,
-  setLoadingTTS: PropTypes.func.isRequired,
+  loadingTTSHomeWork: PropTypes.func.isRequired,
+  setLoadingTTSHomeWork: PropTypes.func.isRequired,
+  lessonByScheduleData: PropTypes.func.isRequired,
+  daysOfWeek: PropTypes.func.isRequired,
+  homeWorksData: PropTypes.func.isRequired,
+  setLessonByScheduleData: PropTypes.func.isRequired,
+  level: PropTypes.func.isRequired,
 };

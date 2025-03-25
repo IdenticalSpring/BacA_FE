@@ -20,6 +20,8 @@ import PropTypes from "prop-types";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import lessonService from "services/lessonService";
 import { jwtDecode } from "jwt-decode";
+import TextArea from "antd/es/input/TextArea";
+import homeWorkService from "services/homeWorkService";
 export default function LessonMangement({
   toolbar,
   quillFormats,
@@ -33,10 +35,16 @@ export default function LessonMangement({
   lessons,
   setLessons,
   teacherId,
+  level,
+  loadingTTSForUpdateLesson,
+  setLoadingTTSForUpdateLesson,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
+  const [mp3Url, setMp3Url] = useState("");
+  const [mp3file, setMp3file] = useState(null);
+  const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const handleDelete = async (id) => {
     try {
@@ -51,24 +59,71 @@ export default function LessonMangement({
     setEditingLesson(lesson);
     form.setFieldsValue({
       name: lesson.name,
-      level: lesson.level,
       linkYoutube: lesson.linkYoutube,
-      linkGame: lesson.linkGame,
+      linkSpeech: lesson.linkSpeech,
       description: lesson.description,
     });
+    setMp3Url(lesson.linkSpeech);
     setModalUpdateLessonVisible(true);
   };
+  const handleConvertToSpeech = async () => {
+    if (!textToSpeech) {
+      return;
+    }
+    setLoadingTTSForUpdateLesson(true);
+
+    try {
+      const response = await homeWorkService.textToSpeech(textToSpeech);
+
+      let base64String = response;
+
+      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
+      function base64ToBlob(base64, mimeType) {
+        let byteCharacters = atob(base64); // Giải mã base64
+        let byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        let byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+      }
+
+      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
+      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      setMp3file(audioBlob);
+      let audioUrl = URL.createObjectURL(audioBlob);
+      setMp3Url(audioUrl);
+    } catch (error) {
+      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+    }
+    setLoadingTTSForUpdateLesson(false);
+  };
+  useEffect(() => {
+    if (mp3Url) {
+      // console.log("🔄 Cập nhật audio URL:", mp3Url);
+      const audioElement = document.getElementById("audio-player");
+      if (audioElement) {
+        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
+        audioElement.load(); // Tải lại audio
+        audioElement.src = mp3Url;
+      }
+    }
+  }, [mp3Url]);
   const handleSave = async () => {
     try {
       setLoadingUpdate(true);
       const values = await form.validateFields();
-
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("level", level);
+      formData.append("linkYoutube", values.linkYoutube);
+      formData.append("description", values.description);
+      formData.append("teacherId", teacherId);
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
       if (editingLesson) {
-        const dataLesson = {
-          ...values,
-          teacherId: teacherId,
-        };
-        await lessonService.editLesson(editingLesson.id, dataLesson);
+        await lessonService.editLesson(editingLesson.id, formData);
         setLessons(
           lessons?.map((lesson) =>
             lesson.id === editingLesson.id ? { ...lesson, ...values } : lesson
@@ -79,6 +134,9 @@ export default function LessonMangement({
       setModalUpdateLessonVisible(false);
       form.resetFields();
       setEditingLesson(null);
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
     } catch (err) {
       message.error("Please check your input and try again");
     } finally {
@@ -159,9 +217,9 @@ export default function LessonMangement({
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
     {
-      title: "Link Game",
-      dataIndex: "linkGame",
-      key: "linkGame",
+      title: "Link Speech",
+      dataIndex: "linkSpeech",
+      key: "linkSpeech",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
@@ -299,7 +357,7 @@ export default function LessonMangement({
             <Input placeholder="Enter lesson name" />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="level"
             label="Level"
             rules={[{ required: true, message: "Please select a level" }]}
@@ -311,7 +369,7 @@ export default function LessonMangement({
                 </Option>
               ))}
             </Select>
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name="linkYoutube"
@@ -326,15 +384,41 @@ export default function LessonMangement({
               }}
             />
           </Form.Item>
-          <Form.Item name="linkGame" label="Lesson Game Link">
-            <Input
-              placeholder="Enter lesson game link"
+          <Form.Item label="Tech to speech">
+            <TextArea
+              value={textToSpeech}
+              onChange={(e) => setTextToSpeech(e.target.value)}
+              rows={3}
+              placeholder="Enter text to convert to speech"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
               }}
             />
           </Form.Item>
+          <Form.Item>
+            <Button
+              type="primary"
+              onClick={handleConvertToSpeech}
+              loading={loadingTTSForUpdateLesson}
+              style={{
+                backgroundColor: colors.deepGreen,
+                borderColor: colors.deepGreen,
+              }}
+            >
+              Convert to Speech
+            </Button>
+          </Form.Item>
+          {mp3Url && (
+            <Form.Item>
+              <div style={{ marginBottom: "16px" }}>
+                <audio id="audio-player" controls style={{ width: "100%" }}>
+                  <source src={mp3Url} type="audio/mp3" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            </Form.Item>
+          )}
 
           <Form.Item
             name="description"
@@ -372,4 +456,7 @@ LessonMangement.propTypes = {
   lessons: PropTypes.func.isRequired,
   setLessons: PropTypes.func.isRequired,
   teacherId: PropTypes.func.isRequired,
+  level: PropTypes.func.isRequired,
+  loadingTTSForUpdateLesson: PropTypes.func.isRequired,
+  setLoadingTTSForUpdateLesson: PropTypes.func.isRequired,
 };
