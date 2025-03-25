@@ -11,7 +11,6 @@ import {
   Typography,
 } from "@mui/material";
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
@@ -39,6 +38,7 @@ function CreateStudent() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [classSchedules, setClassSchedules] = useState([]);
+  const [selectedClassSchedules, setSelectedClassSchedules] = useState([]);
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
@@ -61,52 +61,52 @@ function CreateStudent() {
         setClassSchedules(schedules);
       } catch (error) {
         console.error("Failed to fetch class schedules", error);
-        // Optionally show an error message to the user
       }
     };
 
     fetchClassSchedules();
   }, []);
+  const dayNames = {
+    1: "Thứ Hai",
+    2: "Thứ Ba",
+    3: "Thứ Tư",
+    4: "Thứ Năm",
+    5: "Thứ Sáu",
+    6: "Thứ Bảy",
+    7: "Chủ Nhật",
+  };
 
-  const renderClassScheduleLabel = (scheduleId) => {
-    const selectedSchedule = classSchedules.find((schedule) => schedule.id === scheduleId);
-
-    if (!selectedSchedule) return "Chọn lớp học";
-
-    const { class: classInfo, schedule: scheduleInfo } = selectedSchedule;
-
-    // Chuyển đổi số ngày sang tên ngày
-    const dayNames = {
-      1: "Thứ Hai",
-      2: "Thứ Ba",
-      3: "Thứ Tư",
-      4: "Thứ Năm",
-      5: "Thứ Sáu",
-      6: "Thứ Bảy",
-      7: "Chủ Nhật",
-    };
+  const renderClassScheduleLabel = (classSchedule) => {
+    const { class: classInfo, schedule: scheduleInfo } = classSchedule;
 
     return (
       <Box sx={{ display: "flex", flexDirection: "column" }}>
         <Typography sx={{ fontWeight: "bold", color: colors.midGreen }}>
           {classInfo.name}
         </Typography>
-        <Typography sx={{ color: colors.darkGreen }}>
-          {dayNames[scheduleInfo.dayOfWeek]} •{scheduleInfo.startTime.substring(0, 5)} -{" "}
+        {/* <Typography sx={{ color: colors.darkGreen, fontSize: "0.875rem" }}>
+          {dayNames[scheduleInfo.dayOfWeek]} • {scheduleInfo.startTime.substring(0, 5)} -{" "}
           {scheduleInfo.endTime.substring(0, 5)}
-        </Typography>
+        </Typography> */}
       </Box>
     );
   };
 
   const handleClassScheduleChange = (event) => {
-    const selectedScheduleId = event.target.value;
-    const selectedSchedule = classSchedules.find((schedule) => schedule.id === selectedScheduleId);
+    const selectedClassId = event.target.value;
 
+    // Lọc ra tất cả các schedule có cùng classID
+    const matchingSchedules = classSchedules.filter(
+      (schedule) => schedule.class.id === selectedClassId
+    );
+
+    // Cập nhật state cho schedules của class được chọn
+    setSelectedClassSchedules(matchingSchedules);
+
+    // Lưu classID vào studentData
     setStudentData((prevData) => ({
       ...prevData,
-      classID: selectedSchedule.class.id,
-      schedule: selectedSchedule.schedule.id,
+      classID: selectedClassId,
     }));
   };
   const handleFileChange = (event) => {
@@ -277,16 +277,61 @@ function CreateStudent() {
                 label="Class Schedule"
                 fullWidth
                 margin="normal"
-                value={studentData.classScheduleId}
+                value={studentData.classID}
                 onChange={handleClassScheduleChange}
-                renderValue={() => renderClassScheduleLabel(studentData.classScheduleId)}
+                renderValue={() => {
+                  const selectedSchedule = classSchedules.find(
+                    (schedule) => schedule.class.id === studentData.classID
+                  );
+                  return selectedSchedule
+                    ? renderClassScheduleLabel(selectedSchedule)
+                    : "Select Class Schedule";
+                }}
               >
-                {classSchedules.map((scheduleItem) => (
-                  <MenuItem key={scheduleItem.id} value={scheduleItem.id}>
-                    {renderClassScheduleLabel(scheduleItem.id)}
-                  </MenuItem>
-                ))}
+                {/* Tạo dropdown từ các class duy nhất */}
+                {Array.from(new Set(classSchedules.map((schedule) => schedule.class.id))).map(
+                  (uniqueClassId) => {
+                    const classSchedule = classSchedules.find(
+                      (schedule) => schedule.class.id === uniqueClassId
+                    );
+                    return (
+                      <MenuItem key={uniqueClassId} value={uniqueClassId}>
+                        {renderClassScheduleLabel(classSchedule)}
+                      </MenuItem>
+                    );
+                  }
+                )}
               </TextField>
+
+              {/* Hiển thị tất cả các schedule của class đã chọn */}
+              {selectedClassSchedules.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="h6" sx={{ color: colors.midGreen, mb: 1 }}>
+                    Class Schedules
+                  </Typography>
+                  {selectedClassSchedules.map((schedule, index) => (
+                    <Box
+                      key={schedule.id}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        mb: 1,
+                        p: 1,
+                        backgroundColor: colors.white,
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Typography sx={{ mr: 2 }}>
+                        {dayNames[schedule.schedule.dayOfWeek]}
+                      </Typography>
+                      <Typography>
+                        {schedule.schedule.startTime.substring(0, 5)} -{" "}
+                        {schedule.schedule.endTime.substring(0, 5)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <TextField
                 label="User name"
