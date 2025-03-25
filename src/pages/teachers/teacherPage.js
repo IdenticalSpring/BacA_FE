@@ -126,6 +126,7 @@ const TeacherPage = () => {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
   const [assignmentModal, setAssignmentModal] = useState(false);
+  const [homeworkModal, setHomeworkModal] = useState(false);
   const [activeTab, setActiveTab] = useState("lesson");
   const [levels, setLevels] = useState(null);
   const [modalUpdateHomeWorkVisible, setModalUpdateHomeWorkVisible] = useState(false);
@@ -219,9 +220,12 @@ const TeacherPage = () => {
       youtube: youtubeLink,
     });
   };
-  const openAssignmentModal = (tab = "lesson") => {
-    setActiveTab(tab);
+  const openAssignmentModal = () => {
     setAssignmentModal(true);
+  };
+
+  const openHomeworkModal = () => {
+    setHomeworkModal(true);
   };
 
   const checkClassScheduleForToday = () => {
@@ -499,8 +503,13 @@ const TeacherPage = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sidebar classes={classes} selectedClass={selectedClass} onSelectClass={handleSelectClass} />
+    <Layout style={{ minHeight: "99vh" }}>
+      <Sidebar
+        teacherName={userName}
+        classes={classes}
+        selectedClass={selectedClass}
+        onSelectClass={handleSelectClass}
+      />
 
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
         <Header
@@ -521,7 +530,7 @@ const TeacherPage = () => {
             level={isMobile ? 5 : 4}
             style={{ margin: 0, color: colors.darkGreen, marginLeft: isMobile ? "25%" : "0" }}
           >
-            TEACHER DASHBOARD
+            HappyClass
           </Title>
 
           <Dropdown overlay={userMenu} placement="bottomRight">
@@ -640,6 +649,7 @@ const TeacherPage = () => {
             }}
           >
             <Toolbox
+              onHomework={openHomeworkModal}
               onAssignment={() => openAssignmentModal()}
               onClassReview={() => console.log("Class review")}
               onEnterScores={handleEnterTestScores}
@@ -649,8 +659,7 @@ const TeacherPage = () => {
         )}
       </Layout>
 
-      {/* Lesson Modal */}
-      <Modal
+      {/* <Modal
         title="Assignment Management"
         open={assignmentModal}
         onCancel={() => setAssignmentModal(false)}
@@ -805,64 +814,6 @@ const TeacherPage = () => {
                     height: "40vh",
                   }}
                 >
-                  {/* <div style={{ maxHeight: "35vh", overflow: "auto" }}>
-                    <Form layout="vertical">
-                      <Form.Item label="Title">
-                        <Input
-                          value={homeworkTitle}
-                          onChange={(e) => setHomeworkTitle(e.target.value)}
-                          placeholder="Enter homework title"
-                        />
-                      </Form.Item>
-                      <Form.Item label="Description">
-                        <ReactQuill
-                          theme="snow"
-                          value={homeworkDescription}
-                          onChange={setHomeworkDescription}
-                          style={{ height: "150px", marginBottom: "40px" }}
-                        />
-                      </Form.Item>
-                      <Form.Item label="Text to Speech">
-                        <TextArea
-                          rows={3}
-                          value={textToSpeech}
-                          onChange={(e) => setTextToSpeech(e.target.value)}
-                          placeholder="Enter text to convert to speech"
-                        />
-                      </Form.Item>
-                      <Form.Item>
-                        <Button
-                          type="primary"
-                          onClick={handleConvertToSpeech}
-                          loading={loadingTTS}
-                          style={{
-                            backgroundColor: colors.deepGreen,
-                            borderColor: colors.deepGreen,
-                          }}
-                        >
-                          Convert to Speech
-                        </Button>
-                      </Form.Item>
-                      {mp3Url && (
-                        <Form.Item>
-                          <div style={{ marginBottom: "16px" }}>
-                            <audio controls style={{ width: "100%" }}>
-                              <source src={mp3Url} type="audio/mp3" />
-                              Your browser does not support the audio element.
-                            </audio>
-                          </div>
-                        </Form.Item>
-                      )}
-                      <Form.Item label="YouTube Link">
-                        <Input
-                          prefix={<YoutubeOutlined style={{ color: colors.errorRed }} />}
-                          value={youtubeLink}
-                          onChange={(e) => setYoutubeLink(e.target.value)}
-                          placeholder="Paste YouTube link here"
-                        />
-                      </Form.Item>
-                    </Form>
-                  </div> */}
                   <CreateHomeWork
                     toolbar={toolbar}
                     quillFormats={quillFormats}
@@ -914,6 +865,200 @@ const TeacherPage = () => {
             )}
           </TabPane>
         </Tabs>
+      </Modal> */}
+
+      <Modal
+        title="Assignment Management"
+        open={assignmentModal}
+        onCancel={() => setAssignmentModal(false)}
+        footer={[
+          <Button
+            style={{ marginTop: "20px" }}
+            key="close"
+            onClick={() => setAssignmentModal(false)}
+          >
+            Close
+          </Button>,
+        ]}
+        width={isMobile ? "95%" : "95%"}
+        centered={true}
+        className="assignment-modal"
+        style={{
+          borderRadius: "8px",
+        }}
+      >
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            <Spin />
+            <div style={{ marginTop: "10px" }}>Loading...</div>
+          </div>
+        ) : error ? (
+          <Alert message="Error" description={error} type="error" showIcon />
+        ) : (
+          <div
+            style={{
+              maxHeight: "70vh",
+              width: "100%",
+              display: "flex",
+              flexWrap: "wrap",
+              rowGap: isMobile ? "20px" : "20px",
+              justifyContent: "space-between",
+              overflow: "auto",
+            }}
+          >
+            <div
+              style={{
+                maxHeight: "35vh",
+                width: isMobile ? "100%" : "49%",
+                height: "40vh",
+              }}
+            >
+              <CreateLesson
+                toolbar={toolbar}
+                quillFormats={quillFormats}
+                levels={levels}
+                isMobile={isMobile}
+                loadingCreateLesson={loadingCreateLesson}
+                setLoadingCreateLesson={setLoadingCreateLesson}
+                teacherId={teacherId}
+              />
+            </div>
+            <div
+              style={{
+                maxHeight: "35vh",
+                overflow: "auto",
+                width: isMobile ? "100%" : "49%",
+              }}
+            >
+              <LessonBySchedule
+                lessonByScheduleData={lessonByScheduleData}
+                daysOfWeek={daysOfWeek}
+                lessonsData={lessonsData}
+                setLessonByScheduleData={setLessonByScheduleData}
+                isMobile={isMobile}
+              />
+            </div>
+            <div
+              style={{
+                maxHeight: "35vh",
+                width: "100%",
+                height: "35vh",
+              }}
+            >
+              <LessonMangement
+                toolbar={toolbar}
+                quillFormats={quillFormats}
+                levels={levels}
+                isMobile={isMobile}
+                setModalUpdateLessonVisible={setModalUpdateLessonVisible}
+                setEditingLesson={setEditingLesson}
+                modalUpdateLessonVisible={modalUpdateLessonVisible}
+                editingLesson={editingLesson}
+                lessons={lessons}
+                setLessons={setLessons}
+                loading={loading}
+                teacherId={teacherId}
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title="Homework Management"
+        open={homeworkModal}
+        onCancel={() => setHomeworkModal(false)}
+        footer={[
+          <Button style={{ marginTop: "20px" }} key="close" onClick={() => setHomeworkModal(false)}>
+            Close
+          </Button>,
+        ]}
+        width={isMobile ? "95%" : "95%"}
+        centered={true}
+        className="homework-modal"
+        style={{
+          borderRadius: "8px",
+        }}
+      >
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            <Spin />
+            <div style={{ marginTop: "10px" }}>Loading...</div>
+          </div>
+        ) : error ? (
+          <Alert message="Error" description={error} type="error" showIcon />
+        ) : (
+          <div
+            style={{
+              maxHeight: "70vh",
+              width: "100%",
+              display: "flex",
+              flexWrap: "wrap",
+              rowGap: isMobile ? "20px" : "20px",
+              justifyContent: "space-between",
+              overflow: "auto",
+            }}
+          >
+            <div
+              style={{
+                maxHeight: "35vh",
+                width: isMobile ? "100%" : "49%",
+                height: "40vh",
+              }}
+            >
+              <CreateHomeWork
+                toolbar={toolbar}
+                quillFormats={quillFormats}
+                levels={levels}
+                isMobile={isMobile}
+                loadingCreateHomeWork={loadingCreateHomeWork}
+                setLoadingCreateHomeWork={setLoadingCreateHomeWork}
+                teacherId={teacherId}
+                loadingTTS={loadingTTS}
+                setLoadingTTS={setLoadingTTS}
+              />
+            </div>
+            <div
+              style={{
+                maxHeight: "35vh",
+                overflow: "auto",
+                width: isMobile ? "100%" : "49%",
+              }}
+            >
+              <HomeWorkBySchedule
+                lessonByScheduleData={lessonByScheduleData}
+                daysOfWeek={daysOfWeek}
+                homeWorksData={homeWorksData}
+                setLessonByScheduleData={setLessonByScheduleData}
+                isMobile={isMobile}
+              />
+            </div>
+            <div
+              style={{
+                maxHeight: "35vh",
+                width: "100%",
+                height: "35vh",
+              }}
+            >
+              <HomeWorkMangement
+                toolbar={toolbar}
+                quillFormats={quillFormats}
+                levels={levels}
+                isMobile={isMobile}
+                setModalUpdateHomeWorkVisible={setModalUpdateHomeWorkVisible}
+                setEditingHomeWork={setEditingHomeWork}
+                modalUpdateHomeWorkVisible={modalUpdateHomeWorkVisible}
+                editingHomeWork={editingHomeWork}
+                loading={loading}
+                homeWorks={homeWorks}
+                setHomeWorks={setHomeWorks}
+                loadingTTSForUpdate={loadingTTSForUpdate}
+                setLoadingTTSForUpdate={setLoadingTTSForUpdate}
+                teacherId={teacherId}
+              />
+            </div>
+          </div>
+        )}
       </Modal>
     </Layout>
   );

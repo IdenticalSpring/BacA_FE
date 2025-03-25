@@ -18,7 +18,7 @@ export const colors = {
   borderGreen: "#A8E6C3",
 };
 
-const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
+const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -54,7 +54,7 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
     <>
       <div
         style={{
-          padding: "20px 16px",
+          padding: "15.5px 16px",
           background: colors.deepGreen,
           display: "flex",
           alignItems: "center",
@@ -71,7 +71,9 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
               marginRight: 12,
             }}
           />
-          <Text style={{ color: colors.white, fontSize: 18, fontWeight: 600 }}>Lớp học</Text>
+          <Text style={{ color: colors.white, fontSize: 18, fontWeight: 600 }}>
+            Xin chào {teacherName}
+          </Text>
         </div>
 
         {isMobile && (
@@ -83,12 +85,34 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
           />
         )}
       </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "center",
+          borderBottom: `1px solid ${colors.lightGreen}`,
+          marginBottom: "10px",
+        }}
+      >
+        <Text
+          style={{
+            fontWeight: 700,
+            color: colors.darkGreen,
+          }}
+        >
+          Toàn bộ lớp học
+        </Text>
+      </div>
 
       <div
         style={{
-          padding: "10px",
-          overflow: "auto",
-          height: isMobile ? "calc(100vh - 70px)" : "calc(100vh - 70px)",
+          padding: "0",
+          overflowY: "auto",
+          maxHeight: "400px",
+          // overflow: "auto",
+          // height: "50%",
+          // height: isMobile ? "calc(100vh - 70px)" : "calc(100vh - 70px)",
         }}
       >
         {classes?.length > 0 ? (
@@ -105,7 +129,7 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
                 key={classItem.id}
                 onClick={() => handleClassSelect(classItem.id)}
                 style={{
-                  margin: "8px 0",
+                  margin: "0",
                   padding: "10px",
                   borderRadius: "8px",
                   color: colors.darkGreen,
@@ -142,6 +166,44 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
             Không có lớp học nào
           </div>
         )}
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "center",
+          borderBottom: `1px solid ${colors.lightGreen}`,
+          marginBottom: "10px",
+        }}
+      >
+        <Text
+          style={{
+            fontWeight: 700,
+            color: colors.darkGreen,
+          }}
+        >
+          Công cụ giảng dạy
+        </Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "center",
+          borderBottom: `1px solid ${colors.lightGreen}`,
+          marginBottom: "10px",
+        }}
+      >
+        <Text
+          style={{
+            fontWeight: 700,
+            color: colors.darkGreen,
+          }}
+        >
+          Công cụ giao bài tập
+        </Text>
       </div>
     </>
   );
@@ -197,6 +259,7 @@ const Sidebar = ({ classes, selectedClass, onSelectClass }) => {
 
 // Add PropTypes validation
 Sidebar.propTypes = {
+  teacherName: PropTypes.string.isRequired,
   classes: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

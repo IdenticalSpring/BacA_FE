@@ -20,7 +20,7 @@ export const colors = {
   emerald: "#2ECC71",
 };
 
-const Toolbox = ({ onAssignment, onClassReview, onEnterScores, onAttendanceCheck }) => {
+const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAttendanceCheck }) => {
   const menu = (
     <Menu>
       <Menu.Item key="attendance" onClick={onAttendanceCheck}>
@@ -52,7 +52,19 @@ const Toolbox = ({ onAssignment, onClassReview, onEnterScores, onAttendanceCheck
             color: colors.white,
           }}
         >
-          <span className="button-text">Assignment</span>
+          <span className="button-text">Lesson</span>
+        </Button>
+        <Button
+          type="primary"
+          icon={<BookOutlined />}
+          onClick={onHomework}
+          style={{
+            backgroundColor: colors.deepGreen,
+            borderColor: colors.deepGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Homework</span>
         </Button>
         <Button
           type="primary"
@@ -104,6 +116,7 @@ const Toolbox = ({ onAssignment, onClassReview, onEnterScores, onAttendanceCheck
 
 // Add PropTypes validation
 Toolbox.propTypes = {
+  onHomework: PropTypes.func.isRequired,
   onAssignment: PropTypes.func.isRequired,
   onClassReview: PropTypes.func.isRequired,
   onEnterScores: PropTypes.func.isRequired,
