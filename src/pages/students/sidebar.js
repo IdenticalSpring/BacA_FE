@@ -24,6 +24,7 @@ const Sidebar = ({
   onSelectLessonBySchedule,
   colors,
   isMobile,
+  student,
 }) => {
   // Lọc ra các bài học của ngày hiện tại và ngày đã qua
   const today = dayjs().startOf("day");
@@ -36,7 +37,7 @@ const Sidebar = ({
     .sort((a, b) => {
       return dayjs(b.date).valueOf() - dayjs(a.date).valueOf();
     });
-
+  console.log("student", student);
   return (
     <div
       style={{
@@ -57,77 +58,87 @@ const Sidebar = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: isMobile ? "16px" : "20px",
+          padding: isMobile ? "16px" : "14px",
           backgroundColor: colors.midGreen,
           color: colors.white,
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Avatar
-            style={{
-              backgroundColor: colors.deepGreen,
-              color: colors.white,
-              marginRight: 12,
-              fontSize: isMobile ? 16 : 20,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            icon={<CalendarOutlined />}
-          />
+          {student?.avatarUrl ? (
+            <img
+              src={student.imgUrl}
+              alt={student?.name || "Student"}
+              style={{
+                width: isMobile ? 30 : 38,
+                height: isMobile ? 30 : 38,
+                borderRadius: "50%",
+                objectFit: "cover",
+                marginRight: 12,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: isMobile ? 30 : 38,
+                height: isMobile ? 30 : 38,
+                borderRadius: "50%",
+                backgroundColor: colors.deepGreen,
+                color: colors.white,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: isMobile ? 16 : 20,
+                marginRight: 12,
+              }}
+            >
+              {student?.name?.charAt(0).toUpperCase() || ""}
+            </div>
+          )}
           <Title
             level={isMobile ? 5 : 4}
             style={{
               margin: 0,
               color: colors.white,
               fontWeight: "600",
+              fontSize: isMobile ? "1rem" : "1.2rem",
               letterSpacing: "0.5px",
             }}
           >
-            Lịch học
+            Xin chào {student?.name || ""}
           </Title>
         </div>
-        <Badge
+        {/* <Badge
           count={filteredLessons.length}
           overflowCount={99}
           style={{ backgroundColor: colors.deepGreen }}
-        />
+        /> */}
       </div>
 
-      <div style={{ padding: "12px 16px", backgroundColor: colors.paleGreen }}>
+      <div style={{ padding: "5px 16px", backgroundColor: colors.paleGreen }}>
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 8,
+            margin: "0 auto",
+            padding: "5px 0",
+            width: "80%",
+            textAlign: "center",
+            borderBottom: `1px solid ${colors.lightGreen}`,
+            marginBottom: "10px",
           }}
         >
           <Text
             style={{
+              fontWeight: 700,
               color: colors.darkGreen,
-              fontSize: isMobile ? "0.8rem" : "0.9rem",
-              fontWeight: 500,
             }}
           >
-            BÀI HỌC HIỆN TẠI VÀ ĐÃ QUA
-          </Text>
-          <Text
-            style={{
-              color: colors.deepGreen,
-              fontSize: isMobile ? "0.8rem" : "0.9rem",
-              fontWeight: 500,
-            }}
-          >
-            {filteredLessons.length} lessons
+            Bài học trước đây
           </Text>
         </div>
       </div>
-
       {/* List of lessons by schedule */}
       <div
         style={{
-          padding: "8px 12px",
+          padding: "0px 12px",
           flexGrow: 1,
           overflowY: "auto",
         }}
@@ -255,6 +266,7 @@ const Sidebar = ({
 
 // Define PropTypes
 Sidebar.propTypes = {
+  student: PropTypes.object,
   lessonsBySchedule: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),

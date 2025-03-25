@@ -28,6 +28,7 @@ import {
   LinkOutlined,
   FileTextOutlined,
   SoundOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -39,6 +40,7 @@ import lessonService from "services/lessonService";
 import { colors } from "assets/theme/color";
 import StudentScoreModal from "./studentScoreModal";
 import homeWorkService from "services/homeWorkService";
+import { message } from "antd";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -174,10 +176,21 @@ const StudentPage = () => {
   };
   const handleDeleteClass = () => console.log("Review lesson");
   const handleViewReport = () => console.log("Enter test scores");
-
-  // Dropdown menu
+  const showComingSoon = () => {
+    message.info("Coming soon!");
+  };
+  //
   const menu = (
     <Menu style={{ backgroundColor: colors.paleGreen, borderRadius: "8px" }}>
+      <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
+        Profile
+      </Menu.Item>
+      <Menu.Item key="policy" icon={<ExclamationCircleOutlined />} onClick={showComingSoon}>
+        Policy
+      </Menu.Item>
+      <Menu.Item key="feedback" icon={<MessageOutlined />} onClick={showComingSoon}>
+        Feedback
+      </Menu.Item>
       <Menu.Item
         key="logout"
         icon={<LogoutOutlined />}
@@ -207,6 +220,7 @@ const StudentPage = () => {
       onSelectLessonBySchedule={handleSelectLessonBySchedule}
       colors={colors}
       isMobile={isMobile}
+      student={student}
     />
   );
 
@@ -235,10 +249,7 @@ const StudentPage = () => {
         >
           <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
             <Avatar
-              style={{
-                backgroundColor: colors.deepGreen,
-                color: colors.white,
-              }}
+              style={{ backgroundColor: colors.deepGreen, color: colors.white }}
               icon={<BookOutlined />}
               size={40}
             />
@@ -259,32 +270,34 @@ const StudentPage = () => {
             {lesson.description || " "}
           </Paragraph>
 
-          {lesson.link && (
+          {(lesson.linkYoutube || lesson.linkSpeech) && (
             <div
               style={{
                 backgroundColor: colors.paleGreen,
                 padding: 12,
                 borderRadius: 8,
                 marginBottom: 16,
-                display: "flex",
-                justifyContent: "center",
               }}
             >
-              {lesson.link.includes("youtube.com") || lesson.link.includes("youtu.be") ? (
+              {lesson.linkYoutube && (
                 <iframe
                   width="100%"
                   height="315"
-                  src={lesson.link.replace("watch?v=", "embed/")}
+                  src={lesson.linkYoutube.replace("watch?v=", "embed/")}
                   title="Lesson Video"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                ></iframe>
-              ) : (
-                <video width="100%" height="auto" controls>
-                  <source src={lesson.link} type="video/mp4" />
-                  Trình duyệt của bạn không hỗ trợ phát video.
-                </video>
+                />
+              )}
+              {lesson.linkSpeech && (
+                <audio controls style={{ width: "100%", marginTop: 16 }}>
+                  <source
+                    src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
+                    type="audio/mpeg"
+                  />
+                  Trình duyệt của bạn không hỗ trợ phát audio.
+                </audio>
               )}
             </div>
           )}
@@ -358,16 +371,13 @@ const StudentPage = () => {
                   </div>
                   <audio
                     controls
-                    style={{
-                      width: "100%",
-                      height: 40,
-                      backgroundColor: colors.white,
-                      borderRadius: 4,
-                    }}
+                    crossOrigin="anonymous"
+                    style={{ width: "100%", marginTop: lesson.linkYoutube ? 16 : 0 }}
                   >
-                    <source src={hw.linkSpeech} />
+                    <source src={lesson.linkSpeech} type="audio/mpeg" />
                     Trình duyệt của bạn không hỗ trợ phát audio.
                   </audio>
+
                   <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
                     <Button
                       type="link"
@@ -475,7 +485,7 @@ const StudentPage = () => {
                 textOverflow: "ellipsis",
               }}
             >
-              HỌC SINH
+              Happy Class
             </Title>
           </div>
 
@@ -496,7 +506,7 @@ const StudentPage = () => {
 
         <Content
           style={{
-            padding: isMobile ? "16px" : "24px",
+            padding: isMobile ? "10px" : "10px",
             marginBottom: selectedLessonBySchedule ? (isMobile ? 140 : 70) : 0,
           }}
         >
