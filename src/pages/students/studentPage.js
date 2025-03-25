@@ -15,6 +15,7 @@ import {
   List,
   Tabs,
   Empty,
+  Badge,
 } from "antd";
 import {
   UserOutlined,
@@ -29,6 +30,9 @@ import {
   FileTextOutlined,
   SoundOutlined,
   ExclamationCircleOutlined,
+  TrophyOutlined,
+  BellOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -37,10 +41,11 @@ import studentService from "services/studentService";
 import { jwtDecode } from "jwt-decode";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import lessonService from "services/lessonService";
-import { colors } from "assets/theme/color";
-import StudentScoreModal from "./studentScoreModal";
+import StudentScoreModal from "./studentScoreTab";
 import homeWorkService from "services/homeWorkService";
 import { message } from "antd";
+import StudentScoreTab from "./studentScoreTab";
+import { colors } from "pages/teachers/sidebar";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -60,6 +65,8 @@ const StudentPage = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("lesson");
   const [loadingHomework, setLoadingHomework] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(3); // Example notification count
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
 
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
@@ -143,6 +150,14 @@ const StudentPage = () => {
     } finally {
       setLoadingHomework(false);
     }
+  };
+
+  const showHelpModal = () => {
+    setHelpModalVisible(true);
+  };
+
+  const handleHelpModalClose = () => {
+    setHelpModalVisible(false);
   };
 
   const handleLogout = () => {
@@ -372,9 +387,9 @@ const StudentPage = () => {
                   <audio
                     controls
                     crossOrigin="anonymous"
-                    style={{ width: "100%", marginTop: lesson.linkYoutube ? 16 : 0 }}
+                    style={{ width: "100%", marginTop: hw.linkYoutube ? 16 : 0 }}
                   >
-                    <source src={lesson.linkSpeech} type="audio/mpeg" />
+                    <source src={hw.linkSpeech} type="audio/mpeg" />
                     Trình duyệt của bạn không hỗ trợ phát audio.
                   </audio>
 
@@ -489,19 +504,50 @@ const StudentPage = () => {
             </Title>
           </div>
 
-          <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
-            <Avatar
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {/* Notification Bell */}
+            <Button
+              type="text"
+              onClick={() => message.info("Xem thông báo")}
               style={{
-                backgroundColor: colors.deepGreen,
-                color: colors.white,
-                cursor: "pointer",
-                border: `2px solid ${colors.borderGreen}`,
+                marginRight: 12,
+                color: colors.darkGreen,
+                display: "flex",
+                alignItems: "center",
               }}
-              icon={<UserOutlined />}
             >
-              {userName.charAt(0)}
-            </Avatar>
-          </Dropdown>
+              <Badge count={notificationsCount} size="small">
+                <BellOutlined style={{ fontSize: 20 }} />
+              </Badge>
+            </Button>
+
+            {/* Help/Question Icon */}
+            <Button
+              type="text"
+              onClick={showHelpModal}
+              style={{
+                marginRight: 12,
+                color: colors.darkGreen,
+              }}
+            >
+              <QuestionCircleOutlined style={{ fontSize: 20 }} />
+            </Button>
+
+            {/* User Dropdown remains the same */}
+            <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+              <Avatar
+                style={{
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  cursor: "pointer",
+                  border: `2px solid ${colors.borderGreen}`,
+                }}
+                icon={<UserOutlined />}
+              >
+                {userName.charAt(0)}
+              </Avatar>
+            </Dropdown>
+          </div>
         </Header>
 
         <Content
@@ -559,6 +605,16 @@ const StudentPage = () => {
                 <TabPane
                   tab={
                     <span>
+                      <TrophyOutlined /> Điểm Số
+                    </span>
+                  }
+                  key="scores"
+                >
+                  <StudentScoreTab studentId={studentId} colors={colors} />
+                </TabPane>
+                <TabPane
+                  tab={
+                    <span>
                       <BookOutlined /> Bài Học
                     </span>
                   }
@@ -606,12 +662,12 @@ const StudentPage = () => {
             />
           </div>
         )}
-        <StudentScoreModal
+        {/* <StudentScoreModal
           visible={scoreModalVisible}
           onCancel={handleCloseScoreModal}
           studentId={studentId}
           colors={colors}
-        />
+        /> */}
       </Layout>
     </Layout>
   );
