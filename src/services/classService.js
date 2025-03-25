@@ -18,6 +18,19 @@ const classService = {
     }
   },
 
+  getAllClassSchedule: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/class-schedules`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching class list";
+    }
+  },
+
   getAllClassesByTeacher: async (teacherid) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/classes/teacher/${teacherid}`, {

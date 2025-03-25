@@ -53,6 +53,7 @@ const studentService = {
       throw error.response?.data?.message || "Error creating student";
     }
   },
+
   editStudent: async (id, studentData, file) => {
     try {
       const formData = new FormData();
@@ -75,7 +76,9 @@ const studentService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error updating student";
+      // Cải thiện việc xử lý lỗi
+      console.error("Error updating student:", error);
+      throw error.response?.data?.message || error.message || "Error updating student";
     }
   },
 
