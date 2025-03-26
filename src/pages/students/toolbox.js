@@ -39,12 +39,12 @@ const Toolbox = ({
       onClick: onAddStudent,
       text: "Bài tập về nhà",
     },
-    {
-      key: "homework",
-      icon: <BookOutlined />,
-      onClick: viewScores,
-      text: "Xem điểm",
-    },
+    // {
+    //   key: "homework",
+    //   icon: <BookOutlined />,
+    //   onClick: viewScores,
+    //   text: "Xem điểm",
+    // },
     {
       key: "review",
       icon: <CommentOutlined />,
