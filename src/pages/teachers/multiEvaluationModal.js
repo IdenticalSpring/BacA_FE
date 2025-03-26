@@ -303,7 +303,8 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
           Save
         </Button>,
       ]}
-      width={1000}
+      width="90vw"
+      height="100vh"
     >
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={12}>
