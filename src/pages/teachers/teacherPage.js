@@ -56,6 +56,7 @@ import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
 import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
 import teacherService from "services/teacherService";
 import MultiStudentEvaluationModal from "./multiEvaluationModal";
+import StudentProfileModal from "./studentProfileModal";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -113,6 +114,8 @@ const TeacherPage = () => {
   const [error, setError] = useState("");
   const [hasClassToday, setHasClassToday] = useState(false);
   const [classData, setClassData] = useState(null);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState(null);
   const [isMultiStudentEvaluationModalVisible, setIsMultiStudentEvaluationModalVisible] =
     useState(false);
   // Homework form states
@@ -234,6 +237,13 @@ const TeacherPage = () => {
       audio: mp3Url,
       youtube: youtubeLink,
     });
+  };
+
+  // Thêm hàm xử lý khi nhấn chuột phải
+  const handleRightClick = (student, e) => {
+    e.preventDefault(); // Ngăn menu context mặc định của trình duyệt
+    setSelectedStudentForProfile(student);
+    setIsProfileModalVisible(true);
   };
   const openAssignmentModal = () => {
     setAssignmentModal(true);
@@ -749,6 +759,7 @@ const TeacherPage = () => {
                   hoverable={!isAttendanceMode}
                   bodyStyle={{ padding: "16px" }}
                   onClick={!isAttendanceMode ? () => handleSelectStudent(student) : undefined}
+                  onContextMenu={(e) => handleRightClick(student, e)}
                 >
                   <div
                     style={{
@@ -880,6 +891,15 @@ const TeacherPage = () => {
             schedules={schedulesForToday}
           />
         )}
+
+        <StudentProfileModal
+          visible={isProfileModalVisible}
+          onClose={() => {
+            setIsProfileModalVisible(false);
+            setSelectedStudentForProfile(null);
+          }}
+          student={selectedStudentForProfile}
+        />
 
         {/* Hiển thị MultiStudentEvaluationModal khi chọn >= 2 học sinh */}
         {selectedStudents.length >= 2 && (
