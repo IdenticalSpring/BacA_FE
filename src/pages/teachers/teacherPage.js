@@ -55,6 +55,7 @@ import HomeWorkBySchedule from "components/HomeWorkComponent/HomeWorkBySchedule"
 import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
 import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
 import teacherService from "services/teacherService";
+import MultiStudentEvaluationModal from "./multiEvaluationModal";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -112,6 +113,8 @@ const TeacherPage = () => {
   const [error, setError] = useState("");
   const [hasClassToday, setHasClassToday] = useState(false);
   const [classData, setClassData] = useState(null);
+  const [isMultiStudentEvaluationModalVisible, setIsMultiStudentEvaluationModalVisible] =
+    useState(false);
   // Homework form states
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkDescription, setHomeworkDescription] = useState("");
@@ -610,7 +613,13 @@ const TeacherPage = () => {
       });
       return;
     }
-    setIsEvaluationModalVisible(true);
+
+    // Nếu số học sinh >= 2, hiển thị MultiStudentEvaluationModal
+    if (selectedStudents.length >= 2) {
+      setIsMultiStudentEvaluationModalVisible(true);
+    } else {
+      setIsEvaluationModalVisible(true);
+    }
   };
 
   return (
@@ -863,12 +872,21 @@ const TeacherPage = () => {
             );
           })}
         </Row>
-        {/* Hiển thị Evaluation Modal khi cần */}
         {selectedStudents.length > 0 && (
           <EvaluationModal
             visible={isEvaluationModalVisible}
             onClose={() => setIsEvaluationModalVisible(false)}
-            students={selectedStudents} // Truyền danh sách học sinh
+            students={selectedStudents}
+            schedules={schedulesForToday}
+          />
+        )}
+
+        {/* Hiển thị MultiStudentEvaluationModal khi chọn >= 2 học sinh */}
+        {selectedStudents.length >= 2 && (
+          <MultiStudentEvaluationModal
+            visible={isMultiStudentEvaluationModalVisible}
+            onClose={() => setIsMultiStudentEvaluationModalVisible(false)}
+            students={selectedStudents}
             schedules={schedulesForToday}
           />
         )}
