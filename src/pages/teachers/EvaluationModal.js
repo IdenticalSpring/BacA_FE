@@ -141,15 +141,14 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
         // Xử lý Skills
         skills.forEach((skill) => {
           const skillData = allSkills.find((s) => s.name === skill.name && s.type === 1);
-          console.log("skills:", skillData);
           if (skillData && skill.rating > 0) {
             skillScorePromises.push(
               TeacherService.skillScoreStudent({
                 studentID: student.id,
                 skillType: "1",
                 score: skill.rating,
-                teacherCommentID: teacherCommentID,
-                skillID: skillData.id,
+                teacherComment: teacherCommentID,
+                skill: skillData.id,
               })
             );
           }
@@ -158,15 +157,14 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
         // Xử lý Behaviors
         behaviors.forEach((behavior) => {
           const behaviorData = allSkills.find((s) => s.name === behavior.name && s.type === 0);
-          console.log("behavior:", behaviorData);
           if (behaviorData && behavior.rating > 0) {
             skillScorePromises.push(
               TeacherService.skillScoreStudent({
                 studentID: student.id,
                 skillType: "0",
                 score: behavior.rating,
-                teacherCommentID: teacherCommentID,
-                skillID: behaviorData.id,
+                teacherComment: teacherCommentID,
+                skill: behaviorData.id,
               })
             );
           }
