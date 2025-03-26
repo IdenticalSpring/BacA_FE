@@ -141,18 +141,18 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Schedules",
-    key: "schedules",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/schedules",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <Schedules />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Schedules",
+  //   key: "schedules",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/schedules",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <Schedules />
+  //     </PrivateRoute>
+  //   ),
+  // },
   {
     type: "collapse",
     name: "Lessons",

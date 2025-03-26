@@ -100,18 +100,21 @@ function CreateClass() {
   useEffect(() => {
     fetchTeachers();
     fetchClasses();
-    fetchLevels();
     fetchSchedules();
     // fetchSchedules();
+  }, [levels]);
+  useEffect(() => {
+    fetchLevels();
   }, []);
   const fetchClasses = async () => {
     try {
       setLoadingClass(true);
       const data = await classService.getAllClasses();
+
       const formattedRows = data.map((cls) => ({
         id: cls.id,
         name: cls.name,
-        level: cls.level,
+        level: levels?.find((lv) => lv.id === cls.level)?.name,
         // startDate: cls.startDate,
         // endDate: cls.endDate,
         teacher: cls.teacher?.name || "N/A",
