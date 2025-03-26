@@ -21,13 +21,6 @@ export const colors = {
 };
 
 const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAttendanceCheck }) => {
-  const menu = (
-    <Menu>
-      <Menu.Item key="attendance" onClick={onAttendanceCheck}>
-        Attendance Check
-      </Menu.Item>
-    </Menu>
-  );
   return (
     <div
       style={{
@@ -90,17 +83,19 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
         >
           <span className="button-text">Enter test scores</span>
         </Button>
-        <Dropdown overlay={menu} trigger={["click"]}>
-          <Button
-            shape="circle"
-            icon={<EllipsisOutlined />}
-            style={{
-              borderColor: colors.borderGreen,
-              backgroundColor: colors.midGreen,
-              color: colors.white,
-            }}
-          />
-        </Dropdown>
+
+        <Button
+          type="primary"
+          icon={<BarChartOutlined />}
+          onClick={onAttendanceCheck}
+          style={{
+            backgroundColor: colors.safeGreen,
+            borderColor: colors.safeGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Attendance Check</span>
+        </Button>
       </Space>
 
       <style>{`

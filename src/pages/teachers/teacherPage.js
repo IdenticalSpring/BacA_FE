@@ -18,6 +18,7 @@ import {
   Tabs,
   notification,
   message,
+  Badge,
 } from "antd";
 import {
   UserOutlined,
@@ -26,6 +27,8 @@ import {
   FormOutlined,
   BarChartOutlined,
   YoutubeOutlined,
+  BellOutlined,
+  QuestionCircleOutlined,
   ExclamationCircleOutlined,
   MessageOutlined,
 } from "@ant-design/icons";
@@ -99,6 +102,7 @@ const TeacherPage = () => {
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingCreateHomeWork, setLoadingCreateHomeWork] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(3); // Example notification count
   const [loadingCreateLesson, setLoadingCreateLesson] = useState(false);
   const [error, setError] = useState("");
   const [hasClassToday, setHasClassToday] = useState(false);
@@ -476,7 +480,30 @@ const TeacherPage = () => {
 
   // Enter Test Score
   const handleEnterTestScores = () => {
-    navigate("/teacherpage/entertestscore");
+    if (!selectedClass) {
+      notification.warning({
+        message: "No Class Selected",
+        description: "Please select a class before entering test scores.",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
+    navigate("/teacherpage/entertestscore", {
+      state: {
+        classId: selectedClass, // Truyền classId qua state
+      },
+    });
+  };
+  const handleViewNotification = () => {
+    message.info("Comming soon...");
+  };
+  const showHelpModal = () => {
+    setHelpModalVisible(true);
+  };
+
+  const handleHelpModalClose = () => {
+    setHelpModalVisible(false);
   };
 
   const handleOpenEvaluationModal = () => {
@@ -525,24 +552,55 @@ const TeacherPage = () => {
             height: isMobile ? 60 : 64,
           }}
         >
-          <Title
-            level={isMobile ? 5 : 4}
-            style={{ margin: 0, color: colors.darkGreen, marginLeft: isMobile ? "25%" : "0" }}
-          >
-            HappyClass
-          </Title>
-
-          <Dropdown overlay={userMenu} placement="bottomRight">
-            <Avatar
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Title
+              level={isMobile ? 5 : 4}
+              style={{ margin: 0, color: colors.darkGreen, marginLeft: isMobile ? "25%" : "0" }}
+            >
+              HappyClass
+            </Title>
+          </div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {/* Notification Bell */}
+            <Button
+              type="text"
+              onClick={handleViewNotification}
               style={{
-                backgroundColor: colors.deepGreen,
-                color: colors.white,
-                cursor: "pointer",
+                marginRight: 12,
+                color: colors.darkGreen,
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              {userName.charAt(0)}
-            </Avatar>
-          </Dropdown>
+              <Badge count={notificationsCount} size="small">
+                <BellOutlined style={{ fontSize: 20 }} />
+              </Badge>
+            </Button>
+
+            {/* Help/Question Icon */}
+            <Button
+              type="text"
+              onClick={showHelpModal}
+              style={{
+                marginRight: 12,
+                color: colors.darkGreen,
+              }}
+            >
+              <QuestionCircleOutlined style={{ fontSize: 20 }} />
+            </Button>
+
+            <Dropdown overlay={userMenu} placement="bottomRight">
+              <Avatar
+                style={{
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  cursor: "pointer",
+                }}
+              >
+                {userName.charAt(0)}
+              </Avatar>
+            </Dropdown>
+          </div>
         </Header>
 
         {selectedClass && (
@@ -556,15 +614,6 @@ const TeacherPage = () => {
               <strong>Class Status:</strong>{" "}
               {hasClassToday ? "Class is scheduled for today" : "Class is scheduled for today"}
             </Text>
-            <div style={{ float: "right" }}>
-              <Button
-                type="primary"
-                onClick={handleOpenEvaluationModal}
-                style={{ backgroundColor: colors.deepGreen, color: colors.white }}
-              >
-                Evaluate Selected Students
-              </Button>
-            </div>
           </div>
         )}
 
@@ -650,7 +699,7 @@ const TeacherPage = () => {
             <Toolbox
               onHomework={openHomeworkModal}
               onAssignment={() => openAssignmentModal()}
-              onClassReview={() => console.log("Class review")}
+              onClassReview={handleOpenEvaluationModal}
               onEnterScores={handleEnterTestScores}
               onAttendanceCheck={handleAttendanceCheck}
             />

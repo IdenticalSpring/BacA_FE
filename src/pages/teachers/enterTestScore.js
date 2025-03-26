@@ -21,7 +21,6 @@ import { ArrowLeftOutlined, SaveOutlined, CalculatorOutlined } from "@ant-design
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import studentService from "services/studentService";
-import classService from "services/classService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import studentScoreService from "services/studentScoreService";
 import { colors } from "./teacherPage";
@@ -39,8 +38,6 @@ const EnterTestScore = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
-  const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
   const [previousScores, setPreviousScores] = useState([]);
 
   // Get the teacherId from token
@@ -48,40 +45,29 @@ const EnterTestScore = () => {
   const decoded = token ? jwtDecode(token) : null;
   const teacherId = decoded?.userId;
 
-  useEffect(() => {
-    if (teacherId) {
-      fetchClasses();
-    }
-  }, [teacherId]);
+  // Get classId from location.state
+  const classId = location.state?.classId;
 
-  const fetchClasses = async () => {
-    try {
-      setLoading(true);
-      const data = await classService.getAllClassesByTeacher(teacherId);
-      setClasses(data);
-      // If there's a class ID in location state, select it
-      if (location.state?.classId) {
-        setSelectedClass(location.state.classId);
-      }
-    } catch (error) {
-      console.error("Error fetching classes:", error);
+  // Fetch test schedules and students when classId is available
+  useEffect(() => {
+    if (classId) {
+      fetchClassTestSchedules(classId);
+      fetchStudents(classId);
+    } else {
       notification.error({
         message: "Error",
-        description: "Failed to load classes. Please try again.",
+        description: "No class selected. Please select a class from the Teacher Page.",
       });
-    } finally {
-      setLoading(false);
+      navigate(-1); // Quay lại trang trước nếu không có classId
     }
-  };
+  }, [classId]);
 
   const fetchClassTestSchedules = async (classId) => {
     try {
       setLoading(true);
       const data = await classTestScheduleSerivce.getAllClassTestSchedule();
-
       // Filter test schedules by the selected class ID
       const filteredData = data.filter((schedule) => schedule.classID === classId);
-
       setClassTestSchedules(filteredData);
     } catch (error) {
       console.error("Error fetching test schedules:", error);
@@ -111,43 +97,6 @@ const EnterTestScore = () => {
   };
 
   useEffect(() => {
-    if (selectedClass) {
-      fetchClassTestSchedules(selectedClass);
-      fetchStudents(selectedClass);
-    }
-  }, [selectedClass]);
-
-  const fetchPreviousScores = async (studentId) => {
-    try {
-      setLoading(true);
-      const data = await studentScoreService.getScorebyStudentID(studentId);
-
-      // Format the data for the table
-      const formattedData = data.map((score, index) => ({
-        key: index.toString(),
-        id: score.id,
-        // testDate: score.testDate,
-        // testName: score.testName,a
-        writingScore: score.writingScore,
-        readingScore: score.readingScore,
-        listeningScore: score.listeningScore,
-        speakingScore: score.speakingScore,
-        avgScore: score.avgScore,
-      }));
-
-      setPreviousScores(formattedData);
-    } catch (error) {
-      //   console.error("Error fetching previous scores:", error);
-      //   notification.error({
-      //     message: "Error",
-      //     description: "Failed to load previous scores. Please try again.",
-      //   });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
     if (selectedStudent) {
       fetchPreviousScores(selectedStudent);
     } else {
@@ -155,16 +104,34 @@ const EnterTestScore = () => {
     }
   }, [selectedStudent]);
 
-  // Calculate average score
+  const fetchPreviousScores = async (studentId) => {
+    try {
+      setLoading(true);
+      const data = await studentScoreService.getScorebyStudentID(studentId);
+      const formattedData = data.map((score, index) => ({
+        key: index.toString(),
+        id: score.id,
+        writingScore: score.writingScore,
+        readingScore: score.readingScore,
+        listeningScore: score.listeningScore,
+        speakingScore: score.speakingScore,
+        avgScore: score.avgScore,
+      }));
+      setPreviousScores(formattedData);
+    } catch (error) {
+      // Không hiển thị lỗi nếu không có điểm trước đó
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const calculateAvgScore = (writingScore, readingScore, listeningScore, speakingScore) => {
-    // All scores need to exist and be between 0-10
     if (
       writingScore !== undefined &&
       readingScore !== undefined &&
       listeningScore !== undefined &&
       speakingScore !== undefined
     ) {
-      // Calculate average with proper weighting (equal weights here, adjust as needed)
       return ((writingScore + readingScore + listeningScore + speakingScore) / 4).toFixed(2);
     }
     return "";
@@ -173,20 +140,14 @@ const EnterTestScore = () => {
   const handleScoreChange = () => {
     const values = form.getFieldsValue();
     const { writingScore, readingScore, listeningScore, speakingScore } = values;
-
     const avgScore = calculateAvgScore(writingScore, readingScore, listeningScore, speakingScore);
-
     form.setFieldsValue({ avgScore });
   };
 
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-
-      // Get the test schedule details to include name/date
       const testSchedule = classTestSchedules.find((schedule) => schedule.id === selectedClassTest);
-
-      // Construct the data to save
       const testScoreData = {
         classTestScheduleID: selectedClassTest,
         studentID: selectedStudent,
@@ -196,21 +157,12 @@ const EnterTestScore = () => {
         speakingScore: values.speakingScore,
         avgScore: parseFloat(values.avgScore),
       };
-
-      console.log("Saving test score:", testScoreData);
-
-      // Use the API service to create the score
       await studentScoreService.createScoreStudent(testScoreData);
-
       notification.success({
         message: "Success",
         description: "Test scores have been saved successfully.",
       });
-
-      // Refresh the previous scores
       fetchPreviousScores(selectedStudent);
-
-      // Reset form fields but keep selections
       form.resetFields([
         "writingScore",
         "readingScore",
@@ -261,7 +213,7 @@ const EnterTestScore = () => {
         <Title level={4} style={{ margin: 0, color: colors.darkGreen }}>
           Enter Test Scores
         </Title>
-        <div style={{ width: "32px" }} /> {/* Empty div for balance */}
+        <div style={{ width: "32px" }} />
       </Header>
 
       <Content style={{ padding: "24px", background: colors.white }}>
@@ -279,29 +231,7 @@ const EnterTestScore = () => {
         >
           <Spin spinning={loading}>
             <Row gutter={[24, 24]}>
-              <Col xs={24} md={8}>
-                <Form.Item label="Select Class">
-                  <Select
-                    placeholder="Select a class"
-                    value={selectedClass}
-                    onChange={(value) => {
-                      setSelectedClass(value);
-                      setSelectedClassTest(null);
-                      setSelectedStudent(null);
-                      form.resetFields();
-                    }}
-                    style={{ width: "100%" }}
-                  >
-                    {classes.map((cls) => (
-                      <Option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
                 <Form.Item label="Select Test Schedule">
                   <Select
                     placeholder="Select a test schedule"
@@ -312,7 +242,6 @@ const EnterTestScore = () => {
                       form.resetFields();
                     }}
                     style={{ width: "100%" }}
-                    disabled={!selectedClass}
                   >
                     {classTestSchedules.map((schedule) => (
                       <Option key={schedule.id} value={schedule.id}>
@@ -323,7 +252,7 @@ const EnterTestScore = () => {
                 </Form.Item>
               </Col>
 
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
                 <Form.Item label="Select Student">
                   <Select
                     placeholder="Select a student"
@@ -504,21 +433,15 @@ const EnterTestScore = () => {
               </Form>
             )}
 
-            {!selectedStudent && selectedClassTest && (
-              <div style={{ textAlign: "center", padding: "20px" }}>
-                <Text type="secondary">Please select a student to enter test scores.</Text>
-              </div>
-            )}
-
-            {!selectedClassTest && selectedClass && (
+            {!selectedClassTest && (
               <div style={{ textAlign: "center", padding: "20px" }}>
                 <Text type="secondary">Please select a test schedule to continue.</Text>
               </div>
             )}
 
-            {!selectedClass && (
+            {selectedClassTest && !selectedStudent && (
               <div style={{ textAlign: "center", padding: "20px" }}>
-                <Text type="secondary">Please select a class to begin.</Text>
+                <Text type="secondary">Please select a student to enter test scores.</Text>
               </div>
             )}
           </Spin>
@@ -534,16 +457,6 @@ const EnterTestScore = () => {
           >
             <Table
               columns={[
-                // {
-                //   title: "Test Date",
-                //   dataIndex: "testDate",
-                //   key: "testDate",
-                // },
-                // {
-                //   title: "Test Name",
-                //   dataIndex: "testName",
-                //   key: "testName",
-                // },
                 {
                   title: "Writing",
                   dataIndex: "writingScore",

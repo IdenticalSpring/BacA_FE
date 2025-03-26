@@ -160,6 +160,10 @@ const StudentPage = () => {
     setHelpModalVisible(false);
   };
 
+  const handleViewNotification = () => {
+    message.info("Comming soon...");
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     window.location.href = "/login/student";
@@ -508,7 +512,7 @@ const StudentPage = () => {
             {/* Notification Bell */}
             <Button
               type="text"
-              onClick={() => message.info("Xem thông báo")}
+              onClick={handleViewNotification}
               style={{
                 marginRight: 12,
                 color: colors.darkGreen,
