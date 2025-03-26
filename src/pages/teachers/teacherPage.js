@@ -280,7 +280,7 @@ const TeacherPage = () => {
     if (!hasClassToday) {
       notification.warning({
         message: "Warning",
-        description: "Class is scheduled for today",
+        description: "Class is not scheduled for today",
         placement: "topRight",
         duration: 4,
       });
@@ -560,30 +560,31 @@ const TeacherPage = () => {
               HappyClass
             </Title>
           </div>
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             {/* Notification Bell */}
             <Button
               type="text"
               onClick={handleViewNotification}
               style={{
                 marginRight: 12,
-                color: colors.darkGreen,
                 display: "flex",
                 alignItems: "center",
+                padding: 0,
               }}
             >
               <Badge count={notificationsCount} size="small">
-                <BellOutlined style={{ fontSize: 20 }} />
+                <BellOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
               </Badge>
             </Button>
 
             {/* Help/Question Icon */}
             <Button
               type="text"
-              onClick={showHelpModal}
+              onClick={handleViewNotification}
               style={{
                 marginRight: 12,
                 color: colors.darkGreen,
+                padding: 0,
               }}
             >
               <QuestionCircleOutlined style={{ fontSize: 20 }} />
@@ -612,7 +613,7 @@ const TeacherPage = () => {
           >
             <Text style={{ color: hasClassToday ? colors.darkGreen : colors.darkGray }}>
               <strong>Class Status:</strong>{" "}
-              {hasClassToday ? "Class is scheduled for today" : "Class is scheduled for today"}
+              {hasClassToday ? "Class is scheduled for today" : "Class is not scheduled for today"}
             </Text>
           </div>
         )}
@@ -626,7 +627,7 @@ const TeacherPage = () => {
           }}
         >
           {students?.map((student) => (
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} key={student.id}>
+            <Col xs={20} sm={10} md={8} lg={6} xl={4} key={student.id}>
               <Dropdown overlay={studentMenu(student)} trigger={["contextMenu"]}>
                 <Card
                   style={{
@@ -667,9 +668,9 @@ const TeacherPage = () => {
                     >
                       {student.name}
                     </Typography.Title>
-                    <Typography.Text type="secondary" style={{ display: "block" }}>
+                    {/* <Typography.Text type="secondary" style={{ display: "block" }}>
                       Level: {student.level || "N/A"}
-                    </Typography.Text>
+                    </Typography.Text> */}
                   </div>
                 </Card>
               </Dropdown>
