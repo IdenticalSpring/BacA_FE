@@ -137,7 +137,7 @@ const routes = [
     route: "/classes",
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
-        <Classes />
+        <CreateClass />
       </PrivateRoute>
     ),
   },

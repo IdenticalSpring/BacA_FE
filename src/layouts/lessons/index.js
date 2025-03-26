@@ -196,7 +196,7 @@ function Lessons() {
                 <MDTypography variant="h6" color="white">
                   Lesson Tables
                 </MDTypography>
-                <Button
+                {/* <Button
                   variant="contained"
                   sx={{
                     backgroundColor: colors.midGreen,
@@ -206,7 +206,7 @@ function Lessons() {
                   onClick={() => navigate("/lessons/create-lesson")}
                 >
                   Create
-                </Button>
+                </Button> */}
               </MDBox>
               <MDBox pt={3}>
                 {loading ? (

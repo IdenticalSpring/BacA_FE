@@ -42,6 +42,21 @@ const lessonByScheduleService = {
       throw error.response?.data?.message || "Error fetching lesson by schedule list";
     }
   },
+  getSchedulesByClass: async (id) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/lesson-by-schedule/schedules_by_class/${id}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating lesson by schedule";
+    }
+  },
   updateLessonBySchedule: async (id, lessonByScheduleData) => {
     try {
       const response = await axios.put(
