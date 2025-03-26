@@ -69,6 +69,19 @@ const teacherService = {
       throw error;
     }
   },
+  skillScoreStudent: async (payload) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/studentskillbehaviorscores`, payload, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error saving student skill behavior scores:", error);
+      throw error;
+    }
+  },
   async attendanceStudent(payload) {
     try {
       const response = await axios.post(`${API_BASE_URL}/checkins`, payload, {

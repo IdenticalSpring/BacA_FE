@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Modal, Form, Select, Button, Row, Col, Rate, List, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import TeacherService from "services/teacherService";
+import skillService from "services/skillService";
 import { jwtDecode } from "jwt-decode";
 
 const { TextArea } = Input;
@@ -17,34 +18,65 @@ const colors = {
   errorRed: "#FF6B6B",
 };
 
-const SKILL_OPTIONS = ["Vocabulary", "Structure", "Listening", "Speaking", "Reading", "Writing"];
+const RATING_DESCRIPTIONS = {
+  1: "Cần cải thiện",
+  2: "Cố gắng hơn",
+  3: "Khá",
+  4: "Giỏi",
+  5: "Xuất sắc",
+};
 
 const EvaluationModal = ({ visible, onClose, students, schedules }) => {
   const [skills, setSkills] = useState([]);
+  const [availableSkills, setAvailableSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
+  const [behaviors, setBehaviors] = useState([]);
+  const [availableBehaviors, setAvailableBehaviors] = useState([]);
+  const [selectedBehavior, setSelectedBehavior] = useState("");
   const [evaluation, setEvaluation] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-
-  const [behaviors, setBehaviors] = useState([
-    { name: "Respect", rating: 0 },
-    { name: "Discipline", rating: 0 },
-    { name: "Cooperation", rating: 0 },
-  ]);
+  const [allSkills, setAllSkills] = useState([]); // Lưu toàn bộ skill từ API để lấy skillID
 
   useEffect(() => {
-    if (!visible) {
+    const fetchSkillsAndBehaviors = async () => {
+      try {
+        const skillData = await skillService.getAllSkill();
+        const fetchedSkills = skillData
+          .filter((item) => item.type === 1)
+          .map((skill) => skill.name);
+        const fetchedBehaviors = skillData
+          .filter((item) => item.type === 0)
+          .map((behavior) => behavior.name);
+
+        setAvailableSkills(fetchedSkills);
+        setAvailableBehaviors(fetchedBehaviors);
+        setAllSkills(skillData); // Lưu toàn bộ skill để lấy skillID sau này
+        setSkills([]);
+        setBehaviors([]);
+      } catch (error) {
+        console.error("Error fetching skills and behaviors:", error);
+        message.error("Failed to load skills and behaviors.");
+      }
+    };
+
+    if (visible) {
+      fetchSkillsAndBehaviors();
+      if (schedules.length > 0) {
+        setSelectedSchedule(schedules[0].id);
+      }
+    } else {
       setSkills([]);
       setSelectedSkill("");
+      setBehaviors([]);
+      setSelectedBehavior("");
       setEvaluation("");
       setSelectedSchedule(null);
-      setBehaviors([
-        { name: "Respect", rating: 0 },
-        { name: "Discipline", rating: 0 },
-        { name: "Cooperation", rating: 0 },
-      ]);
+      setAvailableSkills([]);
+      setAvailableBehaviors([]);
+      setAllSkills([]);
     }
-  }, [visible]);
+  }, [visible, schedules]);
 
   const handleAddSkill = () => {
     if (selectedSkill && !skills.some((s) => s.name === selectedSkill)) {
@@ -63,6 +95,17 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
     setSkills(updatedSkills);
   };
 
+  const handleAddBehavior = () => {
+    if (selectedBehavior && !behaviors.some((b) => b.name === selectedBehavior)) {
+      setBehaviors([...behaviors, { name: selectedBehavior, rating: 0 }]);
+      setSelectedBehavior("");
+    }
+  };
+
+  const handleDeleteBehavior = (index) => {
+    setBehaviors(behaviors.filter((_, i) => i !== index));
+  };
+
   const handleBehaviorRating = (index, value) => {
     const updatedBehaviors = [...behaviors];
     updatedBehaviors[index].rating = value;
@@ -79,28 +122,58 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
     const decoded = jwtDecode(token);
     const teacherID = decoded?.userId;
 
-    const skillRatings = skills.reduce((acc, skill) => {
-      acc[skill.name.toLowerCase()] = skill.rating;
-      return acc;
-    }, {});
-
-    const behaviorRatings = behaviors.reduce((acc, behavior) => {
-      acc[behavior.name.toLowerCase()] = behavior.rating;
-      return acc;
-    }, {});
-
     setLoading(true);
     try {
-      const evaluationPromises = students.map((student) => {
-        const payload = {
+      const evaluationPromises = students.map(async (student) => {
+        // Bước 1: Gửi comment lên evaluationStudent
+        const commentPayload = {
           teacherID,
           studentID: student.id,
           scheduleID: selectedSchedule,
           comment: evaluation,
-          ...skillRatings,
-          ...behaviorRatings,
         };
-        return TeacherService.evaluationStudent(payload);
+        const commentResponse = await TeacherService.evaluationStudent(commentPayload);
+        const teacherCommentID = commentResponse.id; // Giả sử response trả về id của teacherComment
+
+        // Bước 2: Gửi skills và behaviors lên skillScoreStudent
+        const skillScorePromises = [];
+
+        // Xử lý Skills
+        skills.forEach((skill) => {
+          const skillData = allSkills.find((s) => s.name === skill.name && s.type === 1);
+          console.log("skills:", skillData);
+          if (skillData && skill.rating > 0) {
+            skillScorePromises.push(
+              TeacherService.skillScoreStudent({
+                studentID: student.id,
+                skillType: "1",
+                score: skill.rating,
+                teacherCommentID: teacherCommentID,
+                skillID: skillData.id,
+              })
+            );
+          }
+        });
+
+        // Xử lý Behaviors
+        behaviors.forEach((behavior) => {
+          const behaviorData = allSkills.find((s) => s.name === behavior.name && s.type === 0);
+          console.log("behavior:", behaviorData);
+          if (behaviorData && behavior.rating > 0) {
+            skillScorePromises.push(
+              TeacherService.skillScoreStudent({
+                studentID: student.id,
+                skillType: "0",
+                score: behavior.rating,
+                teacherCommentID: teacherCommentID,
+                skillID: behaviorData.id,
+              })
+            );
+          }
+        });
+
+        // Chờ tất cả skill/behavior scores được lưu
+        await Promise.all(skillScorePromises);
       });
 
       await Promise.all(evaluationPromises);
@@ -114,10 +187,14 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
     }
   };
 
+  const currentSchedule = schedules.find((s) => s.id === selectedSchedule) || schedules[0];
+
   return (
     <Modal
       title={`Evaluation for ${
         students.length > 1 ? `${students.length} Students` : students[0]?.name || "Unknown"
+      } - Schedule: ${
+        currentSchedule ? `${currentSchedule.startTime} - ${currentSchedule.endTime}` : "N/A"
       }`}
       open={visible}
       onCancel={onClose}
@@ -146,7 +223,7 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
             style={{ width: "100%" }}
             placeholder="Select a skill"
           >
-            {SKILL_OPTIONS.map((skill) => (
+            {availableSkills.map((skill) => (
               <Option key={skill} value={skill}>
                 {skill}
               </Option>
@@ -156,6 +233,7 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
             type="primary"
             onClick={handleAddSkill}
             style={{ marginTop: 8, backgroundColor: colors.deepGreen, color: colors.white }}
+            disabled={!selectedSkill || skills.some((s) => s.name === selectedSkill)}
           >
             Add Skill
           </Button>
@@ -164,11 +242,14 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
             renderItem={(item, index) => (
               <List.Item>
                 <span style={{ flex: 1 }}>{item.name}</span>
-                <Rate
-                  value={item.rating}
-                  onChange={(value) => handleSkillRating(index, value)}
-                  count={4}
-                />
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Rate
+                    value={item.rating}
+                    onChange={(value) => handleSkillRating(index, value)}
+                    count={5}
+                  />
+                  <span>{item.rating > 0 ? RATING_DESCRIPTIONS[item.rating] : ""}</span>
+                </div>
                 <Button
                   type="text"
                   icon={<DeleteOutlined style={{ color: colors.errorRed }} />}
@@ -182,15 +263,43 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
 
         <Col span={12}>
           <h3>Behaviors</h3>
+          <Select
+            value={selectedBehavior}
+            onChange={(value) => setSelectedBehavior(value)}
+            style={{ width: "100%" }}
+            placeholder="Select a behavior"
+          >
+            {availableBehaviors.map((behavior) => (
+              <Option key={behavior} value={behavior}>
+                {behavior}
+              </Option>
+            ))}
+          </Select>
+          <Button
+            type="primary"
+            onClick={handleAddBehavior}
+            style={{ marginTop: 8, backgroundColor: colors.deepGreen, color: colors.white }}
+            disabled={!selectedBehavior || behaviors.some((b) => b.name === selectedBehavior)}
+          >
+            Add Behavior
+          </Button>
           <List
             dataSource={behaviors}
             renderItem={(item, index) => (
               <List.Item>
                 <span style={{ flex: 1 }}>{item.name}</span>
-                <Rate
-                  value={item.rating}
-                  onChange={(value) => handleBehaviorRating(index, value)}
-                  count={4}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Rate
+                    value={item.rating}
+                    onChange={(value) => handleBehaviorRating(index, value)}
+                    count={5}
+                  />
+                  <span>{item.rating > 0 ? RATING_DESCRIPTIONS[item.rating] : ""}</span>
+                </div>
+                <Button
+                  type="text"
+                  icon={<DeleteOutlined style={{ color: colors.errorRed }} />}
+                  onClick={() => handleDeleteBehavior(index)}
                 />
               </List.Item>
             )}
@@ -200,24 +309,6 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
       </Row>
 
       <Form layout="vertical" style={{ marginTop: 20 }}>
-        <Form.Item label="Select Schedule">
-          <Select
-            value={selectedSchedule}
-            onChange={(value) => setSelectedSchedule(value)}
-            placeholder="Choose a schedule"
-            style={{ width: "100%" }}
-          >
-            {schedules.length > 0 ? (
-              schedules.map((schedule) => (
-                <Option key={schedule.id} value={schedule.id}>
-                  {schedule.startTime} - {schedule.endTime}
-                </Option>
-              ))
-            ) : (
-              <Option disabled>No schedules available</Option>
-            )}
-          </Select>
-        </Form.Item>
         <Form.Item label="Comment">
           <TextArea
             rows={4}
@@ -243,7 +334,8 @@ EvaluationModal.propTypes = {
   schedules: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      name: PropTypes.string,
+      startTime: PropTypes.string.isRequired,
+      endTime: PropTypes.string.isRequired,
     })
   ).isRequired,
 };
