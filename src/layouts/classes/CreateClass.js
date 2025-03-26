@@ -33,8 +33,6 @@ import levelService from "services/levelService";
 import { colors } from "assets/theme/color";
 import DataTable from "examples/Tables/DataTable";
 import { message, Spin } from "antd";
-import { LoadingButton } from "@mui/lab";
-
 function CreateClass() {
   const navigate = useNavigate();
   const [classDataForCreate, setClassDataForCreate] = useState({
