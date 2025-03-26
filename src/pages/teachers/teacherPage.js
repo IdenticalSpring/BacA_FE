@@ -19,6 +19,7 @@ import {
   notification,
   message,
   Badge,
+  Space,
 } from "antd";
 import {
   UserOutlined,
@@ -31,6 +32,7 @@ import {
   QuestionCircleOutlined,
   ExclamationCircleOutlined,
   MessageOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -52,6 +54,7 @@ import homeWorkService from "services/homeWorkService";
 import HomeWorkBySchedule from "components/HomeWorkComponent/HomeWorkBySchedule";
 import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
 import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
+import teacherService from "services/teacherService";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -92,6 +95,8 @@ const daysOfWeek = [
 
 // Main TeacherPage Component
 const TeacherPage = () => {
+  const [isAttendanceMode, setIsAttendanceMode] = useState(false);
+  const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [students, setStudents] = useState([]);
@@ -276,6 +281,7 @@ const TeacherPage = () => {
 
   const schedulesForToday = getSchedulesForToday();
 
+  // Hàm để kích hoạt chế độ điểm danh
   const handleAttendanceCheck = () => {
     if (!hasClassToday) {
       notification.warning({
@@ -287,14 +293,93 @@ const TeacherPage = () => {
       return;
     }
 
-    // Chuyển hướng sang trang AttendanceCheck và truyền dữ liệu qua state
-    navigate("/teacherpage/attendanceCheck", {
-      state: {
-        classId: selectedClass,
-        students: students,
-        lessonByScheduleData: lessonByScheduleData,
-      },
-    });
+    // Chọn toàn bộ học sinh và đặt mặc định là "Present" (1)
+    const initialAttendance = students.map((student) => ({
+      studentId: student.id,
+      present: 1, // Mặc định là có mặt
+      note: "",
+    }));
+    setAttendance(initialAttendance);
+    setIsAttendanceMode(true); // Chuyển sang chế độ điểm danh
+  };
+
+  const handleStatusChange = (studentId, present) => {
+    setAttendance((prev) =>
+      prev.map((item) => (item.studentId === studentId ? { ...item, present } : item))
+    );
+  };
+
+  // Hàm để cập nhật ghi chú
+  const handleNoteChange = (studentId, note) => {
+    setAttendance((prev) =>
+      prev.map((item) => (item.studentId === studentId ? { ...item, note } : item))
+    );
+  };
+
+  // Hàm để lưu điểm danh
+  const handleSaveAttendance = async () => {
+    if (!lessonByScheduleData || lessonByScheduleData.length === 0) {
+      notification.warning({
+        message: "Warning",
+        description: "No class schedule available for today",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const todaySchedules = getSchedulesForToday(); // Lấy lịch học hôm nay
+      if (todaySchedules.length === 0) {
+        notification.warning({
+          message: "Warning",
+          description: "No class scheduled for today",
+          placement: "topRight",
+          duration: 4,
+        });
+        return;
+      }
+
+      // Tìm lessonByScheduleId từ lessonByScheduleData dựa trên schedule ID của ngày hôm nay
+      const selectedLessonByScheduleId = lessonByScheduleData.find(
+        (schedule) => schedule.schedule.id === todaySchedules[0]?.id
+      )?.id;
+
+      if (!selectedLessonByScheduleId) {
+        notification.warning({
+          message: "Warning",
+          description: "Cannot find lesson schedule for today",
+          placement: "topRight",
+          duration: 4,
+        });
+        return;
+      }
+
+      // Gửi dữ liệu điểm danh
+      await teacherService.attendanceStudent({
+        lessonByScheduleId: selectedLessonByScheduleId,
+        attendanceData: attendance,
+      });
+
+      notification.success({
+        message: "Success",
+        description: "Attendance submitted successfully",
+        placement: "topRight",
+        duration: 4,
+      });
+      setIsAttendanceMode(false); // Thoát chế độ điểm danh
+    } catch (error) {
+      console.error("Error submitting attendance:", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to submit attendance",
+        placement: "topRight",
+        duration: 4,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const studentMenu = (student) => (
@@ -626,9 +711,15 @@ const TeacherPage = () => {
             paddingBottom: selectedClass ? (isMobile ? "70px" : "64px") : "24px",
           }}
         >
-          {students?.map((student) => (
-            <Col xs={20} sm={10} md={8} lg={6} xl={4} key={student.id}>
-              <Dropdown overlay={studentMenu(student)} trigger={["contextMenu"]}>
+          {students?.map((student) => {
+            const studentAttendance = attendance.find((a) => a.studentId === student.id) || {
+              present: 1,
+              note: "",
+            };
+            const isSelected = selectedStudents.some((s) => s.id === student.id); // Kiểm tra xem học sinh có được chọn không
+
+            return (
+              <Col xs={20} sm={10} md={8} lg={6} xl={4} key={student.id}>
                 <Card
                   style={{
                     borderRadius: "12px",
@@ -636,13 +727,19 @@ const TeacherPage = () => {
                     border: `1px solid ${colors.borderGreen}`,
                     transition: "all 0.3s ease",
                     cursor: "pointer",
-                    backgroundColor: selectedStudents.some((s) => s.id === student.id)
-                      ? colors.paleGreen
-                      : colors.white, // Thay đổi màu nền khi được chọn
+                    backgroundColor: isAttendanceMode
+                      ? studentAttendance.present === 1
+                        ? colors.paleGreen
+                        : studentAttendance.present === 0
+                        ? colors.errorRed
+                        : colors.lightAccent
+                      : isSelected
+                      ? colors.lightGreen
+                      : colors.white,
                   }}
-                  hoverable
+                  hoverable={!isAttendanceMode}
                   bodyStyle={{ padding: "16px" }}
-                  onClick={() => handleSelectStudent(student)} // Thay đổi sự kiện nhấp
+                  onClick={!isAttendanceMode ? () => handleSelectStudent(student) : undefined}
                 >
                   <div
                     style={{
@@ -664,18 +761,107 @@ const TeacherPage = () => {
                     </Avatar>
                     <Typography.Title
                       level={5}
-                      style={{ margin: "0 0 4px 0", color: colors.darkGreen }}
+                      style={{ margin: "0 0 8px 0", color: colors.darkGreen }}
                     >
                       {student.name}
                     </Typography.Title>
-                    {/* <Typography.Text type="secondary" style={{ display: "block" }}>
-                      Level: {student.level || "N/A"}
-                    </Typography.Text> */}
+                    {isAttendanceMode && (
+                      <div style={{ width: "100%", marginTop: 8 }}>
+                        <Space direction="vertical" style={{ width: "100%", gap: "8px" }}>
+                          <Space
+                            style={{
+                              width: "100%",
+                              justifyContent: "space-between",
+                              gap: "4px",
+                            }}
+                          >
+                            <Button
+                              type={studentAttendance.present === 1 ? "primary" : "default"}
+                              style={{
+                                flex: 1,
+                                backgroundColor:
+                                  studentAttendance.present === 1 ? colors.safeGreen : colors.white,
+                                borderColor:
+                                  studentAttendance.present === 1
+                                    ? colors.safeGreen
+                                    : colors.borderGreen,
+                                color:
+                                  studentAttendance.present === 1 ? colors.white : colors.darkGray,
+                                borderRadius: "8px",
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                height: "32px",
+                              }}
+                              onClick={() => handleStatusChange(student.id, 1)}
+                            >
+                              Present
+                            </Button>
+                            <Button
+                              type={studentAttendance.present === 0 ? "primary" : "default"}
+                              style={{
+                                flex: 1,
+                                backgroundColor:
+                                  studentAttendance.present === 0 ? colors.errorRed : colors.white,
+                                borderColor:
+                                  studentAttendance.present === 0
+                                    ? colors.errorRed
+                                    : colors.borderGreen,
+                                color:
+                                  studentAttendance.present === 0 ? colors.white : colors.darkGray,
+                                borderRadius: "8px",
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                height: "32px",
+                              }}
+                              onClick={() => handleStatusChange(student.id, 0)}
+                            >
+                              Absent
+                            </Button>
+                            <Button
+                              type={studentAttendance.present === 2 ? "primary" : "default"}
+                              style={{
+                                flex: 1,
+                                backgroundColor:
+                                  studentAttendance.present === 2 ? colors.accent : colors.white,
+                                borderColor:
+                                  studentAttendance.present === 2
+                                    ? colors.accent
+                                    : colors.borderGreen,
+                                color:
+                                  studentAttendance.present === 2 ? colors.white : colors.darkGray,
+                                borderRadius: "8px",
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                height: "32px",
+                              }}
+                              onClick={() => handleStatusChange(student.id, 2)}
+                            >
+                              Permission
+                            </Button>
+                          </Space>
+                          <Input.TextArea
+                            rows={2}
+                            value={studentAttendance.note}
+                            onChange={(e) => handleNoteChange(student.id, e.target.value)}
+                            placeholder="Enter note here..."
+                            style={{
+                              borderRadius: "8px",
+                              borderColor: colors.borderGreen,
+                              fontSize: "12px",
+                              padding: "8px",
+                              backgroundColor: colors.white,
+                              color: colors.darkGray,
+                              resize: "none",
+                            }}
+                          />
+                        </Space>
+                      </div>
+                    )}
                   </div>
                 </Card>
-              </Dropdown>
-            </Col>
-          ))}
+              </Col>
+            );
+          })}
         </Row>
         {/* Hiển thị Evaluation Modal khi cần */}
         {selectedStudents.length > 0 && (
@@ -697,6 +883,39 @@ const TeacherPage = () => {
               zIndex: 10,
             }}
           >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "12px 0",
+              }}
+            >
+              {isAttendanceMode && (
+                <>
+                  <Button
+                    type="primary"
+                    icon={<CheckCircleOutlined />}
+                    onClick={handleSaveAttendance}
+                    style={{
+                      backgroundColor: colors.deepGreen,
+                      borderColor: colors.deepGreen,
+                      marginRight: "10px",
+                    }}
+                    loading={loading}
+                  >
+                    Save Attendance Check
+                  </Button>
+                  <Button
+                    type="default"
+                    onClick={() => setIsAttendanceMode(false)} // Thoát chế độ điểm danh
+                    style={{ borderColor: colors.errorRed, color: colors.errorRed }}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
+            </div>
             <Toolbox
               onHomework={openHomeworkModal}
               onAssignment={() => openAssignmentModal()}
