@@ -74,6 +74,7 @@ import CreateLesson from "pages/teachers/CreateLesson";
 import AttendancePage from "pages/teachers/attendanceCheck";
 import TestManagement from "pages/admin/testManagement";
 import EnterTestScore from "pages/teachers/enterTestScore";
+import SkillManagement from "layouts/skillManagement";
 
 const routes = [
   {
@@ -209,6 +210,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <Students />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "SkillManagement",
+    key: "skillManagement",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/skills",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <SkillManagement />
       </PrivateRoute>
     ),
   },

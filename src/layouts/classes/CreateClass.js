@@ -27,6 +27,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import levelService from "services/levelService";
 import { colors } from "assets/theme/color";
+import DataTable from "examples/Tables/DataTable";
 
 function CreateClass() {
   const navigate = useNavigate();
@@ -38,11 +39,37 @@ function CreateClass() {
     teacherID: "",
     scheduleId: "",
   });
-  const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [dayOfWeekForCreate, setDayOfWeekForCreate] = useState(0);
+  const [dayOfWeekForUpdate, setDayOfWeekForUpdate] = useState(0);
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
-  const [selectedSchedules, setSelectedSchedules] = useState([]);
+  const [selectedSchedulesForCreate, setSelectedSchedulesForCreate] = useState([]);
+  const [selectedSchedulesForUpdate, setSelectedSchedulesForUpdate] = useState([]);
   const [levels, setLevels] = useState([]);
+  const [classColumns] = useState([
+    { Header: "Class Name", accessor: "name", width: "20%" },
+    { Header: "Level", accessor: "level", width: "10%" },
+    // { Header: "Start Date", accessor: "startDate", width: "20%" },
+    // { Header: "End Date", accessor: "endDate", width: "20%" },
+    { Header: "Teacher", accessor: "teacher", width: "20%" },
+    // { Header: "Actions", accessor: "actions", width: "20%" },
+  ]);
+  const [scheduleColumns] = useState([
+    { Header: "Day Of Week", accessor: "dayOfWeek", width: "30%" },
+    { Header: "Start Time", accessor: "startTime", width: "30%" },
+    { Header: "End Time", accessor: "endTime", width: "30%" },
+    // { Header: "Actions", accessor: "actions", width: "20%" },
+  ]);
+  const [scheduleRows, setScheduleRows] = useState([]);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [classrows, setClassRows] = useState([]);
+  const [loadingClass, setLoadingClass] = useState(true);
+  const [loadingSchedule, setLoadingSchedule] = useState(true);
+  const [errorClass, setErrorClass] = useState("");
+  const [errorSchedule, setErrorSchedule] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
   const daysOfWeek = [
     "Choose day of week",
     "Sunday",
@@ -55,12 +82,43 @@ function CreateClass() {
   ];
   useEffect(() => {
     fetchTeachers();
+    fetchClasses();
     fetchLevels();
+    fetchSchedules();
     // fetchSchedules();
   }, []);
+  const fetchClasses = async () => {
+    try {
+      setLoadingClass(true);
+      const data = await classService.getAllClasses();
+      const formattedRows = data.map((cls) => ({
+        id: cls.id,
+        name: cls.name,
+        level: cls.level,
+        // startDate: cls.startDate,
+        // endDate: cls.endDate,
+        teacher: cls.teacher?.name || "N/A",
+        // actions: (
+        //   <>
+        //     <IconButton color="primary" onClick={() => handleEdit(cls)}>
+        //       <EditIcon />
+        //     </IconButton>
+        //     <IconButton color="secondary" onClick={() => handleDelete(cls.id)}>
+        //       <DeleteIcon />
+        //     </IconButton>
+        //   </>
+        // ),
+      }));
+      setClassRows(formattedRows);
+    } catch (err) {
+      setErrorClass("Lỗi khi tải dữ liệu lớp học!");
+    } finally {
+      setLoadingClass(false);
+    }
+  };
   useEffect(() => {
-    fetchSchedulesByDayOfWeek(dayOfWeek);
-  }, [dayOfWeek]);
+    fetchSchedulesByDayOfWeek(dayOfWeekForCreate);
+  }, [dayOfWeekForCreate]);
   const fetchSchedulesByDayOfWeek = async (dayOfWeek) => {
     try {
       const data = await scheduleService.getScheduleByDayOfWeek({ dayOfWeek: dayOfWeek });
@@ -88,14 +146,33 @@ function CreateClass() {
 
   const fetchSchedules = async () => {
     try {
+      setLoadingSchedule(true);
       const data = await scheduleService.getAllSchedules();
-      setSchedules(data);
+      const formattedRows = data.map((schedule) => ({
+        id: schedule.id,
+        dayOfWeek: daysOfWeek[schedule.dayOfWeek],
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        // actions: (
+        //   <>
+        //     <IconButton color="primary" onClick={() => handleEdit(schedule)}>
+        //       <EditIcon />
+        //     </IconButton>
+        //     <IconButton color="secondary" onClick={() => handleDelete(schedule.id)}>
+        //       <DeleteIcon />
+        //     </IconButton>
+        //   </>
+        // ),
+      }));
+      setScheduleRows(formattedRows);
     } catch (err) {
-      console.error("Lỗi khi tải danh sách lịch học");
+      setErrorSchedule("Lỗi khi tải dữ liệu lịch học!");
+    } finally {
+      setLoadingSchedule(false);
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveClass = async () => {
     try {
       const payload = {
         name: classData.name,
@@ -107,7 +184,7 @@ function CreateClass() {
 
       const classEntity = await classService.createClass(payload);
       const dataForLessonBySchedule = {
-        lessons: getDatesForSelectedSchedules(selectedSchedules, classEntity),
+        lessons: getDatesForSelectedSchedules(selectedSchedulesForCreate, classEntity),
       };
       console.log(dataForLessonBySchedule);
 
@@ -123,12 +200,12 @@ function CreateClass() {
     const selectedSchedule = schedules.find((sch) => sch.id === classData.scheduleId);
     if (!selectedSchedule) return;
 
-    if (selectedSchedules.some((sch) => classData.scheduleId === sch.scheduleId)) {
+    if (selectedSchedulesForCreate.some((sch) => classData.scheduleId === sch.scheduleId)) {
       return;
     }
 
     // Thêm schedule mới vào danh sách (tránh trùng lặp)
-    setSelectedSchedules((prev) => [
+    setSelectedSchedulesForCreate((prev) => [
       ...prev,
       {
         scheduleId: selectedSchedule.id,
@@ -139,7 +216,7 @@ function CreateClass() {
     ]);
   };
   const handleRemoveSchedule = (id) => {
-    setSelectedSchedules((prev) => prev.filter((schedule) => schedule.scheduleId !== id));
+    setSelectedSchedulesForCreate((prev) => prev.filter((schedule) => schedule.scheduleId !== id));
   };
   const getDatesForSelectedSchedules = (selectedSchedules, classEntity) => {
     const resultDates = [];
@@ -175,17 +252,41 @@ function CreateClass() {
     return resultDates;
   };
   // console.log(getDatesForSelectedSchedules(selectedSchedules, classData));
+  const [scheduleData, setScheduleData] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+  });
 
+  const handleSaveSchedule = async () => {
+    try {
+      await scheduleService.createSchedule(scheduleData);
+      // navigate("/schedules");
+    } catch (err) {
+      alert("Lỗi khi tạo lịch học!");
+    }
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <Grid container justifyContent="flex-start">
+        <Grid
+          container
+          sx={{
+            display: "flex",
+            gap: "30px",
+            justifyContent: "space-between", // Custom gap size
+          }}
+        >
           <Grid
             item
             xs={12}
-            md={6}
-            sx={{ marginLeft: "20px", borderRadius: "20px", backgroundColor: colors.white }}
+            md={5.5}
+            sx={{
+              borderRadius: "20px",
+              backgroundColor: colors.white,
+              padding: "20px", // Add padding instead of margin
+            }}
           >
             <Card
               sx={{
@@ -288,9 +389,9 @@ function CreateClass() {
                     },
                   }}
                   margin="normal"
-                  value={dayOfWeek}
+                  value={dayOfWeekForCreate}
                   onChange={(e) => {
-                    setDayOfWeek(+e.target.value);
+                    setDayOfWeekForCreate(+e.target.value);
                     // console.log(e.target.value, +e.target.value);
                   }}
                 >
@@ -334,7 +435,7 @@ function CreateClass() {
                   Add
                 </Button>
               </div>
-              {selectedSchedules.length > 0 && (
+              {selectedSchedulesForCreate.length > 0 && (
                 <TableContainer component={Paper} sx={{ marginTop: 2, width: "100%" }}>
                   <Table>
                     <TableHead style={{ display: "table-header-group" }}>
@@ -345,7 +446,7 @@ function CreateClass() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {selectedSchedules.map((schedule, index) => (
+                      {selectedSchedulesForCreate.map((schedule, index) => (
                         <TableRow key={index}>
                           <TableCell>{schedule.day}</TableCell>
                           <TableCell>
@@ -368,13 +469,13 @@ function CreateClass() {
                 </TableContainer>
               )}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
-                <Button
+                {/* <Button
                   variant="text"
                   sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
                   onClick={() => navigate("/classes")}
                 >
                   Cancel
-                </Button>
+                </Button> */}
                 <Button
                   variant="contained"
                   sx={{
@@ -382,10 +483,215 @@ function CreateClass() {
                     color: colors.white,
                     " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
                   }}
-                  onClick={handleSave}
+                  onClick={handleSaveClass}
                 >
                   Create
                 </Button>
+              </MDBox>
+            </Card>
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={5.5}
+            sx={{
+              borderRadius: "20px",
+              backgroundColor: colors.white,
+              padding: "20px", // Add padding instead of margin
+            }}
+          >
+            <Card
+              sx={{
+                padding: 3,
+                backgroundColor: "rgba(255, 255, 255, 0.1)", // Màu nền trong suốt nhẹ
+                backdropFilter: "blur(10px)", // Hiệu ứng kính mờ
+                boxShadow: "0px 4px 10px rgba(255, 255, 255, 0.2)", // Đổ bóng nhẹ
+                borderRadius: "12px", // Bo góc
+                border: "1px solid rgba(255, 255, 255, 0.3)", // Viền nhẹ
+              }}
+            >
+              {" "}
+              <TextField
+                select
+                label="Day of Week"
+                fullWidth
+                InputProps={{
+                  sx: {
+                    minHeight: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                }}
+                margin="normal"
+                value={scheduleData.dayOfWeek}
+                onChange={(e) => {
+                  setScheduleData({ ...scheduleData, dayOfWeek: e.target.value });
+                }}
+              >
+                {daysOfWeek.map((d, index) => (
+                  <MenuItem key={index} value={index}>
+                    {d}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Start Time"
+                type="time"
+                InputLabelProps={{ shrink: true }}
+                value={scheduleData.startTime}
+                onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
+              />
+              <TextField
+                fullWidth
+                margin="normal"
+                label="End Time"
+                type="time"
+                InputLabelProps={{ shrink: true }}
+                value={scheduleData.endTime}
+                onChange={(e) => setScheduleData({ ...scheduleData, endTime: e.target.value })}
+              />
+              <MDBox display="flex" justifyContent="space-between" mt={3}>
+                {/* <Button
+                  variant="text"
+                  sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+                  onClick={() => navigate("/schedules")}
+                >
+                  Cancel
+                </Button> */}
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={handleSaveSchedule}
+                >
+                  Create
+                </Button>
+              </MDBox>
+            </Card>
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={5.5}
+            sx={{
+              borderRadius: "20px",
+              backgroundColor: colors.white,
+              padding: "20px", // Add padding instead of margin
+            }}
+          >
+            <Card>
+              <MDBox
+                mx={2}
+                mt={-3}
+                py={3}
+                px={2}
+                variant="gradient"
+                borderRadius="lg"
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
+              >
+                <MDTypography variant="h6" color="white">
+                  Class Tables
+                </MDTypography>
+                {/* <Button variant="contained" color="success" onClick={() => setOpen(true)}>
+                            Create
+                          </Button> */}
+                {/* <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={() => navigate("/classes/create-class")}
+                >
+                  Create
+                </Button> */}
+              </MDBox>
+              <MDBox pt={3}>
+                {loadingClass ? (
+                  <MDTypography variant="h6" color="info" align="center">
+                    Loading...
+                  </MDTypography>
+                ) : errorClass ? (
+                  <MDTypography variant="h6" color="error" align="center">
+                    {errorClass}
+                  </MDTypography>
+                ) : (
+                  <DataTable
+                    table={{ columns: classColumns, rows: classrows }}
+                    isSorted={false}
+                    entriesPerPage={false}
+                    showTotalEntries={false}
+                    noEndBorder
+                  />
+                )}
+              </MDBox>
+            </Card>
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={5.5}
+            sx={{
+              borderRadius: "20px",
+              backgroundColor: colors.white,
+              padding: "20px", // Add padding instead of margin
+            }}
+          >
+            <Card>
+              <MDBox
+                mx={2}
+                mt={-3}
+                py={3}
+                px={2}
+                variant="gradient"
+                borderRadius="lg"
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
+              >
+                <MDTypography variant="h6" color="white">
+                  Schedule Tables
+                </MDTypography>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.midGreen,
+                    color: colors.white,
+                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                  }}
+                  onClick={() => navigate("/schedules/create-schedule")}
+                >
+                  Create
+                </Button>
+              </MDBox>
+              <MDBox pt={3}>
+                {loadingSchedule ? (
+                  <MDTypography variant="h6" color="info" align="center">
+                    Loading...
+                  </MDTypography>
+                ) : errorSchedule ? (
+                  <MDTypography variant="h6" color="error" align="center">
+                    {errorSchedule}
+                  </MDTypography>
+                ) : (
+                  <DataTable
+                    table={{ columns: scheduleColumns, rows: scheduleRows }}
+                    isSorted={false}
+                    entriesPerPage={false}
+                    showTotalEntries={false}
+                    noEndBorder
+                  />
+                )}
               </MDBox>
             </Card>
           </Grid>

@@ -30,7 +30,7 @@ function CreateSchedule() {
   const handleSave = async () => {
     try {
       await scheduleService.createSchedule(scheduleData);
-      navigate("/schedules");
+      // navigate("/schedules");
     } catch (err) {
       alert("Lỗi khi tạo lịch học!");
     }
