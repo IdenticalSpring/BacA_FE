@@ -69,7 +69,7 @@ function Students() {
     age: "",
     phone: "",
     classID: "",
-    schedule: "",
+    // schedule: "",
     imgUrl: "",
     startDate: "",
     endDate: "",
@@ -249,7 +249,7 @@ function Students() {
         password: studentData.password,
         age: studentData.age,
         classID: studentData.classID,
-        schedule: studentData.schedule,
+        // schedule: studentData.schedule,
         phone: studentData.phone,
         level: studentData.level,
         startDate: studentData.startDate,
@@ -317,7 +317,7 @@ function Students() {
         age: "",
         phone: "",
         classID: "",
-        schedule: "",
+        // schedule: "",
         imgUrl: "",
         startDate: "",
         endDate: "",
@@ -525,7 +525,7 @@ function Students() {
               setStudentData({
                 ...studentData,
                 classID: selectedClassSchedule.class.id,
-                schedule: selectedClassSchedule.schedule.id,
+                // schedule: selectedClassSchedule.schedule.id,
               });
             }}
             renderValue={(selectedValue) => {
