@@ -75,6 +75,7 @@ import AttendancePage from "pages/teachers/attendanceCheck";
 import TestManagement from "pages/admin/testManagement";
 import EnterTestScore from "pages/teachers/enterTestScore";
 import SkillManagement from "pages/admin/skillManagement";
+import HomeWorks from "layouts/homeWorks";
 
 const routes = [
   {
@@ -162,6 +163,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <Lessons />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Homeworks",
+    key: "homeworks",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/homeworks",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <HomeWorks />
       </PrivateRoute>
     ),
   },

@@ -17,7 +17,6 @@ import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import { useNavigate } from "react-router-dom";
 import lessonService from "services/lessonService";
-import { MenuItem } from "@mui/material";
 import { colors } from "assets/theme/color";
 import levelService from "services/levelService";
 import PropTypes from "prop-types";
@@ -26,7 +25,7 @@ import { Button, message } from "antd";
 import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
-import LessonDetailModal from "./LessonDetailModal";
+import HomeworkDetailModal from "./HomeworkDetailModal";
 // const levels = [
 //   "Level Pre-1",
 //   "Level 1",
@@ -37,23 +36,23 @@ import LessonDetailModal from "./LessonDetailModal";
 //   "Pre-KET",
 //   "level-PET",
 // ];
-function Lessons() {
+function HomeWorks() {
   const navigate = useNavigate();
   const [columns] = useState([
     {
-      Header: "Lesson Name",
-      accessor: "name",
+      Header: "Lesson Title",
+      accessor: "title",
       width: "30%",
       Cell: ({ row }) => (
         <span
           style={{ cursor: "pointer" }}
           className="truncate-text"
           onClick={() => {
-            setSelectedLessonDetail(row.original);
+            setSelectedHomeworkDetail(row.original);
             setDetailModalOpen(true);
           }}
         >
-          {row.values.name}
+          {row.values.title}
         </span>
       ),
     },
@@ -66,7 +65,7 @@ function Lessons() {
           style={{ cursor: "pointer" }}
           className="truncate-text"
           onClick={() => {
-            setSelectedLessonDetail(row.original);
+            setSelectedHomeworkDetail(row.original);
             setDetailModalOpen(true);
           }}
         >
@@ -83,11 +82,28 @@ function Lessons() {
           style={{ cursor: "pointer" }}
           className="truncate-text"
           onClick={() => {
-            setSelectedLessonDetail(row.original);
+            setSelectedHomeworkDetail(row.original);
             setDetailModalOpen(true);
           }}
         >
           {row.values.linkYoutube}
+        </span>
+      ),
+    },
+    {
+      Header: "Link Game",
+      accessor: "linkGame",
+      width: "30%",
+      Cell: ({ row }) => (
+        <span
+          style={{ cursor: "pointer" }}
+          className="truncate-text"
+          onClick={() => {
+            setSelectedHomeworkDetail(row.original);
+            setDetailModalOpen(true);
+          }}
+        >
+          {row.values.linkGame}
         </span>
       ),
     },
@@ -100,7 +116,7 @@ function Lessons() {
           style={{ cursor: "pointer" }}
           className="truncate-text"
           onClick={() => {
-            setSelectedLessonDetail(row.original);
+            setSelectedHomeworkDetail(row.original);
             setDetailModalOpen(true);
           }}
         >
@@ -117,7 +133,7 @@ function Lessons() {
           style={{ cursor: "pointer" }}
           className="truncate-text"
           onClick={() => {
-            setSelectedLessonDetail(row.original);
+            setSelectedHomeworkDetail(row.original);
             setDetailModalOpen(true);
           }}
         >
@@ -134,7 +150,7 @@ function Lessons() {
           style={{ cursor: "pointer" }}
           className="truncate-text"
           onClick={() => {
-            setSelectedLessonDetail(row.original);
+            setSelectedHomeworkDetail(row.original);
             setDetailModalOpen(true);
           }}
         >
@@ -170,27 +186,28 @@ function Lessons() {
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [selectedHomeWork, setSelectedHomeWork] = useState(null);
   const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
-  const [loadingTTSLesson, setLoadingTTSLesson] = useState(false);
-  const [loadingUpdateLesson, setLoadingUpdateLesson] = useState(false);
-  const [lessonData, setLessonData] = useState({
-    name: "",
+  const [loadingTTSHomework, setLoadingTTSHomework] = useState(false);
+  const [loadingUpdateHomework, setLoadingUpdateHomework] = useState(false);
+  const [homeworkData, setHomeworkData] = useState({
+    title: "",
     level: "",
     linkYoutube: "",
+    linkSpeech: "",
     linkSpeech: "",
     TeacherId: "",
     description: "",
   });
   const [levels, setLevels] = useState([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedLessonDetail, setSelectedLessonDetail] = useState(null);
+  const [selectedHomeworkDetail, setSelectedHomeworkDetail] = useState(null);
   useEffect(() => {
-    fetchLessons();
+    fetchHomeworks();
   }, [levels]);
   useEffect(() => {
     fetchLevels();
@@ -286,7 +303,7 @@ function Lessons() {
 
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
-    setLoadingTTSLesson(true);
+    setLoadingTTSHomework(true);
 
     try {
       const response = await homeWorkService.textToSpeech(textToSpeech);
@@ -330,7 +347,7 @@ function Lessons() {
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
-    setLoadingTTSLesson(false);
+    setLoadingTTSHomework(false);
   };
   // console.log(mp3Url);
   useEffect(() => {
@@ -344,18 +361,19 @@ function Lessons() {
       }
     }
   }, [mp3Url]);
-  const fetchLessons = async () => {
+  const fetchHomeworks = async () => {
     try {
-      const data = await lessonService.getAllLessons();
+      const data = await homeWorkService.getAllHomeWork();
       // console.log(data);
-      const formattedRows = data.map((lesson) => ({
-        id: lesson.id,
-        name: lesson.name,
-        level: levels?.find((lv) => lv.id === lesson.level)?.name,
-        linkYoutube: lesson.linkYoutube,
-        linkSpeech: lesson.linkSpeech,
-        TeacherId: lesson?.teacher?.username,
-        description: lesson.description,
+      const formattedRows = data.map((homework) => ({
+        id: homework.id,
+        title: homework.title,
+        level: levels?.find((lv) => lv.id === homework.level)?.name,
+        linkYoutube: homework.linkYoutube,
+        linkGame: homework.linkGame,
+        linkSpeech: homework.linkSpeech,
+        TeacherId: homework?.teacher?.username,
+        description: homework.description,
         actions: (
           <>
             <IconButton
@@ -364,7 +382,7 @@ function Lessons() {
                 color: colors.white,
                 " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
               }}
-              onClick={() => handleEdit(lesson)}
+              onClick={() => handleEdit(homework)}
             >
               <EditIcon />
             </IconButton>
@@ -388,60 +406,62 @@ function Lessons() {
       }));
       setRows(formattedRows);
     } catch (err) {
-      setError("Lỗi khi tải dữ liệu bài học!" + err);
+      setError("Lỗi khi tải dữ liệu bài tập! " + err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (lesson) => {
+  const handleEdit = (homeWork) => {
     setEditMode(true);
-    setSelectedLesson(lesson);
-    setLessonData({
-      name: lesson.name,
-      level: lesson.level,
-      linkYoutube: lesson.linkYoutube,
-      description: lesson.description,
-      TeacherId: lesson?.teacher?.id || "",
+    setSelectedHomeWork(homeWork);
+    setHomeworkData({
+      title: homeWork.title,
+      level: homeWork.level,
+      linkYoutube: homeWork.linkYoutube,
+      linkGame: homeWork.linkGame,
+      description: homeWork.description,
+      TeacherId: homeWork?.teacher?.id || "",
     });
-    setMp3Url(lesson.linkSpeech);
+    setMp3Url(homeWork.linkSpeech);
     setOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài học này?")) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa bài tập này?")) {
       try {
-        await lessonService.deleteLesson(id);
+        await homeWorkService.deleteHomeWork(id);
         setRows(rows.filter((row) => row.id !== id));
       } catch (err) {
-        alert("Lỗi khi xóa bài học!");
+        alert("Lỗi khi xóa bài tập!");
       }
     }
   };
 
   const handleSave = async () => {
     try {
-      setLoadingUpdateLesson(true);
+      setLoadingUpdateHomework(true);
       const formData = new FormData();
-      formData.append("name", lessonData.name);
-      formData.append("level", lessonData.level);
-      formData.append("linkYoutube", lessonData.linkYoutube);
-      formData.append("description", lessonData.description);
-      formData.append("teacherId", lessonData.TeacherId);
+      formData.append("title", homeworkData.title);
+      formData.append("level", homeworkData.level);
+      formData.append("linkYoutube", homeworkData.linkYoutube);
+      formData.append("linkGame", homeworkData.linkGame);
+      formData.append("description", homeworkData.description);
+      formData.append("teacherId", homeworkData.TeacherId);
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
       }
-      const lessonEntity = await lessonService.editLesson(selectedLesson.id, formData);
+      const homeworkEntity = await homeWorkService.editHomeWork(selectedHomeWork.id, formData);
       setRows(
         rows.map((row) =>
-          row.id === selectedLesson.id
+          row.id === selectedHomeWork.id
             ? {
                 ...row,
-                ...lessonData,
-                linkSpeech: lessonEntity.linkSpeech,
+                ...homeworkData,
+                linkSpeech: homeworkEntity.linkSpeech,
                 actions: (
                   <>
-                    <IconButton color="primary" onClick={() => handleEdit(lessonEntity)}>
+                    <IconButton color="primary" onClick={() => handleEdit(homeworkEntity)}>
                       <EditIcon />
                     </IconButton>
                     {/* <IconButton color="secondary" onClick={() => handleDelete(selectedLesson.id)}>
@@ -453,24 +473,25 @@ function Lessons() {
             : row
         )
       );
-      message.success("Lesson updated successfully");
+      message.success("Homework updated successfully");
       setTextToSpeech("");
       setMp3file(null);
       setMp3Url("");
       setOpen(false);
-      setLessonData({
-        name: "",
+      setHomeworkData({
+        title: "",
         level: "",
         linkYoutube: "",
+        linkGame: "",
         linkSpeech: "",
         TeacherId: "",
         description: "",
       });
       setEditMode(false);
     } catch (err) {
-      alert(editMode ? "Lỗi khi chỉnh sửa bài học!" + err : "Lỗi khi tạo bài học!");
+      alert(editMode ? "Lỗi khi chỉnh sửa bài tập!" + err : "Lỗi khi tạo bài tập!");
     } finally {
-      setLoadingUpdateLesson(false);
+      setLoadingUpdateHomework(false);
     }
   };
   //   console.log("Lesson -> rows", rows);
@@ -563,11 +584,11 @@ function Lessons() {
         <DialogTitle>{editMode ? "Edit Lesson" : "Create"}</DialogTitle>
         <DialogContent sx={{ height: "100%", overflowY: "auto" }}>
           <TextField
-            label="Lesson Name"
+            label="Lesson Title"
             fullWidth
             margin="normal"
-            value={lessonData.name}
-            onChange={(e) => setLessonData({ ...lessonData, name: e.target.value })}
+            value={homeworkData.title}
+            onChange={(e) => setHomeworkData({ ...homeworkData, title: e.target.value })}
           />
           <TextField
             // select
@@ -583,9 +604,9 @@ function Lessons() {
                 },
             }}
             margin="normal"
-            value={lessonData.level}
+            value={homeworkData.level}
             onChange={(e) => {
-              setLessonData({ ...lessonData, level: e.target.value });
+              setHomeworkData({ ...homeworkData, level: e.target.value });
               // console.log(e.target.value, +e.target.value);
             }}
           >
@@ -599,8 +620,15 @@ function Lessons() {
             label="Lesson Link"
             fullWidth
             margin="normal"
-            value={lessonData.linkYoutube}
-            onChange={(e) => setLessonData({ ...lessonData, linkYoutube: e.target.value })}
+            value={homeworkData.linkYoutube}
+            onChange={(e) => setHomeworkData({ ...homeworkData, linkYoutube: e.target.value })}
+          />
+          <TextField
+            label="Lesson Game Link"
+            fullWidth
+            margin="normal"
+            value={homeworkData.linkGame}
+            onChange={(e) => setHomeworkData({ ...homeworkData, linkGame: e.target.value })}
           />
           <TextArea
             value={textToSpeech}
@@ -615,7 +643,7 @@ function Lessons() {
           <Button
             type="primary"
             onClick={handleConvertToSpeech}
-            loading={loadingTTSLesson}
+            loading={loadingTTSHomework}
             style={{
               backgroundColor: colors.deepGreen,
               borderColor: colors.deepGreen,
@@ -642,10 +670,10 @@ function Lessons() {
               borderRadius: "6px",
               border: `1px solid ${colors.inputBorder}`,
             }}
-            value={lessonData.description}
+            value={homeworkData.description}
             onChange={(e) => {
               // console.log(e);
-              setLessonData({ ...lessonData, description: e });
+              setHomeworkData({ ...homeworkData, description: e });
             }}
           />
         </DialogContent>
@@ -657,7 +685,7 @@ function Lessons() {
             Cancel
           </Button>
           <Button
-            loading={loadingUpdateLesson}
+            loading={loadingUpdateHomework}
             key="submit"
             type="primary"
             onClick={handleSave}
@@ -670,20 +698,20 @@ function Lessons() {
           </Button>
         </DialogActions>
       </Dialog>
-      <LessonDetailModal
+      <HomeworkDetailModal
         open={detailModalOpen}
         onClose={() => {
           setDetailModalOpen(false);
-          setSelectedLessonDetail(null);
+          setSelectedHomeworkDetail(null);
         }}
-        lesson={selectedLessonDetail}
+        homework={selectedHomeworkDetail}
       />
     </DashboardLayout>
   );
 }
 
-export default Lessons;
-Lessons.propTypes = {
+export default HomeWorks;
+HomeWorks.propTypes = {
   value: PropTypes.func.isRequired,
   row: PropTypes.func.isRequired,
 };
