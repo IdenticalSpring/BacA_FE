@@ -10,7 +10,6 @@ export const colors = {
   paleGreen: "#E8F5EE",
   midGreen: "#5FAE8C",
   errorRed: "#FF6B6B",
-  // Additional modern colors
   mintGreen: "#C2F0D7",
   paleBlue: "#E6F7FF",
   softShadow: "rgba(0, 128, 96, 0.1)",
@@ -18,7 +17,6 @@ export const colors = {
   highlightGreen: "#43D183",
   safeGreen: "#27AE60",
   borderGreen: "#A8E6C3",
-  // New colors
   cardBg: "#FFFFFF",
   headerBg: "#368A68",
   buttonHover: "#43D183",
@@ -26,4 +24,8 @@ export const colors = {
   tableRowHover: "#F2FBF6",
   inputBorder: "#C2F0D7",
   inputFocus: "#5FAE8C",
+  // Additional light green theme colors
+  softGreen: "#90EE90",
+  seaGreen: "#2E8B57",
+  lightMint: "#98FB98",
 };

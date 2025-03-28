@@ -77,6 +77,8 @@ import EnterTestScore from "pages/teachers/enterTestScore";
 import SkillManagement from "pages/admin/skillManagement";
 import HomeWorks from "layouts/homeWorks";
 
+import StudentCheckinStatistics from "layouts/Studentcheckinstatistics";
+
 const routes = [
   {
     // type: "collapse",
@@ -127,6 +129,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <Dashboard />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "StudentCheckIn",
+    key: "studentCheckIn",
+    icon: <Icon fontSize="small">Student CheckIn</Icon>,
+    route: "/StudentCheckIn",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <StudentCheckinStatistics />
       </PrivateRoute>
     ),
   },

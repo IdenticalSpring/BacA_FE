@@ -39,6 +39,18 @@ const studentService = {
       throw error.response?.data?.message || "Error fetching student list";
     }
   },
+  countAllStudentOfCall: async (classId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/students/classCount/${classId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching student list";
+    }
+  },
   createStudentWithFile: async (formData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/students`, formData, {
