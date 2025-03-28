@@ -51,7 +51,7 @@ function CreateStudent() {
     endDate: "",
     note: "",
     classID: "",
-    schedule: "",
+    // schedule: "",
   });
 
   useEffect(() => {
@@ -77,17 +77,13 @@ function CreateStudent() {
   };
 
   const renderClassScheduleLabel = (classSchedule) => {
-    const { class: classInfo, schedule: scheduleInfo } = classSchedule;
+    const { class: classInfo } = classSchedule;
 
     return (
       <Box sx={{ display: "flex", flexDirection: "column" }}>
         <Typography sx={{ fontWeight: "bold", color: colors.midGreen }}>
           {classInfo.name}
         </Typography>
-        {/* <Typography sx={{ color: colors.darkGreen, fontSize: "0.875rem" }}>
-          {dayNames[scheduleInfo.dayOfWeek]} • {scheduleInfo.startTime.substring(0, 5)} -{" "}
-          {scheduleInfo.endTime.substring(0, 5)}
-        </Typography> */}
       </Box>
     );
   };

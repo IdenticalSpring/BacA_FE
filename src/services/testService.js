@@ -51,7 +51,7 @@ const testService = {
       });
       return { message: "Test deleted successfully" };
     } catch (error) {
-      throw error.response?.data?.message || "Error deleting teacher";
+      throw error.response?.data?.message || "Error deleting test ";
     }
   },
 };

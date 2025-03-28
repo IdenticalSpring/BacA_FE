@@ -1,5 +1,5 @@
 import { Button, Card, Divider, Form, Input, message, Select, Space, Typography } from "antd";
-import { SaveOutlined } from "@ant-design/icons";
+import { SaveOutlined, RobotOutlined } from "@ant-design/icons"; // Thêm RobotOutlined cho nút Enhance
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -10,8 +10,10 @@ import LessonBySchedule from "./LessonBySchedule";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
+
 const { Title } = Typography;
 const { Option } = Select;
+
 export default function CreateLesson({
   toolbar,
   quillFormats,
@@ -35,12 +37,15 @@ export default function CreateLesson({
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
+  const [loadingEnhance, setLoadingEnhance] = useState(false); // Thêm trạng thái loading cho nút Enhance
+
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       setQuill(editor);
     }
   }, [quillRef]);
+
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -53,17 +58,12 @@ export default function CreateLesson({
 
       const formData = new FormData();
       formData.append("file", file);
-      // console.log([...formData]);
 
       try {
         const response = await axios.post(
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-        console.log(response.data.url);
-
-        // const result = await response.json();
-
         if (response.status === 201 && quillRef.current) {
           const editor = quillRef.current.getEditor();
           const range = editor.getSelection(true);
@@ -86,30 +86,49 @@ export default function CreateLesson({
       },
     },
   };
+
+  // Hàm gọi Gemini API để cải thiện description
+  const enhanceDescription = async () => {
+    if (!quill) return;
+
+    const currentContent = quill.getText(); // Lấy nội dung từ ReactQuill
+    if (!currentContent.trim()) {
+      message.warning("Please enter a description first!");
+      return;
+    }
+
+    setLoadingEnhance(true);
+    try {
+      const enhancedText = await lessonService.enhanceDescription(currentContent);
+      quill.setText(enhancedText); // Cập nhật lại nội dung trong ReactQuill
+      message.success("Description enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing description:", error);
+      message.error("Failed to enhance description. Please try again!");
+    } finally {
+      setLoadingEnhance(false);
+    }
+  };
+
   const handleSubmit = async (values) => {
     try {
       setLoadingCreateLesson(true);
-
-      // If we have a video file, we need to update the link field
-      // if (videoFile) {
-      //   values.link = videoFile.response?.url || videoFile.name;
-      // }
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
-      formData.append("description", values.description);
+      formData.append("description", quill.getText()); // Lấy nội dung từ ReactQuill
       formData.append("teacherId", teacherId);
-      // console.log(dataLesson);
+
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
       }
+
       const lessonData = await lessonService.createLesson(formData);
       for (const item of selected) {
         await lessonByScheduleService.updateLessonOfLessonBySchedule(item, lessonData.id);
       }
       message.success("Lesson created successfully!");
-      // navigate("/teacherpage/manageLessons");
       form.resetFields();
       setTextToSpeech("");
       setMp3file(null);
@@ -120,24 +139,17 @@ export default function CreateLesson({
       setLoadingCreateLesson(false);
     }
   };
+
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTSLesson(true);
 
     try {
       const response = await homeWorkService.textToSpeech(textToSpeech);
-
       let base64String = response;
-      // console.log(response);
 
-      // base64String = btoa(
-      //   new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), "")
-      // );
-      // console.log(base64String);
-
-      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
       function base64ToBlob(base64, mimeType) {
-        let byteCharacters = atob(base64); // Giải mã base64
+        let byteCharacters = atob(base64);
         let byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -146,20 +158,8 @@ export default function CreateLesson({
         return new Blob([byteArray], { type: mimeType });
       }
 
-      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
-      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      let audioBlob = base64ToBlob(base64String, "audio/mp3");
       setMp3file(audioBlob);
-      console.log(audioBlob);
-
-      // if (mp3Url) {
-      //   const audioElement = document.getElementById("audio-player");
-      //   if (audioElement) {
-      //     audioElement.src = ""; // Xóa src trước khi revoke
-      //     audioElement.load(); // Yêu cầu cập nhật
-      //   }
-      //   URL.revokeObjectURL(mp3Url);
-      // }
-      // console.log("mémaeseaseas");
 
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
@@ -168,19 +168,18 @@ export default function CreateLesson({
     }
     setLoadingTTSLesson(false);
   };
-  // console.log(mp3Url);
+
   useEffect(() => {
     if (mp3Url) {
-      // console.log("🔄 Cập nhật audio URL:", mp3Url);
       const audioElement = document.getElementById("audio-player");
       if (audioElement) {
-        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
-        audioElement.load(); // Tải lại audio
+        audioElement.src = "";
+        audioElement.load();
         audioElement.src = mp3Url;
       }
     }
   }, [mp3Url]);
-  // console.log(selected);
+
   return (
     <div
       style={{
@@ -204,30 +203,11 @@ export default function CreateLesson({
           }}
         >
           <div style={{ marginBottom: isMobile ? "" : "14px" }}>
-            {/* <Button
-                          icon={<ArrowLeftOutlined />}
-                          onClick={() => navigate("/teacherpage/manageLessons")}
-                          style={{
-                            border: "none",
-                            boxShadow: "none",
-                            paddingLeft: 0,
-                            color: colors.deepGreen,
-                          }}
-                        >
-                          Back to Lessons
-                        </Button> */}
             <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
               Create New Lesson
             </Title>
             <Divider style={{ borderColor: colors.paleGreen }} />
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              justifyContent: "center",
-            }}
-          ></div>
           <Form
             form={form}
             layout="vertical"
@@ -257,52 +237,6 @@ export default function CreateLesson({
               />
             </Form.Item>
 
-            {/* <Form.Item
-              name="level"
-              label="Level"
-              rules={[{ required: true, message: "Please select a level" }]}
-            >
-              <Select
-                placeholder="Select level"
-                style={{
-                  borderRadius: "6px",
-                }}
-              >
-                {levels?.map((level, index) => (
-                  <Option key={index} value={level.id}>
-                    {level.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item> */}
-
-            {/* <Form.Item
-            name="link"
-            label="Lesson Video"
-            rules={[{ required: true, message: "Please upload a video file" }]}
-          >
-            <Upload {...uploadProps} listType="picture">
-              <Button
-                icon={<VideoCameraOutlined />}
-                style={{
-                  borderColor: colors.inputBorder,
-                  borderRadius: "6px",
-                  width: "100%",
-                  height: "60px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: colors.deepGreen,
-                  backgroundColor: colors.paleGreen,
-                }}
-              >
-                <span style={{ marginLeft: "8px" }}>Select Video File</span>
-              </Button>
-            </Upload>
-            <div style={{ marginTop: "4px", color: colors.darkGray, fontSize: "12px" }}>
-              Supported formats: MP4, MOV, AVI, WEBM
-            </div>
-          </Form.Item> */}
             <Form.Item
               name="linkYoutube"
               label="Lesson Youtube Link"
@@ -316,7 +250,8 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item label="Tech to speech">
+
+            <Form.Item label="Text to Speech">
               <TextArea
                 value={textToSpeech}
                 onChange={(e) => setTextToSpeech(e.target.value)}
@@ -328,6 +263,7 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
+
             <Form.Item>
               <Button
                 type="primary"
@@ -341,6 +277,7 @@ export default function CreateLesson({
                 Convert to Speech
               </Button>
             </Form.Item>
+
             {mp3Url && (
               <Form.Item>
                 <div style={{ marginBottom: "16px" }}>
@@ -351,6 +288,7 @@ export default function CreateLesson({
                 </div>
               </Form.Item>
             )}
+
             <Form.Item
               name="description"
               label="Description"
@@ -363,12 +301,27 @@ export default function CreateLesson({
                 ref={quillRef}
                 style={{
                   height: "250px",
-                  marginBottom: "60px", // Consider reducing this
+                  marginBottom: "10px", // Giảm margin để nút gần hơn
                   borderRadius: "6px",
                   border: `1px solid ${colors.inputBorder}`,
                 }}
               />
             </Form.Item>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={enhanceDescription}
+              loading={loadingEnhance}
+              style={{
+                alignSelf: "flex-start", // Căn trái nút
+                marginTop: "50px",
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+              }}
+            >
+              Enhance Description
+            </Button>
           </Form>
         </Card>
       </div>
@@ -432,20 +385,20 @@ export default function CreateLesson({
     </div>
   );
 }
+
 CreateLesson.propTypes = {
-  toolbar: PropTypes.func.isRequired,
-  quillFormats: PropTypes.func.isRequired,
-  levels: PropTypes.func.isRequired,
-  isMobile: PropTypes.func.isRequired,
-  loadingCreateLesson: PropTypes.func.isRequired,
+  toolbar: PropTypes.array.isRequired, // Sửa PropTypes cho đúng kiểu dữ liệu
+  quillFormats: PropTypes.array.isRequired,
+  levels: PropTypes.array.isRequired,
+  isMobile: PropTypes.bool.isRequired,
+  loadingCreateLesson: PropTypes.bool.isRequired,
   setLoadingCreateLesson: PropTypes.func.isRequired,
-  teacherId: PropTypes.func.isRequired,
-  lessonByScheduleData: PropTypes.func.isRequired,
-  daysOfWeek: PropTypes.func.isRequired,
-  lessonsData: PropTypes.func.isRequired,
+  teacherId: PropTypes.string.isRequired, // Giả sử teacherId là string
+  lessonByScheduleData: PropTypes.array.isRequired,
+  daysOfWeek: PropTypes.array.isRequired,
+  lessonsData: PropTypes.array.isRequired,
   setLessonByScheduleData: PropTypes.func.isRequired,
-  isMobile: PropTypes.func.isRequired,
-  loadingTTSLesson: PropTypes.func.isRequired,
+  loadingTTSLesson: PropTypes.bool.isRequired,
   setLoadingTTSLesson: PropTypes.func.isRequired,
-  level: PropTypes.func.isRequired,
+  level: PropTypes.string.isRequired, // Giả sử level là string
 };

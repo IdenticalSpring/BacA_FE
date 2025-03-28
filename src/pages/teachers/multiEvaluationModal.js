@@ -253,7 +253,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
           <Select
             value={record.behaviors[behavior] || 0}
             onChange={(value) => handleBehaviorRating(record.studentId, behavior, value)}
-            style={{ width: 120 }}
+            style={{ width: 150 }}
           >
             <Option value={0}>Select Score</Option>
             <Option value={1}>1 - Cần cải thiện</Option>

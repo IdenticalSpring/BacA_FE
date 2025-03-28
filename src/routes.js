@@ -76,6 +76,7 @@ import TestManagement from "pages/admin/testManagement";
 import EnterTestScore from "pages/teachers/enterTestScore";
 import SkillManagement from "pages/admin/skillManagement";
 import HomeWorks from "layouts/homeWorks";
+import TestSkillManagement from "pages/admin/testSkillManagement";
 
 import StudentCheckinStatistics from "layouts/Studentcheckinstatistics";
 
@@ -225,6 +226,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <TestManagement />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Test Skill Management",
+    key: "testSkillManagement",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/testSkillManagement",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <TestSkillManagement />
       </PrivateRoute>
     ),
   },

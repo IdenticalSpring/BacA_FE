@@ -15,6 +15,18 @@ const StudentScoreService = {
       throw error.response?.data?.message || "Error fetching levels list";
     }
   },
+  getAllStudentScoreDetails: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/student-score-details`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching levels list";
+    }
+  },
   getScorebyStudentID: async (id) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/studentScore/student/${id}`, {
@@ -30,6 +42,19 @@ const StudentScoreService = {
   createScoreStudent: async (levelData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/studentScore`, levelData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error creating Score";
+    }
+  },
+
+  createScoreStudentDetails: async (levelData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/student-score-details`, levelData, {
         headers: {
           "ngrok-skip-browser-warning": "true",
         },
