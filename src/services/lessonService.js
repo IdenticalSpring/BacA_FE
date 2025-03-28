@@ -38,6 +38,19 @@ const lessonService = {
       throw error.response?.data?.message || "Error fetching lessons list";
     }
   },
+  enhanceDescription: async (description) => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/chatbot/enhance`, // Đường dẫn tới endpoint NestJS
+        { description },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data.response; // Trả về nội dung đã cải thiện
+    } catch (error) {
+      console.error("Error enhancing description:", error);
+      throw new Error("Failed to enhance description. Please try again!");
+    }
+  },
   getLessonByTeacherId: async (TeacherId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/lessons/teacher/${TeacherId}`, {
