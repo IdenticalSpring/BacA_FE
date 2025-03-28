@@ -506,7 +506,7 @@ export default function StudentCheckinStatistics() {
                   alignItems: "start",
                 }}
               >
-                <Pie data={chartData} />
+                {chartData.datasets && <Pie data={chartData} />}
               </div>
             </div>
           )}
