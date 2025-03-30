@@ -19,18 +19,9 @@ import { colors } from "assets/theme/color";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import classService from "services/classService";
+import levelService from "services/levelService";
 
 // Thêm id vào mỗi level
-const levels = [
-  { id: 1, name: "Level Pre-1" },
-  { id: 2, name: "Level 1" },
-  { id: 3, name: "Level Starters" },
-  { id: 4, name: "Level Movers" },
-  { id: 5, name: "Level Flyers" },
-  { id: 6, name: "Level Pre-KET" },
-  { id: 7, name: "Level-KET" },
-  { id: 8, name: "Level-PET" },
-];
 
 function CreateStudent() {
   const navigate = useNavigate();
@@ -39,10 +30,11 @@ function CreateStudent() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [classSchedules, setClassSchedules] = useState([]);
   const [selectedClassSchedules, setSelectedClassSchedules] = useState([]);
+  const [levels, setLevels] = useState([]);
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
-    age: "",
+    yearOfBirth: "",
     phone: "",
     imgUrl: "",
     username: "",
@@ -63,8 +55,17 @@ function CreateStudent() {
         console.error("Failed to fetch class schedules", error);
       }
     };
+    const fetchLevels = async () => {
+      try {
+        const levelData = await levelService.getAllLevels();
+        setLevels(levelData);
+      } catch (error) {
+        console.error("Failed to fetch levels", error);
+      }
+    };
 
     fetchClassSchedules();
+    fetchLevels();
   }, []);
   const dayNames = {
     1: "Thứ Hai",
@@ -175,7 +176,7 @@ function CreateStudent() {
               />
               <TextField
                 select
-                label="level"
+                label="Level"
                 fullWidth
                 sx={{
                   "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
@@ -198,11 +199,13 @@ function CreateStudent() {
                 ))}
               </TextField>
               <TextField
-                label="Age"
                 fullWidth
                 margin="normal"
-                value={studentData.age}
-                onChange={(e) => setStudentData({ ...studentData, age: e.target.value })}
+                type="date"
+                label="Year of birth"
+                InputLabelProps={{ shrink: true }}
+                value={studentData.yearOfBirth}
+                onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
               />
               <TextField
                 label="Phone"

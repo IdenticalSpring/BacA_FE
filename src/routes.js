@@ -196,18 +196,18 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Lesson by schedule",
-    key: "lesson_by_schedules",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/lesson_by_schedules",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <LessonBySchedules />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Lesson by schedule",
+  //   key: "lesson_by_schedules",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/lesson_by_schedules",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <LessonBySchedules />
+  //     </PrivateRoute>
+  //   ),
+  // },
   {
     type: "collapse",
     name: "Teachers",
