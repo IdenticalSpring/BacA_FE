@@ -7,8 +7,7 @@
 * Copyright 2023 Creative Tim (https://www.creative-tim.com)
 
 Coded by www.creative-tim.com
-
- =========================================================
+=========================================================
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
@@ -23,52 +22,151 @@ import MDBox from "components/MDBox";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
-import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
-
-// Data
-import reportsBarChartData from "layouts/dashboard/data/reportsBarChartData";
-import reportsLineChartData from "layouts/dashboard/data/reportsLineChartData";
 
 // Dashboard components
 import Projects from "layouts/dashboard/components/Projects";
 import OrdersOverview from "layouts/dashboard/components/OrdersOverview";
 
+import { useEffect, useState } from "react";
+import studentService from "services/studentService";
+import teacherService from "services/teacherService";
+import lessonService from "services/lessonService";
+import homeWorkService from "services/homeWorkService";
+import checkinService from "services/checkinService";
+
 function Dashboard() {
-  const { sales, tasks } = reportsLineChartData;
+  const [stats, setStats] = useState({
+    students: 0,
+    teachers: 0,
+    lessons: 0,
+    homeworks: 0,
+  });
+
+  const [attendanceChartData, setAttendanceChartData] = useState({
+    labels: [],
+    datasets: [
+      { label: "Present", data: [], color: "success" },
+      { label: "Absent Without Permission", data: [], color: "error" },
+      { label: "Absent With Permission", data: [], color: "warning" },
+    ],
+  });
+
+  // Lấy dữ liệu tổng quan
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [students, teachers, lessons, homeworks] = await Promise.all([
+          studentService.getAllStudents(),
+          teacherService.getAllTeachers(),
+          lessonService.getAllLessons(),
+          homeWorkService.getAllHomeWork(),
+        ]);
+
+        setStats({
+          students: students.length,
+          teachers: teachers.length,
+          lessons: lessons.length,
+          homeworks: homeworks.length,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // Lấy và xử lý dữ liệu điểm danh
+  useEffect(() => {
+    const fetchAttendanceStats = async () => {
+      try {
+        // Lấy tất cả check-ins từ API
+        const checkins = await checkinService.getAllCheckins();
+
+        console.log("Fetched checkins:", checkins); // Debug dữ liệu đầu vào
+
+        if (!checkins || checkins.length === 0) {
+          console.warn("No checkin data available");
+          return;
+        }
+
+        // Nhóm dữ liệu theo ngày từ dữ liệu fetch
+        const groupedByDate = checkins.reduce((acc, checkin) => {
+          const date = checkin.lessonBySchedule?.date; // Lấy ngày từ lessonBySchedule
+          if (!date) {
+            console.warn("Missing date in checkin:", checkin);
+            return acc;
+          }
+          if (!acc[date]) {
+            acc[date] = { present: 0, absent: 0, absentWithPermission: 0 };
+          }
+          if (checkin.present === 1) acc[date].present += 1;
+          if (checkin.present === 0) acc[date].absent += 1;
+          if (checkin.present === 2) acc[date].absentWithPermission += 1;
+          return acc;
+        }, {});
+
+        console.log("Grouped by date:", groupedByDate); // Debug dữ liệu sau khi nhóm
+
+        // Chuẩn bị dữ liệu cho biểu đồ
+        const dates = Object.keys(groupedByDate).sort(); // Sắp xếp ngày
+        if (dates.length === 0) {
+          console.warn("No dates found in grouped data");
+          return;
+        }
+
+        const presentData = dates.map((date) => groupedByDate[date].present);
+        const absentData = dates.map((date) => groupedByDate[date].absent);
+        const absentWithPermissionData = dates.map(
+          (date) => groupedByDate[date].absentWithPermission
+        );
+
+        const chartData = {
+          labels: dates,
+          datasets: [
+            { label: "Present", data: presentData, color: "success" },
+            { label: "Absent Without Permission", data: absentData, color: "error" },
+            { label: "Absent With Permission", data: absentWithPermissionData, color: "warning" },
+          ],
+        };
+
+        console.log("Chart data:", chartData); // Debug dữ liệu biểu đồ
+
+        setAttendanceChartData(chartData);
+      } catch (error) {
+        console.error("Error fetching attendance stats:", error);
+      }
+    };
+
+    fetchAttendanceStats();
+  }, []);
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox py={3}>
+        {/* Grid 1: Tổng số students, teachers, lessons, homeworks */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 color="dark"
-                icon="weekend"
-                title="Bookings"
-                count={281}
-                percentage={{
-                  color: "success",
-                  amount: "+55%",
-                  label: "than lask week",
-                }}
+                icon="person"
+                title="Students"
+                count={stats.students}
+                percentage={{ color: "success", amount: "", label: "Total students" }}
               />
             </MDBox>
           </Grid>
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
-                icon="leaderboard"
-                title="Today's Users"
-                count="2,300"
-                percentage={{
-                  color: "success",
-                  amount: "+3%",
-                  label: "than last month",
-                }}
+                icon="school"
+                title="Teachers"
+                count={stats.teachers}
+                percentage={{ color: "success", amount: "", label: "Total teachers" }}
               />
             </MDBox>
           </Grid>
@@ -76,14 +174,10 @@ function Dashboard() {
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 color="success"
-                icon="store"
-                title="Revenue"
-                count="34k"
-                percentage={{
-                  color: "success",
-                  amount: "+1%",
-                  label: "than yesterday",
-                }}
+                icon="book"
+                title="Lessons"
+                count={stats.lessons}
+                percentage={{ color: "success", amount: "", label: "Total lessons" }}
               />
             </MDBox>
           </Grid>
@@ -91,59 +185,33 @@ function Dashboard() {
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 color="primary"
-                icon="person_add"
-                title="Followers"
-                count="+91"
-                percentage={{
-                  color: "success",
-                  amount: "",
-                  label: "Just updated",
-                }}
+                icon="assignment"
+                title="Homeworks"
+                count={stats.homeworks}
+                percentage={{ color: "success", amount: "", label: "Total homeworks" }}
               />
             </MDBox>
           </Grid>
         </Grid>
+
+        {/* Grid 2: Thống kê điểm danh theo biểu đồ đường */}
         <MDBox mt={4.5}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} md={12} lg={12}>
               <MDBox mb={3}>
-                <ReportsBarChart
+                <ReportsLineChart
                   color="info"
-                  title="website views"
-                  description="Last Campaign Performance"
-                  date="campaign sent 2 days ago"
-                  chart={reportsBarChartData}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="success"
-                  title="daily sales"
-                  description={
-                    <>
-                      (<strong>+15%</strong>) increase in today sales.
-                    </>
-                  }
-                  date="updated 4 min ago"
-                  chart={sales}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="dark"
-                  title="completed tasks"
-                  description="Last Campaign Performance"
-                  date="just updated"
-                  chart={tasks}
+                  title="Attendance Statistics"
+                  description="Daily attendance trends"
+                  date={`Updated: ${new Date().toLocaleDateString()}`}
+                  chart={attendanceChartData}
                 />
               </MDBox>
             </Grid>
           </Grid>
         </MDBox>
+
+        {/* Grid 3: Projects và OrdersOverview */}
         <MDBox>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} lg={8}>
