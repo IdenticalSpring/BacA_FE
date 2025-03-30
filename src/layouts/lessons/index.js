@@ -631,14 +631,18 @@ function Lessons() {
               </audio>
             </div>
           )}
+          <MDTypography variant="h6" sx={{ color: "#7b809a", margin: "10px" }}>
+            Notification Detail
+          </MDTypography>
           <ReactQuill
+            id="detail"
             theme="snow"
             modules={modules}
             formats={quillFormats}
             ref={quillRef}
             style={{
               height: "250px",
-              marginBottom: "60px", // Consider reducing this
+              marginBottom: "60px",
               borderRadius: "6px",
               border: `1px solid ${colors.inputBorder}`,
             }}
@@ -684,6 +688,5 @@ function Lessons() {
 
 export default Lessons;
 Lessons.propTypes = {
-  value: PropTypes.func.isRequired,
-  row: PropTypes.func.isRequired,
+  row: PropTypes.object.isRequired,
 };

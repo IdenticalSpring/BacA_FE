@@ -183,11 +183,11 @@ export default function HomeWorkBySchedule({
   );
 }
 HomeWorkBySchedule.propTypes = {
-  lessonByScheduleData: PropTypes.func.isRequired,
-  daysOfWeek: PropTypes.func.isRequired,
-  homeWorksData: PropTypes.func.isRequired,
-  setLessonByScheduleData: PropTypes.func.isRequired,
-  isMobile: PropTypes.func.isRequired,
+  lessonByScheduleData: PropTypes.array.isRequired,
+  daysOfWeek: PropTypes.array.isRequired,
+  homeWorksData: PropTypes.array.isRequired,
+  setLessonByScheduleData: PropTypes.array.isRequired,
+  isMobile: PropTypes.bool.isRequired,
   setSelected: PropTypes.func.isRequired,
-  selected: PropTypes.func.isRequired,
+  selected: PropTypes.bool.isRequired,
 };

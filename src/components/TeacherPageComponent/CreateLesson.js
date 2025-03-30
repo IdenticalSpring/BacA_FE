@@ -400,5 +400,5 @@ CreateLesson.propTypes = {
   setLessonByScheduleData: PropTypes.func.isRequired,
   loadingTTSLesson: PropTypes.bool.isRequired,
   setLoadingTTSLesson: PropTypes.func.isRequired,
-  level: PropTypes.string.isRequired, // Giả sử level là string
+  level: PropTypes.number.isRequired, // Giả sử level là string
 };

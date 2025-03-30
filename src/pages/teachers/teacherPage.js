@@ -57,6 +57,8 @@ import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
 import teacherService from "services/teacherService";
 import MultiStudentEvaluationModal from "./multiEvaluationModal";
 import StudentProfileModal from "./studentProfileModal";
+import NotificationSection from "components/TeacherPageComponent/NotificationComponent";
+import notificationService from "services/notificationService";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -94,7 +96,24 @@ const daysOfWeek = [
   "Friday",
   "Saturday",
 ];
+// Helper function to calculate time elapsed
+const getTimeElapsed = (createdAt) => {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - created) / 1000);
 
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} sec`;
+  } else if (diffInSeconds < 3600) {
+    return `${Math.floor(diffInSeconds / 60)} min`;
+  } else if (diffInSeconds < 86400) {
+    return `${Math.floor(diffInSeconds / 3600)} hr`;
+  } else {
+    return `${Math.floor(diffInSeconds / 86400)} day${
+      Math.floor(diffInSeconds / 86400) !== 1 ? "s" : ""
+    }`;
+  }
+};
 // Main TeacherPage Component
 const TeacherPage = () => {
   const [isAttendanceMode, setIsAttendanceMode] = useState(false);
@@ -128,6 +147,9 @@ const TeacherPage = () => {
   const [loadingTTSForUpdateHomeWork, setLoadingTTSForUpdateHomeWork] = useState(false);
   const [loadingTTSForUpdateLesson, setLoadingTTSForUpdateLesson] = useState(false);
   const [mp3Url, setMp3Url] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotification, setLoadingNotification] = useState(false);
+  const [errorNotification, setErrorNotification] = useState(false);
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
 
@@ -151,6 +173,7 @@ const TeacherPage = () => {
   const [modalUpdateLessonVisible, setModalUpdateLessonVisible] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
   const [editingHomeWork, setEditingHomeWork] = useState(null);
+  const [openNotification, setOpenNotification] = useState(false);
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -180,6 +203,30 @@ const TeacherPage = () => {
     "background",
     "align",
   ];
+  useEffect(() => {
+    const fetchNotification = async () => {
+      try {
+        setLoadingNotification(true);
+        const res = await notificationService.getAllGeneralNotifications();
+
+        if (res[0]?.createdAt) {
+          const sortedData = [...res].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          const data = sortedData.map((item) => ({
+            ...item,
+            timeElapsed: getTimeElapsed(item.createdAt),
+          }));
+          //   console.log(data);
+
+          setNotifications(data);
+        }
+      } catch (error) {
+        setErrorNotification(error || "fail to fetch notification");
+      } finally {
+        setLoadingNotification(true);
+      }
+    };
+    fetchNotification();
+  }, []);
   useEffect(() => {
     fetchLessons();
   }, [loadingCreateLesson]);
@@ -594,7 +641,8 @@ const TeacherPage = () => {
     });
   };
   const handleViewNotification = () => {
-    message.info("Comming soon...");
+    // message.info("Comming soon...");
+    setOpenNotification(!openNotification);
   };
   const showHelpModal = () => {
     setHelpModalVisible(true);
@@ -656,7 +704,10 @@ const TeacherPage = () => {
             height: isMobile ? 60 : 64,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{ display: "flex", alignItems: "center" }}
+            onClick={() => setOpenNotification(false)}
+          >
             <Title
               level={isMobile ? 5 : 4}
               style={{ margin: 0, color: colors.darkGreen, marginLeft: isMobile ? "25%" : "0" }}
@@ -676,7 +727,7 @@ const TeacherPage = () => {
                 padding: 0,
               }}
             >
-              <Badge count={notificationsCount} size="small">
+              <Badge count={notifications.length} size="small">
                 <BellOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
               </Badge>
             </Button>
@@ -729,6 +780,7 @@ const TeacherPage = () => {
             background: colors.white,
             paddingBottom: selectedClass ? (isMobile ? "70px" : "64px") : "24px",
           }}
+          onClick={() => setOpenNotification(false)}
         >
           {students?.map((student) => {
             const studentAttendance = attendance.find((a) => a.studentId === student.id) || {
@@ -1381,6 +1433,37 @@ const TeacherPage = () => {
             </div>
           </div>
         )}
+      </Modal>
+      <Modal
+        open={openNotification}
+        onCancel={() => setOpenNotification(false)}
+        footer={<></>}
+        style={{
+          position: "absolute",
+          top: "50px",
+          right: isMobile ? "10px" : "100px",
+          width: isMobile ? "350px" : "400px",
+          zIndex: "10000",
+          padding: 0,
+
+          // visibility: openNotification ? "visible" : "hidden",
+          // opacity: openNotification ? "1" : "0",
+          // transform: openNotification ? "translateY(0)" : "translateY(-20px)",
+          // transition: "opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease",
+          // boxShadow:
+          //   "0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px 0 rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03)",
+          // transition: "ease-in-out all 0.1s",
+          // maxHeight: "400px",
+          // overflow: "auto",
+        }}
+        title="Notification"
+      >
+        <NotificationSection
+          notifications={notifications}
+          setNotifications={setNotifications}
+          errorNotification={errorNotification}
+          loadingNotification={loadingNotification}
+        />
       </Modal>
     </Layout>
   );

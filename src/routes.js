@@ -79,6 +79,7 @@ import HomeWorks from "layouts/homeWorks";
 import TestSkillManagement from "pages/admin/testSkillManagement";
 
 import StudentCheckinStatistics from "layouts/Studentcheckinstatistics";
+import CreateNotificationByAdmin from "layouts/notification";
 
 const routes = [
   {
@@ -262,6 +263,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <SkillManagement />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Create Notification",
+    key: "createNotification",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/create-notification",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <CreateNotificationByAdmin />
       </PrivateRoute>
     ),
   },

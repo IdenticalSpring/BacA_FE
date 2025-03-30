@@ -524,6 +524,5 @@ export default function StudentCheckinStatistics() {
   );
 }
 StudentCheckinStatistics.propTypes = {
-  value: PropTypes.func.isRequired,
-  row: PropTypes.func.isRequired,
+  row: PropTypes.object.isRequired,
 };
