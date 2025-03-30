@@ -15,6 +15,21 @@ const StudentScoreService = {
       throw error.response?.data?.message || "Error fetching levels list";
     }
   },
+  getScoreDetailsByStudentId: async (studentId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/student-score-details/student/${studentId}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching score details by student ID";
+    }
+  },
   getAllStudentScoreDetails: async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/student-score-details`, {

@@ -23,29 +23,15 @@ import { MenuItem, Box, Typography, CircularProgress } from "@mui/material";
 import { colors } from "assets/theme/color";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import classService from "services/classService";
-
-const levels = [
-  { id: 1, name: "Level Pre-1" },
-  { id: 2, name: "Level 1" },
-  { id: 3, name: "Starters" },
-  { id: 4, name: "Level-KET" },
-  { id: 5, name: "Movers" },
-  { id: 6, name: "Flyers" },
-  { id: 7, name: "Pre-KET" },
-  { id: 8, name: "level-PET" },
-];
-
-const getLevelNameById = (levelId) => {
-  const level = levels.find((level) => level.id === levelId);
-  return level ? level.name : "Unknown Level";
-};
+import levelService from "services/levelService";
 
 function Students() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [levels, setLevels] = useState([]);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
-    { Header: "Age", accessor: "age", width: "10%" },
+    { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
     { Header: "Level", accessor: "level", width: "15%" },
     { Header: "Schedule", accessor: "note", width: "15%" },
     { Header: "Phone", accessor: "phone", width: "15%" },
@@ -66,10 +52,9 @@ function Students() {
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
-    age: "",
+    yearOfBirth: "",
     phone: "",
     classID: "",
-    // schedule: "",
     imgUrl: "",
     startDate: "",
     endDate: "",
@@ -77,8 +62,22 @@ function Students() {
   });
 
   useEffect(() => {
-    fetchStudents();
-    fetchClassSchedules();
+    const fetchData = async () => {
+      try {
+        // Fetch levels trước
+        const levelData = await levelService.getAllLevels();
+        setLevels(levelData);
+
+        // Sau đó fetch students và class schedules
+        await fetchStudents();
+        await fetchClassSchedules();
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+        setError("Error fetching initial data!");
+      }
+    };
+
+    fetchData();
   }, []);
 
   const fetchClassSchedules = async () => {
@@ -87,15 +86,8 @@ function Students() {
       setClassSchedules(schedules);
     } catch (error) {
       console.error("Failed to fetch class schedules", error);
-      // Optionally show an error message to the user
     }
   };
-
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
 
   const fetchStudents = async () => {
     try {
@@ -103,8 +95,8 @@ function Students() {
       const formattedRows = data.map((student) => ({
         id: student.id,
         name: student.name,
-        level: typeof student.level === "number" ? getLevelNameById(student.level) : student.level,
-        age: student.age,
+        level: student.level, // Hiển thị tên level trong cột
+        yearOfBirth: student.yearOfBirth,
         phone: student.phone,
         avatar: (
           <Box display="flex" justifyContent="center">
@@ -124,16 +116,15 @@ function Students() {
         imgUrl: student.imgUrl,
         startDate: student.startDate,
         endDate: student.endDate,
-        // Thay đổi này: thay vì chỉ hiển thị note, giờ hiển thị thông tin lịch học
         note: formatSchedule(student),
-        rawLevel: student.level,
+        rawLevel: student.level, // Lưu giá trị thô để dùng trong edit
         actions: (
           <>
             <IconButton
               sx={{
                 backgroundColor: colors.midGreen,
                 color: colors.white,
-                " &:hover": { backgroundColor: colors.highlightGreen },
+                "&:hover": { backgroundColor: colors.highlightGreen },
               }}
               onClick={() => handleEdit(student)}
             >
@@ -148,33 +139,24 @@ function Students() {
       setRows(formattedRows);
     } catch (err) {
       setError("Error fetching students!");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
   const formatSchedule = (student) => {
     let scheduleInfo = "";
-
-    // Thêm thông tin lớp học
     if (student.class && student.class.name) {
       scheduleInfo += `Class: ${student.class.name}`;
     }
-
-    // Thêm thông tin lịch học
     if (student.schedule) {
       const { startTime, endTime, dayOfWeek } = student.schedule;
-
-      // Định dạng ngày trong tuần (1-Thứ Hai, 2-Thứ Ba, vv.)
       const dayNames = ["", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
       const dayName = dayNames[dayOfWeek] || "";
-
-      // Nếu đã có thông tin lớp thì thêm dòng mới
       if (scheduleInfo) scheduleInfo += "\n";
-
-      // Thêm thông tin thời gian
       scheduleInfo += `${dayName}: ${startTime?.substring(0, 5)} - ${endTime?.substring(0, 5)}`;
     }
-
     return scheduleInfo || "N/A";
   };
 
@@ -183,14 +165,13 @@ function Students() {
     setSelectedStudent(student);
     setStudentData({
       name: student.name,
-      username: student.username,
-      password: student.password,
-      age: student.age,
+      username: student.username || "",
+      password: student.password || "",
+      yearOfBirth: student.yearOfBirth,
       phone: student.phone,
       imgUrl: student.imgUrl,
       classID: student.classID,
-      schedule: student.schedule,
-      level: student.rawLevel || student.level,
+      level: student.rawLevel, // Sử dụng rawLevel để giữ giá trị gốc
       startDate: student.startDate,
       endDate: student.endDate,
       note: student.note,
@@ -206,50 +187,38 @@ function Students() {
         setRows(rows.filter((row) => row.id !== id));
       } catch (err) {
         alert("Error deleting student!");
+        console.error(err);
       }
     }
   };
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setUploadingImage(true);
       try {
-        // Create a preview of the image
         const reader = new FileReader();
         reader.onloadend = () => {
           setPreviewImage(reader.result);
         };
         reader.readAsDataURL(file);
-
-        // Set the file in studentData
-        setStudentData((prev) => ({
-          ...prev,
-          file: file,
-        }));
+        setStudentData((prev) => ({ ...prev, file }));
       } catch (error) {
         console.error("Error uploading image:", error);
-        setSnackbar({
-          open: true,
-          message: "Error uploading image",
-          severity: "error",
-        });
       } finally {
         setUploadingImage(false);
       }
     }
   };
 
-  // Updated handleSave method to support edit and file upload
   const handleSave = async () => {
     try {
-      // Prepare student data for submission
       const dataToSubmit = {
         name: studentData.name,
         username: studentData.username,
         password: studentData.password,
-        age: studentData.age,
+        yearOfBirth: studentData.yearOfBirth,
         classID: studentData.classID,
-        // schedule: studentData.schedule,
         phone: studentData.phone,
         level: studentData.level,
         startDate: studentData.startDate,
@@ -258,25 +227,19 @@ function Students() {
       };
 
       if (editMode && selectedStudent) {
-        // If editing an existing student
         const updatedStudent = await studentService.editStudent(
           selectedStudent.id,
           dataToSubmit,
           studentData.file
         );
-
-        // Update the rows state
         setRows(
           rows.map((row) =>
             row.id === selectedStudent.id
               ? {
                   ...row,
                   name: updatedStudent.name,
-                  level:
-                    typeof updatedStudent.level === "number"
-                      ? getLevelNameById(updatedStudent.level)
-                      : updatedStudent.level,
-                  age: updatedStudent.age,
+                  level: updatedStudent.level, // Cập nhật tên level
+                  yearOfBirth: updatedStudent.yearOfBirth,
                   phone: updatedStudent.phone,
                   avatar: (
                     <Box display="flex" justifyContent="center">
@@ -294,30 +257,23 @@ function Students() {
                     </Box>
                   ),
                   imgUrl: updatedStudent.imgUrl,
+                  startDate: updatedStudent.startDate,
+                  endDate: updatedStudent.endDate,
                   note: formatSchedule(updatedStudent),
+                  rawLevel: updatedStudent.level,
                 }
               : row
           )
         );
-
-        setSnackbar({
-          open: true,
-          message: "Student updated successfully",
-          severity: "success",
-        });
       }
 
-      // Close the dialog
       setOpen(false);
-
-      // Reset form
       setStudentData({
         name: "",
         level: "",
-        age: "",
+        yearOfBirth: "",
         phone: "",
         classID: "",
-        // schedule: "",
         imgUrl: "",
         startDate: "",
         endDate: "",
@@ -328,21 +284,10 @@ function Students() {
       setSelectedStudent(null);
     } catch (error) {
       console.error("Error saving student:", error);
-      setSnackbar({
-        open: true,
-        message: error.toString(),
-        severity: "error",
-      });
+      alert("Error saving student!");
     }
   };
 
-  // Handle closing the snackbar
-  const handleCloseSnackbar = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackbar({ ...snackbar, open: false });
-  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -370,7 +315,7 @@ function Students() {
                   sx={{
                     backgroundColor: colors.midGreen,
                     color: colors.white,
-                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                    "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
                   }}
                   onClick={() => navigate("/students/create-student")}
                 >
@@ -415,7 +360,7 @@ function Students() {
           />
           <TextField
             select
-            label="level"
+            label="Level"
             fullWidth
             sx={{
               "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
@@ -427,9 +372,7 @@ function Students() {
             }}
             margin="normal"
             value={studentData.level}
-            onChange={(e) => {
-              setStudentData({ ...studentData, level: e.target.value });
-            }}
+            onChange={(e) => setStudentData({ ...studentData, level: e.target.value })}
           >
             {levels.map((level) => (
               <MenuItem key={level.id} value={level.id}>
@@ -438,11 +381,13 @@ function Students() {
             ))}
           </TextField>
           <TextField
-            label="Age"
             fullWidth
             margin="normal"
-            value={studentData.age}
-            onChange={(e) => setStudentData({ ...studentData, age: e.target.value })}
+            type="date"
+            label="Year of birth"
+            InputLabelProps={{ shrink: true }}
+            value={studentData.yearOfBirth}
+            onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
           />
           <TextField
             label="Phone"
@@ -451,14 +396,10 @@ function Students() {
             value={studentData.phone}
             onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
           />
-
-          {/* Phần upload ảnh đại diện */}
           <Box sx={{ mt: 3, mb: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
               Student Avatar
             </Typography>
-
-            {/* Hiển thị preview ảnh */}
             {previewImage && (
               <Box display="flex" justifyContent="center" mb={2}>
                 <Avatar
@@ -474,8 +415,6 @@ function Students() {
                 </Avatar>
               </Box>
             )}
-
-            {/* File input hidden */}
             <input
               type="file"
               accept="image/*"
@@ -483,8 +422,6 @@ function Students() {
               ref={fileInputRef}
               onChange={handleFileChange}
             />
-
-            {/* Button to trigger file dialog */}
             <Box
               sx={{
                 display: "flex",
@@ -513,7 +450,6 @@ function Students() {
               </Button>
             </Box>
           </Box>
-
           <TextField
             select
             label="Class Schedule"
@@ -524,8 +460,7 @@ function Students() {
               const selectedClassSchedule = classSchedules.find((cs) => cs.id === e.target.value);
               setStudentData({
                 ...studentData,
-                classID: selectedClassSchedule.class.id,
-                // schedule: selectedClassSchedule.schedule.id,
+                classID: selectedClassSchedule ? selectedClassSchedule.class.id : "",
               });
             }}
             renderValue={(selectedValue) => {
@@ -592,7 +527,7 @@ function Students() {
         <DialogActions>
           <Button
             onClick={() => setOpen(false)}
-            sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+            sx={{ color: colors.midGreen, "&:hover": { color: colors.darkGreen } }}
           >
             Cancel
           </Button>
@@ -601,7 +536,7 @@ function Students() {
             sx={{
               backgroundColor: colors.midGreen,
               color: colors.white,
-              " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+              "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
             }}
           >
             {editMode ? "Save" : "Create"}

@@ -15,6 +15,18 @@ const classTestScheduleSerivce = {
       throw error.response?.data?.message || "Error fetching class test schedule list";
     }
   },
+  getClassTestScheduleByID: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/classTestSchedule/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching class test schedule list";
+    }
+  },
 
   createClassTestSchedule: async (data) => {
     try {

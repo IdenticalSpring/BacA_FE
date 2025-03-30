@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Layout,
   Typography,
@@ -11,9 +11,7 @@ import {
   Divider,
   Drawer,
   Grid,
-  Comment,
   List,
-  Tabs,
   Empty,
   Badge,
 } from "antd";
@@ -22,17 +20,13 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  LikeOutlined,
-  MessageOutlined,
-  ShareAltOutlined,
   BookOutlined,
-  LinkOutlined,
   FileTextOutlined,
   SoundOutlined,
-  ExclamationCircleOutlined,
   TrophyOutlined,
   BellOutlined,
   QuestionCircleOutlined,
+  LinkOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -41,16 +35,14 @@ import studentService from "services/studentService";
 import { jwtDecode } from "jwt-decode";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import lessonService from "services/lessonService";
-import StudentScoreModal from "./studentScoreTab";
+import StudentScoreTab from "./studentScoreTab";
 import homeWorkService from "services/homeWorkService";
 import { message } from "antd";
-import StudentScoreTab from "./studentScoreTab";
 import { colors } from "pages/teachers/sidebar";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
-const { TabPane } = Tabs;
 
 const StudentPage = () => {
   const [classes, setClasses] = useState([]);
@@ -63,18 +55,17 @@ const StudentPage = () => {
   const userName = userId.username || "Student";
   const [lessonsBySchedule, setLessonsBySchedule] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("lesson");
+  const [activeTab, setActiveTab] = useState("scores");
   const [loadingHomework, setLoadingHomework] = useState(false);
-  const [notificationsCount, setNotificationsCount] = useState(3); // Example notification count
-  const [helpModalVisible, setHelpModalVisible] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(3);
 
-  // Use Ant Design's Grid breakpoints
+  // Refs cho từng section
+  const scoresRef = useRef(null);
+  const lessonsRef = useRef(null);
+  const homeworkRef = useRef(null);
+
   const screens = useBreakpoint();
-
-  // Determine if we're on mobile or tablet
   const isMobile = !screens.md;
-  const isTablet = screens.md && !screens.lg;
-  const isDesktop = screens.lg;
 
   useEffect(() => {
     const fetchStudentById = async () => {
@@ -115,14 +106,9 @@ const StudentPage = () => {
           const data = await lessonService.getLessonById(findSelectedLessonBySchedule.lessonID);
           setLessons([data]);
 
-          console.log("data", findSelectedLessonBySchedule);
-
-          // Kiểm tra xem có homeworkId trong lessonBySchedule không
           if (findSelectedLessonBySchedule.homeWorkId) {
-            // Gọi API để lấy bài tập sử dụng homeworkId từ lessonBySchedule
             fetchHomeworkByLesson(findSelectedLessonBySchedule.homeWorkId);
           } else {
-            // Sử dụng lessonBySchedule ID nếu không có homeworkId
             fetchHomeworkByLesson(findSelectedLessonBySchedule.id);
           }
         } catch (error) {
@@ -138,7 +124,6 @@ const StudentPage = () => {
     }
   }, [selectedLessonBySchedule]);
 
-  // Hàm lấy dữ liệu bài tập từ API
   const fetchHomeworkByLesson = async (homeworkId) => {
     try {
       setLoadingHomework(true);
@@ -150,18 +135,6 @@ const StudentPage = () => {
     } finally {
       setLoadingHomework(false);
     }
-  };
-
-  const showHelpModal = () => {
-    setHelpModalVisible(true);
-  };
-
-  const handleHelpModalClose = () => {
-    setHelpModalVisible(false);
-  };
-
-  const handleViewNotification = () => {
-    message.info("Comming soon...");
   };
 
   const handleLogout = () => {
@@ -180,51 +153,25 @@ const StudentPage = () => {
     setSidebarVisible(!sidebarVisible);
   };
 
-  // Toolbox handlers
-  const handleAddStudent = () => console.log("Add assignment");
-  const [scoreModalVisible, setScoreModalVisible] = useState(false);
-
-  // Update the handleViewScore function
-  const handleViewScore = () => {
-    setScoreModalVisible(true);
+  const handleViewNotification = () => {
+    message.info("Coming soon...");
   };
 
-  // Add this right before the return statement
-  const handleCloseScoreModal = () => {
-    setScoreModalVisible(false);
-  };
-  const handleDeleteClass = () => console.log("Review lesson");
-  const handleViewReport = () => console.log("Enter test scores");
   const showComingSoon = () => {
     message.info("Coming soon!");
   };
-  //
+
   const menu = (
     <Menu style={{ backgroundColor: colors.paleGreen, borderRadius: "8px" }}>
       <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
         Profile
       </Menu.Item>
-      <Menu.Item key="policy" icon={<ExclamationCircleOutlined />} onClick={showComingSoon}>
-        Policy
-      </Menu.Item>
-      <Menu.Item key="feedback" icon={<MessageOutlined />} onClick={showComingSoon}>
-        Feedback
-      </Menu.Item>
-      <Menu.Item
-        key="logout"
-        icon={<LogoutOutlined />}
-        onClick={handleLogout}
-        style={{
-          color: colors.darkGreen,
-          "&:hover": { backgroundColor: colors.mintGreen },
-        }}
-      >
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
         Đăng xuất
       </Menu.Item>
     </Menu>
   );
 
-  // Function to generate a random time for demo purposes
   const getRandomTime = () => {
     const hours = Math.floor(Math.random() * 12) + 1;
     const minutes = Math.floor(Math.random() * 60);
@@ -243,14 +190,25 @@ const StudentPage = () => {
     />
   );
 
-  const handleTabChange = (key) => {
-    setActiveTab(key);
+  const scrollToSection = (ref) => {
+    ref.current.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Xử lý nộp bài tập
-  const handleSubmitHomework = (homeworkId) => {
-    console.log("Nộp bài tập ID:", homeworkId);
-    // Thêm logic xử lý nộp bài ở đây
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case "scores":
+        scrollToSection(scoresRef);
+        break;
+      case "lessons":
+        scrollToSection(lessonsRef);
+        break;
+      case "homework":
+        scrollToSection(homeworkRef);
+        break;
+      default:
+        break;
+    }
   };
 
   const renderLessonContent = () => (
@@ -281,14 +239,12 @@ const StudentPage = () => {
               </Text>
             </div>
           </div>
-
           <Paragraph
             ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
             style={{ marginBottom: 16 }}
           >
             {lesson.description || " "}
           </Paragraph>
-
           {(lesson.linkYoutube || lesson.linkSpeech) && (
             <div
               style={{
@@ -320,7 +276,6 @@ const StudentPage = () => {
               )}
             </div>
           )}
-
           <Divider style={{ margin: "12px 0" }} />
         </Card>
       )}
@@ -348,10 +303,7 @@ const StudentPage = () => {
             >
               <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
                 <Avatar
-                  style={{
-                    backgroundColor: colors.mintGreen,
-                    color: colors.deepGreen,
-                  }}
+                  style={{ backgroundColor: colors.mintGreen, color: colors.deepGreen }}
                   icon={<FileTextOutlined />}
                   size={40}
                 />
@@ -365,14 +317,12 @@ const StudentPage = () => {
                   </Text>
                 </div>
               </div>
-
               <Paragraph
                 ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
                 style={{ marginBottom: 16 }}
               >
                 {hw.description || "Chưa có mô tả cho bài tập này."}
               </Paragraph>
-
               {hw.linkSpeech && (
                 <div
                   style={{
@@ -388,15 +338,10 @@ const StudentPage = () => {
                       Audio bài tập:
                     </Text>
                   </div>
-                  <audio
-                    controls
-                    crossOrigin="anonymous"
-                    style={{ width: "100%", marginTop: hw.linkYoutube ? 16 : 0 }}
-                  >
+                  <audio controls style={{ width: "100%", marginTop: hw.linkYoutube ? 16 : 0 }}>
                     <source src={hw.linkSpeech} type="audio/mpeg" />
                     Trình duyệt của bạn không hỗ trợ phát audio.
                   </audio>
-
                   <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
                     <Button
                       type="link"
@@ -410,15 +355,11 @@ const StudentPage = () => {
                   </div>
                 </div>
               )}
-
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   type="primary"
-                  onClick={() => handleSubmitHomework(hw.id)}
-                  style={{
-                    backgroundColor: colors.deepGreen,
-                    borderColor: colors.deepGreen,
-                  }}
+                  onClick={() => console.log("Nộp bài tập ID:", hw.id)}
+                  style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
                 >
                   {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
                 </Button>
@@ -443,14 +384,11 @@ const StudentPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* Desktop Sidebar */}
       {!isMobile && (
         <div style={{ width: "260px", height: "100%", position: "fixed", zIndex: 1001 }}>
           <SidebarComponent />
         </div>
       )}
-
-      {/* Mobile Drawer Sidebar */}
       {isMobile && (
         <Drawer
           placement="left"
@@ -464,7 +402,6 @@ const StudentPage = () => {
           <SidebarComponent />
         </Drawer>
       )}
-
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
         <Header
           style={{
@@ -486,11 +423,7 @@ const StudentPage = () => {
                 type="text"
                 icon={sidebarVisible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
                 onClick={toggleSidebar}
-                style={{
-                  fontSize: "16px",
-                  marginRight: "12px",
-                  color: colors.darkGreen,
-                }}
+                style={{ fontSize: "16px", marginRight: "12px", color: colors.darkGreen }}
               />
             )}
             <Title
@@ -507,9 +440,7 @@ const StudentPage = () => {
               Happy Class
             </Title>
           </div>
-
           <div style={{ display: "flex", alignItems: "center" }}>
-            {/* Notification Bell */}
             <Button
               type="text"
               onClick={handleViewNotification}
@@ -524,20 +455,6 @@ const StudentPage = () => {
                 <BellOutlined style={{ fontSize: 20 }} />
               </Badge>
             </Button>
-
-            {/* Help/Question Icon */}
-            <Button
-              type="text"
-              onClick={showHelpModal}
-              style={{
-                marginRight: 12,
-                color: colors.darkGreen,
-              }}
-            >
-              <QuestionCircleOutlined style={{ fontSize: 20 }} />
-            </Button>
-
-            {/* User Dropdown remains the same */}
             <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
               <Avatar
                 style={{
@@ -554,12 +471,7 @@ const StudentPage = () => {
           </div>
         </Header>
 
-        <Content
-          style={{
-            padding: isMobile ? "10px" : "10px",
-            marginBottom: selectedLessonBySchedule ? (isMobile ? 140 : 70) : 0,
-          }}
-        >
+        <Content style={{ padding: isMobile ? "10px" : "20px", marginBottom: 70 }}>
           {!selectedLessonBySchedule ? (
             <div
               style={{
@@ -598,80 +510,87 @@ const StudentPage = () => {
             </div>
           ) : (
             <div>
-              <Tabs
-                activeKey={activeTab}
-                onChange={handleTabChange}
-                type="card"
-                style={{
-                  marginBottom: 16,
-                }}
-              >
-                <TabPane
-                  tab={
-                    <span>
-                      <TrophyOutlined /> Điểm Số
-                    </span>
-                  }
-                  key="scores"
-                >
-                  <StudentScoreTab studentId={studentId} colors={colors} />
-                </TabPane>
-                <TabPane
-                  tab={
-                    <span>
-                      <BookOutlined /> Bài Học
-                    </span>
-                  }
-                  key="lesson"
-                >
-                  {renderLessonContent()}
-                </TabPane>
-                <TabPane
-                  tab={
-                    <span>
-                      <FileTextOutlined /> Bài Tập
-                    </span>
-                  }
-                  key="homework"
-                >
-                  {renderHomeworkContent()}
-                </TabPane>
-              </Tabs>
+              {/* Các section */}
+              <div ref={scoresRef}>
+                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+                  <TrophyOutlined /> Điểm Số
+                </Title>
+                <StudentScoreTab studentId={studentId} colors={colors} />
+                <Divider />
+              </div>
+
+              <div ref={lessonsRef}>
+                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+                  <BookOutlined /> Bài Học
+                </Title>
+                {renderLessonContent()}
+                <Divider />
+              </div>
+
+              <div ref={homeworkRef}>
+                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+                  <FileTextOutlined /> Bài Tập
+                </Title>
+                {renderHomeworkContent()}
+              </div>
             </div>
           )}
         </Content>
 
+        {/* Thanh tab điều hướng ở dưới */}
         {selectedLessonBySchedule && (
           <div
             style={{
               position: "fixed",
               bottom: 0,
-              width: isMobile ? "100%" : `calc(100% - 260px)`,
+              left: isMobile ? 0 : 260,
               right: 0,
               backgroundColor: colors.white,
               borderTop: `1px solid ${colors.borderGreen}`,
-              zIndex: 1000,
+              zIndex: 999,
+              padding: "10px 0",
+              display: "flex",
+              justifyContent: "center",
               boxShadow: `0 -2px 8px ${colors.softShadow}`,
-              padding: isMobile ? "12px 8px" : "12px 0",
             }}
           >
-            <Toolbox
-              onAddStudent={handleAddStudent}
-              viewScores={handleViewScore}
-              onDeleteClass={handleDeleteClass}
-              onViewReport={handleViewReport}
-              colors={colors}
-              isMobile={isMobile}
-              isTablet={isTablet}
-            />
+            <Space size="large">
+              <Button
+                type={activeTab === "scores" ? "primary" : "link"}
+                icon={<TrophyOutlined />}
+                onClick={() => handleTabClick("scores")}
+                style={{
+                  backgroundColor: activeTab === "scores" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "scores" ? colors.deepGreen : colors.borderGreen,
+                }}
+              >
+                Điểm Số
+              </Button>
+              <Button
+                type={activeTab === "lessons" ? "primary" : "link"}
+                icon={<BookOutlined />}
+                onClick={() => handleTabClick("lessons")}
+                style={{
+                  backgroundColor: activeTab === "lessons" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "lessons" ? colors.deepGreen : colors.borderGreen,
+                }}
+              >
+                Bài Học
+              </Button>
+              <Button
+                type={activeTab === "homework" ? "primary" : "link"}
+                icon={<FileTextOutlined />}
+                onClick={() => handleTabClick("homework")}
+                style={{
+                  backgroundColor: activeTab === "homework" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "homework" ? colors.deepGreen : colors.borderGreen,
+                }}
+              >
+                Bài Tập
+              </Button>
+            </Space>
           </div>
         )}
-        {/* <StudentScoreModal
-          visible={scoreModalVisible}
-          onCancel={handleCloseScoreModal}
-          studentId={studentId}
-          colors={colors}
-        /> */}
       </Layout>
     </Layout>
   );

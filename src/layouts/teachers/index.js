@@ -34,7 +34,7 @@ function Teachers() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "30%" },
-    { Header: "Level", accessor: "level", width: "30%" },
+    // { Header: "Level", accessor: "level", width: "30%" },
     { Header: "Start Date", accessor: "startDate", width: "30%" },
     { Header: "End Date", accessor: "endDate", width: "30%" },
     { Header: "Actions", accessor: "actions", width: "20%" },

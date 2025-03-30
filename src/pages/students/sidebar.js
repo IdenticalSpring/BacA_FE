@@ -152,7 +152,7 @@ const Sidebar = ({
                   >
                     {daysOfWeek[item.schedule.dayOfWeek]}
                   </Text>
-                  <Text
+                  {/* <Text
                     style={{
                       color: colors.darkGray,
                       fontSize: isMobile ? "0.8rem" : "0.9rem",
@@ -162,7 +162,7 @@ const Sidebar = ({
                     }}
                   >
                     {`${item.schedule.startTime} - ${item.schedule.endTime}`}
-                  </Text>
+                  </Text> */}
                 </div>
               </div>
             </List.Item>

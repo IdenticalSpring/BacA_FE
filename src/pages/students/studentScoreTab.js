@@ -25,12 +25,13 @@ import {
 import studentScoreService from "services/studentScoreService";
 import studentService from "services/studentService";
 import PropTypes from "prop-types";
+import classTestScheduleSerivce from "services/classTestScheduleService";
 
 const { Title, Text } = Typography;
 
 const StudentScoreTab = ({ studentId, colors }) => {
   const [loading, setLoading] = useState(false);
-  const [scoreData, setScoreData] = useState([]);
+  const [scoreDetailsData, setScoreDetailsData] = useState([]);
   const [studentInfo, setStudentInfo] = useState(null);
   const [error, setError] = useState(null);
 
@@ -42,30 +43,63 @@ const StudentScoreTab = ({ studentId, colors }) => {
       setError(null);
 
       try {
-        // Fetch student scores
-        const scoreData = await studentScoreService.getScorebyStudentID(studentId);
+        // Fetch detailed scores
+        const scoreDetails = await studentScoreService.getScoreDetailsByStudentId(studentId);
+        const sortedScoreDetails = Array.isArray(scoreDetails) ? [...scoreDetails] : [scoreDetails];
 
-        // Ensure we have an array and sort by date (most recent first)
-        const sortedScoreData = Array.isArray(scoreData) ? [...scoreData] : [scoreData];
+        // Get unique classTestScheduleIDs
+        const uniqueScheduleIds = [
+          ...new Set(sortedScoreDetails.map((score) => score.studentScore.classTestScheduleID)),
+        ];
 
-        // Sort by date (most recent first)
-        sortedScoreData.sort((a, b) => {
-          const dateA = a.classTestSchedule?.date
-            ? new Date(a.classTestSchedule.date)
-            : new Date(0);
-          const dateB = b.classTestSchedule?.date
-            ? new Date(b.classTestSchedule.date)
-            : new Date(0);
-          return dateB - dateA; // Descending order (newest first)
+        // Fetch class test schedule details
+        const testSchedules = await Promise.all(
+          uniqueScheduleIds.map(async (id) => {
+            const schedule = await classTestScheduleSerivce.getClassTestScheduleByID(id);
+            return {
+              id,
+              testName: schedule.test?.name || "Bài kiểm tra",
+              date: schedule.date || "N/A",
+            };
+          })
+        );
+
+        // Integrate test schedule info into score details
+        const enrichedScoreDetails = sortedScoreDetails.map((score) => {
+          const schedule = testSchedules.find(
+            (s) => s.id === score.studentScore.classTestScheduleID
+          );
+          return {
+            ...score,
+            studentScore: {
+              ...score.studentScore,
+              classTestSchedule: {
+                ...score.studentScore.classTestSchedule,
+                testName: schedule?.testName,
+                date: schedule?.date,
+              },
+            },
+          };
         });
 
-        setScoreData(sortedScoreData);
+        // Sort by date (most recent first)
+        enrichedScoreDetails.sort((a, b) => {
+          const dateA = a.studentScore?.classTestSchedule?.date
+            ? new Date(a.studentScore.classTestSchedule.date)
+            : new Date(0);
+          const dateB = b.studentScore?.classTestSchedule?.date
+            ? new Date(b.studentScore.classTestSchedule.date)
+            : new Date(0);
+          return dateB - dateA;
+        });
+
+        setScoreDetailsData(enrichedScoreDetails);
 
         // Fetch student information
         const studentData = await studentService.getStudentById(studentId);
         setStudentInfo(studentData);
 
-        console.log("Score data retrieved and sorted:", sortedScoreData);
+        console.log("Enriched score details retrieved and sorted:", enrichedScoreDetails);
         console.log("Student data retrieved:", studentData);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -78,30 +112,50 @@ const StudentScoreTab = ({ studentId, colors }) => {
     fetchData();
   }, [studentId]);
 
-  // Get the most recent test scores
-  const getMostRecentScores = () => {
-    if (!scoreData || scoreData.length === 0) return null;
-    return scoreData[0]; // First item is the most recent due to our sorting
+  const groupScoresByTest = () => {
+    const grouped = {};
+    scoreDetailsData.forEach((score) => {
+      const key = score.studentScoreID;
+      if (!grouped[key]) {
+        grouped[key] = {
+          studentScoreID: score.studentScoreID,
+          testName: score.studentScore.classTestSchedule?.testName || "Bài kiểm tra",
+          date: score.studentScore.classTestSchedule?.date || "N/A",
+          writingScore: null,
+          readingScore: null,
+          speakingScore: null,
+          listeningScore: null,
+        };
+      }
+      const skillName = score.testSkill.name.toLowerCase();
+      grouped[key][`${skillName}Score`] = score.score;
+    });
+    return Object.values(grouped).sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : new Date(0);
+      const dateB = b.date ? new Date(b.date) : new Date(0);
+      return dateB - dateA;
+    });
   };
 
-  // Calculate average score using only the most recent test
-  const calculateAverage = () => {
-    if (!scoreData || scoreData.length === 0) return 0;
+  const getMostRecentScores = () => {
+    const groupedScores = groupScoresByTest();
+    if (!groupedScores || groupedScores.length === 0) return null;
+    return groupedScores[0];
+  };
 
-    // Just use the first item in the sorted array (most recent)
-    const mostRecentScore = scoreData[0];
+  const calculateAverage = () => {
+    const mostRecentScore = getMostRecentScores();
+    if (!mostRecentScore) return 0;
 
     const writingScore = parseFloat(mostRecentScore.writingScore) || 0;
     const readingScore = parseFloat(mostRecentScore.readingScore) || 0;
     const speakingScore = parseFloat(mostRecentScore.speakingScore) || 0;
     const listeningScore = parseFloat(mostRecentScore.listeningScore) || 0;
 
-    // Calculate average of the four scores
     const average = (writingScore + readingScore + speakingScore + listeningScore) / 4;
     return average.toFixed(1);
   };
 
-  // Get score color based on score value
   const getScoreColor = (score) => {
     score = parseFloat(score);
     if (isNaN(score)) return colors.lightGreen || "#d9d9d9";
@@ -111,13 +165,12 @@ const StudentScoreTab = ({ studentId, colors }) => {
     return "#f5222d";
   };
 
-  // Calculate the progress percent for the circular progress
   const getProgressPercent = () => {
     const avg = parseFloat(calculateAverage());
     return Math.min(Math.round((avg / 10) * 100), 100);
   };
 
-  // Get most recent scores for display
+  const groupedScores = groupScoresByTest();
   const recentScores = getMostRecentScores();
 
   if (loading) {
@@ -159,10 +212,9 @@ const StudentScoreTab = ({ studentId, colors }) => {
                 backgroundColor: colors.deepGreen || "#1890ff",
                 boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
               }}
-              src={studentInfo?.avatarUrl}
+              src={studentInfo?.imgUrl}
             />
           </Col>
-
           <Col xs={24} sm={10} md={11}>
             <Title level={4} style={{ margin: "0 0 8px 0", color: colors.darkGreen }}>
               {studentInfo?.name || "Học sinh"}
@@ -179,7 +231,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
               </Text>
             </Space>
           </Col>
-
           <Col xs={24} sm={8} style={{ textAlign: "center" }}>
             <Progress
               type="circle"
@@ -205,7 +256,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
         </Row>
       </Card>
 
-      {/* Chi tiết điểm của bài thi gần nhất */}
       {recentScores && (
         <Card
           title={
@@ -318,11 +368,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
               </Card>
             </Col>
           </Row>
-          {recentScores.classTestSchedule?.date && (
+          {recentScores.date && (
             <div style={{ marginTop: 12, textAlign: "center" }}>
               <Text type="secondary">
-                Bài thi: {recentScores.testName || recentScores.examName || "Bài kiểm tra"} | Ngày
-                thi: {recentScores.classTestSchedule.date}
+                Bài thi: {recentScores.testName || "Bài kiểm tra"} | Ngày thi: {recentScores.date}
               </Text>
             </div>
           )}
@@ -336,117 +385,155 @@ const StudentScoreTab = ({ studentId, colors }) => {
         </Space>
       </Divider>
 
-      {scoreData && scoreData.length > 0 ? (
-        <div className="score-history-table" style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              border: `1px solid ${colors.borderGreen}`,
-            }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: colors.paleGreen }}>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Bài kiểm tra
-                </th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Ngày thi
-                </th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Viết</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Đọc</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Nói</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Nghe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scoreData.map((score, index) => (
-                <tr key={index}>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.testName || score.examName || "Bài kiểm tra"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.classTestSchedule?.date || "N/A"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.writingScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.writingScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.readingScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.readingScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.speakingScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.speakingScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.listeningScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.listeningScore || "N/A"}
-                    </Tag>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {groupedScores && groupedScores.length > 0 ? (
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          {/* Bảng thông tin bài thi */}
+          <Col xs={24} md={12}>
+            <div className="test-info-table" style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  border: `1px solid ${colors.borderGreen}`,
+                }}
+              >
+                <thead>
+                  <tr style={{ backgroundColor: colors.paleGreen }}>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Bài kiểm tra
+                    </th>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Ngày thi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedScores.map((score, index) => (
+                    <tr key={index}>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        {score.testName}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        {score.date}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Col>
+
+          {/* Bảng điểm số */}
+          <Col xs={24} md={12}>
+            <div className="score-table" style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  border: `1px solid ${colors.borderGreen}`,
+                }}
+              >
+                <thead>
+                  <tr style={{ backgroundColor: colors.paleGreen }}>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Viết
+                    </th>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Đọc
+                    </th>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Nói
+                    </th>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Nghe
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedScores.map((score, index) => (
+                    <tr key={index}>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Tag
+                          color={getScoreColor(score.writingScore)}
+                          style={{ fontSize: "14px", padding: "1px 8px" }}
+                        >
+                          {score.writingScore || "N/A"}
+                        </Tag>
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Tag
+                          color={getScoreColor(score.readingScore)}
+                          style={{ fontSize: "14px", padding: "1px 8px" }}
+                        >
+                          {score.readingScore || "N/A"}
+                        </Tag>
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Tag
+                          color={getScoreColor(score.speakingScore)}
+                          style={{ fontSize: "14px", padding: "1px 8px" }}
+                        >
+                          {score.speakingScore || "N/A"}
+                        </Tag>
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Tag
+                          color={getScoreColor(score.listeningScore)}
+                          style={{ fontSize: "14px", padding: "1px 8px" }}
+                        >
+                          {score.listeningScore || "N/A"}
+                        </Tag>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Col>
+        </Row>
       ) : (
         <Empty description="Chưa có dữ liệu điểm số" style={{ padding: "30px 0" }} />
       )}
     </>
   );
 };
+
 const ColorPropTypes = PropTypes.shape({
   lightGreen: PropTypes.string,
   deepGreen: PropTypes.string,
@@ -456,7 +543,6 @@ const ColorPropTypes = PropTypes.shape({
   borderGreen: PropTypes.string,
 });
 
-// Assuming the component is named StudentScoreTab
 StudentScoreTab.propTypes = {
   studentId: PropTypes.string.isRequired,
   colors: ColorPropTypes.isRequired,
