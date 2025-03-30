@@ -10,6 +10,8 @@ import LessonBySchedule from "./LessonBySchedule";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
+import notificationService from "services/notificationService";
+import user_notificationService from "services/user_notificationService";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -29,6 +31,8 @@ export default function CreateLesson({
   loadingTTSLesson,
   setLoadingTTSLesson,
   level,
+  classID,
+  students,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -125,9 +129,35 @@ export default function CreateLesson({
       }
 
       const lessonData = await lessonService.createLesson(formData);
+      let detailStr = "Bạn mới có bài học mới vào ngày:";
       for (const item of selected) {
-        await lessonByScheduleService.updateLessonOfLessonBySchedule(item, lessonData.id);
+        const data = await lessonByScheduleService.updateLessonOfLessonBySchedule(
+          item,
+          lessonData.id
+        );
+
+        detailStr += " " + data.date.toString();
       }
+
+      const notificationData = {
+        title: "Bài học mới",
+        general: false,
+        classID: classID,
+        detail: detailStr,
+        createdAt: new Date(),
+      };
+      const notificationRes = await notificationService.createNotification(notificationData);
+      const userNotificationCreate = students.forEach(async (element) => {
+        const userNotificationData = {
+          status: false,
+          notificationID: notificationRes.id,
+          studentID: element.id,
+        };
+        const userNotificationRes = await user_notificationService.createUserNotification(
+          userNotificationData
+        );
+      });
+      // await Promise.all(userNotificationCreate);
       message.success("Lesson created successfully!");
       form.resetFields();
       setTextToSpeech("");
@@ -186,13 +216,13 @@ export default function CreateLesson({
         width: "100%",
         display: "flex",
         flexWrap: "wrap",
-        justifyContent: "right",
+        justifyContent: "space-between",
         gap: "10px",
         maxHeight: "60vh",
         overflow: "auto",
       }}
     >
-      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "59%" }}>
+      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "60%" }}>
         <Card
           style={{
             borderRadius: "12px",
@@ -363,25 +393,27 @@ export default function CreateLesson({
           setSelected={setSelected}
         />
       </div>
-      {!isMobile && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loadingCreateLesson}
-          icon={<SaveOutlined />}
-          style={{
-            borderRadius: "6px",
-            backgroundColor: colors.emerald,
-            borderColor: colors.emerald,
-            boxShadow: "0 2px 0 " + colors.softShadow,
-          }}
-          onClick={() => {
-            form.submit();
-          }}
-        >
-          Create Lesson
-        </Button>
-      )}
+      <div style={{ display: "flex", justifyContent: "right", width: "100%" }}>
+        {!isMobile && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loadingCreateLesson}
+            icon={<SaveOutlined />}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              boxShadow: "0 2px 0 " + colors.softShadow,
+            }}
+            onClick={() => {
+              form.submit();
+            }}
+          >
+            Create Lesson
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -401,4 +433,6 @@ CreateLesson.propTypes = {
   loadingTTSLesson: PropTypes.bool.isRequired,
   setLoadingTTSLesson: PropTypes.func.isRequired,
   level: PropTypes.number.isRequired, // Giả sử level là string
+  classID: PropTypes.number.isRequired, // Giả sử level là string
+  students: PropTypes.array.isRequired, // Giả sử level là string
 };

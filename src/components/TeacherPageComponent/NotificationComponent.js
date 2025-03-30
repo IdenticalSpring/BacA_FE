@@ -3,6 +3,7 @@ import { List, Badge, Modal, Typography, Space, Tag, Avatar, message } from "ant
 import { BellOutlined, NotificationOutlined } from "@ant-design/icons";
 import notificationService from "services/notificationService";
 import PropTypes from "prop-types";
+import user_notificationService from "services/user_notificationService";
 const { Title, Text, Paragraph } = Typography;
 
 // Helper function to calculate time elapsed
@@ -29,6 +30,8 @@ const NotificationSection = ({
   setNotifications,
   loadingNotification,
   errorNotification,
+  notificationsCount,
+  setNotificationsCount,
 }) => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,6 +70,9 @@ const NotificationSection = ({
   const handleModalClose = () => {
     setIsModalOpen(false);
   };
+  const handleUpdateStatusUserNotification = async (user_notificationID) => {
+    user_notificationService.editUserNotification(user_notificationID, { status: true });
+  };
   return (
     <div
       style={{
@@ -104,12 +110,20 @@ const NotificationSection = ({
         style={{ maxHeight: "400px", overflow: "auto" }}
         renderItem={(item) => (
           <List.Item
-            onClick={() => showNotificationDetail(item)}
+            onClick={() => {
+              if (item.user_notificationID && !item.status) {
+                handleUpdateStatusUserNotification(item.user_notificationID);
+                item.status = true;
+                setNotificationsCount(notificationsCount - 1);
+              }
+              showNotificationDetail(item);
+            }}
             style={{
               padding: "12px 16px",
               cursor: "pointer",
               transition: "background-color 0.3s",
               borderBottom: "1px solid #f0f0f0",
+              backgroundColor: item.status ? "rgba(124, 124, 124, 0.1)" : "",
             }}
             className="notification-item"
           >
@@ -214,4 +228,6 @@ NotificationSection.propTypes = {
   setNotifications: PropTypes.func.isRequired,
   loadingNotification: PropTypes.bool.isRequired,
   errorNotification: PropTypes.string.isRequired,
+  notificationsCount: PropTypes.number.isRequired,
+  setNotificationsCount: PropTypes.func.isRequired,
 };

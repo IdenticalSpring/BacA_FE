@@ -81,6 +81,7 @@ import TestSkillManagement from "pages/admin/testSkillManagement";
 import StudentCheckinStatistics from "layouts/Studentcheckinstatistics";
 import LevelManagement from "pages/admin/levelManagement";
 import CreateNotificationByAdmin from "layouts/notification";
+import DoHomework from "pages/students/DoHomework";
 
 const routes = [
   {
@@ -290,6 +291,14 @@ const routes = [
         <CreateNotificationByAdmin />
       </PrivateRoute>
     ),
+  },
+  {
+    // type: "collapse",
+    name: "DoHomework",
+    key: "doHomework",
+    icon: <Icon fontSize="small">doHomework</Icon>,
+    route: "/do-homework",
+    component: <DoHomework />,
   },
   // {
   //   type: "collapse",

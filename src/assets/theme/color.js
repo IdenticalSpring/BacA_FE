@@ -24,7 +24,6 @@ export const colors = {
   tableRowHover: "#F2FBF6",
   inputBorder: "#C2F0D7",
   inputFocus: "#5FAE8C",
-  // Additional light green theme colors
   softGreen: "#90EE90",
   seaGreen: "#2E8B57",
   lightMint: "#98FB98",

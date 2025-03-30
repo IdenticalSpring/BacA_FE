@@ -84,6 +84,7 @@ export default function App() {
     "/teacherpage/manageLessons",
     "/teacherpage/attendanceCheck",
     "/teacherpage/entertestscore",
+    "/do-homework",
   ];
 
   // Cache for the rtl

@@ -16,6 +16,7 @@ import {
   Tabs,
   Empty,
   Badge,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -46,12 +47,31 @@ import homeWorkService from "services/homeWorkService";
 import { message } from "antd";
 import StudentScoreTab from "./studentScoreTab";
 import { colors } from "pages/teachers/sidebar";
+import NotificationSection from "components/TeacherPageComponent/NotificationComponent";
+import notificationService from "services/notificationService";
+import user_notificationService from "services/user_notificationService";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
 const { TabPane } = Tabs;
+const getTimeElapsed = (createdAt) => {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - created) / 1000);
 
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} sec`;
+  } else if (diffInSeconds < 3600) {
+    return `${Math.floor(diffInSeconds / 60)} min`;
+  } else if (diffInSeconds < 86400) {
+    return `${Math.floor(diffInSeconds / 3600)} hr`;
+  } else {
+    return `${Math.floor(diffInSeconds / 86400)} day${
+      Math.floor(diffInSeconds / 86400) !== 1 ? "s" : ""
+    }`;
+  }
+};
 const StudentPage = () => {
   const [classes, setClasses] = useState([]);
   const [selectedLessonBySchedule, setSelectedLessonBySchedule] = useState(null);
@@ -65,9 +85,13 @@ const StudentPage = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("lesson");
   const [loadingHomework, setLoadingHomework] = useState(false);
-  const [notificationsCount, setNotificationsCount] = useState(3); // Example notification count
+  const [notificationsCount, setNotificationsCount] = useState(0); // Example notification count
   const [helpModalVisible, setHelpModalVisible] = useState(false);
-
+  const [notifications, setNotifications] = useState([]);
+  const [studentNotifications, setStudentNotifications] = useState([]);
+  const [loadingNotification, setLoadingNotification] = useState(false);
+  const [errorNotification, setErrorNotification] = useState(false);
+  const [openNotification, setOpenNotification] = useState(false);
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
 
@@ -75,7 +99,47 @@ const StudentPage = () => {
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
   const isDesktop = screens.lg;
+  useEffect(() => {
+    const fetchNotification = async () => {
+      try {
+        setLoadingNotification(true);
+        let count = 0;
+        const res = await notificationService.getAllGeneralNotifications();
+        const studentNotification = await user_notificationService.getAllUserNotificationsOfStudent(
+          studentId
+        );
+        // console.log(studentNotification);
 
+        const studentNotificationsData = studentNotification.map((noti) => {
+          if (!noti.status) {
+            count++;
+          }
+          return { ...noti.notification, status: noti.status, user_notificationID: noti.id };
+        });
+        count += res.length;
+        setNotificationsCount(count);
+        const fullData = [...res, ...studentNotificationsData];
+
+        if (res[0]?.createdAt) {
+          const sortedData = [...fullData].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          const data = sortedData.map((item) => ({
+            ...item,
+            timeElapsed: getTimeElapsed(item.createdAt),
+          }));
+          // console.log(data);
+
+          setNotifications(data);
+        }
+      } catch (error) {
+        setErrorNotification(error || "fail to fetch notification");
+      } finally {
+        setLoadingNotification(true);
+      }
+    };
+    fetchNotification();
+  }, []);
   useEffect(() => {
     const fetchStudentById = async () => {
       try {
@@ -161,7 +225,7 @@ const StudentPage = () => {
   };
 
   const handleViewNotification = () => {
-    message.info("Comming soon...");
+    setOpenNotification(!openNotification);
   };
 
   const handleLogout = () => {
@@ -673,6 +737,29 @@ const StudentPage = () => {
           colors={colors}
         /> */}
       </Layout>
+      <Modal
+        open={openNotification}
+        onCancel={() => setOpenNotification(false)}
+        footer={<></>}
+        style={{
+          position: "absolute",
+          top: "50px",
+          right: isMobile ? "10px" : "100px",
+          width: isMobile ? "350px" : "400px",
+          zIndex: "10000",
+          padding: 0,
+        }}
+        title="Notification"
+      >
+        <NotificationSection
+          notifications={notifications}
+          setNotifications={setNotifications}
+          errorNotification={errorNotification}
+          loadingNotification={loadingNotification}
+          notificationsCount={notificationsCount}
+          setNotificationsCount={setNotificationsCount}
+        />
+      </Modal>
     </Layout>
   );
 };

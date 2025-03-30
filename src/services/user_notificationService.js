@@ -15,6 +15,18 @@ const user_notificationService = {
       throw error.response?.data?.message || "Error fetching user_notification list";
     }
   },
+  getAllUserNotificationsOfStudent: async (studentId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/user_notification/student/${studentId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching user_notification list";
+    }
+  },
   getUserNotificationById: async (id) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/user_notification/${id}`, {

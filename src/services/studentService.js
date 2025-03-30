@@ -1,4 +1,5 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -22,6 +23,27 @@ const studentService = {
           "ngrok-skip-browser-warning": "true",
         },
       });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching student";
+    }
+  },
+  getStudentByIdAndLogin: async (id) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/students/find-and-login`,
+        { studentId: id },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      const token = response.data;
+      sessionStorage.setItem("token", token);
+
+      const decoded = jwtDecode(token);
+      sessionStorage.setItem("role", decoded.role);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching student";

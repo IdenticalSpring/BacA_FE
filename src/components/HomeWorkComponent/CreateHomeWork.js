@@ -10,6 +10,8 @@ import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
 import HomeWorkBySchedule from "./HomeWorkBySchedule";
 import lessonByScheduleService from "services/lessonByScheduleService";
+import notificationService from "services/notificationService";
+import user_notificationService from "services/user_notificationService";
 const { Title } = Typography;
 const { Option } = Select;
 export default function CreateHomeWork({
@@ -27,6 +29,8 @@ export default function CreateHomeWork({
   daysOfWeek,
   homeWorksData,
   setLessonByScheduleData,
+  classID,
+  students,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -105,9 +109,32 @@ export default function CreateHomeWork({
       }
 
       const homeworkData = await homeWorkService.createHomeWork(formData);
+      let detailStr = "Bạn mới có bài tập mới vào ngày:";
       for (const item of selected) {
-        await lessonByScheduleService.updateHomeWorkLessonBySchedule(item, homeworkData.id);
+        const data = await lessonByScheduleService.updateHomeWorkLessonBySchedule(
+          item,
+          homeworkData.id
+        );
+        detailStr += " " + data.date.toString();
       }
+      const notificationData = {
+        title: "Bài tập mới",
+        general: false,
+        classID: classID,
+        detail: detailStr,
+        createdAt: new Date(),
+      };
+      const notificationRes = await notificationService.createNotification(notificationData);
+      const userNotificationCreate = students.forEach(async (element) => {
+        const userNotificationData = {
+          status: false,
+          notificationID: notificationRes.id,
+          studentID: element.id,
+        };
+        const userNotificationRes = await user_notificationService.createUserNotification(
+          userNotificationData
+        );
+      });
       message.success("Homework created successfully!");
       form.resetFields();
       setTextToSpeech("");
@@ -186,13 +213,13 @@ export default function CreateHomeWork({
         width: "100%",
         display: "flex",
         flexWrap: "wrap",
-        justifyContent: "right",
+        justifyContent: "space-between",
         gap: "10px",
         maxHeight: "60vh",
         overflow: "auto",
       }}
     >
-      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "59%" }}>
+      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "60%" }}>
         <Card
           style={{
             borderRadius: "12px",
@@ -395,25 +422,27 @@ export default function CreateHomeWork({
           setSelected={setSelected}
         />
       </div>
-      {!isMobile && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loadingCreateHomeWork}
-          icon={<SaveOutlined />}
-          style={{
-            borderRadius: "6px",
-            backgroundColor: colors.emerald,
-            borderColor: colors.emerald,
-            boxShadow: "0 2px 0 " + colors.softShadow,
-          }}
-          onClick={() => {
-            form.submit();
-          }}
-        >
-          Create HomeWork
-        </Button>
-      )}
+      <div style={{ display: "flex", justifyContent: "right", width: "100%" }}>
+        {!isMobile && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loadingCreateHomeWork}
+            icon={<SaveOutlined />}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              boxShadow: "0 2px 0 " + colors.softShadow,
+            }}
+            onClick={() => {
+              form.submit();
+            }}
+          >
+            Create HomeWork
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -432,4 +461,6 @@ CreateHomeWork.propTypes = {
   homeWorksData: PropTypes.array.isRequired,
   setLessonByScheduleData: PropTypes.func.isRequired,
   level: PropTypes.number.isRequired,
+  classID: PropTypes.number.isRequired, // Giả sử level là string
+  students: PropTypes.array.isRequired, // Giả sử level là string
 };

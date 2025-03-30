@@ -1286,6 +1286,8 @@ const TeacherPage = () => {
                 loadingTTSLesson={loadingTTSLesson}
                 setLoadingTTSLesson={setLoadingTTSLesson}
                 level={classData?.level}
+                classID={selectedClass}
+                students={students}
               />
             </div>
             {/* <div
@@ -1389,6 +1391,8 @@ const TeacherPage = () => {
                 homeWorksData={homeWorksData}
                 setLessonByScheduleData={setLessonByScheduleData}
                 level={classData?.level}
+                classID={selectedClass}
+                students={students}
               />
             </div>
             {/* <div
@@ -1445,16 +1449,6 @@ const TeacherPage = () => {
           width: isMobile ? "350px" : "400px",
           zIndex: "10000",
           padding: 0,
-
-          // visibility: openNotification ? "visible" : "hidden",
-          // opacity: openNotification ? "1" : "0",
-          // transform: openNotification ? "translateY(0)" : "translateY(-20px)",
-          // transition: "opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease",
-          // boxShadow:
-          //   "0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px 0 rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03)",
-          // transition: "ease-in-out all 0.1s",
-          // maxHeight: "400px",
-          // overflow: "auto",
         }}
         title="Notification"
       >
