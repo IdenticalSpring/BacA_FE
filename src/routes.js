@@ -82,6 +82,7 @@ import StudentCheckinStatistics from "layouts/Studentcheckinstatistics";
 import LevelManagement from "pages/admin/levelManagement";
 import CreateNotificationByAdmin from "layouts/notification";
 import DoHomework from "pages/students/DoHomework";
+import ContentPageManagement from "pages/admin/contentpageManagement";
 
 const routes = [
   {
@@ -206,6 +207,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <Teachers />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Content Page",
+    key: "contentPage",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/contentPage",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <ContentPageManagement />
       </PrivateRoute>
     ),
   },

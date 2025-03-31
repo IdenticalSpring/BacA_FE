@@ -27,18 +27,18 @@ const contentPageService = {
       throw error.response?.data?.message || "Error fetching contentpage";
     }
   },
-  createContentPage: async (contentpage) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/contentpage`, contentpage, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data?.message || "Error creating contentpage";
-    }
-  },
+  //   createContentPage: async (contentpage) => {
+  //     try {
+  //       const response = await axios.post(`${API_BASE_URL}/contentpage`, contentpage, {
+  //         headers: {
+  //           "ngrok-skip-browser-warning": "true",
+  //         },
+  //       });
+  //       return response.data;
+  //     } catch (error) {
+  //       throw error.response?.data?.message || "Error creating contentpage";
+  //     }
+  //   },
 
   editContentPage: async (id, contentpage) => {
     try {
