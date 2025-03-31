@@ -16,29 +16,47 @@ const teacherService = {
     }
   },
 
-  createTeacher: async (teacherData) => {
+  createTeacher: async (teacherData, file) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/teachers`, teacherData, {
+      const formData = new FormData();
+      Object.keys(teacherData).forEach((key) => {
+        formData.append(key, teacherData[key]);
+      });
+      if (file) {
+        formData.append("file", file);
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/teachers`, formData, {
         headers: {
-          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error creating teacher";
+      console.error("Error creating teacher:", error);
+      throw error;
     }
   },
 
-  editTeacher: async (id, teacherData) => {
+  editTeacher: async (id, teacherData, file) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, teacherData, {
+      const formData = new FormData();
+      Object.keys(teacherData).forEach((key) => {
+        formData.append(key, teacherData[key]);
+      });
+      if (file) {
+        formData.append("file", file);
+      }
+
+      const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, formData, {
         headers: {
-          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error updating teacher";
+      console.error(`Error updating teacher with ID ${id}:`, error);
+      throw error;
     }
   },
 

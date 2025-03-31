@@ -18,26 +18,15 @@ import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import teacherService from "services/teacherService";
 import { useNavigate } from "react-router-dom";
-import { MenuItem } from "@mui/material";
 import { colors } from "assets/theme/color";
-const levels = [
-  "Level Pre-1",
-  "Level 1",
-  "Starters",
-  "Level-KET",
-  "Movers",
-  "Flyers",
-  "Pre-KET",
-  "level-PET",
-];
+
 function Teachers() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState([
-    { Header: "Name", accessor: "name", width: "30%" },
-    // { Header: "Level", accessor: "level", width: "30%" },
-    { Header: "Start Date", accessor: "startDate", width: "30%" },
-    { Header: "End Date", accessor: "endDate", width: "30%" },
-    { Header: "Actions", accessor: "actions", width: "20%" },
+    { Header: "Name", accessor: "name", width: "20%" },
+    { Header: "Start Date", accessor: "startDate", width: "20%" },
+    { Header: "End Date", accessor: "endDate", width: "20%" },
+    { Header: "Actions", accessor: "actions", width: "10%" },
   ]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +34,14 @@ function Teachers() {
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [teacherData, setTeacherData] = useState({ name: "", level: "" });
+  const [teacherData, setTeacherData] = useState({
+    name: "",
+    username: "",
+    password: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [file, setFile] = useState(null); // State để lưu file upload khi chỉnh sửa
 
   useEffect(() => {
     fetchTeachers();
@@ -57,9 +53,15 @@ function Teachers() {
       const formattedRows = data.map((teacher) => ({
         id: teacher.id,
         name: teacher.name,
-        level: teacher.level,
         startDate: teacher.startDate,
         endDate: teacher.endDate,
+        fileUrl: teacher.fileUrl ? (
+          <a href={teacher.fileUrl} target="_blank" rel="noopener noreferrer">
+            {teacher.fileUrl}
+          </a>
+        ) : (
+          "No file"
+        ), // Hiển thị link nếu có fileUrl
         actions: (
           <>
             <IconButton
@@ -93,10 +95,10 @@ function Teachers() {
       name: teacher.name,
       username: teacher.username,
       password: teacher.password,
-      level: teacher.level,
       startDate: teacher.startDate,
       endDate: teacher.endDate,
     });
+    setFile(null); // Reset file khi mở dialog chỉnh sửa
     setOpen(true);
   };
 
@@ -111,24 +113,53 @@ function Teachers() {
     }
   };
 
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]); // Lấy file đầu tiên từ input
+  };
+
   const handleSave = async () => {
     try {
       if (editMode) {
         // Cập nhật giáo viên
-        await teacherService.editTeacher(selectedTeacher.id, teacherData);
+        const updatedTeacher = await teacherService.editTeacher(
+          selectedTeacher.id,
+          teacherData,
+          file
+        );
         setRows(
-          rows.map((row) => (row.id === selectedTeacher.id ? { ...row, ...teacherData } : row))
+          rows.map((row) =>
+            row.id === selectedTeacher.id
+              ? {
+                  ...row,
+                  ...teacherData,
+                  fileUrl: updatedTeacher.fileUrl ? (
+                    <a href={updatedTeacher.fileUrl} target="_blank" rel="noopener noreferrer">
+                      {updatedTeacher.fileUrl}
+                    </a>
+                  ) : (
+                    "No file"
+                  ),
+                }
+              : row
+          )
         );
       } else {
-        // Tạo giáo viên mới
-        const createdTeacher = await teacherService.createTeacher(teacherData);
+        // Tạo giáo viên mới (không áp dụng ở đây vì đã có trang CreateTeacher riêng)
+        const createdTeacher = await teacherService.createTeacher(teacherData, file);
         setRows([
           ...rows,
           {
             id: createdTeacher.id,
             name: createdTeacher.name,
-            level: createdTeacher.level,
             startDate: createdTeacher.startDate,
+            endDate: createdTeacher.endDate,
+            fileUrl: createdTeacher.fileUrl ? (
+              <a href={createdTeacher.fileUrl} target="_blank" rel="noopener noreferrer">
+                {createdTeacher.fileUrl}
+              </a>
+            ) : (
+              "No file"
+            ),
             actions: (
               <>
                 <IconButton
@@ -151,7 +182,8 @@ function Teachers() {
       }
 
       setOpen(false);
-      setTeacherData({ name: "", level: "" });
+      setTeacherData({ name: "", username: "", password: "", startDate: "", endDate: "" });
+      setFile(null);
       setEditMode(false);
     } catch (err) {
       alert(editMode ? "Lỗi khi chỉnh sửa giáo viên!" : "Lỗi khi tạo giáo viên!");
@@ -229,31 +261,6 @@ function Teachers() {
             onChange={(e) => setTeacherData({ ...teacherData, name: e.target.value })}
           />
           <TextField
-            select
-            label="level"
-            fullWidth
-            sx={{
-              "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
-                {
-                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
-                  display: "flex",
-                  alignItems: "center",
-                },
-            }}
-            margin="normal"
-            value={teacherData.level}
-            onChange={(e) => {
-              setTeacherData({ ...teacherData, level: e.target.value });
-              // console.log(e.target.value, +e.target.value);
-            }}
-          >
-            {levels.map((d, index) => (
-              <MenuItem key={index} value={d}>
-                {d}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
             label="Username"
             fullWidth
             margin="normal"
@@ -268,20 +275,31 @@ function Teachers() {
             onChange={(e) => setTeacherData({ ...teacherData, password: e.target.value })}
           />
           <TextField
-            // label="Start Date"
             fullWidth
             margin="normal"
             type="date"
+            label="Start Date"
+            InputLabelProps={{ shrink: true }}
             value={teacherData.startDate}
             onChange={(e) => setTeacherData({ ...teacherData, startDate: e.target.value })}
           />
           <TextField
-            // label="End Date"
             fullWidth
             margin="normal"
             type="date"
+            label="End Date"
+            InputLabelProps={{ shrink: true }}
             value={teacherData.endDate}
             onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            type="file"
+            label="Upload File"
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ accept: "image/*, .pdf" }} // Giới hạn loại file
+            onChange={handleFileChange}
           />
         </DialogContent>
         <DialogActions>

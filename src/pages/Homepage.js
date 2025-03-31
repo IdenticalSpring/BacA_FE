@@ -32,6 +32,8 @@ import PricingCard from "components/LandingPageComponent/PricingCard";
 import FaqItem from "components/LandingPageComponent/FaqItem";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import Logo from "assets/images/logos/logo.png";
+
 export default function Homepage() {
   const [visible, setVisible] = useState({
     hero: false,
@@ -148,8 +150,10 @@ export default function Homepage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <BookOutlined
-            style={{ color: colors.deepGreen, fontSize: "28px", marginRight: "10px" }}
+          <img
+            src={Logo}
+            alt="Happy Class Logo"
+            style={{ width: "50px", height: "50px", marginRight: "10px" }} // Điều chỉnh kích thước nếu cần
           />
           <h1
             style={{
@@ -199,7 +203,7 @@ export default function Homepage() {
                     Đánh giá
                   </a>
                 </li>
-                <li>
+                {/* <li>
                   <a href="#pricing" style={{ color: colors.darkGray, textDecoration: "none" }}>
                     Giá cả
                   </a>
@@ -208,7 +212,7 @@ export default function Homepage() {
                   <a href="#faq" style={{ color: colors.darkGray, textDecoration: "none" }}>
                     FAQ
                   </a>
-                </li>
+                </li> */}
                 <li>
                   <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
                     Liên hệ
@@ -301,16 +305,16 @@ export default function Homepage() {
                         Đánh giá
                       </a>
                     </li>
-                    <li style={{ marginBottom: "1rem" }}>
+                    {/* <li style={{ marginBottom: "1rem" }}>
                       <a href="#pricing" style={{ color: colors.darkGray, textDecoration: "none" }}>
                         Giá cả
                       </a>
-                    </li>
-                    <li style={{ marginBottom: "1rem" }}>
+                    </li> */}
+                    {/* <li style={{ marginBottom: "1rem" }}>
                       <a href="#faq" style={{ color: colors.darkGray, textDecoration: "none" }}>
                         FAQ
                       </a>
-                    </li>
+                    </li> */}
                     <li style={{ marginBottom: "1rem" }}>
                       <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
                         Liên hệ
@@ -478,7 +482,11 @@ export default function Homepage() {
                 border: "1px solid rgba(255, 255, 255, 0.3)",
               }}
             >
-              <BookOutlined style={{ fontSize: "100px", opacity: "0.7" }} />
+              <img
+                src={Logo}
+                alt="Happy Class Logo"
+                style={{ width: "80%", height: "100%" }} // Điều chỉnh kích thước nếu cần
+              />
             </div>
           </div>
         </div>
@@ -790,7 +798,7 @@ export default function Homepage() {
       </section>
 
       {/* Pricing Section */}
-      <section
+      {/* <section
         id="pricing"
         style={{
           padding: "6rem 2rem",
@@ -895,10 +903,10 @@ export default function Homepage() {
             />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* FAQ Section */}
-      <section
+      {/* <section
         id="faq"
         style={{
           padding: "6rem 2rem",
@@ -968,7 +976,7 @@ export default function Homepage() {
             />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section
@@ -1150,7 +1158,7 @@ export default function Homepage() {
                   Testimonials
                 </a>
               </li>
-              <li style={{ marginBottom: "0.75rem" }}>
+              {/* <li style={{ marginBottom: "0.75rem" }}>
                 <a href="#pricing" style={{ color: colors.white, textDecoration: "none" }}>
                   Pricing
                 </a>
@@ -1159,7 +1167,7 @@ export default function Homepage() {
                 <a href="#faq" style={{ color: colors.white, textDecoration: "none" }}>
                   FAQ
                 </a>
-              </li>
+              </li> */}
             </ul>
           </div>
 

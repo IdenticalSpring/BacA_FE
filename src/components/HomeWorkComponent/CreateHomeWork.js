@@ -100,6 +100,7 @@ export default function CreateHomeWork({
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
+      formData.append("linkZalo", values.linkZalo);
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
 
@@ -257,6 +258,7 @@ export default function CreateHomeWork({
               level: "",
               linkYoutube: "",
               linkGame: "",
+              linkZalo: "",
               description: "",
             }}
           >
@@ -311,6 +313,15 @@ export default function CreateHomeWork({
             <Form.Item name="linkGame" label="Homework Game Link">
               <Input
                 placeholder="Enter homework game link"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item name="linkZalo" label="Homework Zalo Link">
+              <Input
+                placeholder="Enter homework Zalo link"
                 style={{
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
