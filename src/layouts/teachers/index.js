@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
@@ -18,26 +18,15 @@ import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import teacherService from "services/teacherService";
 import { useNavigate } from "react-router-dom";
-import { MenuItem } from "@mui/material";
 import { colors } from "assets/theme/color";
-const levels = [
-  "Level Pre-1",
-  "Level 1",
-  "Starters",
-  "Level-KET",
-  "Movers",
-  "Flyers",
-  "Pre-KET",
-  "level-PET",
-];
+
 function Teachers() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState([
-    { Header: "Name", accessor: "name", width: "30%" },
-    // { Header: "Level", accessor: "level", width: "30%" },
-    { Header: "Start Date", accessor: "startDate", width: "30%" },
-    { Header: "End Date", accessor: "endDate", width: "30%" },
-    { Header: "Actions", accessor: "actions", width: "20%" },
+    { Header: "Name", accessor: "name", width: "20%" },
+    { Header: "Start Date", accessor: "startDate", width: "20%" },
+    { Header: "End Date", accessor: "endDate", width: "20%" },
+    { Header: "Actions", accessor: "actions", width: "10%" },
   ]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +34,15 @@ function Teachers() {
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [teacherData, setTeacherData] = useState({ name: "", level: "" });
+  const [teacherData, setTeacherData] = useState({
+    name: "",
+    username: "",
+    password: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [file, setFile] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Thêm state cho tìm kiếm
 
   useEffect(() => {
     fetchTeachers();
@@ -57,9 +54,15 @@ function Teachers() {
       const formattedRows = data.map((teacher) => ({
         id: teacher.id,
         name: teacher.name,
-        level: teacher.level,
         startDate: teacher.startDate,
         endDate: teacher.endDate,
+        fileUrl: teacher.fileUrl ? (
+          <a href={teacher.fileUrl} target="_blank" rel="noopener noreferrer">
+            {teacher.fileUrl}
+          </a>
+        ) : (
+          "No file"
+        ),
         actions: (
           <>
             <IconButton
@@ -93,10 +96,10 @@ function Teachers() {
       name: teacher.name,
       username: teacher.username,
       password: teacher.password,
-      level: teacher.level,
       startDate: teacher.startDate,
       endDate: teacher.endDate,
     });
+    setFile(null);
     setOpen(true);
   };
 
@@ -111,24 +114,51 @@ function Teachers() {
     }
   };
 
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
   const handleSave = async () => {
     try {
       if (editMode) {
-        // Cập nhật giáo viên
-        await teacherService.editTeacher(selectedTeacher.id, teacherData);
+        const updatedTeacher = await teacherService.editTeacher(
+          selectedTeacher.id,
+          teacherData,
+          file
+        );
         setRows(
-          rows.map((row) => (row.id === selectedTeacher.id ? { ...row, ...teacherData } : row))
+          rows.map((row) =>
+            row.id === selectedTeacher.id
+              ? {
+                  ...row,
+                  ...teacherData,
+                  fileUrl: updatedTeacher.fileUrl ? (
+                    <a href={updatedTeacher.fileUrl} target="_blank" rel="noopener noreferrer">
+                      {updatedTeacher.fileUrl}
+                    </a>
+                  ) : (
+                    "No file"
+                  ),
+                }
+              : row
+          )
         );
       } else {
-        // Tạo giáo viên mới
-        const createdTeacher = await teacherService.createTeacher(teacherData);
+        const createdTeacher = await teacherService.createTeacher(teacherData, file);
         setRows([
           ...rows,
           {
             id: createdTeacher.id,
             name: createdTeacher.name,
-            level: createdTeacher.level,
             startDate: createdTeacher.startDate,
+            endDate: createdTeacher.endDate,
+            fileUrl: createdTeacher.fileUrl ? (
+              <a href={createdTeacher.fileUrl} target="_blank" rel="noopener noreferrer">
+                {createdTeacher.fileUrl}
+              </a>
+            ) : (
+              "No file"
+            ),
             actions: (
               <>
                 <IconButton
@@ -149,14 +179,19 @@ function Teachers() {
           },
         ]);
       }
-
       setOpen(false);
-      setTeacherData({ name: "", level: "" });
+      setTeacherData({ name: "", username: "", password: "", startDate: "", endDate: "" });
+      setFile(null);
       setEditMode(false);
     } catch (err) {
       alert(editMode ? "Lỗi khi chỉnh sửa giáo viên!" : "Lỗi khi tạo giáo viên!");
     }
   };
+
+  const filteredRows = useMemo(() => {
+    if (!searchTerm) return rows;
+    return rows.filter((row) => row.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [rows, searchTerm]);
 
   return (
     <DashboardLayout>
@@ -180,17 +215,38 @@ function Teachers() {
                 <MDTypography variant="h6" color="white">
                   Teachers Table
                 </MDTypography>
+
                 <Button
                   variant="contained"
                   sx={{
                     backgroundColor: colors.midGreen,
                     color: colors.white,
-                    " &: hover": { backgroundColor: colors.highlightGreen },
+                    " &:hover": { backgroundColor: colors.highlightGreen },
                   }}
                   onClick={() => navigate("/teachers/create-teacher")}
                 >
                   Create
                 </Button>
+              </MDBox>
+              <MDBox
+                mx={2}
+                mt={0}
+                py={3}
+                px={2}
+                variant="gradient"
+                borderRadius="lg"
+                display="flex"
+                justifyContent="right"
+                alignItems="center"
+              >
+                <TextField
+                  label="Search by teacher"
+                  variant="outlined"
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
               </MDBox>
               <MDBox pt={3}>
                 {loading ? (
@@ -203,7 +259,7 @@ function Teachers() {
                   </MDTypography>
                 ) : (
                   <DataTable
-                    table={{ columns, rows }}
+                    table={{ columns, rows: filteredRows }}
                     isSorted={false}
                     entriesPerPage={false}
                     showTotalEntries={false}
@@ -229,31 +285,6 @@ function Teachers() {
             onChange={(e) => setTeacherData({ ...teacherData, name: e.target.value })}
           />
           <TextField
-            select
-            label="level"
-            fullWidth
-            sx={{
-              "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
-                {
-                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
-                  display: "flex",
-                  alignItems: "center",
-                },
-            }}
-            margin="normal"
-            value={teacherData.level}
-            onChange={(e) => {
-              setTeacherData({ ...teacherData, level: e.target.value });
-              // console.log(e.target.value, +e.target.value);
-            }}
-          >
-            {levels.map((d, index) => (
-              <MenuItem key={index} value={d}>
-                {d}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
             label="Username"
             fullWidth
             margin="normal"
@@ -268,20 +299,31 @@ function Teachers() {
             onChange={(e) => setTeacherData({ ...teacherData, password: e.target.value })}
           />
           <TextField
-            // label="Start Date"
             fullWidth
             margin="normal"
             type="date"
+            label="Start Date"
+            InputLabelProps={{ shrink: true }}
             value={teacherData.startDate}
             onChange={(e) => setTeacherData({ ...teacherData, startDate: e.target.value })}
           />
           <TextField
-            // label="End Date"
             fullWidth
             margin="normal"
             type="date"
+            label="End Date"
+            InputLabelProps={{ shrink: true }}
             value={teacherData.endDate}
             onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            type="file"
+            label="Upload File"
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ accept: "image/*, .pdf" }}
+            onChange={handleFileChange}
           />
         </DialogContent>
         <DialogActions>

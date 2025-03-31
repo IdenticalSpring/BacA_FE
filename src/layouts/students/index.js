@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
@@ -24,6 +24,8 @@ import { colors } from "assets/theme/color";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import classService from "services/classService";
 import levelService from "services/levelService";
+import SearchIcon from "@mui/icons-material/Search";
+import InputAdornment from "@mui/material/InputAdornment";
 
 function Students() {
   const navigate = useNavigate();
@@ -60,15 +62,14 @@ function Students() {
     endDate: "",
     note: "",
   });
+  const [searchName, setSearchName] = useState("");
+  const [searchSchedule, setSearchSchedule] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch levels trước
         const levelData = await levelService.getAllLevels();
         setLevels(levelData);
-
-        // Sau đó fetch students và class schedules
         await fetchStudents();
         await fetchClassSchedules();
       } catch (error) {
@@ -76,7 +77,6 @@ function Students() {
         setError("Error fetching initial data!");
       }
     };
-
     fetchData();
   }, []);
 
@@ -95,7 +95,7 @@ function Students() {
       const formattedRows = data.map((student) => ({
         id: student.id,
         name: student.name,
-        level: student.level, // Hiển thị tên level trong cột
+        level: student.level,
         yearOfBirth: student.yearOfBirth,
         phone: student.phone,
         avatar: (
@@ -117,7 +117,7 @@ function Students() {
         startDate: student.startDate,
         endDate: student.endDate,
         note: formatSchedule(student),
-        rawLevel: student.level, // Lưu giá trị thô để dùng trong edit
+        rawLevel: student.level,
         actions: (
           <>
             <IconButton
@@ -160,6 +160,14 @@ function Students() {
     return scheduleInfo || "N/A";
   };
 
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const nameMatch = row.name.toLowerCase().includes(searchName.toLowerCase());
+      const scheduleMatch = row.note.toLowerCase().includes(searchSchedule.toLowerCase());
+      return nameMatch && scheduleMatch;
+    });
+  }, [rows, searchName, searchSchedule]);
+
   const handleEdit = (student) => {
     setEditMode(true);
     setSelectedStudent(student);
@@ -171,7 +179,7 @@ function Students() {
       phone: student.phone,
       imgUrl: student.imgUrl,
       classID: student.classID,
-      level: student.rawLevel, // Sử dụng rawLevel để giữ giá trị gốc
+      level: student.rawLevel,
       startDate: student.startDate,
       endDate: student.endDate,
       note: student.note,
@@ -238,7 +246,7 @@ function Students() {
               ? {
                   ...row,
                   name: updatedStudent.name,
-                  level: updatedStudent.level, // Cập nhật tên level
+                  level: updatedStudent.level,
                   yearOfBirth: updatedStudent.yearOfBirth,
                   phone: updatedStudent.phone,
                   avatar: (
@@ -322,6 +330,31 @@ function Students() {
                   Create
                 </Button>
               </MDBox>
+              <MDBox
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={2}
+                px={2}
+                py={1}
+              >
+                <TextField
+                  label="Search by name"
+                  variant="outlined"
+                  size="small"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
+                <TextField
+                  label="Search by Schedule"
+                  variant="outlined"
+                  size="small"
+                  value={searchSchedule}
+                  onChange={(e) => setSearchSchedule(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
+              </MDBox>
               <MDBox pt={3}>
                 {loading ? (
                   <MDTypography variant="h6" color="info" align="center">
@@ -333,7 +366,7 @@ function Students() {
                   </MDTypography>
                 ) : (
                   <DataTable
-                    table={{ columns, rows }}
+                    table={{ columns, rows: filteredRows }}
                     isSorted={false}
                     entriesPerPage={false}
                     showTotalEntries={false}

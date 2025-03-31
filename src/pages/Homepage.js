@@ -32,6 +32,9 @@ import PricingCard from "components/LandingPageComponent/PricingCard";
 import FaqItem from "components/LandingPageComponent/FaqItem";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import Logo from "assets/images/logos/logo.png";
+import contentPageService from "services/contentpageService";
+
 export default function Homepage() {
   const [visible, setVisible] = useState({
     hero: false,
@@ -51,7 +54,23 @@ export default function Homepage() {
     zalo: false,
     global: false,
   });
+  const [contentData, setContentData] = useState(null); // State lưu dữ liệu từ API
   const navigate = useNavigate();
+
+  // Fetch dữ liệu từ contentPageService khi component mount
+  useEffect(() => {
+    const fetchContentData = async () => {
+      try {
+        const data = await contentPageService.getAllContentPages();
+        // Giả sử chỉ lấy phần tử đầu tiên trong mảng (nếu API trả về danh sách)
+        setContentData(data[0]);
+      } catch (error) {
+        console.error("Error fetching content page data:", error);
+      }
+    };
+    fetchContentData();
+  }, []);
+
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -59,7 +78,6 @@ export default function Homepage() {
         setIsMenuOpen(false);
       }
     };
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -67,6 +85,7 @@ export default function Homepage() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
   // Animate on scroll
   useEffect(() => {
     setVisible({
@@ -100,7 +119,6 @@ export default function Homepage() {
         if (scrollPosition > 4600) setVisible((prev) => ({ ...prev, faq: true }));
         if (scrollPosition > 5400) setVisible((prev) => ({ ...prev, cta: true }));
       }
-      console.log(scrollPosition);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -118,10 +136,11 @@ export default function Homepage() {
     lightAccent: "#FFEDC2",
     darkGreen: "#224922",
   };
-  // console.log(visible);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   return (
     <div
       style={{
@@ -148,8 +167,10 @@ export default function Homepage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <BookOutlined
-            style={{ color: colors.deepGreen, fontSize: "28px", marginRight: "10px" }}
+          <img
+            src={Logo}
+            alt="Happy Class Logo"
+            style={{ width: "50px", height: "50px", marginRight: "10px" }}
           />
           <h1
             style={{
@@ -200,16 +221,6 @@ export default function Homepage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#pricing" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Giá cả
-                  </a>
-                </li>
-                <li>
-                  <a href="#faq" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    FAQ
-                  </a>
-                </li>
-                <li>
                   <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
                     Liên hệ
                   </a>
@@ -217,9 +228,7 @@ export default function Homepage() {
               </ul>
             </nav>
             <button
-              onClick={() => {
-                navigate("/login");
-              }}
+              onClick={() => navigate("/login")}
               style={{
                 background: colors.deepGreen,
                 color: colors.white,
@@ -302,16 +311,6 @@ export default function Homepage() {
                       </a>
                     </li>
                     <li style={{ marginBottom: "1rem" }}>
-                      <a href="#pricing" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                        Giá cả
-                      </a>
-                    </li>
-                    <li style={{ marginBottom: "1rem" }}>
-                      <a href="#faq" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                        FAQ
-                      </a>
-                    </li>
-                    <li style={{ marginBottom: "1rem" }}>
                       <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
                         Liên hệ
                       </a>
@@ -319,9 +318,7 @@ export default function Homepage() {
                   </ul>
                 </nav>
                 <button
-                  onClick={() => {
-                    window.location.href = "/login";
-                  }}
+                  onClick={() => navigate("/login")}
                   style={{
                     background: colors.deepGreen,
                     color: colors.white,
@@ -354,7 +351,6 @@ export default function Homepage() {
           overflow: "hidden",
         }}
       >
-        {/* Animated background shapes */}
         <div
           style={{
             position: "absolute",
@@ -403,8 +399,7 @@ export default function Homepage() {
                 lineHeight: "1.2",
               }}
             >
-              Learn Happy, <br />
-              Study <span style={{ color: colors.accent }}>Smarter</span>
+              {contentData?.homepageMainTitle || "Learn Happy, Study Smarter"}
             </h1>
             <p
               style={{
@@ -413,43 +408,9 @@ export default function Homepage() {
                 maxWidth: "600px",
               }}
             >
-              Nâng cao trải nghiệm học tập của bạn với nền tảng học tập tất cả trong một, được thiết
-              kế để làm cho việc giáo dục trở nên thú vị, hiệu quả và phù hợp với phong cách học tập
-              độc đáo của bạn.
+              {contentData?.homepageDescription ||
+                "Nâng cao trải nghiệm học tập của bạn với nền tảng học tập tất cả trong một."}
             </p>
-            {/* <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <button
-                style={{
-                  background: colors.white,
-                  color: colors.deepGreen,
-                  border: "none",
-                  padding: "0.75rem 2rem",
-                  borderRadius: "4px",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  fontSize: "1rem",
-                  transition: "all 0.3s ease",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                Start Free Trial
-              </button>
-              <button
-                style={{
-                  background: "transparent",
-                  color: colors.white,
-                  border: `2px solid ${colors.white}`,
-                  padding: "0.75rem 2rem",
-                  borderRadius: "4px",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  fontSize: "1rem",
-                  transition: "all 0.3s ease",
-                }}
-              >
-                Watch Demo
-              </button>
-            </div> */}
           </div>
           <div
             style={{
@@ -459,7 +420,6 @@ export default function Homepage() {
               height: "400px",
             }}
           >
-            {/* Stylized image placeholder */}
             <div
               style={{
                 position: "absolute",
@@ -478,7 +438,7 @@ export default function Homepage() {
                 border: "1px solid rgba(255, 255, 255, 0.3)",
               }}
             >
-              <BookOutlined style={{ fontSize: "100px", opacity: "0.7" }} />
+              <img src={Logo} alt="Happy Class Logo" style={{ width: "80%", height: "100%" }} />
             </div>
           </div>
         </div>
@@ -566,7 +526,7 @@ export default function Homepage() {
                 fontWeight: "bold",
               }}
             >
-              Study Smart, <span style={{ color: colors.deepGreen }}>Not Hard</span>
+              {contentData?.featureMainTitle || "Study Smart, Not Hard"}
             </h2>
             <p
               style={{
@@ -576,8 +536,8 @@ export default function Homepage() {
                 color: "#666",
               }}
             >
-              Nền tảng của chúng tôi cung cấp mọi thứ bạn cần để đạt thành tích xuất sắc trong học
-              tập mà vẫn duy trì được sự cân bằng giữa công việc và cuộc sống.
+              {contentData?.featureMainDescription ||
+                "Nền tảng của chúng tôi cung cấp mọi thứ bạn cần để đạt thành tích xuất sắc."}
             </p>
           </div>
 
@@ -590,43 +550,61 @@ export default function Homepage() {
           >
             <FeatureCard
               icon={<CalendarOutlined style={{ fontSize: "28px" }} />}
-              title="Lịch Học Thông Minh"
-              description="Tạo lịch học cá nhân hóa dựa trên mục tiêu, thời hạn và thời gian học tập tối ưu của bạn."
+              title={contentData?.featureFirstTitle || "Lịch Học Thông Minh"}
+              description={
+                contentData?.featureFristDescription ||
+                "Tạo lịch học cá nhân hóa dựa trên mục tiêu và thời gian học tập tối ưu."
+              }
               color={colors.lightGreen}
               delay={0.1}
             />
             <FeatureCard
               icon={<FileTextOutlined style={{ fontSize: "28px" }} />}
-              title="Tài Liệu Học Tập Đa Phương Tiện"
-              description="Tạo tài liệu học tập linh hoạt với tích hợp đa phương tiện, sơ đồ tư duy và các tính năng cộng tác."
+              title={contentData?.featureSecondTitle || "Tài Liệu Học Tập Đa Phương Tiện"}
+              description={
+                contentData?.featureSecondDescription ||
+                "Tạo tài liệu học tập linh hoạt với tích hợp đa phương tiện."
+              }
               color={colors.lightGreen}
               delay={0.2}
             />
             <FeatureCard
               icon={<TeamOutlined style={{ fontSize: "28px" }} />}
-              title="Cộng Đồng Học Tập"
-              description="Kết nối với bạn cùng lớp, tạo nhóm học tập và chia sẻ tài nguyên để nâng cao hiểu biết."
+              title={contentData?.featureThirdTitle || "Cộng Đồng Học Tập"}
+              description={
+                contentData?.featureThirdDescription ||
+                "Kết nối với bạn cùng lớp và chia sẻ tài nguyên."
+              }
               color={colors.lightGreen}
               delay={0.3}
             />
             <FeatureCard
               icon={<BellOutlined style={{ fontSize: "28px" }} />}
-              title="Thông báo thông minh"
-              description="Hệ thống thông báo cá nhân hóa giúp bạn duy trì lộ trình học tập và hoàn thành đúng hạn."
+              title={contentData?.featureFourthTitle || "Thông báo thông minh"}
+              description={
+                contentData?.featureFourthDescription ||
+                "Hệ thống thông báo cá nhân hóa giúp bạn duy trì lộ trình học tập."
+              }
               color={colors.lightGreen}
               delay={0.4}
             />
             <FeatureCard
               icon={<TrophyOutlined style={{ fontSize: "28px" }} />}
-              title="Hệ Thống Thưởng"
-              description="Trải nghiệm học tập gamified với huy hiệu, điểm và phần thưởng để giữ bạn luôn được động viên."
+              title={contentData?.featureFivethTitle || "Hệ Thống Thưởng"}
+              description={
+                contentData?.featureFivethDescription ||
+                "Trải nghiệm học tập gamified với huy hiệu và phần thưởng."
+              }
               color={colors.lightGreen}
               delay={0.5}
             />
             <FeatureCard
               icon={<RocketOutlined style={{ fontSize: "28px" }} />}
-              title="Phân Tích Học Tập"
-              description="Cung cấp cái nhìn chi tiết về mẫu học tập, điểm mạnh và điểm yếu của bạn."
+              title={contentData?.featureSixthTitle || "Phân Tích Học Tập"}
+              description={
+                contentData?.featureSixthDescription ||
+                "Cung cấp cái nhìn chi tiết về mẫu học tập của bạn."
+              }
               color={colors.lightGreen}
               delay={0.6}
             />
@@ -671,8 +649,18 @@ export default function Homepage() {
                 fontWeight: "bold",
               }}
             >
-              Your Journey to <span style={{ color: colors.deepGreen }}>Learning Success</span>
+              {contentData?.worksMainTitle || "Your Journey to Learning Success"}
             </h2>
+            <p
+              style={{
+                fontSize: "1.1rem",
+                maxWidth: "700px",
+                margin: "1rem auto 0",
+                color: "#666",
+              }}
+            >
+              {contentData?.worksMainDescription || "A simple process to get you started."}
+            </p>
           </div>
 
           <div
@@ -684,27 +672,37 @@ export default function Homepage() {
           >
             <StepCard
               number="01"
-              title="Sign Up & Set Goals"
-              description="Create your profile and set your academic goals. Tell us about your learning style and preferences."
+              title={contentData?.worksFirstTitle || "Sign Up & Set Goals"}
+              description={
+                contentData?.worksFristDescription ||
+                "Create your profile and set your academic goals."
+              }
               color={colors.deepGreen}
             />
             <StepCard
               number="02"
-              title="Build Your Study Plan"
-              description="Our AI creates a personalized study schedule based on your goals, deadlines, and optimal learning times."
+              title={contentData?.worksSecondTitle || "Build Your Study Plan"}
+              description={
+                contentData?.worksSecondDescription ||
+                "Our AI creates a personalized study schedule."
+              }
               color={colors.deepGreen}
               reverse={true}
             />
             <StepCard
               number="03"
-              title="Learn & Track Progress"
-              description="Follow your plan, use our tools, and watch your progress. Adjust as needed with real-time feedback."
+              title={contentData?.worksThirdTitle || "Learn & Track Progress"}
+              description={
+                contentData?.worksThirdDescription || "Follow your plan and watch your progress."
+              }
               color={colors.deepGreen}
             />
             <StepCard
               number="04"
-              title="Celebrate Achievements"
-              description="Reach milestones, earn rewards, and celebrate your academic success along the way."
+              title={contentData?.worksFourthTitle || "Celebrate Achievements"}
+              description={
+                contentData?.worksFourthDescription || "Reach milestones and earn rewards."
+              }
               color={colors.deepGreen}
               reverse={true}
             />
@@ -750,84 +748,7 @@ export default function Homepage() {
                 fontWeight: "bold",
               }}
             >
-              What Our <span style={{ color: colors.deepGreen }}>Students Say</span>
-            </h2>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: "2rem",
-            }}
-          >
-            <TestimonialCard
-              quote="HAPPY CLASS completely transformed my study habits. I'm more productive and actually enjoy learning now!"
-              author="Sarah Johnson"
-              role="Biology Student"
-              image="/api/placeholder/80/80"
-              color={colors.lightGreen}
-              delay={0.1}
-            />
-            <TestimonialCard
-              quote="The scheduling feature helped me balance my coursework and finally maintain a healthy study routine."
-              author="Michael Torres"
-              role="Computer Science Major"
-              image="/api/placeholder/80/80"
-              color={colors.lightGreen}
-              delay={0.2}
-            />
-            <TestimonialCard
-              quote="I've improved my grades significantly since using HAPPY CLASS. The collaborative features are game-changing!"
-              author="Priya Kaur"
-              role="Business Student"
-              image="/api/placeholder/80/80"
-              color={colors.lightGreen}
-              delay={0.3}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section
-        id="pricing"
-        style={{
-          padding: "6rem 2rem",
-          background: colors.gray,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            opacity: visible.pricing ? 1 : 0,
-            transform: `translateY(${visible.pricing ? "0" : "30px"})`,
-            transition: "all 0.8s ease-out",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <span
-              style={{
-                background: colors.lightGreen,
-                color: colors.deepGreen,
-                padding: "0.5rem 1rem",
-                borderRadius: "20px",
-                fontSize: "0.9rem",
-                fontWeight: "bold",
-              }}
-            >
-              PRICING
-            </span>
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                marginTop: "1rem",
-                color: colors.darkGray,
-                fontWeight: "bold",
-              }}
-            >
-              Simple, <span style={{ color: colors.deepGreen }}>Transparent Pricing</span>
+              {contentData?.testimonialsMainTitle || "What Our Students Say"}
             </h2>
             <p
               style={{
@@ -837,7 +758,7 @@ export default function Homepage() {
                 color: "#666",
               }}
             >
-              Choose the plan that works best for your learning journey
+              {contentData?.testimonialsMainDescription || "Hear from our happy learners."}
             </p>
           </div>
 
@@ -848,123 +769,38 @@ export default function Homepage() {
               gap: "2rem",
             }}
           >
-            <PricingCard
-              title="Basic"
-              price="Free"
-              description="Perfect for casual learners"
-              features={[
-                "Smart scheduler (basic)",
-                "Note-taking tools",
-                "Limited progress tracking",
-                "Community access",
-              ]}
-              buttonText="Get Started"
+            <TestimonialCard
+              quote={
+                contentData?.testimonialsFristDescription ||
+                "HAPPY CLASS completely transformed my study habits."
+              }
+              author={contentData?.testimonialsFirstTitle || "Sarah Johnson"}
+              role="Biology Student"
+              image="/api/placeholder/80/80"
               color={colors.lightGreen}
-              recommended={false}
+              delay={0.1}
             />
-            <PricingCard
-              title="Premium"
-              price="$9.99"
-              period="per month"
-              description="Great for dedicated students"
-              features={[
-                "Advanced AI scheduling",
-                "Interactive note tools",
-                "Full progress analytics",
-                "Unlimited study groups",
-                "Priority support",
-              ]}
-              buttonText="Start Free Trial"
-              color={colors.deepGreen}
-              recommended={true}
-            />
-            <PricingCard
-              title="Campus"
-              price="Contact Us"
-              description="For schools and institutions"
-              features={[
-                "Everything in Premium",
-                "Admin dashboard",
-                "Bulk user management",
-                "Custom branding",
-                "API access",
-              ]}
-              buttonText="Schedule Demo"
+            <TestimonialCard
+              quote={
+                contentData?.testimonialsSecondDescription ||
+                "The scheduling feature helped me balance my coursework."
+              }
+              author={contentData?.testimonialsSecondTitle || "Michael Torres"}
+              role="Computer Science Major"
+              image="/api/placeholder/80/80"
               color={colors.lightGreen}
-              recommended={false}
+              delay={0.2}
             />
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section
-        id="faq"
-        style={{
-          padding: "6rem 2rem",
-          background: colors.white,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "900px",
-            margin: "0 auto",
-            opacity: visible.faq ? 1 : 0,
-            transform: `translateY(${visible.faq ? "0" : "30px"})`,
-            transition: "all 0.8s ease-out",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <span
-              style={{
-                background: colors.lightGreen,
-                color: colors.deepGreen,
-                padding: "0.5rem 1rem",
-                borderRadius: "20px",
-                fontSize: "0.9rem",
-                fontWeight: "bold",
-              }}
-            >
-              FAQ
-            </span>
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                marginTop: "1rem",
-                color: colors.darkGray,
-                fontWeight: "bold",
-              }}
-            >
-              Frequently Asked <span style={{ color: colors.deepGreen }}>Questions</span>
-            </h2>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
-            }}
-          >
-            <FaqItem
-              question="How does the AI scheduling work?"
-              answer="Our AI analyzes your learning patterns, course load, and available time to create an optimized study schedule. It adapts as you progress, learning what works best for your unique needs."
-            />
-            <FaqItem
-              question="Can I use HAPPY CLASS offline?"
-              answer="Yes! Our mobile app allows you to download your study materials and schedules for offline use. Your progress will sync once you're back online."
-            />
-            <FaqItem
-              question="Is there a limit to how many courses I can track?"
-              answer="Basic users can track up to 3 courses, while Premium users have unlimited course tracking capabilities."
-            />
-            <FaqItem
-              question="How does the group study feature work?"
-              answer="You can create or join study groups, schedule virtual sessions, share notes, and collaborate on projects—all within the platform."
-            />
-            <FaqItem
-              question="Do you offer refunds if I'm not satisfied?"
-              answer="Yes, we offer a 30-day money-back guarantee for all Premium subscriptions. If you're not happy with the service, you can request a full refund."
+            <TestimonialCard
+              quote={
+                contentData?.testimonialsThirdDescription ||
+                "I've improved my grades significantly since using HAPPY CLASS."
+              }
+              author={contentData?.testimonialsThirdTitle || "Priya Kaur"}
+              role="Business Student"
+              image="/api/placeholder/80/80"
+              color={colors.lightGreen}
+              delay={0.3}
             />
           </div>
         </div>
@@ -980,7 +816,6 @@ export default function Homepage() {
           overflow: "hidden",
         }}
       >
-        {/* Animated background circles */}
         <div
           style={{
             position: "absolute",
@@ -1111,11 +946,13 @@ export default function Homepage() {
               </h3>
             </div>
             <p style={{ marginBottom: "1.5rem" }}>
-              Making learning enjoyable and effective for everyone. Our mission is to transform
-              education through technology and personalization.
+              {contentData?.footerDescription || "Happy Class - Empowering education for all."}
             </p>
             <div style={{ display: "flex", gap: "1rem" }}>
-              <a href="#" style={{ color: colors.white, fontSize: "1.5rem" }}>
+              <a
+                href={contentData?.linkFacebook || "https://facebook.com/happyclass"}
+                style={{ color: colors.white, fontSize: "1.5rem" }}
+              >
                 <FacebookOutlined />
               </a>
               <a href="#" style={{ color: colors.white, fontSize: "1.5rem" }}>
@@ -1148,16 +985,6 @@ export default function Homepage() {
               <li style={{ marginBottom: "0.75rem" }}>
                 <a href="#testimonials" style={{ color: colors.white, textDecoration: "none" }}>
                   Testimonials
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#pricing" style={{ color: colors.white, textDecoration: "none" }}>
-                  Pricing
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#faq" style={{ color: colors.white, textDecoration: "none" }}>
-                  FAQ
                 </a>
               </li>
             </ul>
@@ -1215,6 +1042,8 @@ export default function Homepage() {
           </p>
         </div>
       </footer>
+
+      {/* Social Buttons */}
       <div
         style={{
           display: "flex",
@@ -1243,7 +1072,7 @@ export default function Homepage() {
             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
             opacity: window.scrollY + window.innerHeight > 1000 ? 1 : 0,
             visibility: window.scrollY + window.innerHeight > 1000 ? "visible" : "hidden",
-            transition: " all 0.3s ease",
+            transition: "all 0.3s ease",
             animation: window.scrollY + window.innerHeight > 1000 ? "bounce 1s infinite" : "none",
           }}
         />
@@ -1266,14 +1095,14 @@ export default function Homepage() {
             cursor: "pointer",
             transition: "all 0.3s ease",
             transform: socialHover.facebook ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
-            // opacity: window.scrollY + window.innerHeight > 1000 ? 1 : 0,
-            // visibility: window.scrollY + window.innerHeight > 1000 ? "visible" : "hidden",
-            // animation: window.scrollY + window.innerHeight > 1000 ? "bounce 1s infinite" : "none",
           }}
           onMouseEnter={() => setSocialHover({ ...socialHover, facebook: true })}
           onMouseLeave={() => setSocialHover({ ...socialHover, facebook: false })}
+          onClick={() =>
+            window.open(contentData?.linkFacebook || "https://facebook.com/happyclass")
+          }
         >
-          {<FacebookFilled style={{ fontSize: "24px" }} />}
+          <FacebookFilled style={{ fontSize: "24px" }} />
         </div>
         <div
           style={{
@@ -1293,45 +1122,26 @@ export default function Homepage() {
               : "0 4px 10px rgba(0, 136, 255, 0.3)",
             cursor: "pointer",
             transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
-            // opacity: window.scrollY + window.innerHeight > 1000 ? 1 : 0,
-            // visibility: window.scrollY + window.innerHeight > 1000 ? "visible" : "hidden",
-            transition: " all 0.3s ease",
-            // animation: window.scrollY + window.innerHeight > 1000 ? "bounce 1s infinite" : "none",
+            transition: "all 0.3s ease",
           }}
           onMouseEnter={() => setSocialHover({ ...socialHover, zalo: true })}
           onMouseLeave={() => setSocialHover({ ...socialHover, zalo: false })}
+          onClick={() => window.open(contentData?.linkZalo || "https://zalo.me/happyclass")}
         >
-          {
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              x="0px"
-              y="0px"
-              width="30"
-              height="30"
-              viewBox="0,0,256,256"
-            >
-              <g
-                fill="#ffffff"
-                //   fill-rule="nonzero"
-                //   stroke="none"
-                //   stroke-width="1"
-                //   stroke-linecap="butt"
-                //   stroke-linejoin="miter"
-                //   stroke-miterlimit="10"
-                //   stroke-dasharray=""
-                //   stroke-dashoffset="0"
-                //   font-family="none"
-                //   font-weight="none"
-                //   font-size="none"
-                //   text-anchor="none"
-                style={{ mixBlendMode: "normal" }}
-              >
-                <g transform="scale(5.12,5.12)">
-                  <path d="M9,4c-2.74952,0 -5,2.25048 -5,5v32c0,2.74952 2.25048,5 5,5h32c2.74952,0 5,-2.25048 5,-5v-32c0,-2.74952 -2.25048,-5 -5,-5zM9,6h6.58008c-3.57109,3.71569 -5.58008,8.51808 -5.58008,13.5c0,5.16 2.11016,10.09984 5.91016,13.83984c0.12,0.21 0.21977,1.23969 -0.24023,2.42969c-0.29,0.75 -0.87023,1.72961 -1.99023,2.09961c-0.43,0.14 -0.70969,0.56172 -0.67969,1.01172c0.03,0.45 0.36078,0.82992 0.80078,0.91992c2.87,0.57 4.72852,-0.2907 6.22852,-0.9707c1.35,-0.62 2.24133,-1.04047 3.61133,-0.48047c2.8,1.09 5.77938,1.65039 8.85938,1.65039c4.09369,0 8.03146,-0.99927 11.5,-2.88672v3.88672c0,1.66848 -1.33152,3 -3,3h-32c-1.66848,0 -3,-1.33152 -3,-3v-32c0,-1.66848 1.33152,-3 3,-3zM33,15c0.55,0 1,0.45 1,1v9c0,0.55 -0.45,1 -1,1c-0.55,0 -1,-0.45 -1,-1v-9c0,-0.55 0.45,-1 1,-1zM18,16h5c0.36,0 0.70086,0.19953 0.88086,0.51953c0.17,0.31 0.15875,0.69977 -0.03125,1.00977l-4.04883,6.4707h3.19922c0.55,0 1,0.45 1,1c0,0.55 -0.45,1 -1,1h-5c-0.36,0 -0.70086,-0.19953 -0.88086,-0.51953c-0.17,-0.31 -0.15875,-0.69977 0.03125,-1.00977l4.04883,-6.4707h-3.19922c-0.55,0 -1,-0.45 -1,-1c0,-0.55 0.45,-1 1,-1zM27.5,19c0.61,0 1.17945,0.16922 1.68945,0.44922c0.18,-0.26 0.46055,-0.44922 0.81055,-0.44922c0.55,0 1,0.45 1,1v5c0,0.55 -0.45,1 -1,1c-0.35,0 -0.63055,-0.18922 -0.81055,-0.44922c-0.51,0.28 -1.07945,0.44922 -1.68945,0.44922c-1.93,0 -3.5,-1.57 -3.5,-3.5c0,-1.93 1.57,-3.5 3.5,-3.5zM38.5,19c1.93,0 3.5,1.57 3.5,3.5c0,1.93 -1.57,3.5 -3.5,3.5c-1.93,0 -3.5,-1.57 -3.5,-3.5c0,-1.93 1.57,-3.5 3.5,-3.5zM27.5,21c-0.10375,0 -0.20498,0.01131 -0.30273,0.03125c-0.19551,0.03988 -0.37754,0.11691 -0.53711,0.22461c-0.15957,0.1077 -0.2966,0.24473 -0.4043,0.4043c-0.10769,0.15957 -0.18473,0.3416 -0.22461,0.53711c-0.01994,0.09775 -0.03125,0.19898 -0.03125,0.30273c0,0.10375 0.01131,0.20498 0.03125,0.30273c0.01994,0.09775 0.04805,0.19149 0.08594,0.28125c0.03789,0.08977 0.08482,0.17607 0.13867,0.25586c0.05385,0.07979 0.11578,0.15289 0.18359,0.2207c0.06781,0.06781 0.14092,0.12975 0.2207,0.18359c0.15957,0.10769 0.3416,0.18473 0.53711,0.22461c0.09775,0.01994 0.19898,0.03125 0.30273,0.03125c0.10375,0 0.20498,-0.01131 0.30273,-0.03125c0.68428,-0.13959 1.19727,-0.7425 1.19727,-1.46875c0,-0.83 -0.67,-1.5 -1.5,-1.5zM38.5,21c-0.10375,0 -0.20498,0.01131 -0.30273,0.03125c-0.09775,0.01994 -0.19149,0.04805 -0.28125,0.08594c-0.08977,0.03789 -0.17607,0.08482 -0.25586,0.13867c-0.07979,0.05385 -0.15289,0.11578 -0.2207,0.18359c-0.13562,0.13563 -0.24648,0.29703 -0.32227,0.47656c-0.03789,0.08976 -0.066,0.1835 -0.08594,0.28125c-0.01994,0.09775 -0.03125,0.19898 -0.03125,0.30273c0,0.10375 0.01131,0.20498 0.03125,0.30273c0.01994,0.09775 0.04805,0.19149 0.08594,0.28125c0.03789,0.08977 0.08482,0.17607 0.13867,0.25586c0.05385,0.07979 0.11578,0.15289 0.18359,0.2207c0.06781,0.06781 0.14092,0.12975 0.2207,0.18359c0.07979,0.05385 0.16609,0.10078 0.25586,0.13867c0.08976,0.03789 0.1835,0.066 0.28125,0.08594c0.09775,0.01994 0.19898,0.03125 0.30273,0.03125c0.10375,0 0.20498,-0.01131 0.30273,-0.03125c0.68428,-0.13959 1.19727,-0.7425 1.19727,-1.46875c0,-0.83 -0.67,-1.5 -1.5,-1.5z"></path>
-                </g>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            x="0px"
+            y="0px"
+            width="30"
+            height="30"
+            viewBox="0,0,256,256"
+          >
+            <g fill="#ffffff" style={{ mixBlendMode: "normal" }}>
+              <g transform="scale(5.12,5.12)">
+                <path d="M9,4c-2.74952,0 -5,2.25048 -5,5v32c0,2.74952 2.25048,5 5,5h32c2.74952,0 5,-2.25048 5,-5v-32c0,-2.74952 -2.25048,-5 -5,-5zM9,6h6.58008c-3.57109,3.71569 -5.58008,8.51808 -5.58008,13.5c0,5.16 2.11016,10.09984 5.91016,13.83984c0.12,0.21 0.21977,1.23969 -0.24023,2.42969c-0.29,0.75 -0.87023,1.72961 -1.99023,2.09961c-0.43,0.14 -0.70969,0.56172 -0.67969,1.01172c0.03,0.45 0.36078,0.82992 0.80078,0.91992c2.87,0.57 4.72852,-0.2907 6.22852,-0.9707c1.35,-0.62 2.24133,-1.04047 3.61133,-0.48047c2.8,1.09 5.77938,1.65039 8.85938,1.65039c4.09369,0 8.03146,-0.99927 11.5,-2.88672v3.88672c0,1.66848 -1.33152,3 -3,3h-32c-1.66848,0 -3,-1.33152 -3,-3v-32c0,-1.66848 1.33152,-3 3,-3zM33,15c0.55,0 1,0.45 1,1v9c0,0.55 -0.45,1 -1,1c-0.55,0 -1,-0.45 -1,-1v-9c0,-0.55 0.45,-1 1,-1zM18,16h5c0.36,0 0.70086,0.19953 0.88086,0.51953c0.17,0.31 0.15875,0.69977 -0.03125,1.00977l-4.04883,6.4707h3.19922c0.55,0 1,0.45 1,1c0,0.55 -0.45,1 -1,1h-5c-0.36,0 -0.70086,-0.19953 -0.88086,-0.51953c-0.17,-0.31 -0.15875,-0.69977 0.03125,-1.00977l4.04883,-6.4707h-3.19922c-0.55,0 -1,-0.45 -1,-1c0,-0.55 0.45,-1 1,-1zM27.5,19c0.61,0 1.17945,0.16922 1.68945,0.44922c0.18,-0.26 0.46055,-0.44922 0.81055,-0.44922c0.55,0 1,0.45 1,1v5c0,0.55 -0.45,1 -1,1c-0.35,0 -0.63055,-0.18922 -0.81055,-0.44922c-0.51,0.28 -1.07945,0.44922 -1.68945,0.44922c-1.93,0 -3.5,-1.57 -3.5,-3.5c0,-1.93 1.57,-3.5 3.5,-3.5zM38.5,19c1.93,0 3.5,1.57 3.5,3.5c0,1.93 -1.57,3.5 -3.5,3.5c-1.93,0 -3.5,-1.57 -3.5,-3.5c0,-1.93 1.57,-3.5 3.5,-3.5zM27.5,21c-0.10375,0 -0.20498,0.01131 -0.30273,0.03125c-0.19551,0.03988 -0.37754,0.11691 -0.53711,0.22461c-0.15957,0.1077 -0.2966,0.24473 -0.4043,0.4043c-0.10769,0.15957 -0.18473,0.3416 -0.22461,0.53711c-0.01994,0.09775 -0.03125,0.19898 -0.03125,0.30273c0,0.10375 0.01131,0.20498 0.03125,0.30273c0.01994,0.09775 0.04805,0.19149 0.08594,0.28125c0.03789,0.08977 0.08482,0.17607 0.13867,0.25586c0.05385,0.07979 0.11578,0.15289 0.18359,0.2207c0.06781,0.06781 0.14092,0.12975 0.2207,0.18359c0.15957,0.10769 0.3416,0.18473 0.53711,0.22461c0.09775,0.01994 0.19898,0.03125 0.30273,0.03125c0.10375,0 0.20498,-0.01131 0.30273,-0.03125c0.68428,-0.13959 1.19727,-0.7425 1.19727,-1.46875c0,-0.83 -0.67,-1.5 -1.5,-1.5zM38.5,21c-0.10375,0 -0.20498,0.01131 -0.30273,0.03125c-0.09775,0.01994 -0.19149,0.04805 -0.28125,0.08594c-0.08977,0.03789 -0.17607,0.08482 -0.25586,0.13867c-0.07979,0.05385 -0.15289,0.11578 -0.2207,0.18359c-0.13562,0.13563 -0.24648,0.29703 -0.32227,0.47656c-0.03789,0.08976 -0.066,0.1835 -0.08594,0.28125c-0.01994,0.09775 -0.03125,0.19898 -0.03125,0.30273c0,0.10375 0.01131,0.20498 0.03125,0.30273c0.01994,0.09775 0.04805,0.19149 0.08594,0.28125c0.03789,0.08977 0.08482,0.17607 0.13867,0.25586c0.05385,0.07979 0.11578,0.15289 0.18359,0.2207c0.06781,0.06781 0.14092,0.12975 0.2207,0.18359c0.07979,0.05385 0.16609,0.10078 0.25586,0.13867c0.08976,0.03789 0.1835,0.066 0.28125,0.08594c0.09775,0.01994 0.19898,0.03125 0.30273,0.03125c0.10375,0 0.20498,-0.01131 0.30273,-0.03125c0.68428,-0.13959 1.19727,-0.7425 1.19727,-1.46875c0,-0.83 -0.67,-1.5 -1.5,-1.5z"></path>
               </g>
-            </svg>
-          }
+            </g>
+          </svg>
         </div>
         <style>
           {`

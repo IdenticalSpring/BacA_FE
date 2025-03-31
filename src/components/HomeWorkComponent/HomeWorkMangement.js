@@ -61,6 +61,7 @@ export default function HomeWorkMangement({
       title: homeWork.title,
       linkYoutube: homeWork.linkYoutube,
       linkGame: homeWork.linkGame,
+      linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
       description: homeWork.description,
     });
@@ -121,6 +122,7 @@ export default function HomeWorkMangement({
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
+      formData.append("linkZalo", values.linkZalo);
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
 
@@ -226,6 +228,13 @@ export default function HomeWorkMangement({
       title: "Link Game",
       dataIndex: "linkGame",
       key: "linkGame",
+      width: "20%",
+      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+    },
+    {
+      title: "Link Zalo",
+      dataIndex: "linkZalo",
+      key: "linkZalo",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
@@ -360,6 +369,7 @@ export default function HomeWorkMangement({
             level: "",
             linkYoutube: "",
             linkGame: "",
+            linkZalo: "",
             description: "",
           }}
         >
@@ -414,6 +424,15 @@ export default function HomeWorkMangement({
           <Form.Item name="linkGame" label="Homework Game Link">
             <Input
               placeholder="Enter homework game link"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="linkZalo" label="Homework Zalo Link">
+            <Input
+              placeholder="Enter homework Zalo link"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,

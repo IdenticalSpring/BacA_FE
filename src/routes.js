@@ -74,7 +74,6 @@ import CreateLesson from "pages/teachers/CreateLesson";
 import AttendancePage from "pages/teachers/attendanceCheck";
 import TestManagement from "pages/admin/testManagement";
 import EnterTestScore from "pages/teachers/enterTestScore";
-import SkillManagement from "pages/admin/skillManagement";
 import HomeWorks from "layouts/homeWorks";
 import TestSkillManagement from "pages/admin/testSkillManagement";
 
@@ -82,6 +81,8 @@ import StudentCheckinStatistics from "layouts/Studentcheckinstatistics";
 import LevelManagement from "pages/admin/levelManagement";
 import CreateNotificationByAdmin from "layouts/notification";
 import DoHomework from "pages/students/DoHomework";
+import ContentPageManagement from "pages/admin/contentpageManagement";
+import EvaluationManagement from "pages/admin/evaluationManagement";
 
 const routes = [
   {
@@ -211,6 +212,18 @@ const routes = [
   },
   {
     type: "collapse",
+    name: "Content Page",
+    key: "contentPage",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/contentPage",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <ContentPageManagement />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
     name: "Students",
     key: "students",
     icon: <Icon fontSize="small">table_view</Icon>,
@@ -245,28 +258,28 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Test Skill Management",
-    key: "testSkillManagement",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/testSkillManagement",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <TestSkillManagement />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Test Skill Management",
+  //   key: "testSkillManagement",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/testSkillManagement",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <TestSkillManagement />
+  //     </PrivateRoute>
+  //   ),
+  // },
 
   {
     type: "collapse",
-    name: "Skill Management",
-    key: "skillManagement",
+    name: "Evaluation Management",
+    key: "evaluationManagement",
     icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/skillsManagement",
+    route: "/evaluationManagement",
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
-        <SkillManagement />
+        <EvaluationManagement />
       </PrivateRoute>
     ),
   },
