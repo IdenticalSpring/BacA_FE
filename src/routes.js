@@ -136,18 +136,7 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "StudentCheckIn",
-    key: "studentCheckIn",
-    icon: <Icon fontSize="small">Student CheckIn</Icon>,
-    route: "/StudentCheckIn",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <StudentCheckinStatistics />
-      </PrivateRoute>
-    ),
-  },
+
   {
     type: "collapse",
     name: "Classes",
@@ -222,6 +211,18 @@ const routes = [
   },
   {
     type: "collapse",
+    name: "Students",
+    key: "students",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/students",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <Students />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
     name: "Test Management",
     key: "testManagement",
     icon: <Icon fontSize="small">table_view</Icon>,
@@ -256,18 +257,7 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Students",
-    key: "students",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/students",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <Students />
-      </PrivateRoute>
-    ),
-  },
+
   {
     type: "collapse",
     name: "Skill Management",
@@ -289,6 +279,18 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <CreateNotificationByAdmin />
+      </PrivateRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "StudentCheckIn",
+    key: "studentCheckIn",
+    icon: <Icon fontSize="small">Student CheckIn</Icon>,
+    route: "/StudentCheckIn",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <StudentCheckinStatistics />
       </PrivateRoute>
     ),
   },

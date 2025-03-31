@@ -117,7 +117,7 @@ const Sidebar = ({
                     minWidth: isMobile ? "40px" : "48px",
                   }}
                 >
-                  <Text
+                  {/* <Text
                     style={{
                       fontSize: isMobile ? "0.9rem" : "1rem",
                       fontWeight: "700",
@@ -137,10 +137,33 @@ const Sidebar = ({
                     }}
                   >
                     {dayjs(item.date).format("MMM")}
-                  </Text>
+                  </Text> */}
+                  <CalendarOutlined />
                 </div>
 
-                <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    rowGap: "5px",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isSelected ? colors.darkGreen : colors.darkGray,
+                      fontWeight: "600",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                      display: "block",
+                      lineHeight: "1.2",
+                      width: "100%",
+                      textAlign: "center",
+                    }}
+                  >
+                    {/* {daysOfWeek[item.schedule.dayOfWeek]} */}
+                    {"Bài học ngày"}
+                  </Text>
                   <Text
                     style={{
                       color: isSelected ? colors.darkGreen : colors.darkGray,
@@ -150,7 +173,8 @@ const Sidebar = ({
                       lineHeight: "1.2",
                     }}
                   >
-                    {daysOfWeek[item.schedule.dayOfWeek]}
+                    {/* {daysOfWeek[item.schedule.dayOfWeek]} */}
+                    {new Date(item.date).toLocaleDateString("vi-VN")}
                   </Text>
                   {/* <Text
                     style={{
