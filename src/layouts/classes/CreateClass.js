@@ -32,7 +32,15 @@ import lessonByScheduleService from "services/lessonByScheduleService";
 import levelService from "services/levelService";
 import { colors } from "assets/theme/color";
 import DataTable from "examples/Tables/DataTable";
-import { message, Spin } from "antd";
+import { message, Modal, Spin } from "antd";
+function generateAccessId(length = 5) {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let accessId = "";
+  for (let i = 0; i < length; i++) {
+    accessId += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return accessId;
+}
 function CreateClass() {
   const navigate = useNavigate();
   const [classDataForCreate, setClassDataForCreate] = useState({
@@ -64,6 +72,7 @@ function CreateClass() {
     // { Header: "Start Date", accessor: "startDate", width: "20%" },
     // { Header: "End Date", accessor: "endDate", width: "20%" },
     { Header: "Teacher", accessor: "teacher", width: "20%" },
+    { Header: "Access ID", accessor: "accessId", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [scheduleColumns] = useState([
@@ -85,6 +94,7 @@ function CreateClass() {
   const [openEditClass, setOpenEditClass] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [classAccessId, setClassAccessId] = useState("");
   const daysOfWeek = [
     "Choose day of week",
     "Sunday",
@@ -116,6 +126,7 @@ function CreateClass() {
         // startDate: cls.startDate,
         // endDate: cls.endDate,
         teacher: cls.teacher?.name || "N/A",
+        accessId: cls.accessId || "N/A",
         actions: (
           <>
             <IconButton color="primary" onClick={() => handleEdit(cls)}>
@@ -209,12 +220,14 @@ function CreateClass() {
 
   const handleSaveClass = async () => {
     setLoadingCreateClass(true);
+    const genAccessId = generateAccessId();
     try {
       const payload = {
         name: classDataForCreate.name,
         level: classDataForCreate.level,
         // startDate: classData.startDate,
         // endDate: classData.endDate,
+        accessId: genAccessId,
         teacherID: classDataForCreate.teacherID,
       };
 
@@ -234,6 +247,7 @@ function CreateClass() {
           // startDate: classEntity.startDate,
           // endDate: classEntity.endDate,
           teacher: classEntity.teacher?.name || "N/A",
+          accessId: classEntity.accessId || "N/A",
           actions: (
             <>
               <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
@@ -253,11 +267,12 @@ function CreateClass() {
         // startDate: "",
         // endDate: "",
         teacherID: "",
+        accessId: "",
         scheduleId: "",
       });
       setSelectedSchedulesForCreate([]);
+      setClassAccessId(genAccessId);
       message.success("Create class succsess!");
-
       // navigate("/classes"); // Quay lại trang danh sách lớp
     } catch (err) {
       message.error("Create class failed!");
@@ -1120,6 +1135,18 @@ function CreateClass() {
           </Card>
         </DialogContent>
       </Dialog>
+      {
+        <Modal
+          open={classAccessId.length > 0}
+          onCancel={() => setClassAccessId("")}
+          onClose={() => setClassAccessId("")}
+          footer={<></>}
+        >
+          <div>
+            {"Class created successfully. This is your class access ID:"} {classAccessId}
+          </div>
+        </Modal>
+      }
     </DashboardLayout>
   );
 }
