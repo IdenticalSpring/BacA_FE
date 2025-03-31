@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import IconButton from "@mui/material/IconButton";
@@ -26,16 +26,9 @@ import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
 import HomeworkDetailModal from "./HomeworkDetailModal";
-// const levels = [
-//   "Level Pre-1",
-//   "Level 1",
-//   "Starters",
-//   "Level-KET",
-//   "Movers",
-//   "Flyers",
-//   "Pre-KET",
-//   "level-PET",
-// ];
+import SearchIcon from "@mui/icons-material/Search";
+import InputAdornment from "@mui/material/InputAdornment";
+
 function HomeWorks() {
   const navigate = useNavigate();
   const [columns] = useState([
@@ -162,23 +155,6 @@ function HomeWorks() {
       Header: "Actions",
       accessor: "actions",
       width: "20%",
-      // Cell: ({ row }) => (
-      //   <>
-      //     <IconButton
-      //       sx={{
-      //         backgroundColor: colors.midGreen,
-      //         color: colors.white,
-      //         " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-      //       }}
-      //       onClick={() => handleEdit(row.original)}
-      //     >
-      //       <EditIcon />
-      //     </IconButton>
-      //     <IconButton color="error" onClick={() => handleDelete(row.original.id)}>
-      //       <DeleteIcon />
-      //     </IconButton>
-      //   </>
-      // ),
     },
   ]);
   const [rows, setRows] = useState([]);
@@ -198,7 +174,7 @@ function HomeWorks() {
     title: "",
     level: "",
     linkYoutube: "",
-    linkSpeech: "",
+    linkGame: "",
     linkSpeech: "",
     TeacherId: "",
     description: "",
@@ -206,12 +182,16 @@ function HomeWorks() {
   const [levels, setLevels] = useState([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedHomeworkDetail, setSelectedHomeworkDetail] = useState(null);
+  const [searchTeacher, setSearchTeacher] = useState(""); // State cho tìm kiếm
+
   useEffect(() => {
     fetchHomeworks();
   }, [levels]);
+
   useEffect(() => {
     fetchLevels();
   }, []);
+
   const fetchLevels = async () => {
     try {
       const data = await levelService.getAllLevels();
@@ -220,12 +200,14 @@ function HomeWorks() {
       console.error("Lỗi khi lấy danh sách level:", error);
     }
   };
+
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       setQuill(editor);
     }
   }, [quillRef]);
+
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -255,6 +237,7 @@ function HomeWorks() {
     "background",
     "align",
   ];
+
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -267,16 +250,12 @@ function HomeWorks() {
 
       const formData = new FormData();
       formData.append("file", file);
-      // console.log([...formData]);
 
       try {
         const response = await axios.post(
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-        // console.log(response.data.url);
-
-        // const result = await response.json();
 
         if (response.status === 201 && quillRef.current) {
           const editor = quillRef.current.getEditor();
@@ -307,18 +286,10 @@ function HomeWorks() {
 
     try {
       const response = await homeWorkService.textToSpeech(textToSpeech);
-
       let base64String = response;
-      // console.log(response);
 
-      // base64String = btoa(
-      //   new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), "")
-      // );
-      // console.log(base64String);
-
-      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
       function base64ToBlob(base64, mimeType) {
-        let byteCharacters = atob(base64); // Giải mã base64
+        let byteCharacters = atob(base64);
         let byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -327,21 +298,8 @@ function HomeWorks() {
         return new Blob([byteArray], { type: mimeType });
       }
 
-      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
-      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      let audioBlob = base64ToBlob(base64String, "audio/mp3");
       setMp3file(audioBlob);
-      console.log(audioBlob);
-
-      // if (mp3Url) {
-      //   const audioElement = document.getElementById("audio-player");
-      //   if (audioElement) {
-      //     audioElement.src = ""; // Xóa src trước khi revoke
-      //     audioElement.load(); // Yêu cầu cập nhật
-      //   }
-      //   URL.revokeObjectURL(mp3Url);
-      // }
-      // console.log("mémaeseaseas");
-
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
     } catch (error) {
@@ -349,22 +307,21 @@ function HomeWorks() {
     }
     setLoadingTTSHomework(false);
   };
-  // console.log(mp3Url);
+
   useEffect(() => {
     if (mp3Url) {
-      // console.log("🔄 Cập nhật audio URL:", mp3Url);
       const audioElement = document.getElementById("audio-player");
       if (audioElement) {
-        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
-        audioElement.load(); // Tải lại audio
+        audioElement.src = "";
+        audioElement.load();
         audioElement.src = mp3Url;
       }
     }
   }, [mp3Url]);
+
   const fetchHomeworks = async () => {
     try {
       const data = await homeWorkService.getAllHomeWork();
-      // console.log(data);
       const formattedRows = data.map((homework) => ({
         id: homework.id,
         title: homework.title,
@@ -386,23 +343,8 @@ function HomeWorks() {
             >
               <EditIcon />
             </IconButton>
-            {/* <IconButton color="error" onClick={() => handleDelete(lesson.id)}>
-              <DeleteIcon />
-            </IconButton> */}
           </>
         ),
-        // onClick: () => {
-        //   setSelectedLessonDetail({
-        //     id: lesson.id,
-        //     name: lesson.name,
-        //     level: levels?.find((lv) => lv.id === lesson.level)?.name,
-        //     linkYoutube: lesson.linkYoutube,
-        //     linkSpeech: lesson.linkSpeech,
-        //     TeacherId: lesson?.teacher?.username,
-        //     description: lesson.description,
-        //   });
-        //   setDetailModalOpen(true);
-        // },
       }));
       setRows(formattedRows);
     } catch (err) {
@@ -464,9 +406,6 @@ function HomeWorks() {
                     <IconButton color="primary" onClick={() => handleEdit(homeworkEntity)}>
                       <EditIcon />
                     </IconButton>
-                    {/* <IconButton color="secondary" onClick={() => handleDelete(selectedLesson.id)}>
-                      <DeleteIcon />
-                    </IconButton> */}
                   </>
                 ),
               }
@@ -494,19 +433,23 @@ function HomeWorks() {
       setLoadingUpdateHomework(false);
     }
   };
-  //   console.log("Lesson -> rows", rows);
-  //   console.log(selectedLesson, lessonData);
+
+  const filteredRows = useMemo(() => {
+    if (!searchTeacher) return rows;
+    return rows.filter((row) => row.TeacherId.toLowerCase().includes(searchTeacher.toLowerCase()));
+  }, [rows, searchTeacher]);
+
   return (
     <DashboardLayout>
       <style>
         {`
         .truncate-text {
-  display: inline-block;
-  max-width: 100px;
-  white-space: nowrap; /* Ngăn chữ xuống dòng */
-  overflow: hidden; /* Ẩn phần dư */
-  text-overflow: ellipsis; /* Hiển thị "..." khi bị tràn */
-}
+          display: inline-block;
+          max-width: 100px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         `}
       </style>
       <DashboardNavbar />
@@ -529,17 +472,23 @@ function HomeWorks() {
                 <MDTypography variant="h6" color="white">
                   Lesson Tables
                 </MDTypography>
-                {/* <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: colors.midGreen,
-                    color: colors.white,
-                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-                  }}
-                  onClick={() => navigate("/lessons/create-lesson")}
-                >
-                  Create
-                </Button> */}
+              </MDBox>
+              <MDBox
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={2}
+                px={2}
+                py={1}
+              >
+                <TextField
+                  label="Search by teacher"
+                  variant="outlined"
+                  size="small"
+                  value={searchTeacher}
+                  onChange={(e) => setSearchTeacher(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
               </MDBox>
               <MDBox pt={3}>
                 {loading ? (
@@ -552,7 +501,7 @@ function HomeWorks() {
                   </MDTypography>
                 ) : (
                   <DataTable
-                    table={{ columns, rows }}
+                    table={{ columns, rows: filteredRows }}
                     isSorted={false}
                     entriesPerPage={false}
                     showTotalEntries={false}
@@ -572,12 +521,12 @@ function HomeWorks() {
           setOpen(false);
         }}
         fullWidth
-        maxWidth="xl" // Cỡ lớn nhất có thể
+        maxWidth="xl"
         PaperProps={{
           sx: {
-            width: "90vw", // Chiếm 90% chiều rộng màn hình
-            height: "90vh", // Chiếm 90% chiều cao màn hình
-            maxWidth: "none", // Bỏ giới hạn mặc định
+            width: "90vw",
+            height: "90vh",
+            maxWidth: "none",
           },
         }}
       >
@@ -591,14 +540,13 @@ function HomeWorks() {
             onChange={(e) => setHomeworkData({ ...homeworkData, title: e.target.value })}
           />
           <TextField
-            // select
             disabled
             label="level"
             fullWidth
             sx={{
               "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
                 {
-                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                  minHeight: "48px",
                   display: "flex",
                   alignItems: "center",
                 },
@@ -607,15 +555,8 @@ function HomeWorks() {
             value={homeworkData.level}
             onChange={(e) => {
               setHomeworkData({ ...homeworkData, level: e.target.value });
-              // console.log(e.target.value, +e.target.value);
             }}
-          >
-            {/* {levels.map((d, index) => (
-              <MenuItem key={index} value={d.id}>
-                {d.name}
-              </MenuItem>
-            ))} */}
-          </TextField>
+          />
           <TextField
             label="Lesson Link"
             fullWidth
@@ -666,13 +607,12 @@ function HomeWorks() {
             ref={quillRef}
             style={{
               height: "250px",
-              marginBottom: "60px", // Consider reducing this
+              marginBottom: "60px",
               borderRadius: "6px",
               border: `1px solid ${colors.inputBorder}`,
             }}
             value={homeworkData.description}
             onChange={(e) => {
-              // console.log(e);
               setHomeworkData({ ...homeworkData, description: e });
             }}
           />

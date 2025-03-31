@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
@@ -41,7 +41,8 @@ function Teachers() {
     startDate: "",
     endDate: "",
   });
-  const [file, setFile] = useState(null); // State để lưu file upload khi chỉnh sửa
+  const [file, setFile] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Thêm state cho tìm kiếm
 
   useEffect(() => {
     fetchTeachers();
@@ -61,7 +62,7 @@ function Teachers() {
           </a>
         ) : (
           "No file"
-        ), // Hiển thị link nếu có fileUrl
+        ),
         actions: (
           <>
             <IconButton
@@ -98,7 +99,7 @@ function Teachers() {
       startDate: teacher.startDate,
       endDate: teacher.endDate,
     });
-    setFile(null); // Reset file khi mở dialog chỉnh sửa
+    setFile(null);
     setOpen(true);
   };
 
@@ -114,13 +115,12 @@ function Teachers() {
   };
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]); // Lấy file đầu tiên từ input
+    setFile(e.target.files[0]);
   };
 
   const handleSave = async () => {
     try {
       if (editMode) {
-        // Cập nhật giáo viên
         const updatedTeacher = await teacherService.editTeacher(
           selectedTeacher.id,
           teacherData,
@@ -144,7 +144,6 @@ function Teachers() {
           )
         );
       } else {
-        // Tạo giáo viên mới (không áp dụng ở đây vì đã có trang CreateTeacher riêng)
         const createdTeacher = await teacherService.createTeacher(teacherData, file);
         setRows([
           ...rows,
@@ -180,7 +179,6 @@ function Teachers() {
           },
         ]);
       }
-
       setOpen(false);
       setTeacherData({ name: "", username: "", password: "", startDate: "", endDate: "" });
       setFile(null);
@@ -189,6 +187,11 @@ function Teachers() {
       alert(editMode ? "Lỗi khi chỉnh sửa giáo viên!" : "Lỗi khi tạo giáo viên!");
     }
   };
+
+  const filteredRows = useMemo(() => {
+    if (!searchTerm) return rows;
+    return rows.filter((row) => row.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [rows, searchTerm]);
 
   return (
     <DashboardLayout>
@@ -212,17 +215,38 @@ function Teachers() {
                 <MDTypography variant="h6" color="white">
                   Teachers Table
                 </MDTypography>
+
                 <Button
                   variant="contained"
                   sx={{
                     backgroundColor: colors.midGreen,
                     color: colors.white,
-                    " &: hover": { backgroundColor: colors.highlightGreen },
+                    " &:hover": { backgroundColor: colors.highlightGreen },
                   }}
                   onClick={() => navigate("/teachers/create-teacher")}
                 >
                   Create
                 </Button>
+              </MDBox>
+              <MDBox
+                mx={2}
+                mt={0}
+                py={3}
+                px={2}
+                variant="gradient"
+                borderRadius="lg"
+                display="flex"
+                justifyContent="right"
+                alignItems="center"
+              >
+                <TextField
+                  label="Search by teacher"
+                  variant="outlined"
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
               </MDBox>
               <MDBox pt={3}>
                 {loading ? (
@@ -235,7 +259,7 @@ function Teachers() {
                   </MDTypography>
                 ) : (
                   <DataTable
-                    table={{ columns, rows }}
+                    table={{ columns, rows: filteredRows }}
                     isSorted={false}
                     entriesPerPage={false}
                     showTotalEntries={false}
@@ -298,7 +322,7 @@ function Teachers() {
             type="file"
             label="Upload File"
             InputLabelProps={{ shrink: true }}
-            inputProps={{ accept: "image/*, .pdf" }} // Giới hạn loại file
+            inputProps={{ accept: "image/*, .pdf" }}
             onChange={handleFileChange}
           />
         </DialogContent>

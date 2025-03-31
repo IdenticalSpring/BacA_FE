@@ -29,7 +29,7 @@ import DataTable from "examples/Tables/DataTable";
 import skillService from "services/skillService";
 import { colors } from "assets/theme/color";
 
-function SkillManagement() {
+function EvaluationManagement() {
   // State for form inputs
   const [skillName, setSkillName] = useState("");
   const [skillType, setSkillType] = useState(""); // 1 for Skill, 0 for Behavior
@@ -537,4 +537,4 @@ function SkillManagement() {
   );
 }
 
-export default SkillManagement;
+export default EvaluationManagement;

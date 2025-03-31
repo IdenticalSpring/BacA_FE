@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import IconButton from "@mui/material/IconButton";
@@ -27,16 +27,9 @@ import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
 import LessonDetailModal from "./LessonDetailModal";
-// const levels = [
-//   "Level Pre-1",
-//   "Level 1",
-//   "Starters",
-//   "Level-KET",
-//   "Movers",
-//   "Flyers",
-//   "Pre-KET",
-//   "level-PET",
-// ];
+import SearchIcon from "@mui/icons-material/Search";
+import InputAdornment from "@mui/material/InputAdornment";
+
 function Lessons() {
   const navigate = useNavigate();
   const [columns] = useState([
@@ -146,23 +139,6 @@ function Lessons() {
       Header: "Actions",
       accessor: "actions",
       width: "20%",
-      // Cell: ({ row }) => (
-      //   <>
-      //     <IconButton
-      //       sx={{
-      //         backgroundColor: colors.midGreen,
-      //         color: colors.white,
-      //         " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-      //       }}
-      //       onClick={() => handleEdit(row.original)}
-      //     >
-      //       <EditIcon />
-      //     </IconButton>
-      //     <IconButton color="error" onClick={() => handleDelete(row.original.id)}>
-      //       <DeleteIcon />
-      //     </IconButton>
-      //   </>
-      // ),
     },
   ]);
   const [rows, setRows] = useState([]);
@@ -189,12 +165,16 @@ function Lessons() {
   const [levels, setLevels] = useState([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedLessonDetail, setSelectedLessonDetail] = useState(null);
+  const [searchTeacher, setSearchTeacher] = useState(""); // Thêm state cho tìm kiếm
+
   useEffect(() => {
     fetchLessons();
   }, [levels]);
+
   useEffect(() => {
     fetchLevels();
   }, []);
+
   const fetchLevels = async () => {
     try {
       const data = await levelService.getAllLevels();
@@ -203,12 +183,14 @@ function Lessons() {
       console.error("Lỗi khi lấy danh sách level:", error);
     }
   };
+
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       setQuill(editor);
     }
   }, [quillRef]);
+
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -238,6 +220,7 @@ function Lessons() {
     "background",
     "align",
   ];
+
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -250,16 +233,12 @@ function Lessons() {
 
       const formData = new FormData();
       formData.append("file", file);
-      // console.log([...formData]);
 
       try {
         const response = await axios.post(
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-        // console.log(response.data.url);
-
-        // const result = await response.json();
 
         if (response.status === 201 && quillRef.current) {
           const editor = quillRef.current.getEditor();
@@ -290,18 +269,10 @@ function Lessons() {
 
     try {
       const response = await homeWorkService.textToSpeech(textToSpeech);
-
       let base64String = response;
-      // console.log(response);
 
-      // base64String = btoa(
-      //   new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), "")
-      // );
-      // console.log(base64String);
-
-      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
       function base64ToBlob(base64, mimeType) {
-        let byteCharacters = atob(base64); // Giải mã base64
+        let byteCharacters = atob(base64);
         let byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -310,21 +281,8 @@ function Lessons() {
         return new Blob([byteArray], { type: mimeType });
       }
 
-      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
-      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      let audioBlob = base64ToBlob(base64String, "audio/mp3");
       setMp3file(audioBlob);
-      console.log(audioBlob);
-
-      // if (mp3Url) {
-      //   const audioElement = document.getElementById("audio-player");
-      //   if (audioElement) {
-      //     audioElement.src = ""; // Xóa src trước khi revoke
-      //     audioElement.load(); // Yêu cầu cập nhật
-      //   }
-      //   URL.revokeObjectURL(mp3Url);
-      // }
-      // console.log("mémaeseaseas");
-
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
     } catch (error) {
@@ -332,22 +290,21 @@ function Lessons() {
     }
     setLoadingTTSLesson(false);
   };
-  // console.log(mp3Url);
+
   useEffect(() => {
     if (mp3Url) {
-      // console.log("🔄 Cập nhật audio URL:", mp3Url);
       const audioElement = document.getElementById("audio-player");
       if (audioElement) {
-        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
-        audioElement.load(); // Tải lại audio
+        audioElement.src = "";
+        audioElement.load();
         audioElement.src = mp3Url;
       }
     }
   }, [mp3Url]);
+
   const fetchLessons = async () => {
     try {
       const data = await lessonService.getAllLessons();
-      // console.log(data);
       const formattedRows = data.map((lesson) => ({
         id: lesson.id,
         name: lesson.name,
@@ -368,23 +325,8 @@ function Lessons() {
             >
               <EditIcon />
             </IconButton>
-            {/* <IconButton color="error" onClick={() => handleDelete(lesson.id)}>
-              <DeleteIcon />
-            </IconButton> */}
           </>
         ),
-        // onClick: () => {
-        //   setSelectedLessonDetail({
-        //     id: lesson.id,
-        //     name: lesson.name,
-        //     level: levels?.find((lv) => lv.id === lesson.level)?.name,
-        //     linkYoutube: lesson.linkYoutube,
-        //     linkSpeech: lesson.linkSpeech,
-        //     TeacherId: lesson?.teacher?.username,
-        //     description: lesson.description,
-        //   });
-        //   setDetailModalOpen(true);
-        // },
       }));
       setRows(formattedRows);
     } catch (err) {
@@ -444,9 +386,6 @@ function Lessons() {
                     <IconButton color="primary" onClick={() => handleEdit(lessonEntity)}>
                       <EditIcon />
                     </IconButton>
-                    {/* <IconButton color="secondary" onClick={() => handleDelete(selectedLesson.id)}>
-                      <DeleteIcon />
-                    </IconButton> */}
                   </>
                 ),
               }
@@ -473,19 +412,28 @@ function Lessons() {
       setLoadingUpdateLesson(false);
     }
   };
-  //   console.log("Lesson -> rows", rows);
-  //   console.log(selectedLesson, lessonData);
+
+  const filteredRows = useMemo(() => {
+    console.log("Danh sách gốc:", rows);
+    console.log("Từ khóa tìm kiếm:", searchTeacher);
+    if (!searchTeacher) return rows; // Nếu không có từ khóa, trả về toàn bộ danh sách
+    return rows.filter((row) => {
+      const teacherName = row.TeacherId || ""; // Đảm bảo không bị lỗi nếu TeacherId là null
+      return teacherName.toLowerCase().includes(searchTeacher.toLowerCase());
+    });
+  }, [rows, searchTeacher]);
+
   return (
     <DashboardLayout>
       <style>
         {`
         .truncate-text {
-  display: inline-block;
-  max-width: 100px;
-  white-space: nowrap; /* Ngăn chữ xuống dòng */
-  overflow: hidden; /* Ẩn phần dư */
-  text-overflow: ellipsis; /* Hiển thị "..." khi bị tràn */
-}
+          display: inline-block;
+          max-width: 100px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         `}
       </style>
       <DashboardNavbar />
@@ -508,17 +456,23 @@ function Lessons() {
                 <MDTypography variant="h6" color="white">
                   Lesson Tables
                 </MDTypography>
-                {/* <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: colors.midGreen,
-                    color: colors.white,
-                    " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-                  }}
-                  onClick={() => navigate("/lessons/create-lesson")}
-                >
-                  Create
-                </Button> */}
+              </MDBox>
+              <MDBox
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={2}
+                px={2}
+                py={1}
+              >
+                <TextField
+                  label="Search by teacher"
+                  variant="outlined"
+                  size="small"
+                  value={searchTeacher}
+                  onChange={(e) => setSearchTeacher(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
               </MDBox>
               <MDBox pt={3}>
                 {loading ? (
@@ -531,7 +485,7 @@ function Lessons() {
                   </MDTypography>
                 ) : (
                   <DataTable
-                    table={{ columns, rows }}
+                    table={{ columns, rows: filteredRows }}
                     isSorted={false}
                     entriesPerPage={false}
                     showTotalEntries={false}
@@ -551,12 +505,12 @@ function Lessons() {
           setOpen(false);
         }}
         fullWidth
-        maxWidth="xl" // Cỡ lớn nhất có thể
+        maxWidth="xl"
         PaperProps={{
           sx: {
-            width: "90vw", // Chiếm 90% chiều rộng màn hình
-            height: "90vh", // Chiếm 90% chiều cao màn hình
-            maxWidth: "none", // Bỏ giới hạn mặc định
+            width: "90vw",
+            height: "90vh",
+            maxWidth: "none",
           },
         }}
       >
@@ -570,14 +524,13 @@ function Lessons() {
             onChange={(e) => setLessonData({ ...lessonData, name: e.target.value })}
           />
           <TextField
-            // select
             disabled
             label="level"
             fullWidth
             sx={{
               "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
                 {
-                  minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                  minHeight: "48px",
                   display: "flex",
                   alignItems: "center",
                 },
@@ -586,15 +539,8 @@ function Lessons() {
             value={lessonData.level}
             onChange={(e) => {
               setLessonData({ ...lessonData, level: e.target.value });
-              // console.log(e.target.value, +e.target.value);
             }}
-          >
-            {/* {levels.map((d, index) => (
-              <MenuItem key={index} value={d.id}>
-                {d.name}
-              </MenuItem>
-            ))} */}
-          </TextField>
+          />
           <TextField
             label="Lesson Link"
             fullWidth
@@ -648,7 +594,6 @@ function Lessons() {
             }}
             value={lessonData.description}
             onChange={(e) => {
-              // console.log(e);
               setLessonData({ ...lessonData, description: e });
             }}
           />
