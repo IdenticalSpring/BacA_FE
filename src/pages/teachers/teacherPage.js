@@ -154,7 +154,7 @@ const TeacherPage = () => {
   const screens = useBreakpoint();
 
   // Determine if we're on mobile or tablet
-  const isMobile = !screens.md;
+  const isMobile = !screens.lg;
   const isTablet = screens.md && !screens.lg;
   const isDesktop = screens.lg;
   // User info
@@ -828,6 +828,7 @@ const TeacherPage = () => {
                         color: colors.white,
                         marginBottom: "12px",
                       }}
+                      src={student.imgUrl || ""}
                     >
                       {student.name.charAt(0)}
                     </Avatar>
@@ -1226,7 +1227,7 @@ const TeacherPage = () => {
       </Modal> */}
 
       <Modal
-        title="Assignment Management"
+        title="Lesson Contents"
         open={assignmentModal}
         onCancel={() => setAssignmentModal(false)}
         footer={[

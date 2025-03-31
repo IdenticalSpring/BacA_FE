@@ -315,7 +315,7 @@ export default function HomeWorkMangement({
           columns={columns}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 4 }}
           style={{ borderRadius: "8px", overflow: "hidden" }}
           onRow={(record) => ({
             style: { cursor: "pointer" },

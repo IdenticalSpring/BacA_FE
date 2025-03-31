@@ -1,5 +1,23 @@
-import { Button, Card, Divider, Form, Input, message, Select, Space, Typography } from "antd";
-import { SaveOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  message,
+  Modal,
+  Select,
+  Space,
+  Spin,
+  Typography,
+} from "antd";
+import {
+  CopyOutlined,
+  IdcardOutlined,
+  ReadOutlined,
+  SaveOutlined,
+  SendOutlined,
+} from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -12,7 +30,9 @@ import HomeWorkBySchedule from "./HomeWorkBySchedule";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
+import classService from "services/classService";
 const { Title } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 export default function CreateHomeWork({
   toolbar,
@@ -39,6 +59,20 @@ export default function CreateHomeWork({
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
   const [selected, setSelected] = useState(new Set());
+  const [showAccessId, setShowAccessId] = useState(false);
+  const [accessId, setAccessId] = useState("");
+  const [loadingClass, setLoadingClass] = useState(false);
+  const homeworkLink = "https://happyclass.com.vn/do-homework";
+  const [copySuccess, setCopySuccess] = useState(false);
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(homeworkLink).then(() => {
+      setCopySuccess(true);
+      message.success("Copied to clipboard!"); // Hiển thị thông báo
+
+      // Reset hiệu ứng sau 2 giây
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -208,6 +242,20 @@ export default function CreateHomeWork({
       }
     }
   }, [mp3Url]);
+  useEffect(() => {
+    const fetchClass = async () => {
+      try {
+        setLoadingClass(true);
+        const data = await classService.getClassById(classID);
+        setAccessId(data.accessId);
+      } catch (err) {
+        setAccessId(err);
+      } finally {
+        setLoadingClass(false);
+      }
+    };
+    fetchClass();
+  }, [classID]);
   return (
     <div
       style={{
@@ -396,23 +444,42 @@ export default function CreateHomeWork({
         </Card>
       </div>
       {isMobile && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loadingCreateHomeWork}
-          icon={<SaveOutlined />}
-          style={{
-            borderRadius: "6px",
-            backgroundColor: colors.emerald,
-            borderColor: colors.emerald,
-            boxShadow: "0 2px 0 " + colors.softShadow,
-          }}
-          onClick={() => {
-            form.submit();
-          }}
-        >
-          Create HomeWork
-        </Button>
+        <>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loadingCreateHomeWork}
+            icon={<SaveOutlined />}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              boxShadow: "0 2px 0 " + colors.softShadow,
+            }}
+            onClick={() => {
+              form.submit();
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            // loading={loadingCreateHomeWork}
+            icon={<SendOutlined />}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              boxShadow: "0 2px 0 " + colors.softShadow,
+            }}
+            onClick={() => {
+              setShowAccessId(true);
+            }}
+          >
+            Sent Link
+          </Button>
+        </>
       )}
       <div
         style={{
@@ -433,27 +500,77 @@ export default function CreateHomeWork({
           setSelected={setSelected}
         />
       </div>
-      <div style={{ display: "flex", justifyContent: "right", width: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "right", width: "100%", gap: "10px" }}>
         {!isMobile && (
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loadingCreateHomeWork}
-            icon={<SaveOutlined />}
-            style={{
-              borderRadius: "6px",
-              backgroundColor: colors.emerald,
-              borderColor: colors.emerald,
-              boxShadow: "0 2px 0 " + colors.softShadow,
-            }}
-            onClick={() => {
-              form.submit();
-            }}
-          >
-            Create HomeWork
-          </Button>
+          <>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loadingCreateHomeWork}
+              icon={<SaveOutlined />}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                boxShadow: "0 2px 0 " + colors.softShadow,
+              }}
+              onClick={() => {
+                form.submit();
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loadingClass}
+              icon={<SendOutlined />}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                boxShadow: "0 2px 0 " + colors.softShadow,
+              }}
+              onClick={() => {
+                setShowAccessId(true);
+              }}
+            >
+              Sent Link
+            </Button>
+          </>
         )}
       </div>
+      <Modal
+        open={showAccessId}
+        onCancel={() => setShowAccessId(false)}
+        onClose={() => setShowAccessId(false)}
+        footer={<></>}
+      >
+        {loadingClass ? (
+          <div>
+            <Spin />
+          </div>
+        ) : (
+          <Card style={{ maxWidth: "90%", margin: "auto", textAlign: "center" }}>
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <ReadOutlined style={{ fontSize: 32, color: "#1890ff" }} />
+              <Text strong style={{ fontSize: 16 }}>
+                Your Class ID is: <Text type="danger">{accessId}</Text>
+              </Text>
+              <Input value={homeworkLink} readOnly style={{ textAlign: "center", width: "100%" }} />
+
+              {/* Nút Copy với hiệu ứng */}
+              <Button
+                icon={<CopyOutlined />}
+                onClick={copyToClipboard}
+                type={copySuccess ? "default" : "primary"}
+              >
+                {copySuccess ? "Copied!" : "Copy Homework Link"}
+              </Button>
+            </Space>
+          </Card>
+        )}
+      </Modal>
     </div>
   );
 }

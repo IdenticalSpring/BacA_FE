@@ -49,7 +49,7 @@ export default function DoHomework() {
     setLoading(true);
     setError("");
     try {
-      const res = await classService.getClassById(classID);
+      const res = await classService.getClassByAccessId(classID);
       console.log(res);
 
       setClassData(res);

@@ -45,7 +45,7 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
             color: colors.white,
           }}
         >
-          <span className="button-text">Lesson</span>
+          <span className="button-text">Nội dung bài học</span>
         </Button>
         <Button
           type="primary"
@@ -57,7 +57,7 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
             color: colors.white,
           }}
         >
-          <span className="button-text">Homework</span>
+          <span className="button-text">Bài về nhà</span>
         </Button>
         <Button
           type="primary"
@@ -69,7 +69,7 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
             color: colors.white,
           }}
         >
-          <span className="button-text">Class review</span>
+          <span className="button-text"> Đánh giá</span>
         </Button>
         <Button
           type="primary"
@@ -81,7 +81,7 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
             color: colors.white,
           }}
         >
-          <span className="button-text">Enter test scores</span>
+          <span className="button-text">Nhập điểm thi</span>
         </Button>
 
         <Button
@@ -94,7 +94,7 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
             color: colors.white,
           }}
         >
-          <span className="button-text">Attendance Check</span>
+          <span className="button-text">Điểm Danh</span>
         </Button>
       </Space>
 

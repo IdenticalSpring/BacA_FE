@@ -410,7 +410,7 @@ export default function CreateLesson({
               form.submit();
             }}
           >
-            Create Lesson
+            Save
           </Button>
         )}
       </div>
