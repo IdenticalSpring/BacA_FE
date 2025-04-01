@@ -302,7 +302,7 @@ const Sidebar = ({
                   color: colors.darkGreen,
                 }}
               >
-                Bài học trước đây
+                Nội dung đã học
               </Text>
             </div>
           </div>
@@ -353,7 +353,7 @@ const Sidebar = ({
                   color: colors.darkGreen,
                 }}
               >
-                Bài học sắp tới
+                Nội dung sắp tới
               </Text>
             </div>
           </div>

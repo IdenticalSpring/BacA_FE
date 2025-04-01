@@ -33,6 +33,9 @@ import {
   ExclamationCircleOutlined,
   MessageOutlined,
   CheckCircleOutlined,
+  SmileOutlined,
+  FrownOutlined,
+  MehOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -867,7 +870,7 @@ const TeacherPage = () => {
                               }}
                               onClick={() => handleStatusChange(student.id, 1)}
                             >
-                              Present
+                              <SmileOutlined style={{ fontSize: "20px" }} />
                             </Button>
                             <Button
                               type={studentAttendance.present === 0 ? "primary" : "default"}
@@ -888,7 +891,7 @@ const TeacherPage = () => {
                               }}
                               onClick={() => handleStatusChange(student.id, 0)}
                             >
-                              Absent
+                              <FrownOutlined style={{ fontSize: "20px" }} />
                             </Button>
                             <Button
                               type={studentAttendance.present === 2 ? "primary" : "default"}
@@ -909,7 +912,7 @@ const TeacherPage = () => {
                               }}
                               onClick={() => handleStatusChange(student.id, 2)}
                             >
-                              Permission
+                              <MehOutlined style={{ fontSize: "20px" }} />
                             </Button>
                           </Space>
                           <Input.TextArea
@@ -1227,7 +1230,7 @@ const TeacherPage = () => {
       </Modal> */}
 
       <Modal
-        title="Lesson Contents"
+        title="Nội dung bài học"
         open={assignmentModal}
         onCancel={() => setAssignmentModal(false)}
         footer={[
@@ -1236,7 +1239,7 @@ const TeacherPage = () => {
             key="close"
             onClick={() => setAssignmentModal(false)}
           >
-            Close
+            Đóng
           </Button>,
         ]}
         width={isMobile ? "95%" : "95%"}
@@ -1336,12 +1339,12 @@ const TeacherPage = () => {
       </Modal>
 
       <Modal
-        title="Homework Management"
+        title="Quản lý bài tập"
         open={homeworkModal}
         onCancel={() => setHomeworkModal(false)}
         footer={[
           <Button style={{ marginTop: "20px" }} key="close" onClick={() => setHomeworkModal(false)}>
-            Close
+            Đóng
           </Button>,
         ]}
         width={isMobile ? "95%" : "95%"}

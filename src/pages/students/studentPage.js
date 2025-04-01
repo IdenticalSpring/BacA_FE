@@ -29,6 +29,7 @@ import {
   BellOutlined,
   QuestionCircleOutlined,
   LinkOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -284,6 +285,10 @@ const StudentPage = () => {
       case "lessons":
         scrollToSection(lessonsRef);
         break;
+      case "situation":
+        // scrollToSection(lessonsRef);
+        message.info("Coming soon!");
+        break;
       case "homework":
         scrollToSection(homeworkRef);
         break;
@@ -462,6 +467,7 @@ const StudentPage = () => {
       )}
     </div>
   );
+  console.log(lessonsRef, homeworkRef, scoresRef);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -594,7 +600,7 @@ const StudentPage = () => {
               {/* Các section */}
               <div ref={scoresRef}>
                 <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-                  <TrophyOutlined /> Điểm Số
+                  <TrophyOutlined /> Điểm Thi
                 </Title>
                 <StudentScoreTab studentId={studentId} colors={colors} />
                 <Divider />
@@ -637,17 +643,6 @@ const StudentPage = () => {
           >
             <Space size="large">
               <Button
-                type={activeTab === "scores" ? "primary" : "link"}
-                icon={<TrophyOutlined />}
-                onClick={() => handleTabClick("scores")}
-                style={{
-                  backgroundColor: activeTab === "scores" ? colors.deepGreen : "transparent",
-                  borderColor: activeTab === "scores" ? colors.deepGreen : colors.borderGreen,
-                }}
-              >
-                Điểm Số
-              </Button>
-              <Button
                 type={activeTab === "lessons" ? "primary" : "link"}
                 icon={<BookOutlined />}
                 onClick={() => handleTabClick("lessons")}
@@ -659,6 +654,17 @@ const StudentPage = () => {
                 Bài Học
               </Button>
               <Button
+                type={activeTab === "situation" ? "primary" : "link"}
+                icon={<BarChartOutlined />}
+                onClick={() => handleTabClick("situation")}
+                style={{
+                  backgroundColor: activeTab === "situation" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "situation" ? colors.deepGreen : colors.borderGreen,
+                }}
+              >
+                Tình hình học
+              </Button>
+              <Button
                 type={activeTab === "homework" ? "primary" : "link"}
                 icon={<FileTextOutlined />}
                 onClick={() => handleTabClick("homework")}
@@ -668,6 +674,17 @@ const StudentPage = () => {
                 }}
               >
                 Bài Tập
+              </Button>
+              <Button
+                type={activeTab === "scores" ? "primary" : "link"}
+                icon={<TrophyOutlined />}
+                onClick={() => handleTabClick("scores")}
+                style={{
+                  backgroundColor: activeTab === "scores" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "scores" ? colors.deepGreen : colors.borderGreen,
+                }}
+              >
+                Điểm Thi
               </Button>
             </Space>
           </div>

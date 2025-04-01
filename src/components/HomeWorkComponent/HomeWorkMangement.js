@@ -205,48 +205,48 @@ export default function HomeWorkMangement({
 
   const columns = [
     {
-      title: "Homework title",
+      title: "Tiêu đề bài tập",
       dataIndex: "title",
       key: "title",
       width: "20%",
     },
     {
-      title: "Level",
+      title: "Cấp độ",
       dataIndex: "level",
       key: "level",
       width: "15%",
       render: (text) => levels?.find((level) => level.id === text)?.name,
     },
     {
-      title: "Link Youtube",
+      title: "Link Youtube bài tập",
       dataIndex: "linkYoutube",
       key: "linkYoutube",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
     {
-      title: "Link Game",
+      title: "Link Game bài tập",
       dataIndex: "linkGame",
       key: "linkGame",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
     {
-      title: "Link Zalo",
+      title: "Link Zalo bài tập",
       dataIndex: "linkZalo",
       key: "linkZalo",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
     {
-      title: "Link Speech",
+      title: "Link Speech bài tập",
       dataIndex: "linkSpeech",
       key: "linkSpeech",
       width: "20%",
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
     {
-      title: "Description",
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
       width: "25%",
@@ -257,7 +257,7 @@ export default function HomeWorkMangement({
       ),
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       width: "20%",
       render: (_, record) => (
@@ -272,7 +272,7 @@ export default function HomeWorkMangement({
             }}
           />
           <Popconfirm
-            title="Are you sure you want to delete this homeWork?"
+            title="Bạn có chắc muốn xóa bài tập này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -306,7 +306,7 @@ export default function HomeWorkMangement({
           }}
         >
           <Title level={4} style={{ margin: 0, color: colors.darkGreen }}>
-            HomeWork Management
+            Quản lý bài tập
           </Title>
         </div>
 
@@ -326,7 +326,7 @@ export default function HomeWorkMangement({
 
       <Modal
         centered
-        title={editingHomeWork ? "Edit HomeWork" : "Create New HomeWork"}
+        title={editingHomeWork ? "Điều chỉnh bài tập" : "Create New HomeWork"}
         open={modalUpdateHomeWorkVisible}
         onCancel={() => {
           setModalUpdateHomeWorkVisible(false);
@@ -343,7 +343,7 @@ export default function HomeWorkMangement({
               setEditingHomeWork(null);
             }}
           >
-            Cancel
+            Hủy
           </Button>,
           <Button
             loading={loadingUpdate}
@@ -355,7 +355,7 @@ export default function HomeWorkMangement({
               borderColor: colors.emerald,
             }}
           >
-            {editingHomeWork ? "Save" : "Create"}
+            {editingHomeWork ? "Lưu" : "Create"}
           </Button>,
         ]}
         width={720}
@@ -375,14 +375,14 @@ export default function HomeWorkMangement({
         >
           <Form.Item
             name="title"
-            label="Homework Title"
+            label="Tiêu đề bài tập"
             rules={[
               { required: true, message: "Please enter the homework name" },
               { max: 100, message: "Title cannot be longer than 100 characters" },
             ]}
           >
             <Input
-              placeholder="Enter homework name"
+              placeholder="Nhập tiêu đề bài tập"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
@@ -408,43 +408,13 @@ export default function HomeWorkMangement({
               ))}
             </Select>
           </Form.Item> */}
-          <Form.Item
-            name="linkYoutube"
-            label="Homework Youtube Link"
-            rules={[{ required: true, message: "Please enter the homework link" }]}
-          >
-            <Input
-              placeholder="Enter homework youtube link"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
-          <Form.Item name="linkGame" label="Homework Game Link">
-            <Input
-              placeholder="Enter homework game link"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
-          <Form.Item name="linkZalo" label="Homework Zalo Link">
-            <Input
-              placeholder="Enter homework Zalo link"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
-          <Form.Item label="Tech to speech">
+
+          <Form.Item label="Văn bản thành giọng nói">
             <TextArea
               value={textToSpeech}
               onChange={(e) => setTextToSpeech(e.target.value)}
               rows={3}
-              placeholder="Enter text to convert to speech"
+              placeholder="Nhập văn bản để chuyển thành giọng nói"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
@@ -461,7 +431,7 @@ export default function HomeWorkMangement({
                 borderColor: colors.deepGreen,
               }}
             >
-              Convert to Speech
+              Chuyển thành giọng nói
             </Button>
           </Form.Item>
           {mp3Url && (
@@ -498,8 +468,39 @@ export default function HomeWorkMangement({
             </audio>
           </div> */}
           <Form.Item
+            name="linkYoutube"
+            label="Link Youtube Bài tập"
+            rules={[{ required: true, message: "Please enter the homework link" }]}
+          >
+            <Input
+              placeholder="Nhập link youtube bài tập"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="linkGame" label="Link Game bài tập">
+            <Input
+              placeholder="Nhập link game bài tập"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="linkZalo" label="Link Zalo bài tập">
+            <Input
+              placeholder="Nhập link zalo bài tập"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item
             name="description"
-            label="Description"
+            label="Mô tả"
             rules={[{ required: true, message: "Please enter a description" }]}
           >
             <ReactQuill

@@ -127,6 +127,7 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           padding: "0",
           overflowY: "auto",
           maxHeight: "400px",
+          overflowX: "hidden",
           // overflow: "auto",
           // height: "50%",
           // height: isMobile ? "calc(100vh - 70px)" : "calc(100vh - 70px)",
@@ -139,6 +140,7 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
             style={{
               background: colors.paleGreen,
               border: "none",
+              marginLeft: "10px",
             }}
           >
             {classes?.map((classItem) => (
@@ -166,7 +168,13 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
                   </Avatar>
                 }
               >
-                <span style={{ fontWeight: selectedClass === classItem.id ? 600 : 400 }}>
+                <span
+                  style={{
+                    fontWeight: selectedClass === classItem.id ? 600 : 400,
+                    maxWidth: "100%",
+                    textOverflow: "ellipsis",
+                  }}
+                >
                   {classItem.name}
                 </span>
               </Menu.Item>

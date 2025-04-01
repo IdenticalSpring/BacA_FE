@@ -197,13 +197,13 @@ export default function LessonMangement({
 
   const columns = [
     {
-      title: "Lesson Name",
+      title: "Tên bài học",
       dataIndex: "name",
       key: "name",
       width: "20%",
     },
     {
-      title: "Level",
+      title: "Cấp độ",
       dataIndex: "level",
       key: "level",
       width: "15%",
@@ -224,7 +224,7 @@ export default function LessonMangement({
       render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
     },
     {
-      title: "Description",
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
       width: "25%",
@@ -235,7 +235,7 @@ export default function LessonMangement({
       ),
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       width: "20%",
       render: (_, record) => (
@@ -250,7 +250,7 @@ export default function LessonMangement({
             }}
           />
           <Popconfirm
-            title="Are you sure you want to delete this lesson?"
+            title="Bạn có chắc muốn xóa bài học này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -283,7 +283,7 @@ export default function LessonMangement({
           }}
         >
           <Title level={4} style={{ margin: 0, color: colors.darkGreen }}>
-            Lessons Management
+            Quản lý bài học
           </Title>
         </div>
 
@@ -303,7 +303,7 @@ export default function LessonMangement({
 
       <Modal
         centered
-        title={editingLesson ? "Edit Lesson" : "Create New Lesson"}
+        title={editingLesson ? "Điều chỉnh bài học" : "Create New Lesson"}
         open={modalUpdateLessonVisible}
         onCancel={() => {
           setModalUpdateLessonVisible(false);
@@ -320,7 +320,7 @@ export default function LessonMangement({
               setEditingLesson(null);
             }}
           >
-            Cancel
+            Hủy
           </Button>,
           <Button
             loading={loadingUpdate}
@@ -332,7 +332,7 @@ export default function LessonMangement({
               borderColor: colors.emerald,
             }}
           >
-            {editingLesson ? "Save" : "Create"}
+            {editingLesson ? "Lưu" : "Create"}
           </Button>,
         ]}
         width={720}
@@ -351,10 +351,10 @@ export default function LessonMangement({
         >
           <Form.Item
             name="name"
-            label="Lesson Name"
+            label="Tên bài học"
             rules={[{ required: true, message: "Please enter the lesson name" }]}
           >
-            <Input placeholder="Enter lesson name" />
+            <Input placeholder="Nhập tên bài học" />
           </Form.Item>
 
           {/* <Form.Item
@@ -373,23 +373,23 @@ export default function LessonMangement({
 
           <Form.Item
             name="linkYoutube"
-            label="Lesson Youtube Link"
+            label="Link Youtube bài học"
             rules={[{ required: true, message: "Please enter the lesson link" }]}
           >
             <Input
-              placeholder="Enter lesson youtube link"
+              placeholder="Nhập link youtube bài học"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
               }}
             />
           </Form.Item>
-          <Form.Item label="Tech to speech">
+          <Form.Item label="Văn bản thành giọng nói">
             <TextArea
               value={textToSpeech}
               onChange={(e) => setTextToSpeech(e.target.value)}
               rows={3}
-              placeholder="Enter text to convert to speech"
+              placeholder="Nhập văn bản để chuyển thành giọng nói"
               style={{
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
@@ -406,7 +406,7 @@ export default function LessonMangement({
                 borderColor: colors.deepGreen,
               }}
             >
-              Convert to Speech
+              Chuyển thành giọng nói
             </Button>
           </Form.Item>
           {mp3Url && (
@@ -422,7 +422,7 @@ export default function LessonMangement({
 
           <Form.Item
             name="description"
-            label="Description"
+            label="Mô tả"
             rules={[{ required: true, message: "Please enter a description" }]}
           >
             <ReactQuill

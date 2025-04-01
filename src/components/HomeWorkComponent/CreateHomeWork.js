@@ -292,7 +292,7 @@ export default function CreateHomeWork({
                           Back to Lessons
                         </Button> */}
             <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
-              Create New Homework
+              Tạo bài tập
             </Title>
             <Divider style={{ borderColor: colors.paleGreen }} />
           </div>
@@ -312,14 +312,14 @@ export default function CreateHomeWork({
           >
             <Form.Item
               name="title"
-              label="Homework Title"
+              label="Tiêu đề bài tập"
               rules={[
                 { required: true, message: "Please enter the homework name" },
                 { max: 100, message: "Title cannot be longer than 100 characters" },
               ]}
             >
               <Input
-                placeholder="Enter homework name"
+                placeholder="Nhập tiêu đề bài tập"
                 style={{
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
@@ -345,43 +345,13 @@ export default function CreateHomeWork({
               ))}
             </Select>
           </Form.Item> */}
-            <Form.Item
-              name="linkYoutube"
-              label="Homework Youtube Link"
-              rules={[{ required: true, message: "Please enter the homework link" }]}
-            >
-              <Input
-                placeholder="Enter homework youtube link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-            <Form.Item name="linkGame" label="Homework Game Link">
-              <Input
-                placeholder="Enter homework game link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-            <Form.Item name="linkZalo" label="Homework Zalo Link">
-              <Input
-                placeholder="Enter homework Zalo link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-            <Form.Item label="Tech to speech">
+
+            <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}
                 onChange={(e) => setTextToSpeech(e.target.value)}
                 rows={3}
-                placeholder="Enter text to convert to speech"
+                placeholder="Nhập văn bản để chuyển thành giọng nói"
                 style={{
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
@@ -398,7 +368,7 @@ export default function CreateHomeWork({
                   borderColor: colors.deepGreen,
                 }}
               >
-                Convert to Speech
+                Chuyển thành giọng nói
               </Button>
             </Form.Item>
             {mp3Url && (
@@ -423,8 +393,39 @@ export default function CreateHomeWork({
             </audio>
           </div> */}
             <Form.Item
+              name="linkYoutube"
+              label="Link Youtube bài tập"
+              rules={[{ required: true, message: "Please enter the homework link" }]}
+            >
+              <Input
+                placeholder="Nhập link youtube bài tập"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item name="linkGame" label="Link game bài tập">
+              <Input
+                placeholder="Nhập link game bài tập"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item name="linkZalo" label="Link Zalo bài tập">
+              <Input
+                placeholder="Nhập link zalo bài tập"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item
               name="description"
-              label="Description"
+              label="Mô tả"
               rules={[{ required: true, message: "Please enter a description" }]}
             >
               <ReactQuill
@@ -460,7 +461,7 @@ export default function CreateHomeWork({
               form.submit();
             }}
           >
-            Save
+            Lưu
           </Button>
           <Button
             type="primary"
@@ -477,7 +478,7 @@ export default function CreateHomeWork({
               setShowAccessId(true);
             }}
           >
-            Sent Link
+            Gửi link
           </Button>
         </>
       )}
@@ -518,7 +519,7 @@ export default function CreateHomeWork({
                 form.submit();
               }}
             >
-              Save
+              Lưu
             </Button>
             <Button
               type="primary"
@@ -535,7 +536,7 @@ export default function CreateHomeWork({
                 setShowAccessId(true);
               }}
             >
-              Sent Link
+              Gửi link
             </Button>
           </>
         )}
@@ -555,7 +556,7 @@ export default function CreateHomeWork({
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
               <ReadOutlined style={{ fontSize: 32, color: "#1890ff" }} />
               <Text strong style={{ fontSize: 16 }}>
-                Your Class ID is: <Text type="danger">{accessId}</Text>
+                Mã lớp của bạn là: <Text type="danger">{accessId}</Text>
               </Text>
               <Input value={homeworkLink} readOnly style={{ textAlign: "center", width: "100%" }} />
 
@@ -565,7 +566,7 @@ export default function CreateHomeWork({
                 onClick={copyToClipboard}
                 type={copySuccess ? "default" : "primary"}
               >
-                {copySuccess ? "Copied!" : "Copy Homework Link"}
+                {copySuccess ? "Copied!" : "Copy Link bài tập"}
               </Button>
             </Space>
           </Card>

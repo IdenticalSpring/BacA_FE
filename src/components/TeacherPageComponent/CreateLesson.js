@@ -234,7 +234,7 @@ export default function CreateLesson({
         >
           <div style={{ marginBottom: isMobile ? "" : "14px" }}>
             <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
-              Create New Lesson
+              Tạo bài học mới
             </Title>
             <Divider style={{ borderColor: colors.paleGreen }} />
           </div>
@@ -252,14 +252,14 @@ export default function CreateLesson({
           >
             <Form.Item
               name="name"
-              label="Lesson Name"
+              label="Tên bài học"
               rules={[
                 { required: true, message: "Please enter the lesson name" },
                 { max: 100, message: "Name cannot be longer than 100 characters" },
               ]}
             >
               <Input
-                placeholder="Enter lesson name"
+                placeholder="Nhập tên bài học"
                 style={{
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
@@ -267,26 +267,12 @@ export default function CreateLesson({
               />
             </Form.Item>
 
-            <Form.Item
-              name="linkYoutube"
-              label="Lesson Youtube Link"
-              rules={[{ required: true, message: "Please enter the lesson link" }]}
-            >
-              <Input
-                placeholder="Enter lesson youtube link"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item label="Text to Speech">
+            <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}
                 onChange={(e) => setTextToSpeech(e.target.value)}
                 rows={3}
-                placeholder="Enter text to convert to speech"
+                placeholder="Nhập văn bản để chuyển thành giọng nói"
                 style={{
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
@@ -304,7 +290,7 @@ export default function CreateLesson({
                   borderColor: colors.deepGreen,
                 }}
               >
-                Convert to Speech
+                Chuyển thành giọng nói
               </Button>
             </Form.Item>
 
@@ -318,10 +304,22 @@ export default function CreateLesson({
                 </div>
               </Form.Item>
             )}
-
+            <Form.Item
+              name="linkYoutube"
+              label="Link Youtube bài học"
+              rules={[{ required: true, message: "Please enter the lesson link" }]}
+            >
+              <Input
+                placeholder="Nhập link youtube bài học"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
             <Form.Item
               name="description"
-              label="Description"
+              label="Mô tả"
               rules={[{ required: true, message: "Please enter a description" }]}
             >
               <ReactQuill
@@ -350,7 +348,7 @@ export default function CreateLesson({
                 color: colors.white,
               }}
             >
-              Enhance Description
+              Cải thiện mô tả
             </Button>
           </Form>
         </Card>
@@ -371,7 +369,7 @@ export default function CreateLesson({
             form.submit();
           }}
         >
-          Create Lesson
+          Lưu
         </Button>
       )}
       <div
@@ -410,7 +408,7 @@ export default function CreateLesson({
               form.submit();
             }}
           >
-            Save
+            Lưu
           </Button>
         )}
       </div>
