@@ -33,7 +33,7 @@ function HomeWorks() {
   const navigate = useNavigate();
   const [columns] = useState([
     {
-      Header: "Lesson Title",
+      Header: "Homework Title",
       accessor: "title",
       width: "30%",
       Cell: ({ row }) => (
@@ -169,6 +169,23 @@ function HomeWorks() {
       ),
     },
     {
+      Header: "Date",
+      accessor: "date",
+      width: "20%",
+      Cell: ({ row }) => (
+        <span
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+          className="truncate-text"
+          onClick={() => {
+            setSelectedHomeworkDetail(row.original);
+            setDetailModalOpen(true);
+          }}
+        >
+          {new Date(row.values.date).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
       Header: "Actions",
       accessor: "actions",
       width: "20%",
@@ -196,11 +213,13 @@ function HomeWorks() {
     linkZalo: "",
     TeacherId: "",
     description: "",
+    date: "", // Thêm trường date
   });
   const [levels, setLevels] = useState([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedHomeworkDetail, setSelectedHomeworkDetail] = useState(null);
-  const [searchTeacher, setSearchTeacher] = useState(""); // State cho tìm kiếm
+  const [searchTeacher, setSearchTeacher] = useState("");
+  const [searchDate, setSearchDate] = useState(""); // Thêm state để lọc theo ngày
 
   useEffect(() => {
     fetchHomeworks();
@@ -350,6 +369,7 @@ function HomeWorks() {
         linkZalo: homework.linkZalo,
         TeacherId: homework?.teacher?.username,
         description: homework.description,
+        date: homework.date, // Thêm trường date từ API
         actions: (
           <>
             <IconButton
@@ -383,6 +403,7 @@ function HomeWorks() {
       linkZalo: homeWork.linkZalo,
       description: homeWork.description,
       TeacherId: homeWork?.teacher?.id || "",
+      date: homeWork.date ? new Date(homeWork.date).toISOString().split("T")[0] : "", // Chuẩn hóa thành YYYY-MM-DD
     });
     setMp3Url(homeWork.linkSpeech);
     setOpen(true);
@@ -410,6 +431,7 @@ function HomeWorks() {
       formData.append("linkZalo", homeworkData.linkZalo);
       formData.append("description", homeworkData.description);
       formData.append("teacherId", homeworkData.TeacherId);
+      formData.append("date", homeworkData.date); // Thêm trường date vào formData
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
       }
@@ -423,7 +445,13 @@ function HomeWorks() {
                 linkSpeech: homeworkEntity.linkSpeech,
                 actions: (
                   <>
-                    <IconButton color="primary" onClick={() => handleEdit(homeworkEntity)}>
+                    <IconButton
+                      sx={{
+                        color: colors.midGreen,
+                        " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                      }}
+                      onClick={() => handleEdit(homeworkEntity)}
+                    >
                       <EditIcon />
                     </IconButton>
                   </>
@@ -446,6 +474,7 @@ function HomeWorks() {
         linkSpeech: "",
         TeacherId: "",
         description: "",
+        date: "",
       });
       setEditMode(false);
     } catch (err) {
@@ -456,9 +485,26 @@ function HomeWorks() {
   };
 
   const filteredRows = useMemo(() => {
-    if (!searchTeacher) return rows;
-    return rows.filter((row) => row.TeacherId.toLowerCase().includes(searchTeacher.toLowerCase()));
-  }, [rows, searchTeacher]);
+    let filtered = rows;
+
+    // Lọc theo tên giáo viên
+    if (searchTeacher) {
+      filtered = filtered.filter((row) => {
+        const teacherName = row.TeacherId || "";
+        return teacherName.toLowerCase().includes(searchTeacher.toLowerCase());
+      });
+    }
+
+    // Lọc theo ngày
+    if (searchDate) {
+      filtered = filtered.filter((row) => {
+        const homeworkDate = new Date(row.date).toISOString().split("T")[0]; // Chuẩn hóa thành YYYY-MM-DD
+        return homeworkDate === searchDate;
+      });
+    }
+
+    return filtered;
+  }, [rows, searchTeacher, searchDate]);
 
   return (
     <DashboardLayout>
@@ -491,7 +537,7 @@ function HomeWorks() {
                 sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
               >
                 <MDTypography variant="h6" color="white">
-                  Lesson Tables
+                  Homework Tables
                 </MDTypography>
               </MDBox>
               <MDBox
@@ -508,6 +554,16 @@ function HomeWorks() {
                   size="small"
                   value={searchTeacher}
                   onChange={(e) => setSearchTeacher(e.target.value)}
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
+                <TextField
+                  label="Search by date"
+                  type="date"
+                  variant="outlined"
+                  size="small"
+                  value={searchDate}
+                  onChange={(e) => setSearchDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
                   sx={{ backgroundColor: "white", borderRadius: "4px" }}
                 />
               </MDBox>
@@ -551,10 +607,10 @@ function HomeWorks() {
           },
         }}
       >
-        <DialogTitle>{editMode ? "Edit Lesson" : "Create"}</DialogTitle>
+        <DialogTitle>{editMode ? "Edit Homework" : "Create"}</DialogTitle>
         <DialogContent sx={{ height: "100%", overflowY: "auto" }}>
           <TextField
-            label="Lesson Title"
+            label="Homework Title"
             fullWidth
             margin="normal"
             value={homeworkData.title}
@@ -562,7 +618,7 @@ function HomeWorks() {
           />
           <TextField
             disabled
-            label="level"
+            label="Level"
             fullWidth
             sx={{
               "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
@@ -577,6 +633,15 @@ function HomeWorks() {
             onChange={(e) => {
               setHomeworkData({ ...homeworkData, level: e.target.value });
             }}
+          />
+          <TextField
+            label="Homework Date"
+            type="date"
+            fullWidth
+            margin="normal"
+            value={homeworkData.date}
+            onChange={(e) => setHomeworkData({ ...homeworkData, date: e.target.value })}
+            InputLabelProps={{ shrink: true }}
           />
           <TextArea
             value={textToSpeech}
@@ -608,21 +673,21 @@ function HomeWorks() {
             </div>
           )}
           <TextField
-            label="Lesson Link"
+            label="Youtube Link"
             fullWidth
             margin="normal"
             value={homeworkData.linkYoutube}
             onChange={(e) => setHomeworkData({ ...homeworkData, linkYoutube: e.target.value })}
           />
           <TextField
-            label="Lesson Game Link"
+            label="Game Link"
             fullWidth
             margin="normal"
             value={homeworkData.linkGame}
             onChange={(e) => setHomeworkData({ ...homeworkData, linkGame: e.target.value })}
           />
           <TextField
-            label="Lesson Zalo Link"
+            label="Zalo Link"
             fullWidth
             margin="normal"
             value={homeworkData.linkZalo}
