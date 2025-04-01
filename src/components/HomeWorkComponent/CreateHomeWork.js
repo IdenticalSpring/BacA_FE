@@ -137,7 +137,9 @@ export default function CreateHomeWork({
       formData.append("linkZalo", values.linkZalo);
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
-
+      if (selected.length > 0) {
+        formData.append("status", true);
+      }
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));

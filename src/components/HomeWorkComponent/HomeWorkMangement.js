@@ -9,6 +9,7 @@ import {
   Select,
   Space,
   Table,
+  Tag,
   Typography,
 } from "antd";
 import { colors } from "assets/theme/color";
@@ -17,7 +18,12 @@ import ReactQuill from "react-quill";
 const { Title } = Typography;
 const { Option } = Select;
 import PropTypes from "prop-types";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { jwtDecode } from "jwt-decode";
 import homeWorkService from "services/homeWorkService";
 import TextArea from "antd/es/input/TextArea";
@@ -254,6 +260,25 @@ export default function HomeWorkMangement({
         <Typography.Paragraph ellipsis={{ rows: 2, expandable: true, symbol: "more" }}>
           {text?.replace(/<[^>]*>?/gm, "") || ""}
         </Typography.Paragraph>
+      ),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: "10%",
+      render: (text) => (
+        <Tag
+          color={text ? "green" : "red"}
+          style={{ fontSize: 14, fontWeight: 600, padding: "5px 10px" }}
+        >
+          {text ? (
+            <CheckCircleOutlined style={{ marginRight: 5 }} />
+          ) : (
+            <CloseCircleOutlined style={{ marginRight: 5 }} />
+          )}
+          {text ? "Đã giao" : "Chưa giao"}
+        </Tag>
       ),
     },
     {
