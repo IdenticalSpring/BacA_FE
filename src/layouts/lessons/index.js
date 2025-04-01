@@ -27,8 +27,6 @@ import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
 import LessonDetailModal from "./LessonDetailModal";
-import SearchIcon from "@mui/icons-material/Search";
-import InputAdornment from "@mui/material/InputAdornment";
 
 function Lessons() {
   const navigate = useNavigate();
@@ -317,8 +315,7 @@ function Lessons() {
           <>
             <IconButton
               sx={{
-                backgroundColor: colors.midGreen,
-                color: colors.white,
+                color: colors.midGreen,
                 " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
               }}
               onClick={() => handleEdit(lesson)}
@@ -383,7 +380,13 @@ function Lessons() {
                 linkSpeech: lessonEntity.linkSpeech,
                 actions: (
                   <>
-                    <IconButton color="primary" onClick={() => handleEdit(lessonEntity)}>
+                    <IconButton
+                      sx={{
+                        color: colors.midGreen,
+                        " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                      }}
+                      onClick={() => handleEdit(lessonEntity)}
+                    >
                       <EditIcon />
                     </IconButton>
                   </>

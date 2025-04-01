@@ -27,6 +27,18 @@ const feedbackService = {
       throw error.response?.data?.message || "Error fetching feedback";
     }
   },
+  getFeedbackByStudentId: async (studentId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/feedback/student/${studentId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching feedback";
+    }
+  },
   createFeedback: async (levelData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/feedback`, levelData, {

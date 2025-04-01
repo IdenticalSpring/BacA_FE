@@ -67,8 +67,7 @@ function Teachers() {
           <>
             <IconButton
               sx={{
-                backgroundColor: colors.midGreen,
-                color: colors.white,
+                color: colors.midGreen,
                 " &:hover": { backgroundColor: colors.highlightGreen },
               }}
               onClick={() => handleEdit(teacher)}

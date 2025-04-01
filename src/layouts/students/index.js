@@ -6,6 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import Avatar from "@mui/material/Avatar";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility"; // Icon cho View Detail
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -24,8 +25,7 @@ import { colors } from "assets/theme/color";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import classService from "services/classService";
 import levelService from "services/levelService";
-import SearchIcon from "@mui/icons-material/Search";
-import InputAdornment from "@mui/material/InputAdornment";
+import StudentOverviewModal from "./studentOverviewModal";
 
 function Students() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ function Students() {
   const [levels, setLevels] = useState([]);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
-    { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
+    { Header: "Observation Year", accessor: "yearOfBirth", width: "10%" },
     { Header: "Level", accessor: "level", width: "15%" },
     { Header: "Schedule", accessor: "note", width: "15%" },
     { Header: "Phone", accessor: "phone", width: "15%" },
@@ -46,6 +46,7 @@ function Students() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false); // State cho modal chi tiết
   const [editMode, setEditMode] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -122,8 +123,16 @@ function Students() {
           <>
             <IconButton
               sx={{
-                backgroundColor: colors.midGreen,
-                color: colors.white,
+                color: colors.deepGreen,
+                "&:hover": { backgroundColor: colors.highlightGreen },
+              }}
+              onClick={() => handleViewDetail(student)}
+            >
+              <VisibilityIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                color: colors.midGreen,
                 "&:hover": { backgroundColor: colors.highlightGreen },
               }}
               onClick={() => handleEdit(student)}
@@ -198,6 +207,11 @@ function Students() {
         console.error(err);
       }
     }
+  };
+
+  const handleViewDetail = (student) => {
+    setSelectedStudent(student);
+    setDetailOpen(true);
   };
 
   const handleFileChange = async (e) => {
@@ -379,6 +393,8 @@ function Students() {
         </Grid>
       </MDBox>
       <Footer />
+
+      {/* Dialog chỉnh sửa/thêm mới */}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle sx={{ backgroundColor: colors.deepGreen, color: colors.white }}>
           {editMode ? "Edit Student" : "Add Student"}
@@ -576,6 +592,13 @@ function Students() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal chi tiết */}
+      <StudentOverviewModal
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        student={selectedStudent}
+      />
     </DashboardLayout>
   );
 }
