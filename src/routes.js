@@ -295,18 +295,18 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "StudentCheckIn",
-    key: "studentCheckIn",
-    icon: <Icon fontSize="small">Student CheckIn</Icon>,
-    route: "/StudentCheckIn",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <StudentCheckinStatistics />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "StudentCheckIn",
+  //   key: "studentCheckIn",
+  //   icon: <Icon fontSize="small">Student CheckIn</Icon>,
+  //   route: "/StudentCheckIn",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <StudentCheckinStatistics />
+  //     </PrivateRoute>
+  //   ),
+  // },
   {
     // type: "collapse",
     name: "DoHomework",

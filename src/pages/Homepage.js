@@ -929,10 +929,13 @@ export default function Homepage() {
             gap: "3rem",
           }}
         >
+          {/* About Section */}
           <div>
             <div style={{ display: "flex", alignItems: "center", marginBottom: "1.5rem" }}>
-              <BookOutlined
-                style={{ color: colors.lightGreen, fontSize: "24px", marginRight: "10px" }}
+              <img
+                src={Logo}
+                alt="Happy Class Logo"
+                style={{ width: "50px", height: "50px", marginRight: "10px" }}
               />
               <h3
                 style={{
@@ -967,6 +970,7 @@ export default function Homepage() {
             </div>
           </div>
 
+          {/* Quick Links Section */}
           <div className="footer-links">
             <h4 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
               Quick Links
@@ -990,40 +994,23 @@ export default function Homepage() {
             </ul>
           </div>
 
+          {/* Contact Section */}
           <div>
             <h4 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
-              Resources
+              Contact Us
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#" style={{ color: colors.white, textDecoration: "none" }}>
-                  Help Center
-                </a>
+              <li style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center" }}>
+                <MailOutlined style={{ marginRight: "0.5rem" }} />
+                <span>{contentData?.footerEmail || "support@happyclass.com"}</span>
               </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#" style={{ color: colors.white, textDecoration: "none" }}>
-                  Study Guides
-                </a>
+              <li style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center" }}>
+                <PhoneOutlined style={{ marginRight: "0.5rem" }} />
+                <span>{contentData?.footerContact || "+84 123 456 789"}</span>
               </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#" style={{ color: colors.white, textDecoration: "none" }}>
-                  Blog
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#" style={{ color: colors.white, textDecoration: "none" }}>
-                  Tutorials
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#" style={{ color: colors.white, textDecoration: "none" }}>
-                  Community Forum
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#" style={{ color: colors.white, textDecoration: "none" }}>
-                  Contact Support
-                </a>
+              <li style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center" }}>
+                <GlobalOutlined style={{ marginRight: "0.5rem" }} />
+                <span>{contentData?.footerAddress || "123 Education St, Learning City"}</span>
               </li>
             </ul>
           </div>
@@ -1098,9 +1085,7 @@ export default function Homepage() {
           }}
           onMouseEnter={() => setSocialHover({ ...socialHover, facebook: true })}
           onMouseLeave={() => setSocialHover({ ...socialHover, facebook: false })}
-          onClick={() =>
-            window.open(contentData?.linkFacebook || "https://facebook.com/happyclass")
-          }
+          onClick={() => window.open(contentData?.linkFacebook)}
         >
           <FacebookFilled style={{ fontSize: "24px" }} />
         </div>
