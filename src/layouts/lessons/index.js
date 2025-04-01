@@ -37,7 +37,7 @@ function Lessons() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedLessonDetail(row.original);
@@ -54,7 +54,7 @@ function Lessons() {
       width: "10%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedLessonDetail(row.original);
@@ -71,7 +71,7 @@ function Lessons() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedLessonDetail(row.original);
@@ -88,7 +88,7 @@ function Lessons() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedLessonDetail(row.original);
@@ -105,7 +105,7 @@ function Lessons() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedLessonDetail(row.original);
@@ -122,7 +122,7 @@ function Lessons() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedLessonDetail(row.original);

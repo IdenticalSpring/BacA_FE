@@ -214,14 +214,28 @@ export default function LessonMangement({
       dataIndex: "linkYoutube",
       key: "linkYoutube",
       width: "20%",
-      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
     },
     {
       title: "Link Speech",
       dataIndex: "linkSpeech",
       key: "linkSpeech",
       width: "20%",
-      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
     },
     {
       title: "Mô tả",
@@ -229,7 +243,10 @@ export default function LessonMangement({
       key: "description",
       width: "25%",
       render: (text) => (
-        <Typography.Paragraph ellipsis={{ rows: 2, expandable: true, symbol: "more" }}>
+        <Typography.Paragraph
+          ellipsis={{ rows: 2, expandable: true, symbol: "more" }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+        >
           {text?.replace(/<[^>]*>?/gm, "") || ""}
         </Typography.Paragraph>
       ),

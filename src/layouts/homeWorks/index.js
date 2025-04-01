@@ -38,7 +38,7 @@ function HomeWorks() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -55,7 +55,7 @@ function HomeWorks() {
       width: "10%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -72,7 +72,7 @@ function HomeWorks() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -89,7 +89,7 @@ function HomeWorks() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -106,7 +106,7 @@ function HomeWorks() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -118,12 +118,29 @@ function HomeWorks() {
       ),
     },
     {
+      Header: "Link Zalo",
+      accessor: "linkZalo",
+      width: "30%",
+      Cell: ({ row }) => (
+        <span
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+          className="truncate-text"
+          onClick={() => {
+            setSelectedHomeworkDetail(row.original);
+            setDetailModalOpen(true);
+          }}
+        >
+          {row.values.linkZalo}
+        </span>
+      ),
+    },
+    {
       Header: "Teacher",
       accessor: "TeacherId",
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -140,7 +157,7 @@ function HomeWorks() {
       width: "30%",
       Cell: ({ row }) => (
         <span
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
           onClick={() => {
             setSelectedHomeworkDetail(row.original);
@@ -176,6 +193,7 @@ function HomeWorks() {
     linkYoutube: "",
     linkGame: "",
     linkSpeech: "",
+    linkZalo: "",
     TeacherId: "",
     description: "",
   });
@@ -329,6 +347,7 @@ function HomeWorks() {
         linkYoutube: homework.linkYoutube,
         linkGame: homework.linkGame,
         linkSpeech: homework.linkSpeech,
+        linkZalo: homework.linkZalo,
         TeacherId: homework?.teacher?.username,
         description: homework.description,
         actions: (
@@ -361,6 +380,7 @@ function HomeWorks() {
       level: homeWork.level,
       linkYoutube: homeWork.linkYoutube,
       linkGame: homeWork.linkGame,
+      linkZalo: homeWork.linkZalo,
       description: homeWork.description,
       TeacherId: homeWork?.teacher?.id || "",
     });
@@ -387,6 +407,7 @@ function HomeWorks() {
       formData.append("level", homeworkData.level);
       formData.append("linkYoutube", homeworkData.linkYoutube);
       formData.append("linkGame", homeworkData.linkGame);
+      formData.append("linkZalo", homeworkData.linkZalo);
       formData.append("description", homeworkData.description);
       formData.append("teacherId", homeworkData.TeacherId);
       if (mp3file) {
@@ -421,6 +442,7 @@ function HomeWorks() {
         level: "",
         linkYoutube: "",
         linkGame: "",
+        linkZalo: "",
         linkSpeech: "",
         TeacherId: "",
         description: "",
@@ -556,20 +578,6 @@ function HomeWorks() {
               setHomeworkData({ ...homeworkData, level: e.target.value });
             }}
           />
-          <TextField
-            label="Lesson Link"
-            fullWidth
-            margin="normal"
-            value={homeworkData.linkYoutube}
-            onChange={(e) => setHomeworkData({ ...homeworkData, linkYoutube: e.target.value })}
-          />
-          <TextField
-            label="Lesson Game Link"
-            fullWidth
-            margin="normal"
-            value={homeworkData.linkGame}
-            onChange={(e) => setHomeworkData({ ...homeworkData, linkGame: e.target.value })}
-          />
           <TextArea
             value={textToSpeech}
             onChange={(e) => setTextToSpeech(e.target.value)}
@@ -599,6 +607,27 @@ function HomeWorks() {
               </audio>
             </div>
           )}
+          <TextField
+            label="Lesson Link"
+            fullWidth
+            margin="normal"
+            value={homeworkData.linkYoutube}
+            onChange={(e) => setHomeworkData({ ...homeworkData, linkYoutube: e.target.value })}
+          />
+          <TextField
+            label="Lesson Game Link"
+            fullWidth
+            margin="normal"
+            value={homeworkData.linkGame}
+            onChange={(e) => setHomeworkData({ ...homeworkData, linkGame: e.target.value })}
+          />
+          <TextField
+            label="Lesson Zalo Link"
+            fullWidth
+            margin="normal"
+            value={homeworkData.linkZalo}
+            onChange={(e) => setHomeworkData({ ...homeworkData, linkZalo: e.target.value })}
+          />
           <ReactQuill
             theme="snow"
             modules={modules}

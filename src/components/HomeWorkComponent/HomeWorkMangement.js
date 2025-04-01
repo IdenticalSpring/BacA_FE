@@ -228,36 +228,67 @@ export default function HomeWorkMangement({
       dataIndex: "linkYoutube",
       key: "linkYoutube",
       width: "20%",
-      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
     },
     {
       title: "Link Game bài tập",
       dataIndex: "linkGame",
       key: "linkGame",
       width: "20%",
-      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
     },
     {
       title: "Link Zalo bài tập",
       dataIndex: "linkZalo",
       key: "linkZalo",
       width: "20%",
-      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
     },
     {
       title: "Link Speech bài tập",
       dataIndex: "linkSpeech",
       key: "linkSpeech",
       width: "20%",
-      render: (text) => <Typography.Text ellipsis={{ tooltip: text }}>{text}</Typography.Text>,
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
     },
     {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
-      width: "25%",
+      width: "30%",
       render: (text) => (
-        <Typography.Paragraph ellipsis={{ rows: 2, expandable: true, symbol: "more" }}>
+        <Typography.Paragraph
+          ellipsis={{ rows: 2, expandable: true, symbol: "more" }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+        >
           {text?.replace(/<[^>]*>?/gm, "") || ""}
         </Typography.Paragraph>
       ),
