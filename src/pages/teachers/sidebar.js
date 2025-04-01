@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Layout, Menu, Avatar, Typography, Button, Drawer } from "antd";
-import { BookOutlined, MenuOutlined, CloseOutlined } from "@ant-design/icons";
+import {
+  BookOutlined,
+  MenuOutlined,
+  CloseOutlined,
+  BankOutlined,
+  UserOutlined,
+  CrownOutlined,
+  ReadOutlined,
+  TeamOutlined,
+  LaptopOutlined,
+  UploadOutlined,
+  EditOutlined,
+  BarChartOutlined,
+} from "@ant-design/icons";
 import PropTypes from "prop-types";
 
 const { Sider } = Layout;
@@ -90,11 +103,15 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           margin: "0 auto",
           padding: "5px 0",
           width: "80%",
-          textAlign: "center",
+          textAlign: "start",
           borderBottom: `1px solid ${colors.lightGreen}`,
           marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
         }}
       >
+        <TeamOutlined />
         <Text
           style={{
             fontWeight: 700,
@@ -172,11 +189,38 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           margin: "0 auto",
           padding: "5px 0",
           width: "80%",
-          textAlign: "center",
+          textAlign: "start",
           borderBottom: `1px solid ${colors.lightGreen}`,
           marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
         }}
       >
+        <BarChartOutlined />
+        <Text
+          style={{
+            fontWeight: 700,
+            color: colors.darkGreen,
+          }}
+        >
+          Chi tiết tình hình học
+        </Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          borderBottom: `1px solid ${colors.lightGreen}`,
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}
+      >
+        <LaptopOutlined />
         <Text
           style={{
             fontWeight: 700,
@@ -191,11 +235,15 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           margin: "0 auto",
           padding: "5px 0",
           width: "80%",
-          textAlign: "center",
+          textAlign: "start",
           borderBottom: `1px solid ${colors.lightGreen}`,
           marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
         }}
       >
+        <EditOutlined />
         <Text
           style={{
             fontWeight: 700,
