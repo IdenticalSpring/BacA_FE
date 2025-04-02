@@ -223,12 +223,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
               <Text>
                 <strong>Lớp:</strong> {studentInfo?.class?.name || "N/A"}
               </Text>
-              <Text>
-                <strong>Mã học sinh:</strong> {studentInfo?.id || studentId}
-              </Text>
-              <Text>
-                <strong>Email:</strong> {studentInfo?.email || "N/A"}
-              </Text>
             </Space>
           </Col>
           <Col xs={24} sm={8} style={{ textAlign: "center" }}>

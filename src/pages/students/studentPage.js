@@ -598,14 +598,6 @@ const StudentPage = () => {
           ) : (
             <div>
               {/* Các section */}
-              <div ref={scoresRef}>
-                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-                  <TrophyOutlined /> Điểm Thi
-                </Title>
-                <StudentScoreTab studentId={studentId} colors={colors} />
-                <Divider />
-              </div>
-
               <div ref={lessonsRef}>
                 <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
                   <BookOutlined /> Bài Học
@@ -619,6 +611,14 @@ const StudentPage = () => {
                   <FileTextOutlined /> Bài Tập
                 </Title>
                 {renderHomeworkContent()}
+              </div>
+
+              <div ref={scoresRef}>
+                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+                  <TrophyOutlined /> Điểm Thi
+                </Title>
+                <StudentScoreTab studentId={studentId} colors={colors} />
+                <Divider />
               </div>
             </div>
           )}
