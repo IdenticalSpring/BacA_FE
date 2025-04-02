@@ -710,13 +710,9 @@ function CreateClass() {
                     <DataTable
                       table={{ columns: levelColumns, rows: levelRows }}
                       isSorted={false}
-                      entriesPerPage={false}
+                      entriesPerPage={false} // Thêm phân trang
                       showTotalEntries={false}
                       noEndBorder
-                      sx={{
-                        "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
-                        "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
-                      }}
                     />
                   )}
                 </MDBox>
