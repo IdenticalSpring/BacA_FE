@@ -67,19 +67,37 @@ function Students() {
   const [searchSchedule, setSearchSchedule] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchLevels = async () => {
       try {
         const levelData = await levelService.getAllLevels();
         setLevels(levelData);
-        await fetchStudents();
+      } catch (error) {
+        console.error("Failed to fetch levels", error);
+        setError("Error fetching levels!");
+      }
+    };
+    fetchLevels();
+  }, []); // Chỉ fetch levels một lần khi mount
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        await fetchStudents(); // Fetch students khi levels thay đổi
         await fetchClassSchedules();
       } catch (error) {
         console.error("Failed to fetch data", error);
-        setError("Error fetching initial data!");
+        setError("Error fetching students or schedules!");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+
+    if (levels.length > 0) {
+      // Chỉ fetch khi levels đã có dữ liệu
+      fetchData();
+    }
+  }, [levels]);
 
   const fetchClassSchedules = async () => {
     try {
@@ -93,58 +111,64 @@ function Students() {
   const fetchStudents = async () => {
     try {
       const data = await studentService.getAllStudents();
-      const formattedRows = data.map((student) => ({
-        id: student.id,
-        name: student.name,
-        level: student.level,
-        yearOfBirth: student.yearOfBirth,
-        phone: student.phone,
-        avatar: (
-          <Box display="flex" justifyContent="center">
-            <Avatar
-              src={student.imgUrl}
-              alt={student.name}
-              sx={{
-                width: 50,
-                height: 50,
-                border: `1px solid ${colors.lightGrey}`,
-              }}
-            >
-              {student.name.charAt(0)}
-            </Avatar>
-          </Box>
-        ),
-        imgUrl: student.imgUrl,
-        startDate: student.startDate,
-        endDate: student.endDate,
-        note: formatSchedule(student),
-        rawLevel: student.level,
-        actions: (
-          <>
-            <IconButton
-              sx={{
-                color: colors.deepGreen,
-                "&:hover": { backgroundColor: colors.highlightGreen },
-              }}
-              onClick={() => handleViewDetail(student)}
-            >
-              <VisibilityIcon />
-            </IconButton>
-            <IconButton
-              sx={{
-                color: colors.midGreen,
-                "&:hover": { backgroundColor: colors.highlightGreen },
-              }}
-              onClick={() => handleEdit(student)}
-            >
-              <EditIcon />
-            </IconButton>
-            <IconButton color="error" onClick={() => handleDelete(student.id)}>
-              <DeleteIcon />
-            </IconButton>
-          </>
-        ),
-      }));
+      const formattedRows = data.map((student) => {
+        // Tìm level tương ứng từ levels dựa trên student.level (ID)
+        const levelObj = levels.find((level) => level.id === student.level);
+        const levelName = levelObj ? levelObj.name : "N/A"; // Nếu không tìm thấy, hiển thị "N/A"
+
+        return {
+          id: student.id,
+          name: student.name,
+          level: levelName, // Hiển thị tên thay vì ID
+          yearOfBirth: student.yearOfBirth,
+          phone: student.phone,
+          avatar: (
+            <Box display="flex" justifyContent="center">
+              <Avatar
+                src={student.imgUrl}
+                alt={student.name}
+                sx={{
+                  width: 50,
+                  height: 50,
+                  border: `1px solid ${colors.lightGrey}`,
+                }}
+              >
+                {student.name.charAt(0)}
+              </Avatar>
+            </Box>
+          ),
+          imgUrl: student.imgUrl,
+          startDate: student.startDate,
+          endDate: student.endDate,
+          note: formatSchedule(student),
+          rawLevel: student.level, // Giữ lại ID gốc nếu cần dùng sau này
+          actions: (
+            <>
+              <IconButton
+                sx={{
+                  color: colors.deepGreen,
+                  "&:hover": { backgroundColor: colors.highlightGreen },
+                }}
+                onClick={() => handleViewDetail(student)}
+              >
+                <VisibilityIcon />
+              </IconButton>
+              <IconButton
+                sx={{
+                  color: colors.midGreen,
+                  "&:hover": { backgroundColor: colors.highlightGreen },
+                }}
+                onClick={() => handleEdit(student)}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton color="error" onClick={() => handleDelete(student.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </>
+          ),
+        };
+      });
       setRows(formattedRows);
     } catch (err) {
       setError("Error fetching students!");
