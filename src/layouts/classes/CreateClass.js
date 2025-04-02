@@ -99,6 +99,7 @@ function CreateClass() {
   const [editMode, setEditMode] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
   const [classAccessId, setClassAccessId] = useState("");
+  const [rawClasses, setRawClasses] = useState([]);
   const daysOfWeek = [
     "Choose day of week",
     "Sunday",
@@ -161,10 +162,10 @@ function CreateClass() {
 
   // Fetch data
   useEffect(() => {
+    fetchLevels();
     fetchTeachers();
     fetchClasses();
     fetchSchedules();
-    fetchLevels();
   }, []);
 
   useEffect(() => {
@@ -200,10 +201,34 @@ function CreateClass() {
     try {
       setLoadingClass(true);
       const data = await classService.getAllClasses();
-      const formattedRows = data.map((cls) => ({
+      setRawClasses(data);
+      // const formattedRows = data.map((cls) => ({
+      //   id: cls.id,
+      //   name: cls.name,
+      //   level: levels?.find((lv) => lv.id === cls.level)?.name,
+      //   teacher: cls.teacher?.name || "N/A",
+      //   accessId: cls.accessId || "N/A",
+      //   actions: (
+      //     <>
+      //       <IconButton color="primary" onClick={() => handleEdit(cls)}>
+      //         <EditIcon />
+      //       </IconButton>
+      //     </>
+      //   ),
+      // }));
+      // setClassRows(formattedRows);
+    } catch (err) {
+      setErrorClass("Lỗi khi tải dữ liệu lớp học!");
+    } finally {
+      setLoadingClass(false);
+    }
+  };
+  useEffect(() => {
+    if (rawClasses.length > 0 && levels.length > 0) {
+      const formattedRows = rawClasses.map((cls) => ({
         id: cls.id,
         name: cls.name,
-        level: levels?.find((lv) => lv.id === cls.level)?.name,
+        level: levels.find((lv) => lv.id === cls.level)?.name || "N/A",
         teacher: cls.teacher?.name || "N/A",
         accessId: cls.accessId || "N/A",
         actions: (
@@ -215,12 +240,8 @@ function CreateClass() {
         ),
       }));
       setClassRows(formattedRows);
-    } catch (err) {
-      setErrorClass("Lỗi khi tải dữ liệu lớp học!");
-    } finally {
-      setLoadingClass(false);
     }
-  };
+  }, [rawClasses, levels]);
 
   const fetchSchedules = async () => {
     try {
@@ -1142,7 +1163,7 @@ function CreateClass() {
           <Card
             sx={{
               padding: 3,
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: colors.white,
               backdropFilter: "blur(10px)",
               boxShadow: "0px 4px 10px rgba(255, 255, 255, 0.2)",
               borderRadius: "12px",
