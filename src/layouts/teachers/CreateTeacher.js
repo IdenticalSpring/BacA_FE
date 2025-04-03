@@ -18,15 +18,16 @@ function CreateTeacher() {
     startDate: "",
     endDate: "",
   });
-  const [file, setFile] = useState(null); // State để lưu file upload
+  const [files, setFiles] = useState([]); // Thay đổi từ file thành files để lưu mảng
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]); // Lấy file đầu tiên từ input
+    setFiles(Array.from(e.target.files)); // Chuyển danh sách files thành mảng
   };
 
   const handleSave = async () => {
     try {
-      await teacherService.createTeacher(teacherData, file); // Gửi cả teacherData và file
+      // Gửi teacherData và mảng files lên server
+      await teacherService.createTeacher(teacherData, files);
       navigate("/teachers"); // Quay lại danh sách giáo viên
     } catch (err) {
       alert("Create teacher failed");
@@ -95,14 +96,14 @@ function CreateTeacher() {
                 value={teacherData.endDate}
                 onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
               />
-              {/* Thêm trường upload file */}
+              {/* Trường upload file với hỗ trợ nhiều file */}
               <TextField
                 fullWidth
                 margin="normal"
                 type="file"
-                label="Upload File"
+                label="Upload Files"
                 InputLabelProps={{ shrink: true }}
-                inputProps={{ accept: "image/*, .pdf" }} // Giới hạn loại file (hình ảnh và PDF)
+                inputProps={{ accept: "image/*, .pdf", multiple: true }} // Thêm multiple để chọn nhiều file
                 onChange={handleFileChange}
               />
               <MDBox display="flex" justifyContent="space-between" mt={3}>
