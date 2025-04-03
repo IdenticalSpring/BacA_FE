@@ -16,14 +16,17 @@ const teacherService = {
     }
   },
 
-  createTeacher: async (teacherData, file) => {
+  createTeacher: async (teacherData, files) => {
     try {
       const formData = new FormData();
       Object.keys(teacherData).forEach((key) => {
         formData.append(key, teacherData[key]);
       });
-      if (file) {
-        formData.append("file", file);
+
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          formData.append("files", file); // Append từng file vào key "files"
+        });
       }
 
       const response = await axios.post(`${API_BASE_URL}/teachers`, formData, {
@@ -38,14 +41,17 @@ const teacherService = {
     }
   },
 
-  editTeacher: async (id, teacherData, file) => {
+  editTeacher: async (id, teacherData, files) => {
     try {
       const formData = new FormData();
       Object.keys(teacherData).forEach((key) => {
         formData.append(key, teacherData[key]);
       });
-      if (file) {
-        formData.append("file", file);
+
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          formData.append("files", file); // Append từng file vào key "files"
+        });
       }
 
       const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, formData, {

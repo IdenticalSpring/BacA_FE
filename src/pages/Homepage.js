@@ -54,16 +54,14 @@ export default function Homepage() {
     zalo: false,
     global: false,
   });
-  const [contentData, setContentData] = useState(null); // State lưu dữ liệu từ API
+  const [contentData, setContentData] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch dữ liệu từ contentPageService khi component mount
   useEffect(() => {
     const fetchContentData = async () => {
       try {
         const data = await contentPageService.getAllContentPages();
-        // Giả sử chỉ lấy phần tử đầu tiên trong mảng (nếu API trả về danh sách)
-        setContentData(data[0]);
+        setContentData(data[0]); // Lấy phần tử đầu tiên từ danh sách
       } catch (error) {
         console.error("Error fetching content page data:", error);
       }
@@ -86,7 +84,6 @@ export default function Homepage() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Animate on scroll
   useEffect(() => {
     setVisible({
       hero: true,
@@ -125,7 +122,6 @@ export default function Homepage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Color palette
   const colors = {
     lightGreen: "#8ED1B0",
     deepGreen: "#368A68",
@@ -456,35 +452,90 @@ export default function Homepage() {
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            display: "flex",
-            justifyContent: "space-around",
-            flexWrap: "wrap",
-            gap: "1rem",
-            opacity: visible.statistics ? 1 : 0,
-            transform: `translateY(${visible.statistics ? "0" : "30px"})`,
-            transition: "all 0.8s ease-out",
           }}
         >
-          <StatCard
-            number="2,000+"
-            label="Happy Students"
-            icon={<UserOutlined style={{ fontSize: "24px" }} />}
-          />
-          <StatCard
-            number="100+"
-            label="Expert Courses"
-            icon={<ProfileOutlined style={{ fontSize: "24px" }} />}
-          />
-          <StatCard
-            number="94%"
-            label="Success Rate"
-            icon={<LikeOutlined style={{ fontSize: "24px" }} />}
-          />
-          <StatCard
-            number="4.9"
-            label="App Rating"
-            icon={<StarOutlined style={{ fontSize: "24px" }} />}
-          />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              flexWrap: "wrap",
+              gap: "1rem",
+              opacity: visible.statistics ? 1 : 0,
+              transform: `translateY(${visible.statistics ? "0" : "30px"})`,
+              transition: "all 0.8s ease-out",
+            }}
+          >
+            <StatCard
+              number="2,000+"
+              label="Happy Students"
+              icon={<UserOutlined style={{ fontSize: "24px" }} />}
+            />
+            <StatCard
+              number="100+"
+              label="Expert Courses"
+              icon={<ProfileOutlined style={{ fontSize: "24px" }} />}
+            />
+            <StatCard
+              number="94%"
+              label="Success Rate"
+              icon={<LikeOutlined style={{ fontSize: "24px" }} />}
+            />
+            <StatCard
+              number="4.9"
+              label="App Rating"
+              icon={<StarOutlined style={{ fontSize: "24px" }} />}
+            />
+          </div>
+
+          {/* YouTube Video */}
+          {contentData?.linkYoutube && (
+            <div
+              style={{
+                marginTop: "2rem",
+                textAlign: "center",
+                opacity: visible.statistics ? 1 : 0,
+                transform: `translateY(${visible.statistics ? "0" : "30px"})`,
+                transition: "all 0.8s ease-out",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  color: colors.darkGray,
+                  marginBottom: "1rem",
+                }}
+              >
+                Watch Our Introduction Video
+              </h3>
+              <div
+                style={{
+                  position: "relative",
+                  paddingBottom: "56.25%", // Tỷ lệ 16:9
+                  height: 0,
+                  overflow: "hidden",
+                  maxWidth: "800px",
+                  margin: "0 auto",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <iframe
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  src={contentData.linkYoutube.replace("watch?v=", "embed/")}
+                  title="Happy Class Intro Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -929,7 +980,6 @@ export default function Homepage() {
             gap: "3rem",
           }}
         >
-          {/* About Section */}
           <div>
             <div style={{ display: "flex", alignItems: "center", marginBottom: "1.5rem" }}>
               <img
@@ -970,7 +1020,6 @@ export default function Homepage() {
             </div>
           </div>
 
-          {/* Quick Links Section */}
           <div className="footer-links">
             <h4 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
               Quick Links
@@ -994,7 +1043,6 @@ export default function Homepage() {
             </ul>
           </div>
 
-          {/* Contact Section */}
           <div>
             <h4 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
               Contact Us

@@ -29,7 +29,6 @@ import {
   SoundOutlined,
   TrophyOutlined,
   BellOutlined,
-  QuestionCircleOutlined,
   LinkOutlined,
   BarChartOutlined,
   ReadOutlined,
@@ -55,23 +54,19 @@ import student_lesson_countService from "services/student_lesson_countService";
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
-const { TabPane } = Tabs;
+
 const getTimeElapsed = (createdAt) => {
   const created = new Date(createdAt);
   const now = new Date();
   const diffInSeconds = Math.floor((now - created) / 1000);
 
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} sec`;
-  } else if (diffInSeconds < 3600) {
-    return `${Math.floor(diffInSeconds / 60)} min`;
-  } else if (diffInSeconds < 86400) {
-    return `${Math.floor(diffInSeconds / 3600)} hr`;
-  } else {
+  if (diffInSeconds < 60) return `${diffInSeconds} sec`;
+  else if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min`;
+  else if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hr`;
+  else
     return `${Math.floor(diffInSeconds / 86400)} day${
       Math.floor(diffInSeconds / 86400) !== 1 ? "s" : ""
     }`;
-  }
 };
 
 const StudentPage = () => {
@@ -87,10 +82,8 @@ const StudentPage = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("scores");
   const [loadingHomework, setLoadingHomework] = useState(false);
-  const [notificationsCount, setNotificationsCount] = useState(0); // Example notification count
-  const [helpModalVisible, setHelpModalVisible] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
-  const [studentNotifications, setStudentNotifications] = useState([]);
   const [loadingNotification, setLoadingNotification] = useState(false);
   const [errorNotification, setErrorNotification] = useState(false);
   const [openNotification, setOpenNotification] = useState(false);
@@ -108,17 +101,15 @@ const StudentPage = () => {
     });
   };
   // Use Ant Design's Grid breakpoints
+  // Thêm state cho modal điểm thi
+  const [scoreModalVisible, setScoreModalVisible] = useState(false);
 
-  // Refs cho từng section
-  const scoresRef = useRef(null);
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const lessonsRef = useRef(null);
   const homeworkRef = useRef(null);
   const HomeworkStatisticsDashboardRef = useRef(null);
 
-  const screens = useBreakpoint();
-  const isMobile = !screens.md;
-  const isTablet = screens.md && !screens.lg;
-  const isDesktop = screens.lg;
   useEffect(() => {
     const fetchNotification = async () => {
       try {
@@ -128,18 +119,13 @@ const StudentPage = () => {
         const studentNotification = await user_notificationService.getAllUserNotificationsOfStudent(
           studentId
         );
-        // console.log(studentNotification);
-
         const studentNotificationsData = studentNotification.map((noti) => {
-          if (!noti.status) {
-            count++;
-          }
+          if (!noti.status) count++;
           return { ...noti.notification, status: noti.status, user_notificationID: noti.id };
         });
         count += res.length;
         setNotificationsCount(count);
         const fullData = [...res, ...studentNotificationsData];
-
         if (res[0]?.createdAt) {
           const sortedData = [...fullData].sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -148,14 +134,12 @@ const StudentPage = () => {
             ...item,
             timeElapsed: getTimeElapsed(item.createdAt),
           }));
-          // console.log(data);
-
           setNotifications(data);
         }
       } catch (error) {
         setErrorNotification(error || "fail to fetch notification");
       } finally {
-        setLoadingNotification(true);
+        setLoadingNotification(false);
       }
     };
     fetchNotification();
@@ -193,7 +177,6 @@ const StudentPage = () => {
     const findSelectedLessonBySchedule = lessonsBySchedule.find(
       (lessonBySchedule) => lessonBySchedule.id === selectedLessonBySchedule
     );
-
     if (findSelectedLessonBySchedule && findSelectedLessonBySchedule.lessonID) {
       const fetchLessonById = async () => {
         try {
@@ -235,14 +218,6 @@ const StudentPage = () => {
     }
   };
 
-  const showHelpModal = () => {
-    setHelpModalVisible(true);
-  };
-
-  const handleHelpModalClose = () => {
-    setHelpModalVisible(false);
-  };
-
   const handleViewNotification = () => {
     setOpenNotification(!openNotification);
   };
@@ -254,9 +229,7 @@ const StudentPage = () => {
 
   const handleSelectLessonBySchedule = (lessonByScheduleId) => {
     setSelectedLessonBySchedule(lessonByScheduleId);
-    if (isMobile) {
-      setSidebarVisible(false);
-    }
+    if (isMobile) setSidebarVisible(false);
   };
 
   const toggleSidebar = () => {
@@ -314,18 +287,17 @@ const StudentPage = () => {
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     switch (tab) {
-      case "scores":
-        scrollToSection(scoresRef);
-        break;
       case "lessons":
         scrollToSection(lessonsRef);
         break;
       case "situation":
-        // scrollToSection(lessonsRef);
         message.info("Coming soon!");
         break;
       case "homework":
         scrollToSection(homeworkRef);
+        break;
+      case "scores":
+        setScoreModalVisible(true); // Mở modal khi nhấn "Điểm Thi"
         break;
       default:
         break;
@@ -635,15 +607,6 @@ const StudentPage = () => {
             </div>
           ) : (
             <div>
-              {/* Các section */}
-              <div ref={scoresRef}>
-                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-                  <TrophyOutlined /> Điểm Thi
-                </Title>
-                <StudentScoreTab studentId={studentId} colors={colors} />
-                <Divider />
-              </div>
-
               <div ref={lessonsRef}>
                 <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
                   <BookOutlined /> Bài Học
@@ -668,7 +631,6 @@ const StudentPage = () => {
           )}
         </Content>
 
-        {/* Thanh tab điều hướng ở dưới */}
         {selectedLessonBySchedule && (
           <div
             style={{
@@ -734,6 +696,7 @@ const StudentPage = () => {
           </div>
         )}
       </Layout>
+
       <Modal
         open={openNotification}
         onCancel={() => setOpenNotification(false)}
@@ -800,6 +763,18 @@ const StudentPage = () => {
             </Space>
           </Card>
         )}
+      </Modal>
+
+      {/* Modal cho Điểm Thi */}
+      <Modal
+        title="Điểm Thi"
+        open={scoreModalVisible}
+        onCancel={() => setScoreModalVisible(false)}
+        footer={null}
+        width={isMobile ? "90%" : "50%"}
+        style={{ top: 20 }}
+      >
+        <StudentScoreTab studentId={studentId} colors={colors} />
       </Modal>
     </Layout>
   );

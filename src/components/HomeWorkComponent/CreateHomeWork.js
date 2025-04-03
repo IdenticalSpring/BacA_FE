@@ -31,6 +31,8 @@ import lessonByScheduleService from "services/lessonByScheduleService";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import classService from "services/classService";
+import { BookOutlined } from "@ant-design/icons";
+
 const { Title } = Typography;
 const { Text } = Typography;
 const { Option } = Select;
@@ -184,7 +186,50 @@ export default function CreateHomeWork({
       setLoadingCreateHomeWork(false);
     }
   };
+  const handleLoadLessonContent = async () => {
+    const today = new Date(); // Lấy ngày hiện tại thực tế
+    const todayString = today.toISOString().split("T")[0]; // Định dạng YYYY-MM-DD
 
+    // Tìm bài học của ngày hôm nay từ lessonByScheduleData
+    const todayLesson = lessonByScheduleData.find(
+      (lesson) => lesson.date === todayString && lesson.lessonID
+    );
+
+    if (todayLesson && todayLesson.lessonID) {
+      try {
+        // Gọi API để lấy thông tin lesson từ lessonID
+        const lessonData = await lessonService.getLessonById(todayLesson.lessonID);
+
+        if (lessonData && lessonData.name) {
+          // Cập nhật các field trong Form
+          form.setFieldsValue({
+            title: lessonData.name, // Điền name của lesson vào field title
+            linkYoutube: lessonData.linkYoutube || "", // Điền linkYoutube (nếu có) vào field linkYoutube
+            description: lessonData.description || "", // Điền description (nếu có) vào field description
+          });
+
+          // Cập nhật nội dung description vào ReactQuill
+          if (lessonData.description && quill) {
+            quill.setContents([]); // Xóa nội dung hiện tại
+            quill.clipboard.dangerouslyPasteHTML(lessonData.description); // Chèn description vào ReactQuill
+          } else if (lessonData.content && quill) {
+            // Nếu không có description nhưng có content, dùng content làm fallback
+            quill.setContents([]);
+            quill.clipboard.dangerouslyPasteHTML(lessonData.content);
+          }
+
+          message.success("Đã tải nội dung bài học hôm nay!");
+        } else {
+          message.warning("Không tìm thấy thông tin bài học.");
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin lesson:", error);
+        message.error("Không thể tải thông tin bài học. Vui lòng thử lại.");
+      }
+    } else {
+      message.warning("Không tìm thấy bài học cho ngày hôm nay.");
+    }
+  };
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTSHomeWork(true);
@@ -313,6 +358,21 @@ export default function CreateHomeWork({
               description: "",
             }}
           >
+            <Form.Item>
+              <Button
+                type="default"
+                icon={<BookOutlined />}
+                onClick={handleLoadLessonContent}
+                style={{
+                  backgroundColor: colors.deepGreen,
+                  borderColor: colors.deepGreen,
+                  color: colors.white,
+                }}
+              >
+                Nội dung bài học
+              </Button>
+            </Form.Item>
+
             <Form.Item
               name="title"
               label="Tiêu đề bài tập"

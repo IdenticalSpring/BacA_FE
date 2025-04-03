@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility"; // Thêm icon View
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -19,6 +20,7 @@ import DataTable from "examples/Tables/DataTable";
 import teacherService from "services/teacherService";
 import { useNavigate } from "react-router-dom";
 import { colors } from "assets/theme/color";
+import TeacherOverViewModal from "./teacherOverviewModal"; // Import modal mới
 
 function Teachers() {
   const navigate = useNavigate();
@@ -41,8 +43,9 @@ function Teachers() {
     startDate: "",
     endDate: "",
   });
-  const [file, setFile] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // Thêm state cho tìm kiếm
+  const [files, setFiles] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openOverview, setOpenOverview] = useState(false); // State cho modal overview
 
   useEffect(() => {
     fetchTeachers();
@@ -56,15 +59,26 @@ function Teachers() {
         name: teacher.name,
         startDate: teacher.startDate,
         endDate: teacher.endDate,
-        fileUrl: teacher.fileUrl ? (
-          <a href={teacher.fileUrl} target="_blank" rel="noopener noreferrer">
-            {teacher.fileUrl}
-          </a>
-        ) : (
-          "No file"
-        ),
+        fileUrl: teacher.fileUrls
+          ? teacher.fileUrls.map((url, index) => (
+              <div key={index}>
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                  File {index + 1}
+                </a>
+              </div>
+            ))
+          : "No file",
         actions: (
           <>
+            <IconButton
+              sx={{
+                color: colors.midGreen,
+                " &:hover": { backgroundColor: colors.highlightGreen },
+              }}
+              onClick={() => handleView(teacher)} // Thêm sự kiện View
+            >
+              <VisibilityIcon />
+            </IconButton>
             <IconButton
               sx={{
                 color: colors.midGreen,
@@ -98,7 +112,7 @@ function Teachers() {
       startDate: teacher.startDate,
       endDate: teacher.endDate,
     });
-    setFile(null);
+    setFiles([]);
     setOpen(true);
   };
 
@@ -113,8 +127,13 @@ function Teachers() {
     }
   };
 
+  const handleView = (teacher) => {
+    setSelectedTeacher(teacher);
+    setOpenOverview(true); // Mở modal overview
+  };
+
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    setFiles(Array.from(e.target.files));
   };
 
   const handleSave = async () => {
@@ -123,7 +142,7 @@ function Teachers() {
         const updatedTeacher = await teacherService.editTeacher(
           selectedTeacher.id,
           teacherData,
-          file
+          files
         );
         setRows(
           rows.map((row) =>
@@ -131,19 +150,21 @@ function Teachers() {
               ? {
                   ...row,
                   ...teacherData,
-                  fileUrl: updatedTeacher.fileUrl ? (
-                    <a href={updatedTeacher.fileUrl} target="_blank" rel="noopener noreferrer">
-                      {updatedTeacher.fileUrl}
-                    </a>
-                  ) : (
-                    "No file"
-                  ),
+                  fileUrl: updatedTeacher.fileUrls
+                    ? updatedTeacher.fileUrls.map((url, index) => (
+                        <div key={index}>
+                          <a href={url} target="_blank" rel="noopener noreferrer">
+                            File {index + 1}
+                          </a>
+                        </div>
+                      ))
+                    : "No file",
                 }
               : row
           )
         );
       } else {
-        const createdTeacher = await teacherService.createTeacher(teacherData, file);
+        const createdTeacher = await teacherService.createTeacher(teacherData, files);
         setRows([
           ...rows,
           {
@@ -151,15 +172,26 @@ function Teachers() {
             name: createdTeacher.name,
             startDate: createdTeacher.startDate,
             endDate: createdTeacher.endDate,
-            fileUrl: createdTeacher.fileUrl ? (
-              <a href={createdTeacher.fileUrl} target="_blank" rel="noopener noreferrer">
-                {createdTeacher.fileUrl}
-              </a>
-            ) : (
-              "No file"
-            ),
+            fileUrl: createdTeacher.fileUrls
+              ? createdTeacher.fileUrls.map((url, index) => (
+                  <div key={index}>
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      File {index + 1}
+                    </a>
+                  </div>
+                ))
+              : "No file",
             actions: (
               <>
+                <IconButton
+                  sx={{
+                    color: colors.midGreen,
+                    " &:hover": { backgroundColor: colors.highlightGreen },
+                  }}
+                  onClick={() => handleView(createdTeacher)}
+                >
+                  <VisibilityIcon />
+                </IconButton>
                 <IconButton
                   sx={{
                     backgroundColor: colors.midGreen,
@@ -180,7 +212,7 @@ function Teachers() {
       }
       setOpen(false);
       setTeacherData({ name: "", username: "", password: "", startDate: "", endDate: "" });
-      setFile(null);
+      setFiles([]);
       setEditMode(false);
     } catch (err) {
       alert(editMode ? "Lỗi khi chỉnh sửa giáo viên!" : "Lỗi khi tạo giáo viên!");
@@ -214,7 +246,6 @@ function Teachers() {
                 <MDTypography variant="h6" color="white">
                   Teachers Table
                 </MDTypography>
-
                 <Button
                   variant="contained"
                   sx={{
@@ -319,9 +350,9 @@ function Teachers() {
             fullWidth
             margin="normal"
             type="file"
-            label="Upload File"
+            label="Upload Files"
             InputLabelProps={{ shrink: true }}
-            inputProps={{ accept: "image/*, .pdf" }}
+            inputProps={{ accept: "image/*, .pdf", multiple: true }}
             onChange={handleFileChange}
           />
         </DialogContent>
@@ -344,6 +375,11 @@ function Teachers() {
           </Button>
         </DialogActions>
       </Dialog>
+      <TeacherOverViewModal
+        open={openOverview}
+        onClose={() => setOpenOverview(false)}
+        teacher={selectedTeacher}
+      />
     </DashboardLayout>
   );
 }

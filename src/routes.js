@@ -246,18 +246,18 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Level Management",
-    key: "levelManagement",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/levelManagement",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <LevelManagement />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Level Management",
+  //   key: "levelManagement",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/levelManagement",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <LevelManagement />
+  //     </PrivateRoute>
+  //   ),
+  // },
   // {
   //   type: "collapse",
   //   name: "Test Skill Management",
