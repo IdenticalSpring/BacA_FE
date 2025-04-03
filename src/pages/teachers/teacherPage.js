@@ -62,6 +62,7 @@ import MultiStudentEvaluationModal from "./multiEvaluationModal";
 import StudentProfileModal from "./studentProfileModal";
 import NotificationSection from "components/TeacherPageComponent/NotificationComponent";
 import notificationService from "services/notificationService";
+import HomeworkStatisticsDashboard from "./HomeworkStatisticsDashboard";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -177,6 +178,7 @@ const TeacherPage = () => {
   const [editingLesson, setEditingLesson] = useState(null);
   const [editingHomeWork, setEditingHomeWork] = useState(null);
   const [openNotification, setOpenNotification] = useState(false);
+  const [openHomeworkStatisticsDashboard, setOpenHomeworkStatisticsDashboard] = useState(false);
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -690,6 +692,7 @@ const TeacherPage = () => {
         classes={classes}
         selectedClass={selectedClass}
         onSelectClass={handleSelectClass}
+        setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
       />
 
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
@@ -1461,6 +1464,24 @@ const TeacherPage = () => {
           setNotifications={setNotifications}
           errorNotification={errorNotification}
           loadingNotification={loadingNotification}
+        />
+      </Modal>
+      <Modal
+        open={openHomeworkStatisticsDashboard}
+        onCancel={() => setOpenHomeworkStatisticsDashboard(false)}
+        footer={<></>}
+        width={isMobile ? "90%" : "90%"}
+        centered={true}
+        className="homework-modal"
+        style={{
+          borderRadius: "8px",
+        }}
+      >
+        <HomeworkStatisticsDashboard
+          students={students}
+          lessonByScheduleData={lessonByScheduleData}
+          daysOfWeek={daysOfWeek}
+          isMobile={isMobile}
         />
       </Modal>
     </Layout>

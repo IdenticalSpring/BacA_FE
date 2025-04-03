@@ -88,7 +88,6 @@ const lessonService = {
       throw error.response?.data?.message || "Error updating lesson";
     }
   },
-
   deleteLesson: async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/lessons/${id}`, {

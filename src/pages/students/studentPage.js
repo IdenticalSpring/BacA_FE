@@ -16,6 +16,8 @@ import {
   Badge,
   Modal,
   Tabs,
+  Input,
+  Spin,
 } from "antd";
 import {
   UserOutlined,
@@ -30,6 +32,8 @@ import {
   QuestionCircleOutlined,
   LinkOutlined,
   BarChartOutlined,
+  ReadOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -45,6 +49,8 @@ import { colors } from "pages/teachers/sidebar";
 import NotificationSection from "components/TeacherPageComponent/NotificationComponent";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
+import student_homework_countService from "services/student_homework_countService";
+import student_lesson_countService from "services/student_lesson_countService";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -88,12 +94,26 @@ const StudentPage = () => {
   const [loadingNotification, setLoadingNotification] = useState(false);
   const [errorNotification, setErrorNotification] = useState(false);
   const [openNotification, setOpenNotification] = useState(false);
+  const [openSubmitHomework, setOpenSubmitHomework] = useState(false);
+  const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [loadingSubmitHomework, setLoadingSubmitHomework] = useState(false);
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(homeworkZaloLink).then(() => {
+      setCopySuccess(true);
+      message.success("Copied to clipboard!"); // Hiển thị thông báo
+
+      // Reset hiệu ứng sau 2 giây
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
   // Use Ant Design's Grid breakpoints
 
   // Refs cho từng section
   const scoresRef = useRef(null);
   const lessonsRef = useRef(null);
   const homeworkRef = useRef(null);
+  const HomeworkStatisticsDashboardRef = useRef(null);
 
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -140,7 +160,7 @@ const StudentPage = () => {
     };
     fetchNotification();
   }, []);
-
+  useEffect(() => {}, []);
   useEffect(() => {
     const fetchStudentById = async () => {
       try {
@@ -179,7 +199,11 @@ const StudentPage = () => {
         try {
           const data = await lessonService.getLessonById(findSelectedLessonBySchedule.lessonID);
           setLessons([data]);
-
+          const student_lesson_countData = {
+            lessonId: +findSelectedLessonBySchedule.lessonID,
+            studentId: +studentId,
+          };
+          await student_lesson_countService.updateCount(student_lesson_countData);
           if (findSelectedLessonBySchedule.homeWorkId) {
             fetchHomeworkByLesson(findSelectedLessonBySchedule.homeWorkId);
           } else {
@@ -242,7 +266,18 @@ const StudentPage = () => {
   const showComingSoon = () => {
     message.info("Coming soon!");
   };
-
+  const handleSubmitHomework = async (homeworkId) => {
+    try {
+      setLoadingSubmitHomework(true);
+      setOpenSubmitHomework(true);
+      const student_homework_countData = { homeworkId, studentId };
+      await student_homework_countService.updateCount(student_homework_countData);
+    } catch {
+      message.error("có lỗi khi nộp bài vui lòng refresh trang và nộp lại!");
+    } finally {
+      setLoadingSubmitHomework(false);
+    }
+  };
   const menu = (
     <Menu style={{ backgroundColor: colors.paleGreen, borderRadius: "8px" }}>
       <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
@@ -444,7 +479,10 @@ const StudentPage = () => {
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   type="primary"
-                  onClick={() => console.log("Nộp bài tập ID:", hw.id)}
+                  onClick={() => {
+                    handleSubmitHomework(hw.id);
+                    setHomeworkZaloLink(hw.linkZalo);
+                  }}
                   style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
                 >
                   {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
@@ -467,7 +505,7 @@ const StudentPage = () => {
       )}
     </div>
   );
-  console.log(lessonsRef, homeworkRef, scoresRef);
+  // console.log(lessonsRef, homeworkRef, scoresRef);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -620,6 +658,12 @@ const StudentPage = () => {
                 </Title>
                 {renderHomeworkContent()}
               </div>
+              <div ref={HomeworkStatisticsDashboardRef}>
+                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+                  <FileTextOutlined /> Tình hình học tập
+                </Title>
+                {/* <HomeworkStatisticsDashboard /> */}
+              </div>
             </div>
           )}
         </Content>
@@ -712,6 +756,50 @@ const StudentPage = () => {
           notificationsCount={notificationsCount}
           setNotificationsCount={setNotificationsCount}
         />
+      </Modal>
+      <Modal
+        open={openSubmitHomework}
+        onCancel={() => setOpenSubmitHomework(false)}
+        onClose={() => setOpenSubmitHomework(false)}
+        footer={<></>}
+      >
+        {loadingSubmitHomework ? (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              marginTop: "10px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Spin />
+          </div>
+        ) : (
+          <Card style={{ maxWidth: "90%", margin: "auto", textAlign: "center" }}>
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <FileTextOutlined style={{ fontSize: 32, color: "#1890ff" }} />
+              <Text strong style={{ fontSize: 16 }}>
+                Bạn vui lòng nộp bài cho giáo viên qua link zalo này:
+              </Text>
+              <Input
+                value={homeworkZaloLink}
+                readOnly
+                style={{ textAlign: "center", width: "100%" }}
+              />
+
+              {/* Nút Copy với hiệu ứng */}
+              <Button
+                icon={<CopyOutlined />}
+                onClick={copyToClipboard}
+                type={copySuccess ? "default" : "primary"}
+              >
+                {copySuccess ? "Copied!" : "Copy Link nộp bài tập"}
+              </Button>
+            </Space>
+          </Card>
+        )}
       </Modal>
     </Layout>
   );

@@ -551,7 +551,16 @@ export default function CreateHomeWork({
         footer={<></>}
       >
         {loadingClass ? (
-          <div>
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              marginTop: "10px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <Spin />
           </div>
         ) : (

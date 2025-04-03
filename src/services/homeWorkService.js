@@ -75,7 +75,6 @@ const homeWorkService = {
       throw error.response?.data?.message || "Error updating homeWork";
     }
   },
-
   deleteHomeWork: async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/homeworks/${id}`, {

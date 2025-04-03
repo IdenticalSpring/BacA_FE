@@ -31,10 +31,15 @@ export const colors = {
   borderGreen: "#A8E6C3",
 };
 
-const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
+const Sidebar = ({
+  teacherName,
+  classes,
+  selectedClass,
+  onSelectClass,
+  setOpenHomeworkStatisticsDashboard,
+}) => {
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -109,6 +114,7 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           display: "flex",
           alignItems: "center",
           gap: "4px",
+          padding: "5px 3px",
         }}
       >
         <TeamOutlined />
@@ -203,15 +209,21 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           display: "flex",
           alignItems: "center",
           gap: "4px",
+          cursor: "pointer",
+          borderRadius: "5px",
+          padding: "5px 3px",
+          transition: "all 0.1s ease-in-out",
         }}
+        className="HomeworkStatisticsDashboard"
+        onClick={() => setOpenHomeworkStatisticsDashboard(true)}
       >
-        <BarChartOutlined />
         <Text
           style={{
             fontWeight: 700,
-            color: colors.darkGreen,
           }}
+          className="hoverChangeColor"
         >
+          <BarChartOutlined style={{ marginRight: "3px" }} />
           Chi tiết tình hình học
         </Text>
       </div>
@@ -226,6 +238,7 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           display: "flex",
           alignItems: "center",
           gap: "4px",
+          padding: "5px 3px",
         }}
       >
         <LaptopOutlined />
@@ -249,6 +262,7 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
           display: "flex",
           alignItems: "center",
           gap: "4px",
+          padding: "5px 3px",
         }}
       >
         <EditOutlined />
@@ -266,6 +280,22 @@ const Sidebar = ({ teacherName, classes, selectedClass, onSelectClass }) => {
 
   return (
     <>
+      <style>
+        {`
+        .HomeworkStatisticsDashboard:hover{
+          background-color: #368A68;
+  transform: scale(1.05);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+  color:white
+        }
+  .hoverChangeColor:hover{
+  color:white
+  }
+  .hoverChangeColor{
+  color: ${colors.darkGreen}
+  }
+        `}
+      </style>
       {isMobile ? (
         <>
           <Button
@@ -324,6 +354,7 @@ Sidebar.propTypes = {
   ).isRequired,
   selectedClass: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onSelectClass: PropTypes.func.isRequired,
+  setOpenHomeworkStatisticsDashboard: PropTypes.func.isRequired,
 };
 
 // Add default props
