@@ -13,6 +13,7 @@ import {
   Card,
   Progress,
   Statistic,
+  Table, // Thêm Table từ Ant Design
 } from "antd";
 import {
   TrophyOutlined,
@@ -229,6 +230,114 @@ const StudentScoreTab = ({ studentId, colors }) => {
       },
     ],
   };
+
+  // Cấu hình cột cho bảng Lịch sử điểm số
+  const scoreHistoryColumns = [
+    {
+      title: "Ngày thi",
+      dataIndex: "date",
+      key: "date",
+      align: "center",
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Giáo viên",
+      dataIndex: "teacher",
+      key: "teacher",
+      align: "center",
+      render: (text) => text || "N/A",
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Bài kiểm tra",
+      dataIndex: "testName",
+      key: "testName",
+      align: "center",
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Nghe",
+      dataIndex: "listeningScore",
+      key: "listeningScore",
+      align: "center",
+      render: (score) => (
+        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
+          {score || "N/A"}
+        </Tag>
+      ),
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Nói",
+      dataIndex: "speakingScore",
+      key: "speakingScore",
+      align: "center",
+      render: (score) => (
+        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
+          {score || "N/A"}
+        </Tag>
+      ),
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Đọc",
+      dataIndex: "readingScore",
+      key: "readingScore",
+      align: "center",
+      render: (score) => (
+        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
+          {score || "N/A"}
+        </Tag>
+      ),
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Viết",
+      dataIndex: "writingScore",
+      key: "writingScore",
+      align: "center",
+      render: (score) => (
+        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
+          {score || "N/A"}
+        </Tag>
+      ),
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Đánh giá",
+      dataIndex: "assessment",
+      key: "assessment",
+      align: "center",
+      render: (text) => text || "N/A",
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+    {
+      title: "Bình luận",
+      dataIndex: "comment",
+      key: "comment",
+      align: "center",
+      render: (text) => text || "Chưa có bình luận",
+      onHeaderCell: () => ({
+        style: { backgroundColor: colors.paleGreen || "#f6ffed" }, // Màu nền cho header
+      }),
+    },
+  ];
 
   if (loading) {
     return (
@@ -458,146 +567,15 @@ const StudentScoreTab = ({ studentId, colors }) => {
       </Divider>
 
       {groupedScores && groupedScores.length > 0 ? (
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              border: `1px solid ${colors.borderGreen}`,
-            }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: colors.paleGreen }}>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Ngày thi
-                </th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Giáo viên
-                </th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Bài kiểm tra
-                </th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Nghe</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Nói</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Đọc</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Viết</th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Đánh giá
-                </th>
-                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                  Bình luận
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedScores.map((score, index) => (
-                <tr key={index}>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.date}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.teacher || "N/A"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.testName}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.listeningScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.listeningScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.speakingScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.speakingScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.readingScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.readingScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Tag
-                      color={getScoreColor(score.writingScore)}
-                      style={{ fontSize: "14px", padding: "1px 8px" }}
-                    >
-                      {score.writingScore || "N/A"}
-                    </Tag>
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.assessment || "N/A"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      textAlign: "center",
-                    }}
-                  >
-                    {score.comment || "Chưa có bình luận"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          columns={scoreHistoryColumns}
+          dataSource={groupedScores.map((score, index) => ({ ...score, key: index }))} // Thêm key cho mỗi row
+          pagination={{
+            pageSize: 4, // Giới hạn 4 rows mỗi trang
+            showSizeChanger: false, // Ẩn tùy chọn thay đổi số lượng rows mỗi trang
+          }}
+          scroll={{ x: true }} // Thêm scroll ngang nếu bảng quá rộng
+        />
       ) : (
         <Empty description="Chưa có dữ liệu điểm số" style={{ padding: "30px 0" }} />
       )}
