@@ -767,7 +767,7 @@ const StudentPage = () => {
         open={scoreModalVisible}
         onCancel={() => setScoreModalVisible(false)}
         footer={null}
-        width={isMobile ? "90%" : "65%"}
+        width={isMobile ? "90%" : "50%"}
         style={{ top: 20 }}
       >
         <StudentScoreTab studentId={studentId} colors={colors} />

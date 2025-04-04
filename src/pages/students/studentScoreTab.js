@@ -22,6 +22,7 @@ import {
   SoundOutlined,
   AudioOutlined,
 } from "@ant-design/icons";
+import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
 import studentScoreService from "services/studentScoreService";
 import studentService from "services/studentService";
 import PropTypes from "prop-types";
@@ -31,8 +32,8 @@ const { Title, Text } = Typography;
 
 const StudentScoreTab = ({ studentId, colors }) => {
   const [loading, setLoading] = useState(false);
-  const [scoreDetailsData, setScoreDetailsData] = useState([]); // Dữ liệu từ getScoreDetailsByStudentId
-  const [assessmentData, setAssessmentData] = useState([]); // Dữ liệu từ getScorebyStudentID
+  const [scoreDetailsData, setScoreDetailsData] = useState([]);
+  const [assessmentData, setAssessmentData] = useState([]);
   const [studentInfo, setStudentInfo] = useState(null);
   const [error, setError] = useState(null);
 
@@ -44,7 +45,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
       setError(null);
 
       try {
-        // Fetch detailed scores (for scores table)
         const scoreDetails = await studentScoreService.getScoreDetailsByStudentId(studentId);
         const sortedScoreDetails = Array.isArray(scoreDetails) ? [...scoreDetails] : [scoreDetails];
 
@@ -92,7 +92,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
 
         setScoreDetailsData(enrichedScoreDetails);
 
-        // Fetch assessment data (for teacher/assessment/comment table)
         const scores = await studentScoreService.getScorebyStudentID(studentId);
         const sortedScores = Array.isArray(scores) ? [...scores] : [scores];
         sortedScores.sort((a, b) => {
@@ -106,13 +105,8 @@ const StudentScoreTab = ({ studentId, colors }) => {
         });
         setAssessmentData(sortedScores);
 
-        // Fetch student information
         const studentData = await studentService.getStudentById(studentId);
         setStudentInfo(studentData);
-
-        console.log("Enriched score details retrieved and sorted:", enrichedScoreDetails);
-        console.log("Assessment data retrieved and sorted:", sortedScores);
-        console.log("Student data retrieved:", studentData);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err.message || "Không thể tải thông tin học sinh và điểm số");
@@ -137,10 +131,22 @@ const StudentScoreTab = ({ studentId, colors }) => {
           readingScore: null,
           speakingScore: null,
           listeningScore: null,
+          teacher: null,
+          assessment: null,
+          comment: null,
         };
       }
       const skillName = score.testSkill.name.toLowerCase();
       grouped[key][`${skillName}Score`] = score.score;
+
+      const assessment = assessmentData.find(
+        (a) => a.classTestScheduleID === score.studentScore.classTestScheduleID
+      );
+      if (assessment) {
+        grouped[key].teacher = assessment.teacher?.name || "N/A";
+        grouped[key].assessment = assessment.assessment?.name || "N/A";
+        grouped[key].comment = assessment.teacherComment || "Chưa có bình luận";
+      }
     });
     return Object.values(grouped).sort((a, b) => {
       const dateA = a.date ? new Date(a.date) : new Date(0);
@@ -182,8 +188,47 @@ const StudentScoreTab = ({ studentId, colors }) => {
     return Math.min(Math.round((avg / 10) * 100), 100);
   };
 
+  const getAverageScoresForChart = () => {
+    const groupedScores = groupScoresByTest();
+    return groupedScores
+      .map((score) => {
+        const validScores = [
+          parseFloat(score.writingScore) || 0,
+          parseFloat(score.readingScore) || 0,
+          parseFloat(score.speakingScore) || 0,
+          parseFloat(score.listeningScore) || 0,
+        ].filter((score) => score > 0);
+
+        const average =
+          validScores.length > 0
+            ? validScores.reduce((sum, score) => sum + score, 0) / validScores.length
+            : 0;
+
+        return {
+          date: score.date,
+          average: Number(average.toFixed(1)),
+        };
+      })
+      .reverse();
+  };
+
   const groupedScores = groupScoresByTest();
   const recentScores = getMostRecentScores();
+  const chartData = getAverageScoresForChart();
+
+  // Cấu hình dữ liệu cho DefaultLineChart của Material Dashboard 2
+  const lineChartData = {
+    labels: chartData.map((item) => new Date(item.date).toLocaleDateString()),
+    datasets: [
+      {
+        label: "Điểm trung bình",
+        data: chartData.map((item) => item.average),
+        fill: false,
+        borderColor: colors.deepGreen || "#1890ff",
+        tension: 0.4,
+      },
+    ],
+  };
 
   if (loading) {
     return (
@@ -387,212 +432,172 @@ const StudentScoreTab = ({ studentId, colors }) => {
       <Divider style={{ margin: "16px 0" }} orientation="left">
         <Space>
           <TrophyOutlined />
+          <span>Thống kê điểm trung bình</span>
+        </Space>
+      </Divider>
+
+      {chartData && chartData.length > 0 ? (
+        <Card
+          style={{
+            marginBottom: 16,
+            borderRadius: 8,
+            boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
+          }}
+        >
+          <DefaultLineChart chart={lineChartData} height="300px" />
+        </Card>
+      ) : (
+        <Empty description="Chưa có dữ liệu để hiển thị biểu đồ" style={{ padding: "30px 0" }} />
+      )}
+
+      <Divider style={{ margin: "16px 0" }} orientation="left">
+        <Space>
+          <TrophyOutlined />
           <span>Lịch sử điểm số</span>
         </Space>
       </Divider>
 
       {groupedScores && groupedScores.length > 0 ? (
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          {/* Bảng thông tin bài thi */}
-          <Col xs={24} md={8}>
-            <div className="test-info-table" style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  border: `1px solid ${colors.borderGreen}`,
-                }}
-              >
-                <thead>
-                  <tr style={{ backgroundColor: colors.paleGreen }}>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Bài kiểm tra
-                    </th>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Ngày thi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupedScores.map((score, index) => (
-                    <tr key={index}>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        {score.testName}
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        {score.date}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Col>
-
-          {/* Bảng điểm số */}
-          <Col xs={24} md={8}>
-            <div className="score-table" style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  border: `1px solid ${colors.borderGreen}`,
-                }}
-              >
-                <thead>
-                  <tr style={{ backgroundColor: colors.paleGreen }}>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Viết
-                    </th>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Đọc
-                    </th>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Nói
-                    </th>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Nghe
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupedScores.map((score, index) => (
-                    <tr key={index}>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        <Tag
-                          color={getScoreColor(score.writingScore)}
-                          style={{ fontSize: "14px", padding: "1px 8px" }}
-                        >
-                          {score.writingScore || "N/A"}
-                        </Tag>
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        <Tag
-                          color={getScoreColor(score.readingScore)}
-                          style={{ fontSize: "14px", padding: "1px 8px" }}
-                        >
-                          {score.readingScore || "N/A"}
-                        </Tag>
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        <Tag
-                          color={getScoreColor(score.speakingScore)}
-                          style={{ fontSize: "14px", padding: "1px 8px" }}
-                        >
-                          {score.speakingScore || "N/A"}
-                        </Tag>
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        <Tag
-                          color={getScoreColor(score.listeningScore)}
-                          style={{ fontSize: "14px", padding: "1px 8px" }}
-                        >
-                          {score.listeningScore || "N/A"}
-                        </Tag>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Col>
-
-          {/* Bảng đánh giá */}
-          <Col xs={24} md={8}>
-            <div className="assessment-table" style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  border: `1px solid ${colors.borderGreen}`,
-                }}
-              >
-                <thead>
-                  <tr style={{ backgroundColor: colors.paleGreen }}>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Giáo viên
-                    </th>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Đánh giá
-                    </th>
-                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
-                      Bình luận
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assessmentData.map((score, index) => (
-                    <tr key={index}>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        {score.teacher?.name || "N/A"}
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        {score.assessment?.name || "N/A"}
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          border: `1px solid ${colors.borderGreen}`,
-                          textAlign: "center",
-                        }}
-                      >
-                        {score.teacherComment || "Chưa có bình luận"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Col>
-        </Row>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              border: `1px solid ${colors.borderGreen}`,
+            }}
+          >
+            <thead>
+              <tr style={{ backgroundColor: colors.paleGreen }}>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                  Ngày thi
+                </th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                  Giáo viên
+                </th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                  Bài kiểm tra
+                </th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Nghe</th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Nói</th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Đọc</th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>Viết</th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                  Đánh giá
+                </th>
+                <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                  Bình luận
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupedScores.map((score, index) => (
+                <tr key={index}>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    {score.date}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    {score.teacher || "N/A"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    {score.testName}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Tag
+                      color={getScoreColor(score.listeningScore)}
+                      style={{ fontSize: "14px", padding: "1px 8px" }}
+                    >
+                      {score.listeningScore || "N/A"}
+                    </Tag>
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Tag
+                      color={getScoreColor(score.speakingScore)}
+                      style={{ fontSize: "14px", padding: "1px 8px" }}
+                    >
+                      {score.speakingScore || "N/A"}
+                    </Tag>
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Tag
+                      color={getScoreColor(score.readingScore)}
+                      style={{ fontSize: "14px", padding: "1px 8px" }}
+                    >
+                      {score.readingScore || "N/A"}
+                    </Tag>
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Tag
+                      color={getScoreColor(score.writingScore)}
+                      style={{ fontSize: "14px", padding: "1px 8px" }}
+                    >
+                      {score.writingScore || "N/A"}
+                    </Tag>
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    {score.assessment || "N/A"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "8px",
+                      border: `1px solid ${colors.borderGreen}`,
+                      textAlign: "center",
+                    }}
+                  >
+                    {score.comment || "Chưa có bình luận"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <Empty description="Chưa có dữ liệu điểm số" style={{ padding: "30px 0" }} />
       )}
