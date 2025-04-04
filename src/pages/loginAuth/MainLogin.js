@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import { colors } from "assets/theme/color";
 import { useNavigate } from "react-router-dom";
+import Logo from "assets/images/logos/logo.png";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -145,7 +146,7 @@ export default function MainLogin() {
                 height: "80%",
               }}
             >
-              Trang Chủ
+              Home Page
             </Button>
           </div>
         </Header>
@@ -210,7 +211,11 @@ export default function MainLogin() {
                     overflow: "hidden",
                   }}
                 >
-                  <BookOutlined />
+                  <img
+                    src={Logo}
+                    alt="Happy Class Logo"
+                    style={{ width: "100%", height: "100%" }}
+                  />
                   <div
                     style={{
                       position: "absolute",
@@ -342,36 +347,6 @@ export default function MainLogin() {
               </Space>
 
               {/* Already have account text */}
-              <div
-                style={{
-                  marginTop: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  animation: "fadeIn 2s ease-out",
-                }}
-              >
-                <Text style={{ color: "#2e7d32" }}>Are you an admin?</Text>
-                <Text
-                  style={{
-                    color: "#2e7d32",
-                    marginLeft: "10px",
-                    textDecoration: "underline",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    position: "relative",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = "#43A047";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = "#2e7d32";
-                  }}
-                  onClick={navigateToAdminLogin}
-                >
-                  Sign in here
-                </Text>
-              </div>
             </div>
 
             {/* Right column - Video Section */}

@@ -634,7 +634,7 @@ function Lessons() {
             </div>
           )}
           <MDTypography variant="h6" sx={{ color: "#7b809a", margin: "10px" }}>
-            Notification Detail
+            Description
           </MDTypography>
           <ReactQuill
             id="detail"

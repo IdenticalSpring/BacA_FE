@@ -15,7 +15,8 @@ import PropTypes from "prop-types";
 import kahootIcon from "assets/icon/kahoot-icon.png"; // Thay bằng đường dẫn thực tế
 import quizizzIcon from "assets/icon/quizizz-icon.png";
 import padletIcon from "assets/icon/padlet-logo.png";
-import bookwidgetsIcon from "assets/icon/bookwidgets-icon.png";
+import blootket from "assets/icon/Blooket-Logo.png";
+import baamboozle from "assets/icon/baamboozle.png";
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -238,6 +239,24 @@ const Sidebar = ({
         <img src={quizizzIcon} alt="Quizizz" style={{ width: 20, height: 20 }} />
         <Text style={{ color: colors.darkGreen }}>Quizizz</Text>
       </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => openLink("https://www.baamboozle.com/")}
+      >
+        <img src={baamboozle} alt="Baamboozle" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Quizizz</Text>
+      </div>
 
       {/* Công cụ giao bài tập */}
       <div
@@ -288,10 +307,10 @@ const Sidebar = ({
           padding: "5px 3px",
           cursor: "pointer",
         }}
-        onClick={() => openLink("https://www.bookwidgets.com")}
+        onClick={() => openLink("https://www.blooket.com/")}
       >
-        <img src={bookwidgetsIcon} alt="BookWidgets" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>BookWidgets</Text>
+        <img src={blootket} alt="BookWidgets" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Blooket</Text>
       </div>
 
       {/* Chi tiết tình hình học */}

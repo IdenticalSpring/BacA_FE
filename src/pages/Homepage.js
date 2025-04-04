@@ -35,6 +35,9 @@ import { useNavigate } from "react-router-dom";
 import Logo from "assets/images/logos/logo.png";
 import contentPageService from "services/contentpageService";
 
+// Thêm import CSS nếu cần
+import "./Homepage.css"; // Tạo file này nếu chưa có
+
 export default function Homepage() {
   const [visible, setVisible] = useState({
     hero: false,
@@ -131,6 +134,7 @@ export default function Homepage() {
     accent: "#FFD166",
     lightAccent: "#FFEDC2",
     darkGreen: "#224922",
+    mediumGray: "#666", // Thêm màu mediumGray đã sử dụng trong footer
   };
 
   const scrollToTop = () => {
@@ -196,16 +200,13 @@ export default function Homepage() {
                 }}
               >
                 <li>
-                  <a
-                    href="#home"
-                    style={{ color: colors.deepGreen, textDecoration: "none", fontWeight: "bold" }}
-                  >
-                    Trang chủ
+                  <a href="#home" style={{ color: colors.deepGreen, textDecoration: "none" }}>
+                    Home page
                   </a>
                 </li>
                 <li>
                   <a href="#features" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Tính năng
+                    Our Features
                   </a>
                 </li>
                 <li>
@@ -213,12 +214,12 @@ export default function Homepage() {
                     href="#testimonials"
                     style={{ color: colors.darkGray, textDecoration: "none" }}
                   >
-                    Đánh giá
+                    Testimonials
                   </a>
                 </li>
                 <li>
                   <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Liên hệ
+                    Contact
                   </a>
                 </li>
               </ul>
@@ -235,9 +236,10 @@ export default function Homepage() {
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 fontSize: "16px",
+                fontWeight: "bold",
               }}
             >
-              Đăng nhập
+              Sign In
             </button>
           </>
         ) : (
@@ -1181,6 +1183,12 @@ export default function Homepage() {
           @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
+          }
+
+          @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
           }
         `}
         </style>

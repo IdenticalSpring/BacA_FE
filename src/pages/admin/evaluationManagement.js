@@ -321,9 +321,16 @@ function EvaluationManagement() {
                           "& fieldset": { borderColor: colors.inputBorder },
                           "&:hover fieldset": { borderColor: colors.midGreen },
                           "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                          // Đảm bảo chiều cao không bị thu hẹp
+                          height: "44px", // Chiều cao tiêu chuẩn của TextField
                         },
                         "& .MuiInputLabel-root": { color: colors.darkGray },
                         "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                        "& .MuiSelect-select": {
+                          height: "100%", // Đảm bảo nội dung select đầy đủ chiều cao
+                          display: "flex",
+                          alignItems: "center",
+                        },
                       }}
                     >
                       <MenuItem value="1">Skill</MenuItem>
@@ -457,9 +464,15 @@ function EvaluationManagement() {
                 "& fieldset": { borderColor: colors.inputBorder },
                 "&:hover fieldset": { borderColor: colors.midGreen },
                 "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                height: "56px", // Chiều cao tiêu chuẩn của TextField
               },
               "& .MuiInputLabel-root": { color: colors.darkGray },
               "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+              "& .MuiSelect-select": {
+                height: "100%", // Đảm bảo nội dung select đầy đủ chiều cao
+                display: "flex",
+                alignItems: "center",
+              },
             }}
           >
             <MenuItem value="1">Skill</MenuItem>

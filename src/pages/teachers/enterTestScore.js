@@ -24,6 +24,7 @@ import studentService from "services/studentService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import studentScoreService from "services/studentScoreService";
 import testSkillService from "services/testSkillService";
+import assessmentService from "services/assessmentService"; // Thêm import assessmentService
 import { colors } from "./teacherPage";
 
 const { Header, Content } = Layout;
@@ -37,6 +38,8 @@ const EnterTestScore = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [testSkills, setTestSkills] = useState([]);
   const [selectedTestSkills, setSelectedTestSkills] = useState([]);
+  const [assessments, setAssessments] = useState([]); // Thêm state cho assessments
+  const [selectedAssessment, setSelectedAssessment] = useState(null); // Thêm state cho assessment được chọn
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -57,6 +60,7 @@ const EnterTestScore = () => {
       fetchClassTestSchedules(classId);
       fetchStudents(classId);
       fetchTestSkills();
+      fetchAssessments(); // Thêm fetch assessments
     } else {
       notification.error({
         message: "Error",
@@ -115,6 +119,22 @@ const EnterTestScore = () => {
     }
   };
 
+  const fetchAssessments = async () => {
+    try {
+      setLoading(true);
+      const data = await assessmentService.getAllAssessments();
+      setAssessments(data);
+    } catch (error) {
+      console.error("Error fetching assessments:", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to load assessments. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedStudent) {
       fetchPreviousScores(selectedStudent);
@@ -139,6 +159,7 @@ const EnterTestScore = () => {
               studentScoreID: score.studentScoreID,
               scores: { [score.testSkill.name]: score.score },
               avgScore: score.avgScore,
+              teacherComment: score.teacherComment, // Thêm teacherComment nếu backend trả về
             });
           }
           return acc;
@@ -177,11 +198,13 @@ const EnterTestScore = () => {
     try {
       setLoading(true);
 
-      // 1. Gọi createScoreStudent để lưu thông tin chính
+      // 1. Gọi createScoreStudent để lưu thông tin chính, bao gồm teacherComment và assessmentId
       const scoreData = {
         studentID: selectedStudent,
         classTestScheduleID: selectedClassTest,
         teacherID: teacherId,
+        teacherComment: values.teacherComment, // Thêm teacher comment
+        assessmentID: values.assessmentId, // Thêm assessment ID
       };
       const scoreResponse = await studentScoreService.createScoreStudent(scoreData);
       const studentScoreId = scoreResponse.id;
@@ -212,6 +235,7 @@ const EnterTestScore = () => {
         studentScoreID: studentScoreId,
         scores: { ...scores },
         avgScore: avgScore,
+        teacherComment: values.teacherComment, // Thêm teacherComment vào previousScores
       };
       setPreviousScores((prev) => [...prev, newScore]);
 
@@ -221,6 +245,7 @@ const EnterTestScore = () => {
       });
       form.resetFields();
       setSelectedTestSkills([]);
+      setSelectedAssessment(null); // Reset assessment dropdown
     } catch (error) {
       console.error("Error saving test scores:", error);
       notification.error({
@@ -249,6 +274,12 @@ const EnterTestScore = () => {
       dataIndex: "avgScore",
       key: "avgScore",
       render: (text) => <strong>{text}</strong>,
+    },
+    {
+      title: "Teacher Comment", // Thêm cột Teacher Comment
+      dataIndex: "teacherComment",
+      key: "teacherComment",
+      render: (text) => text || "-",
     },
   ];
 
@@ -418,6 +449,37 @@ const EnterTestScore = () => {
                             disabled
                             addonAfter={<CalculatorOutlined />}
                           />
+                        </Form.Item>
+                      </Col>
+
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          name="assessmentId"
+                          label="Select Assessment"
+                          rules={[{ required: true, message: "Please select an assessment" }]}
+                        >
+                          <Select
+                            placeholder="Select an assessment"
+                            value={selectedAssessment}
+                            onChange={(value) => setSelectedAssessment(value)}
+                            style={{ width: "100%" }}
+                          >
+                            {assessments.map((assessment) => (
+                              <Option key={assessment.id} value={assessment.id}>
+                                {assessment.name} {/* Giả sử assessment có field 'name' */}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+
+                      <Col xs={24}>
+                        <Form.Item
+                          name="teacherComment"
+                          label="Teacher Comment"
+                          rules={[{ required: true, message: "Please enter a teacher comment" }]}
+                        >
+                          <Input.TextArea rows={3} placeholder="Enter your comment here" />
                         </Form.Item>
                       </Col>
 
