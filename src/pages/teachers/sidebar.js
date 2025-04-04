@@ -4,22 +4,22 @@ import {
   BookOutlined,
   MenuOutlined,
   CloseOutlined,
-  BankOutlined,
-  UserOutlined,
-  CrownOutlined,
-  ReadOutlined,
   TeamOutlined,
   LaptopOutlined,
-  UploadOutlined,
   EditOutlined,
   BarChartOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 
+// Giả sử các icon được đặt trong thư mục src/assets
+import kahootIcon from "assets/icon/kahoot-icon.png"; // Thay bằng đường dẫn thực tế
+import quizizzIcon from "assets/icon/quizizz-icon.png";
+import padletIcon from "assets/icon/padlet-logo.png";
+import bookwidgetsIcon from "assets/icon/bookwidgets-icon.png";
+
 const { Sider } = Layout;
 const { Text } = Typography;
 
-// Color palette
 export const colors = {
   lightGreen: "#8ED1B0",
   deepGreen: "#368A68",
@@ -40,32 +40,27 @@ const Sidebar = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkMobile);
-    };
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const showDrawer = () => {
-    setVisible(true);
-  };
-
-  const onClose = () => {
-    setVisible(false);
-  };
+  const showDrawer = () => setVisible(true);
+  const onClose = () => setVisible(false);
 
   const handleClassSelect = (classId) => {
     onSelectClass(classId);
-    if (isMobile) {
-      onClose();
-    }
+    if (isMobile) onClose();
+  };
+
+  // Hàm chuyển hướng đến trang web của từng ứng dụng
+  const openLink = (url) => {
+    window.open(url, "_blank");
   };
 
   const SidebarContent = () => (
@@ -93,7 +88,6 @@ const Sidebar = ({
             Xin chào {teacherName}
           </Text>
         </div>
-
         {isMobile && (
           <Button
             type="text"
@@ -103,6 +97,7 @@ const Sidebar = ({
           />
         )}
       </div>
+
       <div
         style={{
           margin: "0 auto",
@@ -118,14 +113,7 @@ const Sidebar = ({
         }}
       >
         <TeamOutlined />
-        <Text
-          style={{
-            fontWeight: 700,
-            color: colors.darkGreen,
-          }}
-        >
-          Toàn bộ lớp học
-        </Text>
+        <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Toàn bộ lớp học</Text>
       </div>
 
       <div
@@ -134,9 +122,6 @@ const Sidebar = ({
           overflowY: "auto",
           maxHeight: "400px",
           overflowX: "hidden",
-          // overflow: "auto",
-          // height: "50%",
-          // height: isMobile ? "calc(100vh - 70px)" : "calc(100vh - 70px)",
         }}
       >
         {classes?.length > 0 ? (
@@ -198,6 +183,118 @@ const Sidebar = ({
           </div>
         )}
       </div>
+
+      {/* Công cụ giảng dạy */}
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          borderBottom: `1px solid ${colors.lightGreen}`,
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+        }}
+      >
+        <LaptopOutlined />
+        <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giảng dạy</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => openLink("https://kahoot.com")}
+      >
+        <img src={kahootIcon} alt="Kahoot" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Kahoot</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => openLink("https://quizizz.com")}
+      >
+        <img src={quizizzIcon} alt="Quizizz" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Quizizz</Text>
+      </div>
+
+      {/* Công cụ giao bài tập */}
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          borderBottom: `1px solid ${colors.lightGreen}`,
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+        }}
+      >
+        <EditOutlined />
+        <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giao bài tập</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => openLink("https://padlet.com")}
+      >
+        <img src={padletIcon} alt="Padlet" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Padlet</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => openLink("https://www.bookwidgets.com")}
+      >
+        <img src={bookwidgetsIcon} alt="BookWidgets" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>BookWidgets</Text>
+      </div>
+
+      {/* Chi tiết tình hình học */}
       <div
         style={{
           margin: "0 auto",
@@ -217,62 +314,9 @@ const Sidebar = ({
         className="HomeworkStatisticsDashboard"
         onClick={() => setOpenHomeworkStatisticsDashboard(true)}
       >
-        <Text
-          style={{
-            fontWeight: 700,
-          }}
-          className="hoverChangeColor"
-        >
+        <Text style={{ fontWeight: 700 }} className="hoverChangeColor">
           <BarChartOutlined style={{ marginRight: "3px" }} />
           Chi tiết tình hình học
-        </Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          borderBottom: `1px solid ${colors.lightGreen}`,
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-        }}
-      >
-        <LaptopOutlined />
-        <Text
-          style={{
-            fontWeight: 700,
-            color: colors.darkGreen,
-          }}
-        >
-          Công cụ giảng dạy
-        </Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          borderBottom: `1px solid ${colors.lightGreen}`,
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-        }}
-      >
-        <EditOutlined />
-        <Text
-          style={{
-            fontWeight: 700,
-            color: colors.darkGreen,
-          }}
-        >
-          Công cụ giao bài tập
         </Text>
       </div>
     </>
@@ -284,16 +328,16 @@ const Sidebar = ({
         {`
         .HomeworkStatisticsDashboard:hover{
           background-color: #368A68;
-  transform: scale(1.05);
-  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
-  color:white
+          transform: scale(1.05);
+          box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+          color:white
         }
-  .hoverChangeColor:hover{
-  color:white
-  }
-  .hoverChangeColor{
-  color: ${colors.darkGreen}
-  }
+        .hoverChangeColor:hover{
+          color:white
+        }
+        .hoverChangeColor{
+          color: ${colors.darkGreen}
+        }
         `}
       </style>
       {isMobile ? (
@@ -343,7 +387,6 @@ const Sidebar = ({
   );
 };
 
-// Add PropTypes validation
 Sidebar.propTypes = {
   teacherName: PropTypes.string.isRequired,
   classes: PropTypes.arrayOf(
@@ -357,7 +400,6 @@ Sidebar.propTypes = {
   setOpenHomeworkStatisticsDashboard: PropTypes.func.isRequired,
 };
 
-// Add default props
 Sidebar.defaultProps = {
   classes: [],
   selectedClass: null,
