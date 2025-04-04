@@ -6,6 +6,7 @@ import {
   BarChartOutlined,
   EditOutlined,
   EllipsisOutlined,
+  QqOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 
@@ -86,7 +87,7 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
 
         <Button
           type="primary"
-          icon={<BarChartOutlined />}
+          icon={<QqOutlined />}
           onClick={onAttendanceCheck}
           style={{
             backgroundColor: colors.safeGreen,
