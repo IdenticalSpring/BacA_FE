@@ -274,7 +274,7 @@ function CreateClass() {
   const validateLevelForm = () => {
     const newErrors = {
       levelName: !levelName.trim(),
-      levelDescription: !levelDescription.trim(),
+      // levelDescription: !levelDescription.trim(),
     };
     setErrors({ ...errors, ...newErrors });
     return !Object.values(newErrors).some(Boolean);
@@ -303,7 +303,7 @@ function CreateClass() {
     try {
       const newLevelData = {
         name: levelName.trim(),
-        description: levelDescription.trim(),
+        description: "meomeo",
       };
       await levelService.createLevel(newLevelData);
       fetchLevels();
@@ -666,7 +666,7 @@ function CreateClass() {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={5}>
+                  {/* <Grid item xs={12} md={5}>
                     <MDInput
                       fullWidth
                       label="Description"
@@ -686,7 +686,7 @@ function CreateClass() {
                         "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                       }}
                     />
-                  </Grid>
+                  </Grid> */}
                   <Grid item xs={12} md={2}>
                     <MDButton
                       variant="gradient"

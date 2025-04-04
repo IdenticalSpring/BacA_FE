@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
   Row,
@@ -12,6 +12,8 @@ import {
   Button,
   message,
   Select,
+  Carousel,
+  Badge,
 } from "antd";
 import {
   BarChartOutlined,
@@ -39,7 +41,17 @@ const mockData = [
   { id: 9, count: 3, isDelete: 0, studentId: 9, lessonId: 32 },
   { id: 10, count: 5, isDelete: 0, studentId: 10, lessonId: 33 },
 ];
-
+const contentStyle = {
+  margin: 0,
+  height: "160px",
+  color: "#fff",
+  lineHeight: "160px",
+  textAlign: "center",
+  background: "#364d79",
+};
+const dayssOfWeek = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+let countLesson = 0;
+let countHomework = 0;
 const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWeek, isMobile }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +59,23 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   const [currentPage, setCurrentPage] = useState(1);
   const [student_homework_countData, setStudent_homework_countData] = useState([]);
   const [student_lesson_countData, setStudent_lesson_countData] = useState([]);
+  const [lessonByScheduleDiv, setLessonByScheduleDiv] = useState([]);
+  // const [countLesson, setCountLesson] = useState(0);
+  // const [countHomework, setCountHomework] = useState(0);
+  useMemo(() => {
+    lessonByScheduleData.map((item) => {
+      if (item.lessonID) {
+        countLesson++;
+      }
+      if (item.homeWorkId) {
+        countHomework++;
+      }
+    });
+    // setCountLesson(countLessonData);
+    // setCountHomework(countHomeworkData);
+  }, [lessonByScheduleData]);
+  // console.log(countLesson, countHomework);
+
   useEffect(() => {
     const fetchLessonAndHomeworkCountData = async () => {
       try {
@@ -85,7 +114,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
             isDelete: item.student.isDelete ? 1 : 0,
           };
         });
-        console.log(homeworkCountData, lessonCountData);
+        // console.log(homeworkCountData, lessonCountData);
 
         setStudent_homework_countData(homeworkCountData);
         setStudent_lesson_countData(lessonCountData);
@@ -98,7 +127,63 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
       }
     };
     fetchLessonAndHomeworkCountData();
+    let lessonByScheduleDiv1 = [];
+    const firstDate = new Date(lessonByScheduleData[0].date);
+    const lastDate = new Date(firstDate);
+    lastDate.setMonth(firstDate.getMonth() + 6);
+    // Xác định ngày đầu tiên của tuần chứa firstDate (Chủ Nhật hoặc Thứ Hai)
+    const firstWeekStart = new Date(firstDate);
+    firstWeekStart.setDate(firstWeekStart.getDate() - firstWeekStart.getDay()); // Lùi về Chủ Nhật
+
+    let currentDate = new Date(firstWeekStart);
+    while (currentDate <= lastDate) {
+      let week = []; // Tạo một mảng chứa JSX của từng tuần
+      for (let i = 0; i < 7; i++) {
+        if (currentDate > lastDate) break;
+
+        // Tìm lịch trình của ngày hiện tại
+        const scheduleItem = lessonByScheduleData.find(
+          (item) => new Date(item.date).getTime() === currentDate.getTime()
+        );
+
+        // Tạo UI cho ngày
+        week.push(
+          <Card
+            key={currentDate.getTime()}
+            hoverable
+            style={{
+              width: isMobile ? 100 : 150,
+              textAlign: "center",
+              border: scheduleItem ? "2px solid red" : "1px solid #ccc",
+              backgroundColor: scheduleItem ? "#fff5f5" : "#f5f5f5",
+              opacity: scheduleItem ? 1 : 0.5, // Giảm độ sáng
+              cursor: scheduleItem ? "pointer" : "not-allowed",
+            }}
+            onClick={() => scheduleItem && console.log(scheduleItem)}
+          >
+            <Badge
+              count={scheduleItem ? "📅" : 0}
+              offset={[5, -5]}
+              style={{
+                backgroundColor: scheduleItem ? "red" : "transparent",
+                color: "white",
+              }}
+            />
+            <div
+              style={{ fontSize: 16, fontWeight: "bold", color: scheduleItem ? "red" : "black" }}
+            >
+              {dayssOfWeek[currentDate.getDay()]}
+            </div>
+          </Card>
+        );
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      lessonByScheduleDiv1.push(week);
+    }
+    setLessonByScheduleDiv(lessonByScheduleDiv1);
   }, [students]);
+  // console.log(lessonByScheduleDiv);
 
   // useEffect(() => {
   //   // Simulate loading data
@@ -260,17 +345,30 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
         >
           Xuất báo cáo
         </Button> */}
-        <Select
-          style={{ width: "400px" }}
-          options={lessonByScheduleData.map((item) => {
-            return {
-              value: item.id,
-              label: `📅 ${daysOfWeek[item.schedule.dayOfWeek]} | ${item.date} | 🕒${" "}
-                ${item.schedule.startTime} - ${item.schedule.endTime}`,
-            };
-          })}
-        />
       </div>
+      <Carousel
+        arrows
+        infinite={false}
+        dots={false}
+        style={{ padding: "20px", backgroundColor: colors.lightGreen, borderRadius: 8 }}
+      >
+        {lessonByScheduleDiv.length > 0 &&
+          lessonByScheduleDiv.map((week, weekIndex) => (
+            <div key={weekIndex} style={{}}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "10px",
+                  flexWrap: "nowrap",
+                  // width: "100px",
+                }}
+              >
+                {week}
+              </div>
+            </div>
+          ))}
+      </Carousel>
 
       <Tabs
         activeKey={activeTab}

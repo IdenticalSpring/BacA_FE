@@ -120,7 +120,7 @@ const Sidebar = ({
         style={{
           padding: "0",
           overflowY: "auto",
-          maxHeight: "400px",
+          maxHeight: "30%",
           overflowX: "hidden",
         }}
       >
@@ -316,7 +316,7 @@ const Sidebar = ({
       >
         <Text style={{ fontWeight: 700 }} className="hoverChangeColor">
           <BarChartOutlined style={{ marginRight: "3px" }} />
-          Chi tiết tình hình học
+          Tình hình lớp học
         </Text>
       </div>
     </>

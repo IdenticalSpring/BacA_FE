@@ -18,6 +18,7 @@ import {
   Tabs,
   Input,
   Spin,
+  Tag,
 } from "antd";
 import {
   UserOutlined,
@@ -153,6 +154,7 @@ const StudentPage = () => {
     };
     fetchStudentById();
   }, [studentId]);
+  // console.log(student);
 
   useEffect(() => {
     if (student && student.class.id) {
@@ -542,6 +544,9 @@ const StudentPage = () => {
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
+            <Tag color="green" bordered={false} style={{ fontSize: "13px" }}>
+              {student?.class?.accessId}
+            </Tag>
             <Button
               type="text"
               onClick={handleViewNotification}
