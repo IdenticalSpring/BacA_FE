@@ -47,7 +47,8 @@ const Sidebar = ({
     });
 
   // Hàm render danh sách bài học chung
-  const renderLessonList = (lessons, isSelectable = false) => {
+  const renderLessonList = (lessons, isSelectable = true) => {
+    // Thay đổi mặc định thành true
     if (lessons.length === 0) {
       return (
         <div
@@ -117,27 +118,6 @@ const Sidebar = ({
                     minWidth: isMobile ? "40px" : "48px",
                   }}
                 >
-                  {/* <Text
-                    style={{
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      fontWeight: "700",
-                      color: isSelected ? colors.white : colors.darkGreen,
-                      lineHeight: "1",
-                    }}
-                  >
-                    {dayjs(item.date).format("DD")}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: isMobile ? "0.7rem" : "0.8rem",
-                      fontWeight: "500",
-                      color: isSelected ? colors.white : colors.darkGray,
-                      lineHeight: "1.2",
-                      marginTop: 4,
-                    }}
-                  >
-                    {dayjs(item.date).format("MMM")}
-                  </Text> */}
                   <CalendarOutlined />
                 </div>
 
@@ -161,7 +141,6 @@ const Sidebar = ({
                       textAlign: "center",
                     }}
                   >
-                    {/* {daysOfWeek[item.schedule.dayOfWeek]} */}
                     {"Bài học ngày"}
                   </Text>
                   <Text
@@ -173,20 +152,8 @@ const Sidebar = ({
                       lineHeight: "1.2",
                     }}
                   >
-                    {/* {daysOfWeek[item.schedule.dayOfWeek]} */}
                     {new Date(item.date).toLocaleDateString("vi-VN")}
                   </Text>
-                  {/* <Text
-                    style={{
-                      color: colors.darkGray,
-                      fontSize: isMobile ? "0.8rem" : "0.9rem",
-                      display: "flex",
-                      alignItems: "center",
-                      marginTop: 6,
-                    }}
-                  >
-                    {`${item.schedule.startTime} - ${item.schedule.endTime}`}
-                  </Text> */}
                 </div>
               </div>
             </List.Item>
@@ -365,7 +332,7 @@ const Sidebar = ({
               flex: 1,
             }}
           >
-            {renderLessonList(upcomingLessons)}
+            {renderLessonList(upcomingLessons, true)} {/* Thay đổi thành true */}
           </div>
         </div>
       </div>

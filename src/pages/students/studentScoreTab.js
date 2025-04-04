@@ -31,7 +31,8 @@ const { Title, Text } = Typography;
 
 const StudentScoreTab = ({ studentId, colors }) => {
   const [loading, setLoading] = useState(false);
-  const [scoreDetailsData, setScoreDetailsData] = useState([]);
+  const [scoreDetailsData, setScoreDetailsData] = useState([]); // Dữ liệu từ getScoreDetailsByStudentId
+  const [assessmentData, setAssessmentData] = useState([]); // Dữ liệu từ getScorebyStudentID
   const [studentInfo, setStudentInfo] = useState(null);
   const [error, setError] = useState(null);
 
@@ -43,16 +44,14 @@ const StudentScoreTab = ({ studentId, colors }) => {
       setError(null);
 
       try {
-        // Fetch detailed scores
+        // Fetch detailed scores (for scores table)
         const scoreDetails = await studentScoreService.getScoreDetailsByStudentId(studentId);
         const sortedScoreDetails = Array.isArray(scoreDetails) ? [...scoreDetails] : [scoreDetails];
 
-        // Get unique classTestScheduleIDs
         const uniqueScheduleIds = [
           ...new Set(sortedScoreDetails.map((score) => score.studentScore.classTestScheduleID)),
         ];
 
-        // Fetch class test schedule details
         const testSchedules = await Promise.all(
           uniqueScheduleIds.map(async (id) => {
             const schedule = await classTestScheduleSerivce.getClassTestScheduleByID(id);
@@ -64,7 +63,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
           })
         );
 
-        // Integrate test schedule info into score details
         const enrichedScoreDetails = sortedScoreDetails.map((score) => {
           const schedule = testSchedules.find(
             (s) => s.id === score.studentScore.classTestScheduleID
@@ -82,7 +80,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
           };
         });
 
-        // Sort by date (most recent first)
         enrichedScoreDetails.sort((a, b) => {
           const dateA = a.studentScore?.classTestSchedule?.date
             ? new Date(a.studentScore.classTestSchedule.date)
@@ -95,11 +92,26 @@ const StudentScoreTab = ({ studentId, colors }) => {
 
         setScoreDetailsData(enrichedScoreDetails);
 
+        // Fetch assessment data (for teacher/assessment/comment table)
+        const scores = await studentScoreService.getScorebyStudentID(studentId);
+        const sortedScores = Array.isArray(scores) ? [...scores] : [scores];
+        sortedScores.sort((a, b) => {
+          const dateA = a.classTestSchedule?.date
+            ? new Date(a.classTestSchedule.date)
+            : new Date(0);
+          const dateB = b.classTestSchedule?.date
+            ? new Date(b.classTestSchedule.date)
+            : new Date(0);
+          return dateB - dateA;
+        });
+        setAssessmentData(sortedScores);
+
         // Fetch student information
         const studentData = await studentService.getStudentById(studentId);
         setStudentInfo(studentData);
 
         console.log("Enriched score details retrieved and sorted:", enrichedScoreDetails);
+        console.log("Assessment data retrieved and sorted:", sortedScores);
         console.log("Student data retrieved:", studentData);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -382,7 +394,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
       {groupedScores && groupedScores.length > 0 ? (
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
           {/* Bảng thông tin bài thi */}
-          <Col xs={24} md={12}>
+          <Col xs={24} md={8}>
             <div className="test-info-table" style={{ overflowX: "auto" }}>
               <table
                 style={{
@@ -430,7 +442,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
           </Col>
 
           {/* Bảng điểm số */}
-          <Col xs={24} md={12}>
+          <Col xs={24} md={8}>
             <div className="score-table" style={{ overflowX: "auto" }}>
               <table
                 style={{
@@ -513,6 +525,66 @@ const StudentScoreTab = ({ studentId, colors }) => {
                         >
                           {score.listeningScore || "N/A"}
                         </Tag>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Col>
+
+          {/* Bảng đánh giá */}
+          <Col xs={24} md={8}>
+            <div className="assessment-table" style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  border: `1px solid ${colors.borderGreen}`,
+                }}
+              >
+                <thead>
+                  <tr style={{ backgroundColor: colors.paleGreen }}>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Giáo viên
+                    </th>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Đánh giá
+                    </th>
+                    <th style={{ padding: "8px", border: `1px solid ${colors.borderGreen}` }}>
+                      Bình luận
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assessmentData.map((score, index) => (
+                    <tr key={index}>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        {score.teacher?.name || "N/A"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        {score.assessment?.name || "N/A"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          border: `1px solid ${colors.borderGreen}`,
+                          textAlign: "center",
+                        }}
+                      >
+                        {score.teacherComment || "Chưa có bình luận"}
                       </td>
                     </tr>
                   ))}

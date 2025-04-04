@@ -31,7 +31,6 @@ import {
   BellOutlined,
   LinkOutlined,
   BarChartOutlined,
-  ReadOutlined,
   CopyOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
@@ -54,6 +53,7 @@ import student_lesson_countService from "services/student_lesson_countService";
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
+const { TabPane } = Tabs;
 
 const getTimeElapsed = (createdAt) => {
   const created = new Date(createdAt);
@@ -80,7 +80,7 @@ const StudentPage = () => {
   const userName = userId.username || "Student";
   const [lessonsBySchedule, setLessonsBySchedule] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("scores");
+  const [activeTab, setActiveTab] = useState("lessons"); // Mặc định là "lessons"
   const [loadingHomework, setLoadingHomework] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -91,24 +91,21 @@ const StudentPage = () => {
   const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
   const [loadingSubmitHomework, setLoadingSubmitHomework] = useState(false);
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(homeworkZaloLink).then(() => {
-      setCopySuccess(true);
-      message.success("Copied to clipboard!"); // Hiển thị thông báo
-
-      // Reset hiệu ứng sau 2 giây
-      setTimeout(() => setCopySuccess(false), 2000);
-    });
-  };
-  // Use Ant Design's Grid breakpoints
-  // Thêm state cho modal điểm thi
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
+
+  const lessonRef = useRef(null); // Ref để cuộn tới section Bài Học
+  const progressRef = useRef(null); // Ref để cuộn tới section Tình Hình Học Tập
 
   const screens = useBreakpoint();
   const isMobile = !screens.md;
-  const lessonsRef = useRef(null);
-  const homeworkRef = useRef(null);
-  const HomeworkStatisticsDashboardRef = useRef(null);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(homeworkZaloLink).then(() => {
+      setCopySuccess(true);
+      message.success("Copied to clipboard!");
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
 
   useEffect(() => {
     const fetchNotification = async () => {
@@ -143,8 +140,8 @@ const StudentPage = () => {
       }
     };
     fetchNotification();
-  }, []);
-  useEffect(() => {}, []);
+  }, [studentId]);
+
   useEffect(() => {
     const fetchStudentById = async () => {
       try {
@@ -203,7 +200,7 @@ const StudentPage = () => {
       setLessons([]);
       setHomework([]);
     }
-  }, [selectedLessonBySchedule]);
+  }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
 
   const fetchHomeworkByLesson = async (homeworkId) => {
     try {
@@ -239,6 +236,7 @@ const StudentPage = () => {
   const showComingSoon = () => {
     message.info("Coming soon!");
   };
+
   const handleSubmitHomework = async (homeworkId) => {
     try {
       setLoadingSubmitHomework(true);
@@ -246,11 +244,12 @@ const StudentPage = () => {
       const student_homework_countData = { homeworkId, studentId };
       await student_homework_countService.updateCount(student_homework_countData);
     } catch {
-      message.error("có lỗi khi nộp bài vui lòng refresh trang và nộp lại!");
+      message.error("Có lỗi khi nộp bài, vui lòng refresh trang và nộp lại!");
     } finally {
       setLoadingSubmitHomework(false);
     }
   };
+
   const menu = (
     <Menu style={{ backgroundColor: colors.paleGreen, borderRadius: "8px" }}>
       <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
@@ -280,105 +279,111 @@ const StudentPage = () => {
     />
   );
 
-  const scrollToSection = (ref) => {
-    ref.current.scrollIntoView({ behavior: "smooth" });
-  };
-
   const handleTabClick = (tab) => {
     setActiveTab(tab);
-    switch (tab) {
-      case "lessons":
-        scrollToSection(lessonsRef);
-        break;
-      case "situation":
-        message.info("Coming soon!");
-        break;
-      case "homework":
-        scrollToSection(homeworkRef);
-        break;
-      case "scores":
-        setScoreModalVisible(true); // Mở modal khi nhấn "Điểm Thi"
-        break;
-      default:
-        break;
+    if (tab === "scores") {
+      setScoreModalVisible(true);
+    } else if (tab === "lessons" && lessonRef.current) {
+      lessonRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (tab === "homework") {
+      setActiveTab("homework");
     }
   };
 
   const renderLessonContent = () => (
-    <List
-      itemLayout="vertical"
-      size="large"
-      dataSource={lessons}
-      renderItem={(lesson) => (
-        <Card
-          style={{
-            marginBottom: 16,
-            borderRadius: 12,
-            boxShadow: `0 2px 8px ${colors.softShadow}`,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-            <Avatar
-              style={{ backgroundColor: colors.deepGreen, color: colors.white }}
-              icon={<BookOutlined />}
-              size={40}
-            />
-            <div style={{ marginLeft: 12 }}>
-              <Text strong style={{ fontSize: 16, display: "block", color: colors.darkGreen }}>
-                {lesson.name}
-              </Text>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
-              </Text>
-            </div>
-          </div>
-          <Paragraph
-            ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-            style={{ marginBottom: 16 }}
-          >
-            {lesson.description || " "}
-          </Paragraph>
-          {(lesson.linkYoutube || lesson.linkSpeech) && (
-            <div
+    <>
+      <div ref={lessonRef}>
+        <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+          <BookOutlined /> Bài Học
+        </Title>
+        <List
+          itemLayout="vertical"
+          size="large"
+          dataSource={lessons}
+          renderItem={(lesson) => (
+            <Card
               style={{
-                backgroundColor: colors.paleGreen,
-                padding: 12,
-                borderRadius: 8,
                 marginBottom: 16,
+                borderRadius: 12,
+                boxShadow: `0 2px 8px ${colors.softShadow}`,
               }}
             >
-              {lesson.linkYoutube && (
-                <iframe
-                  width="100%"
-                  height="315"
-                  src={lesson.linkYoutube.replace("watch?v=", "embed/")}
-                  title="Lesson Video"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                <Avatar
+                  style={{ backgroundColor: colors.deepGreen, color: colors.white }}
+                  icon={<BookOutlined />}
+                  size={40}
                 />
+                <div style={{ marginLeft: 12 }}>
+                  <Text strong style={{ fontSize: 16, display: "block", color: colors.darkGreen }}>
+                    {lesson.name}
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
+                  </Text>
+                </div>
+              </div>
+              <Paragraph
+                ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
+                style={{ marginBottom: 16 }}
+              >
+                {lesson.description || " "}
+              </Paragraph>
+              {(lesson.linkYoutube || lesson.linkSpeech) && (
+                <div
+                  style={{
+                    backgroundColor: colors.paleGreen,
+                    padding: 12,
+                    borderRadius: 8,
+                    marginBottom: 16,
+                  }}
+                >
+                  {lesson.linkYoutube && (
+                    <iframe
+                      width="100%"
+                      height="315"
+                      src={lesson.linkYoutube.replace("watch?v=", "embed/")}
+                      title="Lesson Video"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
+                  {lesson.linkSpeech && (
+                    <audio controls style={{ width: "100%", marginTop: 16 }}>
+                      <source
+                        src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
+                        type="audio/mpeg"
+                      />
+                      Trình duyệt của bạn không hỗ trợ phát audio.
+                    </audio>
+                  )}
+                </div>
               )}
-              {lesson.linkSpeech && (
-                <audio controls style={{ width: "100%", marginTop: 16 }}>
-                  <source
-                    src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
-                    type="audio/mpeg"
-                  />
-                  Trình duyệt của bạn không hỗ trợ phát audio.
-                </audio>
-              )}
-            </div>
+            </Card>
           )}
-          <Divider style={{ margin: "12px 0" }} />
-        </Card>
-      )}
-    />
+        />
+      </div>
+      <Divider />
+      <div ref={progressRef}>
+        <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+          <BarChartOutlined /> Tình hình học tập
+        </Title>
+        <Text style={{ fontSize: 16, color: colors.darkGreen }}>
+          Tính năng này đang được phát triển. Vui lòng quay lại sau!
+        </Text>
+      </div>
+    </>
   );
 
   const renderHomeworkContent = () => (
-    <div>
+    <>
+      <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
+        <FileTextOutlined /> Bài Tập
+      </Title>
       {loadingHomework ? (
         <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <Spin />
           <div>Đang tải dữ liệu bài tập...</div>
         </div>
       ) : homework.length > 0 ? (
@@ -475,9 +480,8 @@ const StudentPage = () => {
           }}
         />
       )}
-    </div>
+    </>
   );
-  // console.log(lessonsRef, homeworkRef, scoresRef);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -606,28 +610,13 @@ const StudentPage = () => {
               </Text>
             </div>
           ) : (
-            <div>
-              <div ref={lessonsRef}>
-                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-                  <BookOutlined /> Bài Học
-                </Title>
-                {renderLessonContent()}
-                <Divider />
-              </div>
-
-              <div ref={homeworkRef}>
-                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-                  <FileTextOutlined /> Bài Tập
-                </Title>
-                {renderHomeworkContent()}
-              </div>
-              <div ref={HomeworkStatisticsDashboardRef}>
-                <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-                  <FileTextOutlined /> Tình hình học tập
-                </Title>
-                {/* <HomeworkStatisticsDashboard /> */}
-              </div>
-            </div>
+            <Tabs
+              activeKey={activeTab}
+              tabBarStyle={{ display: "none" }} // Ẩn thanh Tab mặc định
+            >
+              <TabPane key="lessons">{renderLessonContent()}</TabPane>
+              <TabPane key="homework">{renderHomeworkContent()}</TabPane>
+            </Tabs>
           )}
         </Content>
 
@@ -647,7 +636,16 @@ const StudentPage = () => {
               boxShadow: `0 -2px 8px ${colors.softShadow}`,
             }}
           >
-            <Space size="large">
+            <Space
+              size={screens.xs ? 4 : screens.sm ? 8 : "large"}
+              style={{
+                flexWrap: screens.xs ? "wrap" : "nowrap",
+                justifyContent: "center",
+                width: "100%",
+                maxWidth: screens.lg ? "800px" : "100%",
+                padding: screens.xs ? "0 5px" : "0 10px",
+              }}
+            >
               <Button
                 type={activeTab === "lessons" ? "primary" : "link"}
                 icon={<BookOutlined />}
@@ -655,20 +653,13 @@ const StudentPage = () => {
                 style={{
                   backgroundColor: activeTab === "lessons" ? colors.deepGreen : "transparent",
                   borderColor: activeTab === "lessons" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
                 }}
               >
-                Bài Học
-              </Button>
-              <Button
-                type={activeTab === "situation" ? "primary" : "link"}
-                icon={<BarChartOutlined />}
-                onClick={() => handleTabClick("situation")}
-                style={{
-                  backgroundColor: activeTab === "situation" ? colors.deepGreen : "transparent",
-                  borderColor: activeTab === "situation" ? colors.deepGreen : colors.borderGreen,
-                }}
-              >
-                Tình hình học
+                {screens.xs ? "" : "Bài Học"}
               </Button>
               <Button
                 type={activeTab === "homework" ? "primary" : "link"}
@@ -677,9 +668,13 @@ const StudentPage = () => {
                 style={{
                   backgroundColor: activeTab === "homework" ? colors.deepGreen : "transparent",
                   borderColor: activeTab === "homework" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
                 }}
               >
-                Bài Tập
+                {screens.xs ? "" : "Bài Tập"}
               </Button>
               <Button
                 type={activeTab === "scores" ? "primary" : "link"}
@@ -688,9 +683,13 @@ const StudentPage = () => {
                 style={{
                   backgroundColor: activeTab === "scores" ? colors.deepGreen : "transparent",
                   borderColor: activeTab === "scores" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
                 }}
               >
-                Điểm Thi
+                {screens.xs ? "" : "Điểm Thi"}
               </Button>
             </Space>
           </div>
@@ -744,15 +743,13 @@ const StudentPage = () => {
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
               <FileTextOutlined style={{ fontSize: 32, color: "#1890ff" }} />
               <Text strong style={{ fontSize: 16 }}>
-                Bạn vui lòng nộp bài cho giáo viên qua link zalo này:
+                Bạn vui lòng nộp bài cho giáo viên qua link Zalo này:
               </Text>
               <Input
                 value={homeworkZaloLink}
                 readOnly
                 style={{ textAlign: "center", width: "100%" }}
               />
-
-              {/* Nút Copy với hiệu ứng */}
               <Button
                 icon={<CopyOutlined />}
                 onClick={copyToClipboard}
@@ -765,13 +762,12 @@ const StudentPage = () => {
         )}
       </Modal>
 
-      {/* Modal cho Điểm Thi */}
       <Modal
         title="Điểm Thi"
         open={scoreModalVisible}
         onCancel={() => setScoreModalVisible(false)}
         footer={null}
-        width={isMobile ? "90%" : "50%"}
+        width={isMobile ? "90%" : "65%"}
         style={{ top: 20 }}
       >
         <StudentScoreTab studentId={studentId} colors={colors} />
