@@ -94,6 +94,7 @@ function CreateClass() {
     { Header: "Day Of Week", accessor: "dayOfWeek", width: "30%" },
     { Header: "Start Time", accessor: "startTime", width: "30%" },
     { Header: "End Time", accessor: "endTime", width: "30%" },
+    { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [scheduleRows, setScheduleRows] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState([]);
@@ -138,12 +139,19 @@ function CreateClass() {
     levelDescription: false,
     editLevelName: false,
   });
-
+  const [openUpdateSchedule, setOpenUpdateSchedule] = useState(false);
+  const [editScheduleMode, setEditScheduleMode] = useState(false);
+  const [selectedScheduleForUpdate, setSelectedScheduleForUpdate] = useState(null);
+  const [scheduleDataForUpdate, setScheduleDataForUpdate] = useState({
+    dayOfWeek: "",
+    startTime: "",
+    endTime: "",
+  });
   const levelColumns = [
     { Header: "Name", accessor: "name", width: "70%" },
     { Header: "Actions", accessor: "actions", width: "30%" },
   ];
-
+  const [loadingUpdateSchedule, setLoadingUpdateSchedule] = useState(false);
   const levelRows =
     levels.length > 0
       ? levels.map((level) => ({
@@ -263,6 +271,16 @@ function CreateClass() {
         dayOfWeek: daysOfWeek[schedule.dayOfWeek],
         startTime: schedule.startTime,
         endTime: schedule.endTime,
+        actions: (
+          <>
+            <IconButton color="primary" onClick={() => handleEditSchedule(schedule)}>
+              <EditIcon />
+            </IconButton>
+            <IconButton color="secondary" onClick={() => handleDeleteSchedule(schedule.id)}>
+              <DeleteIcon />
+            </IconButton>
+          </>
+        ),
       }));
       setScheduleRows(formattedRows);
     } catch (err) {
@@ -426,6 +444,28 @@ function CreateClass() {
     });
     setOpenEditClass(true);
   };
+  const handleEditSchedule = async (sch) => {
+    setEditScheduleMode(true);
+    setSelectedScheduleForUpdate(sch);
+    setScheduleDataForUpdate({
+      dayOfWeek: sch.dayOfWeek,
+      startTime: dayjs(sch.startTime, "HH:mm"),
+      endTime: dayjs(sch.endTime, "HH:mm"),
+    });
+    setOpenUpdateSchedule(true);
+  };
+  const handleDeleteSchedule = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa lịch học này?")) {
+      try {
+        await scheduleService.deleteSchedule(id);
+        setScheduleRows(scheduleRows.filter((row) => row.id !== id));
+        // console.log(scheduleRows.map((row) => row.id !== id));
+      } catch (err) {
+        alert("Lỗi khi xóa lịch học! " + err);
+      }
+    }
+  };
+  // console.log(scheduleRows.filter((row) => row.id !== 1));
 
   const handleSaveClass = async () => {
     setLoadingCreateClass(true);
@@ -635,6 +675,16 @@ function CreateClass() {
           dayOfWeek: daysOfWeek[scheduleEntity.dayOfWeek],
           startTime: scheduleEntity.startTime,
           endTime: scheduleEntity.endTime,
+          actions: (
+            <>
+              <IconButton color="primary" onClick={() => handleEditSchedule(scheduleEntity)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton color="secondary" onClick={() => handleDeleteSchedule(scheduleEntity.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </>
+          ),
         },
       ]);
       message.success("Create schedule success!");
@@ -647,7 +697,47 @@ function CreateClass() {
   // console.log(`${dayjs(new Date().getTime()).format("HH:mm").toString()}`);
   // console.log(`${dayjs(new Date().getTime(), "HH:mm").format("HH:mm")}`);
   // console.log(dayjs("10:18:00", "HH:mm"));
-
+  const handleSaveScheduleUpdate = async () => {
+    setLoadingUpdateSchedule(true);
+    try {
+      const data = {
+        dayOfWeek: scheduleDataForUpdate.dayOfWeek,
+        startTime: scheduleDataForUpdate.startTime.format("HH:mm"),
+        endTime: scheduleDataForUpdate.endTime.format("HH:mm"),
+      };
+      const scheduleEntity = await scheduleService.editSchedule(selectedScheduleForUpdate.id, data);
+      setScheduleRows(
+        scheduleRows.map((row) => {
+          return row.id === selectedScheduleForUpdate.id
+            ? {
+                ...row,
+                ...data,
+                dayOfWeek: daysOfWeek[data.dayOfWeek],
+                actions: (
+                  <>
+                    <IconButton color="primary" onClick={() => handleEditSchedule(scheduleEntity)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="secondary"
+                      onClick={() => handleDeleteSchedule(scheduleEntity.id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </>
+                ),
+              }
+            : row;
+        })
+      );
+      setOpenUpdateSchedule(false);
+      message.success("Update schedule success!");
+    } catch (err) {
+      message.error("Update schedule failed!" + err);
+    } finally {
+      setLoadingUpdateSchedule(false);
+    }
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -968,19 +1058,23 @@ function CreateClass() {
                 value={scheduleData.startTime}
                 onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
               /> */}
+              <label style={{ fontSize: "14px" }}>Time Start</label>
               <TimePicker
                 format="HH:mm"
                 value={scheduleData.startTime}
                 onChange={(time, timeString) => {
                   setScheduleData({ ...scheduleData, startTime: time });
                 }}
+                style={{ height: "40px", width: "100%", marginBottom: "8px" }}
               />
+              <label style={{ fontSize: "14px" }}>Time End</label>
               <TimePicker
                 format="HH:mm"
                 value={scheduleData.endTime}
                 onChange={(time, timeString) => {
                   setScheduleData({ ...scheduleData, endTime: time });
                 }}
+                style={{ height: "40px", width: "100%", marginBottom: "8px" }}
               />
               {/* <TimePicker defaultValue={dayjs("10:18:00", "HH:mm")} format={"HH:mm"} /> */}
               {/* <TimePicker
@@ -1412,7 +1506,88 @@ function CreateClass() {
           {"Class created successfully. This is your class access ID:"} {classAccessId}
         </div>
       </Modal>
-
+      <Modal
+        centered
+        title={"Modify Schedule"}
+        open={openUpdateSchedule}
+        onCancel={() => {
+          setOpenUpdateSchedule(false);
+          setScheduleDataForUpdate({
+            dayOfWeek: "",
+            startTime: "",
+            endTime: "",
+          });
+        }}
+        footer={[
+          <Button
+            // style={{ marginTop: "20px" }}
+            key="cancel"
+            onClick={() => setOpenUpdateSchedule(false)}
+          >
+            Cancel
+          </Button>,
+          <Button
+            loading={loadingUpdateSchedule}
+            key="submit"
+            type="primary"
+            onClick={handleSaveScheduleUpdate}
+            style={{
+              color: colors.white,
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+            }}
+          >
+            {"Save"}
+          </Button>,
+        ]}
+        width={720}
+      >
+        <TextField
+          select
+          label="Day of Week"
+          fullWidth
+          sx={{
+            "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
+              {
+                minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                display: "flex",
+                alignItems: "center",
+              },
+          }}
+          margin="normal"
+          value={scheduleDataForUpdate.dayOfWeek}
+          onChange={(e) => {
+            setScheduleDataForUpdate({ ...scheduleDataForUpdate, dayOfWeek: e.target.value });
+            console.log(e.target.value, +e.target.value);
+          }}
+        >
+          {daysOfWeek.map((d, index) => (
+            <MenuItem key={index} value={index}>
+              {d}
+            </MenuItem>
+          ))}
+        </TextField>
+        <label>Time Start</label>
+        <TimePicker
+          format="HH:mm"
+          value={scheduleDataForUpdate.startTime}
+          getPopupContainer={() => document.body}
+          onChange={(time, timeString) => {
+            setScheduleDataForUpdate({ ...scheduleDataForUpdate, startTime: time });
+          }}
+          style={{ height: "40px", width: "100%", marginBottom: "8px" }}
+        />
+        <label>Time End</label>
+        <TimePicker
+          format="HH:mm"
+          value={scheduleDataForUpdate.endTime}
+          onChange={(time, timeString) => {
+            setScheduleDataForUpdate({ ...scheduleDataForUpdate, endTime: time });
+          }}
+          getPopupContainer={() => document.body}
+          style={{ height: "40px", width: "100%", marginBottom: "8px" }}
+        />
+      </Modal>
       <Footer />
     </DashboardLayout>
   );

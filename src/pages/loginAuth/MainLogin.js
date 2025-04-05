@@ -431,14 +431,12 @@ export default function MainLogin() {
                     }}
                   /> */}
                   <iframe
-                    width="100%"
-                    height="100%"
-                    src="https://www.youtube.com/embed/4CCGI83vOVo?si=e9KIeXD_V30WCDnk"
+                    width="560"
+                    height="315"
+                    src="https://www.youtube.com/embed/wLuZ0WMyr9U?si=BfWoYYpHY5vPUUUl"
                     title="YouTube video player"
-                    frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
+                    allowfullscreen
                   ></iframe>
                 </div>
 
