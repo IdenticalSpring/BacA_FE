@@ -6,6 +6,7 @@ import {
   message,
   Modal,
   Popconfirm,
+  Radio,
   Select,
   Space,
   Table,
@@ -22,6 +23,10 @@ import lessonService from "services/lessonService";
 import { jwtDecode } from "jwt-decode";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
+const genderOptions = [
+  { label: "Giọng nam", value: 1 },
+  { label: "Giọng nữ", value: 0 },
+];
 export default function LessonMangement({
   toolbar,
   quillFormats,
@@ -46,6 +51,11 @@ export default function LessonMangement({
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [gender, setGender] = useState(1);
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
   const handleDelete = async (id) => {
     try {
       await lessonService.deleteLesson(id);
@@ -60,6 +70,7 @@ export default function LessonMangement({
     form.setFieldsValue({
       name: lesson.name,
       linkYoutube: lesson.linkYoutube,
+      linkGame: lesson.linkGame,
       linkSpeech: lesson.linkSpeech,
       description: lesson.description,
     });
@@ -73,7 +84,7 @@ export default function LessonMangement({
     setLoadingTTSForUpdateLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech(textToSpeech);
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
 
       let base64String = response;
 
@@ -117,6 +128,7 @@ export default function LessonMangement({
       formData.append("name", values.name);
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
+      formData.append("linkGame", values.linkGame);
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
       if (mp3file) {
@@ -213,6 +225,20 @@ export default function LessonMangement({
       title: "Link Youtube",
       dataIndex: "linkYoutube",
       key: "linkYoutube",
+      width: "20%",
+      render: (text) => (
+        <Typography.Text
+          ellipsis={{ tooltip: text }}
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+        >
+          {text}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: "Link Game",
+      dataIndex: "linkGame",
+      key: "linkGame",
       width: "20%",
       render: (text) => (
         <Typography.Text
@@ -388,19 +414,6 @@ export default function LessonMangement({
             </Select>
           </Form.Item> */}
 
-          <Form.Item
-            name="linkYoutube"
-            label="Link Youtube bài học"
-            rules={[{ required: true, message: "Please enter the lesson link" }]}
-          >
-            <Input
-              placeholder="Nhập link youtube bài học"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>
           <Form.Item label="Văn bản thành giọng nói">
             <TextArea
               value={textToSpeech}
@@ -411,6 +424,14 @@ export default function LessonMangement({
                 borderRadius: "6px",
                 borderColor: colors.inputBorder,
               }}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Radio.Group
+              options={genderOptions}
+              onChange={onChangeGender}
+              value={gender}
+              optionType="button"
             />
           </Form.Item>
           <Form.Item>
@@ -436,7 +457,28 @@ export default function LessonMangement({
               </div>
             </Form.Item>
           )}
-
+          <Form.Item
+            name="linkYoutube"
+            label="Link Youtube bài học"
+            // rules={[{ required: true, message: "Please enter the lesson link" }]}
+          >
+            <Input
+              placeholder="Nhập link youtube bài học"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="linkGame" label="Link game bài học">
+            <Input
+              placeholder="Nhập link game bài học"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item>
           <Form.Item
             name="description"
             label="Mô tả"

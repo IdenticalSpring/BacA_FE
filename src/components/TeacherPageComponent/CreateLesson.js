@@ -1,4 +1,15 @@
-import { Button, Card, Divider, Form, Input, message, Select, Space, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  message,
+  Radio,
+  Select,
+  Space,
+  Typography,
+} from "antd";
 import { SaveOutlined, RobotOutlined } from "@ant-design/icons"; // Thêm RobotOutlined cho nút Enhance
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -15,7 +26,10 @@ import user_notificationService from "services/user_notificationService";
 
 const { Title } = Typography;
 const { Option } = Select;
-
+const genderOptions = [
+  { label: "Giọng nam", value: 1 },
+  { label: "Giọng nữ", value: 0 },
+];
 export default function CreateLesson({
   toolbar,
   quillFormats,
@@ -42,7 +56,11 @@ export default function CreateLesson({
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingEnhance, setLoadingEnhance] = useState(false); // Thêm trạng thái loading cho nút Enhance
-
+  const [gender, setGender] = useState(1);
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
@@ -121,6 +139,7 @@ export default function CreateLesson({
       formData.append("name", values.name);
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
+      formData.append("linkGame", values.linkGame);
       formData.append("description", quill.getText()); // Lấy nội dung từ ReactQuill
       formData.append("teacherId", teacherId);
 
@@ -175,7 +194,7 @@ export default function CreateLesson({
     setLoadingTTSLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech(textToSpeech);
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
       let base64String = response;
 
       function base64ToBlob(base64, mimeType) {
@@ -279,7 +298,14 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-
+            <Form.Item>
+              <Radio.Group
+                options={genderOptions}
+                onChange={onChangeGender}
+                value={gender}
+                optionType="button"
+              />
+            </Form.Item>
             <Form.Item>
               <Button
                 type="primary"
@@ -307,7 +333,7 @@ export default function CreateLesson({
             <Form.Item
               name="linkYoutube"
               label="Link Youtube bài học"
-              rules={[{ required: true, message: "Please enter the lesson link" }]}
+              // rules={[{ required: true, message: "Please enter the lesson link" }]}
             >
               <Input
                 placeholder="Nhập link youtube bài học"
@@ -317,10 +343,19 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
+            <Form.Item name="linkGame" label="Link game bài học">
+              <Input
+                placeholder="Nhập link game bài học"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
             <Form.Item
               name="description"
               label="Mô tả"
-              rules={[{ required: true, message: "Please enter a description" }]}
+              // rules={[{ required: true, message: "Please enter a description" }]}
             >
               <ReactQuill
                 theme="snow"

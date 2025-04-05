@@ -544,7 +544,8 @@ const StudentPage = () => {
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Tag color="green" bordered={false} style={{ fontSize: "13px" }}>
+            <Tag color="green" bordered={false} style={{ fontSize: "16px" }}>
+              {"Mã lớp: "}
               {student?.class?.accessId}
             </Tag>
             <Button

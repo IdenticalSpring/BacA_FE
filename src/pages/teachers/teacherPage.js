@@ -723,9 +723,12 @@ const TeacherPage = () => {
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-            <Tag color="green" bordered={false} style={{ fontSize: "13px" }}>
-              {classes.find((cls) => cls.id === selectedClass)?.accessId}
-            </Tag>
+            {selectedClass && (
+              <Tag color="green" bordered={false} style={{ fontSize: "16px" }}>
+                {"Mã lớp: "}
+                {classes.find((cls) => cls.id === selectedClass)?.accessId}
+              </Tag>
+            )}
             {/* Notification Bell */}
             <Button
               type="text"

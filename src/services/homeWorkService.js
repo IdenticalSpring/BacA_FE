@@ -87,12 +87,13 @@ const homeWorkService = {
       throw error.response?.data?.message || "Error deleting homework";
     }
   },
-  textToSpeech: async (text) => {
+  textToSpeech: async ({ textToSpeech, gender }) => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/homeworks/textToSpeech`,
         {
-          textToSpeech: text,
+          textToSpeech,
+          gender,
         },
         {
           headers: {

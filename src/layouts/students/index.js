@@ -211,8 +211,8 @@ function Students() {
       yearOfBirth: student.yearOfBirth,
       phone: student.phone,
       imgUrl: student.imgUrl,
-      classID: student.classID,
-      level: student.rawLevel,
+      classID: student.schedule.id,
+      level: +student.level,
       startDate: student.startDate,
       endDate: student.endDate,
       note: student.note,
@@ -278,13 +278,15 @@ function Students() {
           dataToSubmit,
           studentData.file
         );
+        console.log("Updated student:", updatedStudent);
+
         setRows(
           rows.map((row) =>
             row.id === selectedStudent.id
               ? {
                   ...row,
                   name: updatedStudent.name,
-                  level: updatedStudent.level,
+                  level: levels.find((lv) => lv.id === +updatedStudent.level)?.name || "N/A",
                   yearOfBirth: updatedStudent.yearOfBirth,
                   phone: updatedStudent.phone,
                   avatar: (

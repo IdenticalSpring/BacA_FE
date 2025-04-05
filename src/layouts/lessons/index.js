@@ -21,12 +21,15 @@ import { colors } from "assets/theme/color";
 import levelService from "services/levelService";
 import PropTypes from "prop-types";
 import TextArea from "antd/es/input/TextArea";
-import { Button, message } from "antd";
+import { Button, message, Radio } from "antd";
 import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
 import LessonDetailModal from "./LessonDetailModal";
-
+const genderOptions = [
+  { label: "Giọng nam", value: 1 },
+  { label: "Giọng nữ", value: 0 },
+];
 function Lessons() {
   const navigate = useNavigate();
   const [columns] = useState([
@@ -78,6 +81,23 @@ function Lessons() {
           }}
         >
           {row.values.linkYoutube}
+        </span>
+      ),
+    },
+    {
+      Header: "Link Game",
+      accessor: "linkGame",
+      width: "30%",
+      Cell: ({ row }) => (
+        <span
+          style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+          className="truncate-text"
+          onClick={() => {
+            setSelectedLessonDetail(row.original);
+            setDetailModalOpen(true);
+          }}
+        >
+          {row.values.linkGame}
         </span>
       ),
     },
@@ -172,6 +192,7 @@ function Lessons() {
     name: "",
     level: "",
     linkYoutube: "",
+    linkGame: "",
     linkSpeech: "",
     TeacherId: "",
     description: "",
@@ -182,7 +203,11 @@ function Lessons() {
   const [selectedLessonDetail, setSelectedLessonDetail] = useState(null);
   const [searchTeacher, setSearchTeacher] = useState("");
   const [searchDate, setSearchDate] = useState(""); // State để lưu ngày tìm kiếm
-
+  const [gender, setGender] = useState(1);
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
   useEffect(() => {
     fetchLessons();
   }, [levels]);
@@ -284,7 +309,7 @@ function Lessons() {
     setLoadingTTSLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech(textToSpeech);
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
       let base64String = response;
 
       function base64ToBlob(base64, mimeType) {
@@ -326,6 +351,7 @@ function Lessons() {
         name: lesson.name,
         level: levels?.find((lv) => lv.id === lesson.level)?.name,
         linkYoutube: lesson.linkYoutube,
+        linkGame: lesson.linkGame,
         linkSpeech: lesson.linkSpeech,
         TeacherId: lesson?.teacher?.username,
         description: lesson.description,
@@ -359,6 +385,7 @@ function Lessons() {
       name: lesson.name,
       level: lesson.level,
       linkYoutube: lesson.linkYoutube,
+      linkGame: lesson.linkGame,
       description: lesson.description,
       TeacherId: lesson?.teacher?.id || "",
       date: lesson.date ? new Date(lesson.date).toISOString().split("T")[0] : "", // Chuyển thành YYYY-MM-DD
@@ -385,6 +412,7 @@ function Lessons() {
       formData.append("name", lessonData.name);
       formData.append("level", lessonData.level);
       formData.append("linkYoutube", lessonData.linkYoutube);
+      formData.append("linkGame", lessonData.linkGame);
       formData.append("description", lessonData.description);
       formData.append("teacherId", lessonData.TeacherId);
       formData.append("date", lessonData.date); // Gửi chuỗi ngày YYYY-MM-DD
@@ -425,6 +453,7 @@ function Lessons() {
         name: "",
         level: "",
         linkYoutube: "",
+        linkGame: "",
         linkSpeech: "",
         TeacherId: "",
         description: "",
@@ -589,11 +618,18 @@ function Lessons() {
             }}
           />
           <TextField
-            label="Lesson Link"
+            label="Lesson Youtube Link"
             fullWidth
             margin="normal"
             value={lessonData.linkYoutube}
             onChange={(e) => setLessonData({ ...lessonData, linkYoutube: e.target.value })}
+          />
+          <TextField
+            label="Lesson Game Link"
+            fullWidth
+            margin="normal"
+            value={lessonData.linkGame}
+            onChange={(e) => setLessonData({ ...lessonData, linkGame: e.target.value })}
           />
           <TextField
             label="Lesson Date"
@@ -613,6 +649,12 @@ function Lessons() {
               borderRadius: "6px",
               borderColor: colors.inputBorder,
             }}
+          />
+          <Radio.Group
+            options={genderOptions}
+            onChange={onChangeGender}
+            value={gender}
+            optionType="button"
           />
           <Button
             type="primary"

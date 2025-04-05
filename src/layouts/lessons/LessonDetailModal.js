@@ -6,7 +6,7 @@ import { colors } from "assets/theme/color";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
 import { Button, Grid, Box } from "@mui/material";
-import { PlayCircle, Youtube, Music } from "lucide-react";
+import { PlayCircle, Youtube, Music, GamepadIcon } from "lucide-react";
 
 function extractYouTubeId(url) {
   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
@@ -164,6 +164,25 @@ function LessonDetailModal({ open, onClose, lesson }) {
                       </a>
                     </MDTypography>
                   )}
+                  {lesson.linkGame && (
+                    <MDTypography variant="body1" color="text">
+                      <strong>Game Link:</strong>
+                      <a
+                        href={lesson.linkGame}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: colors.deepGreen,
+                          marginLeft: "8px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <GamepadIcon size={20} style={{ marginRight: 5 }} />
+                        Open in Game
+                      </a>
+                    </MDTypography>
+                  )}
                 </Box>
 
                 <Box
@@ -205,6 +224,7 @@ LessonDetailModal.propTypes = {
     level: PropTypes.string,
     TeacherId: PropTypes.string,
     linkYoutube: PropTypes.string,
+    linkGame: PropTypes.string,
     linkSpeech: PropTypes.string,
     description: PropTypes.string,
   }),

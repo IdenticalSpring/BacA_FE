@@ -6,6 +6,7 @@ import {
   Input,
   message,
   Modal,
+  Radio,
   Select,
   Space,
   Spin,
@@ -36,6 +37,10 @@ import { BookOutlined } from "@ant-design/icons";
 const { Title } = Typography;
 const { Text } = Typography;
 const { Option } = Select;
+const genderOptions = [
+  { label: "Giọng nam", value: 1 },
+  { label: "Giọng nữ", value: 0 },
+];
 export default function CreateHomeWork({
   toolbar,
   quillFormats,
@@ -66,6 +71,11 @@ export default function CreateHomeWork({
   const [loadingClass, setLoadingClass] = useState(false);
   const homeworkLink = "https://happyclass.com.vn/do-homework";
   const [copySuccess, setCopySuccess] = useState(false);
+  const [gender, setGender] = useState(1);
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -235,7 +245,7 @@ export default function CreateHomeWork({
     setLoadingTTSHomeWork(true);
 
     try {
-      const response = await homeWorkService.textToSpeech(textToSpeech);
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
 
       let base64String = response;
       // console.log(response);
@@ -422,6 +432,14 @@ export default function CreateHomeWork({
               />
             </Form.Item>
             <Form.Item>
+              <Radio.Group
+                options={genderOptions}
+                onChange={onChangeGender}
+                value={gender}
+                optionType="button"
+              />
+            </Form.Item>
+            <Form.Item>
               <Button
                 type="primary"
                 onClick={handleConvertToSpeech}
@@ -458,7 +476,7 @@ export default function CreateHomeWork({
             <Form.Item
               name="linkYoutube"
               label="Link Youtube bài tập"
-              rules={[{ required: true, message: "Please enter the homework link" }]}
+              // rules={[{ required: true, message: "Please enter the homework link" }]}
             >
               <Input
                 placeholder="Nhập link youtube bài tập"
@@ -489,7 +507,7 @@ export default function CreateHomeWork({
             <Form.Item
               name="description"
               label="Mô tả"
-              rules={[{ required: true, message: "Please enter a description" }]}
+              // rules={[{ required: true, message: "Please enter a description" }]}
             >
               <ReactQuill
                 theme="snow"

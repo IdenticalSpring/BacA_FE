@@ -21,14 +21,17 @@ import { colors } from "assets/theme/color";
 import levelService from "services/levelService";
 import PropTypes from "prop-types";
 import TextArea from "antd/es/input/TextArea";
-import { Button, message } from "antd";
+import { Button, message, Radio } from "antd";
 import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
 import HomeworkDetailModal from "./HomeworkDetailModal";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
-
+const genderOptions = [
+  { label: "Giọng nam", value: 1 },
+  { label: "Giọng nữ", value: 0 },
+];
 function HomeWorks() {
   const navigate = useNavigate();
   const [columns] = useState([
@@ -220,7 +223,11 @@ function HomeWorks() {
   const [selectedHomeworkDetail, setSelectedHomeworkDetail] = useState(null);
   const [searchTeacher, setSearchTeacher] = useState("");
   const [searchDate, setSearchDate] = useState(""); // Thêm state để lọc theo ngày
-
+  const [gender, setGender] = useState(1);
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
   useEffect(() => {
     fetchHomeworks();
   }, [levels]);
@@ -322,7 +329,7 @@ function HomeWorks() {
     setLoadingTTSHomework(true);
 
     try {
-      const response = await homeWorkService.textToSpeech(textToSpeech);
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
       let base64String = response;
 
       function base64ToBlob(base64, mimeType) {
@@ -652,6 +659,12 @@ function HomeWorks() {
               borderRadius: "6px",
               borderColor: colors.inputBorder,
             }}
+          />
+          <Radio.Group
+            options={genderOptions}
+            onChange={onChangeGender}
+            value={gender}
+            optionType="button"
           />
           <Button
             type="primary"

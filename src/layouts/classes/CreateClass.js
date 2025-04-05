@@ -39,14 +39,23 @@ import scheduleService from "services/scheduleService";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import levelService from "services/levelService";
 import { colors } from "assets/theme/color";
-import { message, Modal, Spin } from "antd";
-
-function generateAccessId(length = 5) {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+import { message, Modal, Spin, TimePicker } from "antd";
+import dayjs from "dayjs";
+function generateAccessId() {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits = "0123456789";
   let accessId = "";
-  for (let i = 0; i < length; i++) {
-    accessId += characters.charAt(Math.floor(Math.random() * characters.length));
+
+  // Random 2 chữ cái
+  for (let i = 0; i < 2; i++) {
+    accessId += letters.charAt(Math.floor(Math.random() * letters.length));
   }
+
+  // Random 3 số
+  for (let i = 0; i < 3; i++) {
+    accessId += digits.charAt(Math.floor(Math.random() * digits.length));
+  }
+
   return accessId;
 }
 
@@ -61,6 +70,7 @@ function CreateClass() {
     scheduleId: "",
   });
   const [classDataForUpdate, setClassDataForUpdate] = useState({
+    id: "",
     name: "",
     level: "",
     teacherID: "",
@@ -242,6 +252,7 @@ function CreateClass() {
       setClassRows(formattedRows);
     }
   }, [rawClasses, levels]);
+  // console.log(levels);
 
   const fetchSchedules = async () => {
     try {
@@ -407,6 +418,7 @@ function CreateClass() {
     const schedulesData = await lessonByScheduleService.getSchedulesByClass(cls.id);
     setSelectedSchedule(schedulesData);
     setClassDataForUpdate({
+      id: cls.id,
       name: cls.name,
       level: cls.level,
       teacherID: cls.teacher?.id || "",
@@ -437,7 +449,7 @@ function CreateClass() {
         {
           id: classEntity.id,
           name: classEntity.name,
-          level: classEntity.level,
+          level: levels.find((lv) => lv.id === classEntity.level)?.name || "N/A",
           teacher: classEntity.teacher?.name || "N/A",
           accessId: classEntity.accessId || "N/A",
           actions: (
@@ -450,6 +462,7 @@ function CreateClass() {
         },
       ]);
       setClassDataForCreate({
+        id: "",
         name: "",
         level: "",
         teacherID: "",
@@ -480,11 +493,15 @@ function CreateClass() {
         };
         await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
       }
+
       setClassRows(
-        classRows.map((row) =>
-          row.id === selectedClass.id
+        classRows.map((row) => {
+          row.id === selectedClass.id && console.log(row, selectedClass, classEntity);
+
+          return row.id === classEntity.id
             ? {
                 ...row,
+
                 actions: (
                   <>
                     <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
@@ -493,14 +510,17 @@ function CreateClass() {
                   </>
                 ),
                 ...payload,
+                teacher: classEntity.teacher?.name || "N/A",
+                level: levels.find((lv) => lv.id === classEntity.level)?.name || "N/A",
               }
-            : row
-        )
+            : row;
+        })
       );
       setSelectedSchedule([]);
       setSelectedSchedulesForUpdate([]);
       setOpenEditClass(false);
       setClassDataForUpdate({
+        id: "",
         name: "",
         level: "",
         teacherID: "",
@@ -597,7 +617,12 @@ function CreateClass() {
   const handleSaveSchedule = async () => {
     setLoadingCreateSchedule(true);
     try {
-      const scheduleEntity = await scheduleService.createSchedule(scheduleData);
+      const data = {
+        dayOfWeek: scheduleData.dayOfWeek,
+        startTime: scheduleData.startTime.format("HH:mm"),
+        endTime: scheduleData.endTime.format("HH:mm"),
+      };
+      const scheduleEntity = await scheduleService.createSchedule(data);
       setScheduleData({
         dayOfWeek: "",
         startTime: "",
@@ -614,11 +639,14 @@ function CreateClass() {
       ]);
       message.success("Create schedule success!");
     } catch (err) {
-      message.error("Create schedule failed!");
+      message.error("Create schedule failed!" + err);
     } finally {
       setLoadingCreateSchedule(false);
     }
   };
+  // console.log(`${dayjs(new Date().getTime()).format("HH:mm").toString()}`);
+  // console.log(`${dayjs(new Date().getTime(), "HH:mm").format("HH:mm")}`);
+  // console.log(dayjs("10:18:00", "HH:mm"));
 
   return (
     <DashboardLayout>
@@ -931,7 +959,7 @@ function CreateClass() {
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
+              {/* <TextField
                 fullWidth
                 margin="normal"
                 label="Start Time"
@@ -939,8 +967,30 @@ function CreateClass() {
                 InputLabelProps={{ shrink: true }}
                 value={scheduleData.startTime}
                 onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
+              /> */}
+              <TimePicker
+                format="HH:mm"
+                value={scheduleData.startTime}
+                onChange={(time, timeString) => {
+                  setScheduleData({ ...scheduleData, startTime: time });
+                }}
               />
-              <TextField
+              <TimePicker
+                format="HH:mm"
+                value={scheduleData.endTime}
+                onChange={(time, timeString) => {
+                  setScheduleData({ ...scheduleData, endTime: time });
+                }}
+              />
+              {/* <TimePicker defaultValue={dayjs("10:18:00", "HH:mm")} format={"HH:mm"} /> */}
+              {/* <TimePicker
+                format="HH:mm"
+                value={dayjs(scheduleData.endTime, "HH:mm")}
+                onChange={(time, timeString) =>
+                  setScheduleData({ ...scheduleData, endTime: timeString })
+                }
+              /> */}
+              {/* <TextField
                 fullWidth
                 margin="normal"
                 label="End Time"
@@ -948,7 +998,7 @@ function CreateClass() {
                 InputLabelProps={{ shrink: true }}
                 value={scheduleData.endTime}
                 onChange={(e) => setScheduleData({ ...scheduleData, endTime: e.target.value })}
-              />
+              /> */}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="contained"

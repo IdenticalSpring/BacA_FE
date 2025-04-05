@@ -6,6 +6,7 @@ import {
   message,
   Modal,
   Popconfirm,
+  Radio,
   Select,
   Space,
   Table,
@@ -28,6 +29,10 @@ import { jwtDecode } from "jwt-decode";
 import homeWorkService from "services/homeWorkService";
 import TextArea from "antd/es/input/TextArea";
 import axios from "axios";
+const genderOptions = [
+  { label: "Giọng nam", value: 1 },
+  { label: "Giọng nữ", value: 0 },
+];
 export default function HomeWorkMangement({
   toolbar,
   quillFormats,
@@ -52,6 +57,11 @@ export default function HomeWorkMangement({
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [gender, setGender] = useState(1);
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
   const handleDelete = async (id) => {
     try {
       await homeWorkService.deleteHomeWork(id);
@@ -83,7 +93,7 @@ export default function HomeWorkMangement({
     setLoadingTTSForUpdateHomeWork(true);
 
     try {
-      const response = await homeWorkService.textToSpeech(textToSpeech);
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
 
       let base64String = response;
 
@@ -478,6 +488,14 @@ export default function HomeWorkMangement({
             />
           </Form.Item>
           <Form.Item>
+            <Radio.Group
+              options={genderOptions}
+              onChange={onChangeGender}
+              value={gender}
+              optionType="button"
+            />
+          </Form.Item>
+          <Form.Item>
             <Button
               type="primary"
               onClick={handleConvertToSpeech}
@@ -526,7 +544,7 @@ export default function HomeWorkMangement({
           <Form.Item
             name="linkYoutube"
             label="Link Youtube Bài tập"
-            rules={[{ required: true, message: "Please enter the homework link" }]}
+            // rules={[{ required: true, message: "Please enter the homework link" }]}
           >
             <Input
               placeholder="Nhập link youtube bài tập"
@@ -557,7 +575,7 @@ export default function HomeWorkMangement({
           <Form.Item
             name="description"
             label="Mô tả"
-            rules={[{ required: true, message: "Please enter a description" }]}
+            // rules={[{ required: true, message: "Please enter a description" }]}
           >
             <ReactQuill
               theme="snow"
