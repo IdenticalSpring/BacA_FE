@@ -93,13 +93,13 @@ export const colors = {
 
 const daysOfWeek = [
   "Choose day of week",
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
+  "Chủ nhật",
+  "Thứ hai",
+  "Thứ ba",
+  "Thứ tư",
+  "Thứ năm",
+  "Thứ sáu",
+  "Thứ bảy",
 ];
 // Helper function to calculate time elapsed
 const getTimeElapsed = (createdAt) => {
@@ -1342,6 +1342,11 @@ const TeacherPage = () => {
                 loadingTTSForUpdateLesson={loadingTTSForUpdateLesson}
                 setLoadingTTSForUpdateLesson={setLoadingTTSForUpdateLesson}
                 level={classData?.level}
+                lessonByScheduleData={lessonByScheduleData}
+                daysOfWeek={daysOfWeek}
+                setLessonByScheduleData={setLessonByScheduleData}
+                classID={selectedClass}
+                students={students}
               />
             </div>
           </div>
@@ -1447,6 +1452,11 @@ const TeacherPage = () => {
                 setLoadingTTSForUpdateHomeWork={setLoadingTTSForUpdateHomeWork}
                 teacherId={teacherId}
                 level={classData?.level}
+                lessonByScheduleData={lessonByScheduleData}
+                daysOfWeek={daysOfWeek}
+                setLessonByScheduleData={setLessonByScheduleData}
+                classID={selectedClass}
+                students={students}
               />
             </div>
           </div>

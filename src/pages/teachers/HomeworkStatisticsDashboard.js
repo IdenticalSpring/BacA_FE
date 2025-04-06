@@ -143,7 +143,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
 
         // Tìm lịch trình của ngày hiện tại
         const scheduleItem = lessonByScheduleData.find(
-          (item) => new Date(item.date).getTime() === currentDate.getTime()
+          (item) => new Date(item?.date || "").getTime() === currentDate.getTime()
         );
 
         // Tạo UI cho ngày

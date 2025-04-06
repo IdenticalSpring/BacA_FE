@@ -72,6 +72,8 @@ export default function CreateHomeWork({
   const homeworkLink = "https://happyclass.com.vn/do-homework";
   const [copySuccess, setCopySuccess] = useState(false);
   const [gender, setGender] = useState(1);
+  const [openSend, setOpenSend] = useState(false);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -149,9 +151,9 @@ export default function CreateHomeWork({
       formData.append("linkZalo", values.linkZalo);
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
-      if (selected.size > 0) {
-        formData.append("status", 1);
-      }
+      // if (selected.size > 0) {
+      //   formData.append("status", 1);
+      // }
 
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
       if (mp3file) {
@@ -159,14 +161,50 @@ export default function CreateHomeWork({
       }
 
       const homeworkData = await homeWorkService.createHomeWork(formData);
-      let detailStr = "Bạn mới có bài tập mới vào ngày:";
+
       for (const item of selected) {
         const data = await lessonByScheduleService.updateHomeWorkLessonBySchedule(
           item,
           homeworkData.id
         );
-        detailStr += " " + data.date.toString();
       }
+
+      message.success("Homework created successfully!");
+      form.resetFields();
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
+    } catch (err) {
+      message.error("Failed to create lesson. Please try again.");
+    } finally {
+      setLoadingCreateHomeWork(false);
+    }
+  };
+  const handleUpdateSendingHomeworkStatus = async (id) => {
+    try {
+      setLoadingSchedule(true);
+      const data = await lessonByScheduleService.updateSendingHomeworkStatus(id, true);
+      const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+        if (item.id === id) {
+          return { ...item, isHomeWorkSent: true };
+        }
+        return item;
+      });
+      setLessonByScheduleData(lessonByScheduleDataUpdated);
+      let detailStr = "Bạn mới có bài tập mới vào ngày:";
+      console.log(data);
+      const date = lessonByScheduleDataUpdated.find((item) => item.id === id)?.date || null;
+      // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
+
+      detailStr +=
+        " " +
+          (date &&
+            new Date(date).toLocaleDateString("vi-VN", {
+              timeZone: "UTC",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })) || "Không có ngày";
       const notificationData = {
         title: "Bài tập mới",
         general: false,
@@ -185,17 +223,22 @@ export default function CreateHomeWork({
           userNotificationData
         );
       });
-      message.success("Homework created successfully!");
-      form.resetFields();
-      setTextToSpeech("");
-      setMp3file(null);
-      setMp3Url("");
+      message.success("Đã gửi bài tập thành công!");
     } catch (err) {
-      message.error("Failed to create lesson. Please try again.");
+      message.error("Lỗi khi gửi bài tập! " + err);
     } finally {
-      setLoadingCreateHomeWork(false);
+      setLoadingSchedule(false);
     }
   };
+  // console.log(
+  //   new Date("2025-03-28").toLocaleDateString("vi-VN", {
+  //     timeZone: "UTC",
+  //     day: "2-digit",
+  //     month: "2-digit",
+  //     year: "numeric",
+  //   })
+  // );
+
   const handleLoadLessonContent = async () => {
     const today = new Date(); // Lấy ngày hiện tại thực tế
     const todayString = today.toISOString().split("T")[0]; // Định dạng YYYY-MM-DD
@@ -314,6 +357,8 @@ export default function CreateHomeWork({
     };
     fetchClass();
   }, [classID]);
+  // console.log(homeWorksData);
+
   return (
     <div
       style={{
@@ -555,7 +600,7 @@ export default function CreateHomeWork({
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
             onClick={() => {
-              setShowAccessId(true);
+              setOpenSend(true);
             }}
           >
             Gửi link
@@ -604,7 +649,7 @@ export default function CreateHomeWork({
             <Button
               type="primary"
               htmlType="submit"
-              loading={loadingClass}
+              // loading={loadingClass}
               icon={<SendOutlined />}
               style={{
                 borderRadius: "6px",
@@ -613,7 +658,7 @@ export default function CreateHomeWork({
                 boxShadow: "0 2px 0 " + colors.softShadow,
               }}
               onClick={() => {
-                setShowAccessId(true);
+                setOpenSend(true);
               }}
             >
               Gửi link
@@ -660,6 +705,75 @@ export default function CreateHomeWork({
             </Space>
           </Card>
         )}
+      </Modal>
+      <Modal
+        title="Danh sách các lịch học đã có bài tập"
+        open={openSend}
+        onCancel={() => setOpenSend(false)}
+        footer={<></>}
+        centered
+        width={isMobile ? "90%" : "60%"}
+        // style={{ display: "flex", justifyContent: "center" }}
+      >
+        <div
+          style={{
+            width: "100%",
+            // margin: "15px 0",
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          {lessonByScheduleData?.length > 0 ? (
+            lessonByScheduleData?.map((item, index) => {
+              return item.homeWorkId ? (
+                <div
+                  key={index}
+                  style={{
+                    padding: "16px",
+                    marginBottom: "12px",
+                    border: `1px solid ${colors.lightGreen}`,
+                    borderRadius: "8px",
+                    backgroundColor: colors.paleGreen,
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    justifyContent: "space-between",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: "10px",
+                    height: isMobile ? "15%" : "15%",
+                    width: "100%",
+                    transition: "all 0.3s ease-in-out",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: colors.darkGreen,
+                      flex: 1,
+                      marginBottom: isMobile ? "10px" : 0,
+                    }}
+                  >
+                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                    {item.schedule.startTime} - {item.schedule.endTime} |{" "}
+                    {homeWorksData.find((hw) => hw.id === item.homeWorkId)?.title}
+                  </div>
+                  <Button
+                    disabled={item.isHomeWorkSent}
+                    loading={loadingSchedule}
+                    onClick={() => {
+                      handleUpdateSendingHomeworkStatus(item.id);
+                    }}
+                  >
+                    {item.isHomeWorkSent ? <Text>Đã gửi bài tập</Text> : <Text>Gửi bài tập</Text>}
+                  </Button>
+                </div>
+              ) : null;
+            })
+          ) : (
+            <Text>Không có bài tập nào</Text>
+          )}
+        </div>
       </Modal>
     </div>
   );

@@ -105,5 +105,38 @@ const lessonByScheduleService = {
       throw error.response?.data?.message || "Error updating lesson by schedule";
     }
   },
+  updateSendingHomeworkStatus: async (id, isHomeWorkSent) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/lesson-by-schedule/updateIsHomeWorkSent/${id}`,
+        { isHomeWorkSent },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating lesson by schedule";
+    }
+  },
+  updateSendingLessonStatus: async (id, isLessonSent) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/lesson-by-schedule/updateIsLessonSent/${id}`,
+        { isLessonSent },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating lesson by schedule";
+    }
+  },
 };
+
 export default lessonByScheduleService;

@@ -5,12 +5,13 @@ import {
   Form,
   Input,
   message,
+  Modal,
   Radio,
   Select,
   Space,
   Typography,
 } from "antd";
-import { SaveOutlined, RobotOutlined } from "@ant-design/icons"; // Thêm RobotOutlined cho nút Enhance
+import { SaveOutlined, RobotOutlined, SendOutlined } from "@ant-design/icons"; // Thêm RobotOutlined cho nút Enhance
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -26,6 +27,7 @@ import user_notificationService from "services/user_notificationService";
 
 const { Title } = Typography;
 const { Option } = Select;
+const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
@@ -57,6 +59,8 @@ export default function CreateLesson({
   const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingEnhance, setLoadingEnhance] = useState(false); // Thêm trạng thái loading cho nút Enhance
   const [gender, setGender] = useState(1);
+  const [openSend, setOpenSend] = useState(false);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -148,16 +152,50 @@ export default function CreateLesson({
       }
 
       const lessonData = await lessonService.createLesson(formData);
-      let detailStr = "Bạn mới có bài học mới vào ngày:";
       for (const item of selected) {
         const data = await lessonByScheduleService.updateLessonOfLessonBySchedule(
           item,
           lessonData.id
         );
-
-        detailStr += " " + data.date.toString();
       }
 
+      // await Promise.all(userNotificationCreate);
+      message.success("Lesson created successfully!");
+      form.resetFields();
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
+    } catch (err) {
+      message.error("Failed to create lesson. Please try again." + err);
+    } finally {
+      setLoadingCreateLesson(false);
+    }
+  };
+  const handleUpdateSendingLessonStatus = async (id) => {
+    try {
+      setLoadingSchedule(true);
+      const data = await lessonByScheduleService.updateSendingLessonStatus(id, true);
+      const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+        if (item.id === id) {
+          return { ...item, isLessonSent: true };
+        }
+        return item;
+      });
+      setLessonByScheduleData(lessonByScheduleDataUpdated);
+      let detailStr = "Bạn mới có bài học mới vào ngày:";
+      // console.log(data);
+      const date = lessonByScheduleDataUpdated.find((item) => item.id === id)?.date || null;
+      // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
+
+      detailStr +=
+        " " +
+          (date &&
+            new Date(date).toLocaleDateString("vi-VN", {
+              timeZone: "UTC",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })) || "Không có ngày";
       const notificationData = {
         title: "Bài học mới",
         general: false,
@@ -176,19 +214,13 @@ export default function CreateLesson({
           userNotificationData
         );
       });
-      // await Promise.all(userNotificationCreate);
-      message.success("Lesson created successfully!");
-      form.resetFields();
-      setTextToSpeech("");
-      setMp3file(null);
-      setMp3Url("");
+      message.success("Đã gửi bài học thành công!");
     } catch (err) {
-      message.error("Failed to create lesson. Please try again." + err);
+      message.error("Lỗi khi gửi bài học! " + err);
     } finally {
-      setLoadingCreateLesson(false);
+      setLoadingSchedule(false);
     }
   };
-
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTSLesson(true);
@@ -388,24 +420,44 @@ export default function CreateLesson({
           </Form>
         </Card>
       </div>
+
       {isMobile && (
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loadingCreateLesson}
-          icon={<SaveOutlined />}
-          style={{
-            borderRadius: "6px",
-            backgroundColor: colors.emerald,
-            borderColor: colors.emerald,
-            boxShadow: "0 2px 0 " + colors.softShadow,
-          }}
-          onClick={() => {
-            form.submit();
-          }}
-        >
-          Lưu
-        </Button>
+        <>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loadingCreateLesson}
+            icon={<SaveOutlined />}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              boxShadow: "0 2px 0 " + colors.softShadow,
+            }}
+            onClick={() => {
+              form.submit();
+            }}
+          >
+            Lưu
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            // loading={loadingClass}
+            icon={<SendOutlined />}
+            style={{
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              boxShadow: "0 2px 0 " + colors.softShadow,
+            }}
+            onClick={() => {
+              setOpenSend(true);
+            }}
+          >
+            Gửi link
+          </Button>
+        </>
       )}
       <div
         style={{
@@ -426,27 +478,115 @@ export default function CreateLesson({
           setSelected={setSelected}
         />
       </div>
-      <div style={{ display: "flex", justifyContent: "right", width: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "right", width: "100%", gap: "10px" }}>
         {!isMobile && (
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loadingCreateLesson}
-            icon={<SaveOutlined />}
-            style={{
-              borderRadius: "6px",
-              backgroundColor: colors.emerald,
-              borderColor: colors.emerald,
-              boxShadow: "0 2px 0 " + colors.softShadow,
-            }}
-            onClick={() => {
-              form.submit();
-            }}
-          >
-            Lưu
-          </Button>
+          <>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loadingCreateLesson}
+              icon={<SaveOutlined />}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                boxShadow: "0 2px 0 " + colors.softShadow,
+              }}
+              onClick={() => {
+                form.submit();
+              }}
+            >
+              Lưu
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              // loading={loadingClass}
+              icon={<SendOutlined />}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                boxShadow: "0 2px 0 " + colors.softShadow,
+              }}
+              onClick={() => {
+                setOpenSend(true);
+              }}
+            >
+              Gửi link
+            </Button>
+          </>
         )}
       </div>
+      <Modal
+        title="Danh sách các lịch học đã có bài học"
+        open={openSend}
+        onCancel={() => setOpenSend(false)}
+        footer={<></>}
+        centered
+        width={isMobile ? "90%" : "60%"}
+        // style={{ display: "flex", justifyContent: "center" }}
+      >
+        <div
+          style={{
+            width: "100%",
+            // margin: "15px 0",
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          {lessonByScheduleData?.length > 0 ? (
+            lessonByScheduleData?.map((item, index) => {
+              return item.lessonID ? (
+                <div
+                  key={index}
+                  style={{
+                    padding: "16px",
+                    marginBottom: "12px",
+                    border: `1px solid ${colors.lightGreen}`,
+                    borderRadius: "8px",
+                    backgroundColor: colors.paleGreen,
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    justifyContent: "space-between",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: "10px",
+                    height: isMobile ? "15%" : "15%",
+                    width: "100%",
+                    transition: "all 0.3s ease-in-out",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: colors.darkGreen,
+                      flex: 1,
+                      marginBottom: isMobile ? "10px" : 0,
+                    }}
+                  >
+                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                    {item.schedule.startTime} - {item.schedule.endTime} |{" "}
+                    {lessonsData.find((ls) => ls.id === item.lessonID)?.title}
+                  </div>
+                  <Button
+                    disabled={item.isLessonSent}
+                    loading={loadingSchedule}
+                    onClick={() => {
+                      handleUpdateSendingLessonStatus(item.id);
+                    }}
+                  >
+                    {item.isLessonSent ? <Text>Đã gửi bài học</Text> : <Text>Gửi bài học</Text>}
+                  </Button>
+                </div>
+              ) : null;
+            })
+          ) : (
+            <Text>Không có bài học nào</Text>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

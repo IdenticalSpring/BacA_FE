@@ -10,6 +10,7 @@ import {
   Select,
   Space,
   Table,
+  Tag,
   Typography,
 } from "antd";
 import { colors } from "assets/theme/color";
@@ -18,11 +19,21 @@ import ReactQuill from "react-quill";
 const { Title } = Typography;
 const { Option } = Select;
 import PropTypes from "prop-types";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
 import lessonService from "services/lessonService";
 import { jwtDecode } from "jwt-decode";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
+import notificationService from "services/notificationService";
+import user_notificationService from "services/user_notificationService";
+import lessonByScheduleService from "services/lessonByScheduleService";
+const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
@@ -43,6 +54,11 @@ export default function LessonMangement({
   level,
   loadingTTSForUpdateLesson,
   setLoadingTTSForUpdateLesson,
+  lessonByScheduleData,
+  daysOfWeek,
+  setLessonByScheduleData,
+  classID,
+  students,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -52,6 +68,9 @@ export default function LessonMangement({
   const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [gender, setGender] = useState(1);
+  const [openSend, setOpenSend] = useState(false);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState(null);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -66,6 +85,7 @@ export default function LessonMangement({
     }
   };
   const handleEdit = (lesson) => {
+    setSelectedLessonId(lesson.id);
     setEditingLesson(lesson);
     form.setFieldsValue({
       name: lesson.name,
@@ -153,6 +173,56 @@ export default function LessonMangement({
       message.error("Please check your input and try again");
     } finally {
       setLoadingUpdate(false);
+    }
+  };
+  const handleUpdateSendingLessonStatus = async (id) => {
+    try {
+      setLoadingSchedule(true);
+      const data = await lessonByScheduleService.updateSendingLessonStatus(id, true);
+      const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+        if (item.id === id) {
+          return { ...item, isLessonSent: true };
+        }
+        return item;
+      });
+      setLessonByScheduleData(lessonByScheduleDataUpdated);
+      let detailStr = "Bạn mới có bài học mới vào ngày:";
+      // console.log(data);
+      const date = lessonByScheduleDataUpdated.find((item) => item.id === id)?.date || null;
+      // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
+
+      detailStr +=
+        " " +
+          (date &&
+            new Date(date).toLocaleDateString("vi-VN", {
+              timeZone: "UTC",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })) || "Không có ngày";
+      const notificationData = {
+        title: "Bài học mới",
+        general: false,
+        classID: classID,
+        detail: detailStr,
+        createdAt: new Date(),
+      };
+      const notificationRes = await notificationService.createNotification(notificationData);
+      const userNotificationCreate = students.forEach(async (element) => {
+        const userNotificationData = {
+          status: false,
+          notificationID: notificationRes.id,
+          studentID: element.id,
+        };
+        const userNotificationRes = await user_notificationService.createUserNotification(
+          userNotificationData
+        );
+      });
+      message.success("Đã gửi bài học thành công!");
+    } catch (err) {
+      message.error("Lỗi khi gửi bài học! " + err);
+    } finally {
+      setLoadingSchedule(false);
     }
   };
   useEffect(() => {
@@ -278,6 +348,45 @@ export default function LessonMangement({
       ),
     },
     {
+      title: "Trạng thái",
+      dataIndex: "id",
+      key: "id",
+      width: "10%",
+      render: (text) => {
+        // console.log(text);
+
+        const length = lessonByScheduleData.filter((item) => item.lessonID === text).length;
+        const isSentLength = lessonByScheduleData.filter(
+          (item) => item.lessonID === text && item.isLessonSent === true
+        ).length;
+        // console.log(length, isSentLength);
+
+        return (
+          <Tag
+            color={isSentLength === 0 ? "red" : isSentLength === length ? "green" : "yellow"}
+            style={{ fontSize: 14, fontWeight: 600, padding: "5px 10px" }}
+          >
+            {isSentLength === 0 ? (
+              <>
+                <CloseCircleOutlined style={{ marginRight: 5 }} />
+                Chưa giao
+              </>
+            ) : isSentLength === length ? (
+              <>
+                <CheckCircleOutlined style={{ marginRight: 5 }} />
+                Đã giao
+              </>
+            ) : (
+              <>
+                <SyncOutlined style={{ marginRight: 5 }} />
+                Đang giao
+              </>
+            )}
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Hành động",
       key: "actions",
       width: "20%",
@@ -307,6 +416,7 @@ export default function LessonMangement({
       ),
     },
   ];
+  console.log(selectedLessonId);
 
   return (
     <div style={{ padding: "14px" }}>
@@ -376,6 +486,20 @@ export default function LessonMangement({
             }}
           >
             {editingLesson ? "Lưu" : "Create"}
+          </Button>,
+          <Button
+            loading={loadingSchedule}
+            key="submit"
+            type="primary"
+            onClick={() => {
+              setOpenSend(true);
+            }}
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+            }}
+          >
+            {"Gửi bài học"}
           </Button>,
         ]}
         width={720}
@@ -499,6 +623,75 @@ export default function LessonMangement({
           </Form.Item>
         </Form>
       </Modal>
+      <Modal
+        title="Danh sách các lịch học đang sử dụng bài học này"
+        open={openSend}
+        onCancel={() => setOpenSend(false)}
+        footer={<></>}
+        centered
+        width={isMobile ? "90%" : "60%"}
+        // style={{ display: "flex", justifyContent: "center" }}
+      >
+        <div
+          style={{
+            width: "100%",
+            // margin: "15px 0",
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          {lessonByScheduleData?.length > 0 ? (
+            lessonByScheduleData?.map((item, index) => {
+              return item.lessonID === selectedLessonId ? (
+                <div
+                  key={index}
+                  style={{
+                    padding: "16px",
+                    marginBottom: "12px",
+                    border: `1px solid ${colors.lightGreen}`,
+                    borderRadius: "8px",
+                    backgroundColor: colors.paleGreen,
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    justifyContent: "space-between",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: "10px",
+                    height: isMobile ? "15%" : "15%",
+                    width: "100%",
+                    transition: "all 0.3s ease-in-out",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: colors.darkGreen,
+                      flex: 1,
+                      marginBottom: isMobile ? "10px" : 0,
+                    }}
+                  >
+                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                    {item.schedule.startTime} - {item.schedule.endTime} |{" "}
+                    {/* {homeWorksData.find((hw) => hw.id === item.homeWorkId)?.title} */}
+                  </div>
+                  <Button
+                    disabled={item.isLessonSent}
+                    loading={loadingSchedule}
+                    onClick={() => {
+                      handleUpdateSendingLessonStatus(item.id);
+                    }}
+                  >
+                    {item.isLessonSent ? <Text>Đã gửi bài học</Text> : <Text>Gửi bài học</Text>}
+                  </Button>
+                </div>
+              ) : null;
+            })
+          ) : (
+            <Text>Không có bài học nào</Text>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -518,4 +711,9 @@ LessonMangement.propTypes = {
   level: PropTypes.number.isRequired,
   loadingTTSForUpdateLesson: PropTypes.bool.isRequired,
   setLoadingTTSForUpdateLesson: PropTypes.func.isRequired,
+  lessonByScheduleData: PropTypes.array.isRequired,
+  daysOfWeek: PropTypes.array.isRequired,
+  setLessonByScheduleData: PropTypes.func.isRequired,
+  classID: PropTypes.number.isRequired,
+  students: PropTypes.array.isRequired,
 };
