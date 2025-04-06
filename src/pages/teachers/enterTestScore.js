@@ -24,7 +24,7 @@ import studentService from "services/studentService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import studentScoreService from "services/studentScoreService";
 import testSkillService from "services/testSkillService";
-import assessmentService from "services/assessmentService"; // Thêm import assessmentService
+import assessmentService from "services/assessmentService";
 import { colors } from "./teacherPage";
 
 const { Header, Content } = Layout;
@@ -35,32 +35,28 @@ const EnterTestScore = () => {
   const [classTestSchedules, setClassTestSchedules] = useState([]);
   const [selectedClassTest, setSelectedClassTest] = useState(null);
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudents, setSelectedStudents] = useState([]); // Thay đổi thành mảng
   const [testSkills, setTestSkills] = useState([]);
   const [selectedTestSkills, setSelectedTestSkills] = useState([]);
-  const [assessments, setAssessments] = useState([]); // Thêm state cho assessments
-  const [selectedAssessment, setSelectedAssessment] = useState(null); // Thêm state cho assessment được chọn
+  const [assessments, setAssessments] = useState([]);
+  const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
   const [previousScores, setPreviousScores] = useState([]);
 
-  // Get the teacherId from token
   const token = sessionStorage.getItem("token");
   const decoded = token ? jwtDecode(token) : null;
   const teacherId = decoded?.userId;
-
-  // Get classId from location.state
   const classId = location.state?.classId;
 
-  // Fetch dữ liệu khi component mount
   useEffect(() => {
     if (classId) {
       fetchClassTestSchedules(classId);
       fetchStudents(classId);
       fetchTestSkills();
-      fetchAssessments(); // Thêm fetch assessments
+      fetchAssessments();
     } else {
       notification.error({
         message: "Error",
@@ -136,19 +132,19 @@ const EnterTestScore = () => {
   };
 
   useEffect(() => {
-    if (selectedStudent) {
-      fetchPreviousScores(selectedStudent);
+    if (selectedStudents.length > 0) {
+      fetchPreviousScores(selectedStudents);
     } else {
       setPreviousScores([]);
     }
-  }, [selectedStudent]);
+  }, [selectedStudents]);
 
-  const fetchPreviousScores = async (studentId) => {
+  const fetchPreviousScores = async (studentIds) => {
     try {
       setLoading(true);
       const data = await studentScoreService.getAllStudentScoreDetails();
       const studentScores = data
-        .filter((score) => score.studentID === studentId)
+        .filter((score) => studentIds.includes(score.studentID))
         .reduce((acc, score) => {
           const existing = acc.find((item) => item.studentScoreID === score.studentScoreID);
           if (existing) {
@@ -157,9 +153,10 @@ const EnterTestScore = () => {
             acc.push({
               key: score.studentScoreID,
               studentScoreID: score.studentScoreID,
+              studentID: score.studentID,
               scores: { [score.testSkill.name]: score.score },
               avgScore: score.avgScore,
-              teacherComment: score.teacherComment, // Thêm teacherComment nếu backend trả về
+              teacherComment: score.teacherComment,
             });
           }
           return acc;
@@ -167,7 +164,6 @@ const EnterTestScore = () => {
       setPreviousScores(studentScores);
     } catch (error) {
       console.error("Error fetching previous scores:", error);
-      // Không hiển thị lỗi nếu không có điểm trước đó
     } finally {
       setLoading(false);
     }
@@ -183,61 +179,62 @@ const EnterTestScore = () => {
     return "";
   };
 
-  const handleScoreChange = () => {
+  const handleScoreChange = (studentId) => {
     const values = form.getFieldsValue();
     const scores = selectedTestSkills.reduce((acc, skillId) => {
       const skill = testSkills.find((s) => s.id === skillId);
-      acc[skill.name] = values[`score_${skillId}`];
+      acc[skill.name] = values[`${studentId}_score_${skillId}`];
       return acc;
     }, {});
     const avgScore = calculateAvgScore(scores);
-    form.setFieldsValue({ avgScore });
+    form.setFieldsValue({ [`${studentId}_avgScore`]: avgScore });
   };
 
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+      const promises = selectedStudents.map(async (studentId) => {
+        const scoreData = {
+          studentID: studentId,
+          classTestScheduleID: selectedClassTest,
+          teacherID: teacherId,
+          teacherComment: values[`${studentId}_teacherComment`],
+          assessmentID: values[`${studentId}_assessmentId`],
+        };
+        const scoreResponse = await studentScoreService.createScoreStudent(scoreData);
+        const studentScoreId = scoreResponse.id;
 
-      // 1. Gọi createScoreStudent để lưu thông tin chính, bao gồm teacherComment và assessmentId
-      const scoreData = {
-        studentID: selectedStudent,
-        classTestScheduleID: selectedClassTest,
-        teacherID: teacherId,
-        teacherComment: values.teacherComment, // Thêm teacher comment
-        assessmentID: values.assessmentId, // Thêm assessment ID
-      };
-      const scoreResponse = await studentScoreService.createScoreStudent(scoreData);
-      const studentScoreId = scoreResponse.id;
+        const avgScore = parseFloat(values[`${studentId}_avgScore`]);
+        const scores = selectedTestSkills.reduce((acc, skillId) => {
+          const skill = testSkills.find((s) => s.id === skillId);
+          acc[skill.name] = values[`${studentId}_score_${skillId}`];
+          return acc;
+        }, {});
 
-      // 2. Gọi createScoreStudentDetails để lưu chi tiết điểm
-      const avgScore = parseFloat(values.avgScore);
-      const scores = selectedTestSkills.reduce((acc, skillId) => {
-        const skill = testSkills.find((s) => s.id === skillId);
-        acc[skill.name] = values[`score_${skillId}`];
-        return acc;
-      }, {});
+        const scoreDetailsPromises = selectedTestSkills.map((skillId) =>
+          studentScoreService.createScoreStudentDetails({
+            studentID: studentId,
+            testSkillID: skillId,
+            score: values[`${studentId}_score_${skillId}`],
+            avgScore: avgScore,
+            studentScoreID: studentScoreId,
+          })
+        );
 
-      const scoreDetailsPromises = selectedTestSkills.map((skillId) =>
-        studentScoreService.createScoreStudentDetails({
-          studentID: selectedStudent,
-          testSkillID: skillId,
-          score: values[`score_${skillId}`],
-          avgScore: avgScore,
+        await Promise.all(scoreDetailsPromises);
+
+        return {
+          key: studentScoreId,
           studentScoreID: studentScoreId,
-        })
-      );
+          studentID: studentId,
+          scores: { ...scores },
+          avgScore: avgScore,
+          teacherComment: values[`${studentId}_teacherComment`],
+        };
+      });
 
-      await Promise.all(scoreDetailsPromises);
-
-      // 3. Thêm điểm vừa nhập vào danh sách điểm
-      const newScore = {
-        key: studentScoreId,
-        studentScoreID: studentScoreId,
-        scores: { ...scores },
-        avgScore: avgScore,
-        teacherComment: values.teacherComment, // Thêm teacherComment vào previousScores
-      };
-      setPreviousScores((prev) => [...prev, newScore]);
+      const newScores = await Promise.all(promises);
+      setPreviousScores((prev) => [...prev, ...newScores]);
 
       notification.success({
         message: "Success",
@@ -245,7 +242,7 @@ const EnterTestScore = () => {
       });
       form.resetFields();
       setSelectedTestSkills([]);
-      setSelectedAssessment(null); // Reset assessment dropdown
+      setSelectedAssessment(null);
     } catch (error) {
       console.error("Error saving test scores:", error);
       notification.error({
@@ -261,8 +258,12 @@ const EnterTestScore = () => {
     navigate(-1);
   };
 
-  // Tạo cột động cho bảng Previous Test Scores
   const scoreColumns = [
+    {
+      title: "Student",
+      key: "student",
+      render: (_, record) => students.find((s) => s.id === record.studentID)?.name || "Unknown",
+    },
     ...testSkills.map((skill) => ({
       title: skill.name,
       dataIndex: ["scores", skill.name],
@@ -276,7 +277,7 @@ const EnterTestScore = () => {
       render: (text) => <strong>{text}</strong>,
     },
     {
-      title: "Teacher Comment", // Thêm cột Teacher Comment
+      title: "Teacher Comment",
       dataIndex: "teacherComment",
       key: "teacherComment",
       render: (text) => text || "-",
@@ -337,6 +338,7 @@ const EnterTestScore = () => {
                     onChange={(value) => {
                       setSelectedClassTest(value);
                       setSelectedTestSkills([]);
+                      setSelectedStudents([]);
                       form.resetFields();
                     }}
                     style={{ width: "100%" }}
@@ -351,12 +353,13 @@ const EnterTestScore = () => {
               </Col>
 
               <Col xs={24} md={12}>
-                <Form.Item label="Select Student">
+                <Form.Item label="Select Students">
                   <Select
-                    placeholder="Select a student"
-                    value={selectedStudent}
+                    mode="multiple" // Cho phép chọn nhiều học sinh
+                    placeholder="Select students"
+                    value={selectedStudents}
                     onChange={(value) => {
-                      setSelectedStudent(value);
+                      setSelectedStudents(value);
                       setSelectedTestSkills([]);
                       form.resetFields();
                     }}
@@ -373,7 +376,7 @@ const EnterTestScore = () => {
               </Col>
             </Row>
 
-            {selectedStudent && (
+            {selectedStudents.length > 0 && (
               <>
                 <Divider style={{ borderColor: colors.paleGreen }} />
                 <Form.Item label="Select Test Skills">
@@ -383,9 +386,7 @@ const EnterTestScore = () => {
                     value={selectedTestSkills}
                     onChange={(value) => {
                       setSelectedTestSkills(value);
-                      form.resetFields(
-                        testSkills.map((skill) => `score_${skill.id}`).concat("avgScore")
-                      );
+                      form.resetFields();
                     }}
                     style={{ width: "100%" }}
                   >
@@ -398,111 +399,112 @@ const EnterTestScore = () => {
                 </Form.Item>
 
                 {selectedTestSkills.length > 0 && (
-                  <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleSubmit}
-                    initialValues={{ avgScore: "" }}
-                  >
-                    <Row gutter={[24, 16]}>
-                      {selectedTestSkills.map((skillId) => {
-                        const skill = testSkills.find((s) => s.id === skillId);
-                        return (
-                          <Col xs={24} sm={12} md={6} key={skillId}>
-                            <Form.Item
-                              name={`score_${skillId}`}
-                              label={`${skill.name} Score`}
-                              rules={[
-                                { required: true, message: `Please enter ${skill.name} score` },
-                                {
-                                  type: "number",
-                                  min: 0,
-                                  max: 10,
-                                  message: "Score must be between 0 and 10",
-                                },
-                              ]}
-                            >
+                  <Form form={form} layout="vertical" onFinish={handleSubmit}>
+                    {selectedStudents.map((studentId) => (
+                      <Card
+                        key={studentId}
+                        title={`Scores for ${students.find((s) => s.id === studentId)?.name}`}
+                        style={{ marginBottom: 16 }}
+                      >
+                        <Row gutter={[24, 16]}>
+                          {selectedTestSkills.map((skillId) => {
+                            const skill = testSkills.find((s) => s.id === skillId);
+                            return (
+                              <Col xs={24} sm={12} md={6} key={skillId}>
+                                <Form.Item
+                                  name={`${studentId}_score_${skillId}`}
+                                  label={`${skill.name} Score`}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: `Please enter ${skill.name} score`,
+                                    },
+                                    {
+                                      type: "number",
+                                      min: 0,
+                                      max: 10,
+                                      message: "Score must be between 0 and 10",
+                                    },
+                                  ]}
+                                >
+                                  <InputNumber
+                                    placeholder="0-10"
+                                    min={0}
+                                    max={10}
+                                    step={0.1}
+                                    precision={1}
+                                    style={{ width: "100%" }}
+                                    onChange={() => handleScoreChange(studentId)}
+                                  />
+                                </Form.Item>
+                              </Col>
+                            );
+                          })}
+                        </Row>
+
+                        <Row gutter={[24, 16]}>
+                          <Col xs={24} md={12}>
+                            <Form.Item name={`${studentId}_avgScore`} label="Average Score">
                               <InputNumber
-                                placeholder="0-10"
                                 min={0}
                                 max={10}
-                                step={0.1}
-                                precision={1}
+                                precision={2}
                                 style={{ width: "100%" }}
-                                onChange={handleScoreChange}
+                                readOnly
+                                disabled
+                                addonAfter={<CalculatorOutlined />}
                               />
                             </Form.Item>
                           </Col>
-                        );
-                      })}
-                    </Row>
 
-                    <Row gutter={[24, 16]}>
-                      <Col xs={24} md={12}>
-                        <Form.Item name="avgScore" label="Average Score">
-                          <InputNumber
-                            min={0}
-                            max={10}
-                            precision={2}
-                            style={{ width: "100%" }}
-                            readOnly
-                            disabled
-                            addonAfter={<CalculatorOutlined />}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          name="assessmentId"
-                          label="Select Assessment"
-                          rules={[{ required: true, message: "Please select an assessment" }]}
-                        >
-                          <Select
-                            placeholder="Select an assessment"
-                            value={selectedAssessment}
-                            onChange={(value) => setSelectedAssessment(value)}
-                            style={{ width: "100%" }}
-                          >
-                            {assessments.map((assessment) => (
-                              <Option key={assessment.id} value={assessment.id}>
-                                {assessment.name} {/* Giả sử assessment có field 'name' */}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-
-                      <Col xs={24}>
-                        <Form.Item
-                          name="teacherComment"
-                          label="Teacher Comment"
-                          rules={[{ required: true, message: "Please enter a teacher comment" }]}
-                        >
-                          <Input.TextArea rows={3} placeholder="Enter your comment here" />
-                        </Form.Item>
-                      </Col>
-
-                      <Col xs={24} md={12}>
-                        <Form.Item style={{ marginTop: "30px", textAlign: "right" }}>
-                          <Space>
-                            <Button onClick={() => form.resetFields()}>Reset</Button>
-                            <Button
-                              type="primary"
-                              htmlType="submit"
-                              icon={<SaveOutlined />}
-                              loading={loading}
-                              style={{
-                                backgroundColor: colors.emerald,
-                                borderColor: colors.emerald,
-                              }}
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              name={`${studentId}_assessmentId`}
+                              label="Select Assessment"
+                              rules={[{ required: true, message: "Please select an assessment" }]}
                             >
-                              Save Score
-                            </Button>
-                          </Space>
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                              <Select placeholder="Select an assessment" style={{ width: "100%" }}>
+                                {assessments.map((assessment) => (
+                                  <Option key={assessment.id} value={assessment.id}>
+                                    {assessment.name}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+
+                          <Col xs={24}>
+                            <Form.Item
+                              name={`${studentId}_teacherComment`}
+                              label="Teacher Comment"
+                              rules={[
+                                { required: true, message: "Please enter a teacher comment" },
+                              ]}
+                            >
+                              <Input.TextArea rows={3} placeholder="Enter your comment here" />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                      </Card>
+                    ))}
+
+                    <Form.Item style={{ marginTop: "30px", textAlign: "right" }}>
+                      <Space>
+                        <Button onClick={() => form.resetFields()}>Reset</Button>
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          icon={<SaveOutlined />}
+                          loading={loading}
+                          style={{
+                            backgroundColor: colors.emerald,
+                            borderColor: colors.emerald,
+                          }}
+                        >
+                          Save Scores
+                        </Button>
+                      </Space>
+                    </Form.Item>
                   </Form>
                 )}
               </>
@@ -514,19 +516,19 @@ const EnterTestScore = () => {
               </div>
             )}
 
-            {selectedClassTest && !selectedStudent && (
+            {selectedClassTest && selectedStudents.length === 0 && (
               <div style={{ textAlign: "center", padding: "20px" }}>
-                <Text type="secondary">Please select a student to enter test scores.</Text>
+                <Text type="secondary">
+                  Please select at least one student to enter test scores.
+                </Text>
               </div>
             )}
           </Spin>
         </Card>
 
-        {selectedStudent && (
+        {selectedStudents.length > 0 && (
           <Card
-            title={`Test Scores for ${
-              students.find((s) => s.id === selectedStudent)?.name || "Student"
-            }`}
+            title="Previous Test Scores"
             style={{
               borderRadius: "12px",
               boxShadow: `0 4px 12px ${colors.softShadow}`,

@@ -8,14 +8,17 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
+import { format } from "date-fns";
 import DownloadIcon from "@mui/icons-material/Download";
 import EditIcon from "@mui/icons-material/Edit";
+import Pagination from "@mui/material/Pagination"; // Thêm Pagination
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import DataTable from "examples/Tables/DataTable";
 import classService from "services/classService";
 import lessonService from "services/lessonService";
 import homeWorkService from "services/homeWorkService";
+import teacherFeedbackService from "services/teacherFeedbackService";
 import { colors } from "assets/theme/color";
 import TextField from "@mui/material/TextField";
 import TextArea from "antd/es/input/TextArea";
@@ -46,6 +49,8 @@ const cellPropTypes = {
       date: PropTypes.string,
       title: PropTypes.string,
       linkZalo: PropTypes.string,
+      feedback: PropTypes.string,
+      datetime: PropTypes.string,
     }).isRequired,
   }).isRequired,
 };
@@ -54,6 +59,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   const [classes, setClasses] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [homeworks, setHomeworks] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -63,6 +69,8 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   const [lessonDetailOpen, setLessonDetailOpen] = useState(false);
   const [homeworkDetailOpen, setHomeworkDetailOpen] = useState(false);
   const [levels, setLevels] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // Thêm state cho trang hiện tại
+  const feedbacksPerPage = 3; // Số feedback mỗi trang
   const quillRef = useRef(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
@@ -122,6 +130,9 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
 
       const homeworkData = await homeWorkService.getHomeWorkByTeacherId(teacher.id);
       setHomeworks(homeworkData);
+
+      const feedbackData = await teacherFeedbackService.getFeedbackByStudentId(teacher.id);
+      setFeedbacks(feedbackData);
     } catch (err) {
       console.error("Error fetching teacher data:", err);
     } finally {
@@ -452,9 +463,25 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     original: homework,
   }));
 
+  // Logic phân trang cho feedback
+  const feedbackRows = feedbacks.map((feedback) => ({
+    id: feedback.id,
+    title: feedback.title,
+    description: feedback.description || feedback.feedback || "N/A",
+    datetime: feedback.datetime,
+  }));
+
+  const totalFeedbackPages = Math.ceil(feedbackRows.length / feedbacksPerPage);
+  const indexOfLastFeedback = currentPage * feedbacksPerPage;
+  const indexOfFirstFeedback = indexOfLastFeedback - feedbacksPerPage;
+  const currentFeedbacks = feedbackRows.slice(indexOfFirstFeedback, indexOfLastFeedback);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
   const fileUrls = teacher?.fileUrl ? teacher.fileUrl.split(",") : [];
 
-  // Logic chỉnh sửa Lesson
   const handleEditLesson = (lesson) => {
     setEditMode(true);
     setSelectedLesson(lesson);
@@ -498,7 +525,6 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     }
   };
 
-  // Logic chỉnh sửa Homework
   const handleEditHomework = (homework) => {
     setEditMode(true);
     setSelectedHomework(homework);
@@ -544,7 +570,6 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     }
   };
 
-  // Text-to-Speech
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTS(true);
@@ -678,6 +703,9 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         image: imageHandler,
       },
     },
+  };
+  const formatDate = (isoString) => {
+    return format(new Date(isoString), "dd/MM/yyyy HH:mm");
   };
 
   return (
@@ -881,6 +909,75 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   showTotalEntries={false}
                   noEndBorder
                 />
+              )}
+            </Card>
+          </Grid>
+
+          {/* Card Feedbacks */}
+          <Grid item xs={12}>
+            <Card
+              sx={{ padding: 3, borderRadius: "12px", boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)" }}
+            >
+              <MDTypography
+                variant="h6"
+                sx={{ color: colors.deepGreen, fontWeight: "bold", mb: 2 }}
+              >
+                Feedbacks
+              </MDTypography>
+              {loading ? (
+                <MDTypography>Loading...</MDTypography>
+              ) : feedbackRows.length === 0 ? (
+                <MDTypography>No feedback available</MDTypography>
+              ) : (
+                <>
+                  <Grid container spacing={2}>
+                    {currentFeedbacks.map((feedback) => (
+                      <Grid item xs={12} sm={6} md={4} key={feedback.id}>
+                        <Card
+                          sx={{
+                            padding: 2,
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+                          }}
+                        >
+                          <MDTypography
+                            variant="h6"
+                            sx={{ color: colors.midGreen, fontWeight: "bold", mb: 1 }}
+                          >
+                            {feedback.title}
+                          </MDTypography>
+                          <MDTypography variant="body2" sx={{ mb: 1 }}>
+                            <strong>Description:</strong> {feedback.description}
+                          </MDTypography>
+                          <MDTypography variant="body2">
+                            <strong>Created At:</strong>{" "}
+                            {feedback.datetime ? formatDate(feedback.datetime) : "N/A"}
+                          </MDTypography>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                  <MDBox display="flex" justifyContent="center" mt={3}>
+                    <Pagination
+                      count={totalFeedbackPages}
+                      page={currentPage}
+                      onChange={handlePageChange}
+                      color="primary"
+                      sx={{
+                        "& .MuiPaginationItem-root": {
+                          color: colors.midGreen,
+                          "&.Mui-selected": {
+                            backgroundColor: colors.highlightGreen,
+                            color: colors.white,
+                          },
+                          "&:hover": {
+                            backgroundColor: colors.lightGreen,
+                          },
+                        },
+                      }}
+                    />
+                  </MDBox>
+                </>
               )}
             </Card>
           </Grid>

@@ -65,6 +65,7 @@ import StudentProfileModal from "./studentProfileModal";
 import NotificationSection from "components/TeacherPageComponent/NotificationComponent";
 import notificationService from "services/notificationService";
 import HomeworkStatisticsDashboard from "./HomeworkStatisticsDashboard";
+import TeacherFeedbackModal from "./teacherFeedbackModal";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -127,6 +128,7 @@ const TeacherPage = () => {
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
   const [students, setStudents] = useState([]);
   const [lessonsData, setLessonsData] = useState([]);
   const [lessons, setLessons] = useState(null);
@@ -591,7 +593,11 @@ const TeacherPage = () => {
       <Menu.Item key="policy" icon={<ExclamationCircleOutlined />} onClick={showComingSoon}>
         Policy
       </Menu.Item>
-      <Menu.Item key="feedback" icon={<MessageOutlined />} onClick={showComingSoon}>
+      <Menu.Item
+        key="feedback"
+        icon={<MessageOutlined />}
+        onClick={() => setIsFeedbackModalVisible(true)} // Mở modal feedback
+      >
         Feedback
       </Menu.Item>
       <Menu.Item key="1" icon={<LogoutOutlined />} onClick={handleLogout}>
@@ -961,6 +967,12 @@ const TeacherPage = () => {
             schedules={schedulesForToday}
           />
         )}
+
+        <TeacherFeedbackModal
+          visible={isFeedbackModalVisible}
+          onClose={() => setIsFeedbackModalVisible(false)}
+          teacherId={teacherId}
+        />
 
         <StudentProfileModal
           visible={isProfileModalVisible}
