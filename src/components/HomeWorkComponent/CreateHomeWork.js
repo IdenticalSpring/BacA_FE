@@ -399,7 +399,24 @@ export default function CreateHomeWork({
                 }}
               />
             </Form.Item>
-
+            <Form.Item
+              name="description"
+              label="Mô tả"
+              // rules={[{ required: true, message: "Please enter a description" }]}
+            >
+              <ReactQuill
+                theme="snow"
+                modules={modules}
+                formats={quillFormats}
+                ref={quillRef}
+                style={{
+                  height: "250px",
+                  marginBottom: "60px", // Consider reducing this
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.inputBorder}`,
+                }}
+              />
+            </Form.Item>
             {/* <Form.Item
             name="level"
             label="Level"
@@ -501,24 +518,6 @@ export default function CreateHomeWork({
                 style={{
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="description"
-              label="Mô tả"
-              // rules={[{ required: true, message: "Please enter a description" }]}
-            >
-              <ReactQuill
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRef}
-                style={{
-                  height: "250px",
-                  marginBottom: "60px", // Consider reducing this
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
                 }}
               />
             </Form.Item>

@@ -41,6 +41,7 @@ import levelService from "services/levelService";
 import { colors } from "assets/theme/color";
 import { message, Modal, Spin, TimePicker } from "antd";
 import dayjs from "dayjs";
+import classScheduleService from "services/classScheduleService";
 function generateAccessId() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const digits = "0123456789";
@@ -466,6 +467,7 @@ function CreateClass() {
     }
   };
   // console.log(scheduleRows.filter((row) => row.id !== 1));
+  // console.log(selectedSchedulesForCreate);
 
   const handleSaveClass = async () => {
     setLoadingCreateClass(true);
@@ -483,7 +485,17 @@ function CreateClass() {
           lessons: getDatesForSelectedSchedules(selectedSchedulesForCreate, classEntity),
         };
         await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
+        const classScheduleDatas = [];
+        selectedSchedulesForCreate.forEach((schedule) => {
+          const classScheduleData = {
+            classID: classEntity.id,
+            scheduleID: schedule.scheduleId,
+          };
+          classScheduleDatas.push(classScheduleData);
+        });
+        await classScheduleService.createClassSchedule(classScheduleDatas);
       }
+
       setClassRows([
         ...classRows,
         {
@@ -512,7 +524,7 @@ function CreateClass() {
       setClassAccessId(genAccessId);
       message.success("Create class success!");
     } catch (err) {
-      message.error("Create class failed!");
+      message.error("Create class failed! " + err);
     } finally {
       setLoadingCreateClass(false);
     }
@@ -532,6 +544,15 @@ function CreateClass() {
           lessons: getDatesForSelectedSchedules(selectedSchedulesForUpdate, classEntity),
         };
         await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
+        const classScheduleDatas = [];
+        selectedSchedulesForUpdate.forEach((schedule) => {
+          const classScheduleData = {
+            classID: classEntity.id,
+            scheduleID: schedule.scheduleId,
+          };
+          classScheduleDatas.push(classScheduleData);
+        });
+        await classScheduleService.createClassSchedule(classScheduleDatas);
       }
 
       setClassRows(

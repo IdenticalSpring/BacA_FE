@@ -623,6 +623,22 @@ function HomeWorks() {
             value={homeworkData.title}
             onChange={(e) => setHomeworkData({ ...homeworkData, title: e.target.value })}
           />
+          <ReactQuill
+            theme="snow"
+            modules={modules}
+            formats={quillFormats}
+            ref={quillRef}
+            style={{
+              height: "250px",
+              marginBottom: "60px",
+              borderRadius: "6px",
+              border: `1px solid ${colors.inputBorder}`,
+            }}
+            value={homeworkData.description}
+            onChange={(e) => {
+              setHomeworkData({ ...homeworkData, description: e });
+            }}
+          />
           <TextField
             disabled
             label="Level"
@@ -705,22 +721,6 @@ function HomeWorks() {
             margin="normal"
             value={homeworkData.linkZalo}
             onChange={(e) => setHomeworkData({ ...homeworkData, linkZalo: e.target.value })}
-          />
-          <ReactQuill
-            theme="snow"
-            modules={modules}
-            formats={quillFormats}
-            ref={quillRef}
-            style={{
-              height: "250px",
-              marginBottom: "60px",
-              borderRadius: "6px",
-              border: `1px solid ${colors.inputBorder}`,
-            }}
-            value={homeworkData.description}
-            onChange={(e) => {
-              setHomeworkData({ ...homeworkData, description: e });
-            }}
           />
         </DialogContent>
         <DialogActions>
