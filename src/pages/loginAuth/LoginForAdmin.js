@@ -1,38 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Typography, message } from "antd";
-import { UserOutlined, LockOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  LockOutlined,
+  ArrowLeftOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "services/authService";
 import { ShieldOutlined } from "@mui/icons-material";
 import { colors } from "assets/theme/color";
 const { Title, Text } = Typography;
 
-// Enhanced color palette
-// export const colors = {
-//   lightGreen: "#8ED1B0",
-//   deepGreen: "#368A68",
-//   white: "#FFFFFF",
-//   gray: "#F5F5F5",
-//   darkGray: "#333333",
-//   accent: "#FFD166",
-//   lightAccent: "#FFEDC2",
-//   darkGreen: "#224922",
-//   paleGreen: "#E8F5EE",
-//   midGreen: "#5FAE8C",
-//   errorRed: "#FF6B6B",
-//   // Additional modern colors
-//   mintGreen: "#C2F0D7",
-//   paleBlue: "#E6F7FF",
-//   softShadow: "rgba(0, 128, 96, 0.1)",
-//   emerald: "#2ECC71",
-//   highlightGreen: "#43D183",
-//   safeGreen: "#27AE60",
-//   borderGreen: "#A8E6C3",
-// };
-
 const LoginForAdmin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
@@ -232,19 +216,42 @@ const LoginForAdmin = () => {
               name="password"
               rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
             >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: colors.deepGreen }} />}
-                placeholder="***************"
-                style={{
-                  borderRadius: "12px",
-                  borderColor: colors.borderGreen,
-                  padding: "12px 16px",
-                  height: "auto",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
-                  transition: "all 0.3s ease",
-                }}
-                className="input-hover-effect"
-              />
+              <div style={{ position: "relative" }}>
+                <Input
+                  prefix={<LockOutlined style={{ color: colors.deepGreen }} />}
+                  type={passwordVisible ? "text" : "password"}
+                  placeholder="***************"
+                  style={{
+                    borderRadius: "8px",
+                    borderColor: colors.lightGreen,
+                    padding: "12px 16px",
+                    height: "auto",
+                  }}
+                />
+                <Button
+                  type="text"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  style={{
+                    position: "absolute",
+                    right: "8px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 1,
+                    color: passwordVisible ? colors.deepGreen : colors.darkGray,
+                    padding: "0 8px",
+                    borderRadius: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: passwordVisible ? "rgba(142, 209, 176, 0.15)" : "transparent",
+                    border: "none",
+                    height: "32px",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {passwordVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                </Button>
+              </div>
             </Form.Item>
 
             <Form.Item>
