@@ -43,6 +43,7 @@ import "react-quill/dist/quill.snow.css";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import classService from "services/classService";
+import TeacherProfileModal from "./teacherProfileModal";
 import studentService from "services/studentService";
 import lessonService from "services/lessonService";
 import lessonByScheduleService from "services/lessonByScheduleService";
@@ -122,6 +123,7 @@ const getTimeElapsed = (createdAt) => {
 // Main TeacherPage Component
 const TeacherPage = () => {
   const [isAttendanceMode, setIsAttendanceMode] = useState(false);
+  const [isAttendanceGuideVisible, setIsAttendanceGuideVisible] = useState(false);
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -180,6 +182,8 @@ const TeacherPage = () => {
   const [editingHomeWork, setEditingHomeWork] = useState(null);
   const [openNotification, setOpenNotification] = useState(false);
   const [openHomeworkStatisticsDashboard, setOpenHomeworkStatisticsDashboard] = useState(false);
+  const [isTeacherProfileModalVisible, setIsTeacherProfileModalVisible] = useState(false);
+  const [teacherData, setTeacherData] = useState(null);
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -236,6 +240,19 @@ const TeacherPage = () => {
   useEffect(() => {
     fetchLessons();
   }, [loadingCreateLesson]);
+
+  useEffect(() => {
+    const fetchTeacherData = async () => {
+      try {
+        const data = await teacherService.getTeacherById(teacherId);
+        setTeacherData(data);
+      } catch (error) {
+        console.error("Error fetching teacher data:", error);
+        message.error("Failed to load teacher profile");
+      }
+    };
+    fetchTeacherData();
+  }, [teacherId]);
 
   const fetchLessons = async () => {
     try {
@@ -367,6 +384,7 @@ const TeacherPage = () => {
     }));
     setAttendance(initialAttendance);
     setIsAttendanceMode(true); // Chuyển sang chế độ điểm danh
+    setIsAttendanceGuideVisible(true); // Hiển thị phần hướng dẫn
   };
 
   const handleStatusChange = (studentId, present) => {
@@ -396,7 +414,7 @@ const TeacherPage = () => {
 
     try {
       setLoading(true);
-      const todaySchedules = getSchedulesForToday(); // Lấy lịch học hôm nay
+      const todaySchedules = getSchedulesForToday();
       if (todaySchedules.length === 0) {
         notification.warning({
           message: "Warning",
@@ -407,7 +425,6 @@ const TeacherPage = () => {
         return;
       }
 
-      // Tìm lessonByScheduleId từ lessonByScheduleData dựa trên schedule ID của ngày hôm nay
       const selectedLessonByScheduleId = lessonByScheduleData.find(
         (schedule) => schedule.schedule.id === todaySchedules[0]?.id
       )?.id;
@@ -422,7 +439,6 @@ const TeacherPage = () => {
         return;
       }
 
-      // Gửi dữ liệu điểm danh
       await teacherService.attendanceStudent({
         lessonByScheduleId: selectedLessonByScheduleId,
         attendanceData: attendance,
@@ -435,6 +451,7 @@ const TeacherPage = () => {
         duration: 4,
       });
       setIsAttendanceMode(false); // Thoát chế độ điểm danh
+      setIsAttendanceGuideVisible(false); // Ẩn phần hướng dẫn
     } catch (error) {
       console.error("Error submitting attendance:", error);
       notification.error({
@@ -448,21 +465,6 @@ const TeacherPage = () => {
     }
   };
 
-  const studentMenu = (student) => (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => handleViewProfile(student)}>
-        Profile
-      </Menu.Item>
-      {/* <Menu.Item
-        key="evaluation"
-        icon={<BarChartOutlined />}
-        onClick={() => handleViewEvaluation(student)}
-      >
-        Evaluation
-      </Menu.Item> */}
-    </Menu>
-  );
-
   const handleSelectStudent = (student) => {
     setSelectedStudents((prev) => {
       if (prev.some((s) => s.id === student.id)) {
@@ -474,37 +476,6 @@ const TeacherPage = () => {
       }
     });
   };
-
-  const handleViewProfile = (student) => {
-    Modal.info({
-      title: `Profile of ${student.name}`,
-      content: (
-        <div>
-          <p>
-            <b>Level:</b> {student.level || "N/A"}
-          </p>
-          <p>
-            <b>Note:</b> {student.note || "N/A"}
-          </p>
-        </div>
-      ),
-      onOk() {},
-    });
-  };
-
-  // const handleViewEvaluation = (student) => {
-  //   if (!hasClassToday) {
-  //     notification.warning({
-  //       message: "No Class Today",
-  //       description: "Class is scheduled for today",
-  //       placement: "topRight",
-  //       duration: 4,
-  //     });
-  //     return;
-  //   }
-  //   setSelectedStudent(student);
-  //   setIsEvaluationModalVisible(true);
-  // };
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -592,7 +563,6 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
-
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     navigate("/login/teacher");
@@ -611,7 +581,11 @@ const TeacherPage = () => {
 
   const userMenu = (
     <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
+      <Menu.Item
+        key="profile"
+        icon={<UserOutlined />}
+        onClick={() => setIsTeacherProfileModalVisible(true)} // Mở modal
+      >
         Profile
       </Menu.Item>
       <Menu.Item key="policy" icon={<ExclamationCircleOutlined />} onClick={showComingSoon}>
@@ -695,7 +669,6 @@ const TeacherPage = () => {
         onSelectClass={handleSelectClass}
         setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
       />
-
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
         <Header
           style={{
@@ -773,17 +746,48 @@ const TeacherPage = () => {
         </Header>
 
         {selectedClass && (
-          <div
-            style={{
-              padding: "12px 24px",
-              backgroundColor: hasClassToday ? colors.mintGreen : colors.lightAccent,
-            }}
-          >
-            <Text style={{ color: hasClassToday ? colors.darkGreen : colors.darkGray }}>
-              <strong>Class Status:</strong>{" "}
-              {hasClassToday ? "Class is scheduled for today" : "Class is not scheduled for today"}
-            </Text>
-          </div>
+          <>
+            <div
+              style={{
+                padding: "12px 24px",
+                backgroundColor: hasClassToday ? colors.mintGreen : colors.lightAccent,
+              }}
+            >
+              <Text style={{ color: hasClassToday ? colors.darkGreen : colors.darkGray }}>
+                <strong>Class Status:</strong>{" "}
+                {hasClassToday
+                  ? "Class is scheduled for today"
+                  : "Class is not scheduled for today"}
+              </Text>
+            </div>
+            {isAttendanceGuideVisible && (
+              <div
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: colors.paleBlue,
+                  borderTop: `1px solid ${colors.borderGreen}`,
+                }}
+              >
+                <Text style={{ color: colors.darkGreen }}>
+                  <strong>Attendance Guide:</strong>
+                  <ul style={{ margin: "8px 0 0 20px", padding: 0 }}>
+                    <li>
+                      <SmileOutlined style={{ color: colors.safeGreen, marginRight: 8 }} /> Present:
+                      Học sinh có mặt.
+                    </li>
+                    <li>
+                      <FrownOutlined style={{ color: colors.errorRed, marginRight: 8 }} /> Absent:
+                      Học sinh vắng mặt.
+                    </li>
+                    <li>
+                      <MehOutlined style={{ color: colors.accent, marginRight: 8 }} /> Late: Học
+                      sinh đến muộn.
+                    </li>
+                  </ul>
+                </Text>
+              </div>
+            )}
+          </>
         )}
 
         <Row
@@ -1012,7 +1016,10 @@ const TeacherPage = () => {
                   </Button>
                   <Button
                     type="default"
-                    onClick={() => setIsAttendanceMode(false)} // Thoát chế độ điểm danh
+                    onClick={() => {
+                      setIsAttendanceMode(false); // Thoát chế độ điểm danh
+                      setIsAttendanceGuideVisible(false); // Ẩn phần hướng dẫn
+                    }}
                     style={{ borderColor: colors.errorRed, color: colors.errorRed }}
                   >
                     Cancel
@@ -1030,7 +1037,6 @@ const TeacherPage = () => {
           </div>
         )}
       </Layout>
-
       {/* <Modal
         title="Assignment Management"
         open={assignmentModal}
@@ -1238,7 +1244,6 @@ const TeacherPage = () => {
           </TabPane>
         </Tabs>
       </Modal> */}
-
       <Modal
         title="Nội dung bài học"
         open={assignmentModal}
@@ -1347,7 +1352,12 @@ const TeacherPage = () => {
           </div>
         )}
       </Modal>
-
+      {/* // Trong TeacherPage component */}
+      <TeacherProfileModal
+        open={isTeacherProfileModalVisible}
+        onClose={() => setIsTeacherProfileModalVisible(false)}
+        teacher={teacherData}
+      />
       <Modal
         title="Quản lý bài tập"
         open={homeworkModal}
