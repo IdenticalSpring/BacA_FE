@@ -33,7 +33,7 @@ function Students() {
   const [levels, setLevels] = useState([]);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
-    { Header: "Observation Year", accessor: "yearOfBirth", width: "10%" },
+    { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
     { Header: "Level", accessor: "level", width: "15%" },
     { Header: "Schedule", accessor: "note", width: "15%" },
     { Header: "Phone", accessor: "phone", width: "15%" },
@@ -52,6 +52,7 @@ function Students() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [classSchedules, setClassSchedules] = useState([]);
+  const [selectedClassSchedules, setSelectedClassSchedules] = useState([]);
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
@@ -99,6 +100,36 @@ function Students() {
     }
   }, [levels]);
 
+  const handleClassScheduleChange = (event) => {
+    const selectedClassId = event.target.value;
+
+    // Lọc ra tất cả các schedule có cùng classID
+    const matchingSchedules = classSchedules.filter(
+      (schedule) => schedule.class.id === selectedClassId
+    );
+
+    // Cập nhật state cho schedules của class được chọn
+    setSelectedClassSchedules(matchingSchedules);
+
+    // Lưu classID vào studentData
+    setStudentData((prevData) => ({
+      ...prevData,
+      classID: selectedClassId,
+    }));
+  };
+
+  const renderClassScheduleLabel = (classSchedule) => {
+    const { class: classInfo } = classSchedule;
+
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column" }}>
+        <Typography sx={{ fontWeight: "bold", color: colors.midGreen }}>
+          {classInfo.name}
+        </Typography>
+      </Box>
+    );
+  };
+
   const fetchClassSchedules = async () => {
     try {
       const schedules = await classService.getAllClassSchedule();
@@ -140,7 +171,7 @@ function Students() {
           imgUrl: student.imgUrl,
           startDate: student.startDate,
           endDate: student.endDate,
-          note: formatSchedule(student),
+          note: student.class.name,
           rawLevel: student.level, // Giữ lại ID gốc nếu cần dùng sau này
           actions: (
             <>
@@ -177,6 +208,7 @@ function Students() {
       setLoading(false);
     }
   };
+  const dayNames = ["", "CN", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
 
   const formatSchedule = (student) => {
     let scheduleInfo = "";
@@ -185,7 +217,7 @@ function Students() {
     }
     if (student.schedule) {
       const { startTime, endTime, dayOfWeek } = student.schedule;
-      const dayNames = ["", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
+
       const dayName = dayNames[dayOfWeek] || "";
       if (scheduleInfo) scheduleInfo += "\n";
       scheduleInfo += `${dayName}: ${startTime?.substring(0, 5)} - ${endTime?.substring(0, 5)}`;
@@ -525,7 +557,8 @@ function Students() {
               </Button>
             </Box>
           </Box>
-          <TextField
+          {/* Dropdown có hẳn schedule */}
+          {/* <TextField
             select
             label="Class Schedule"
             fullWidth
@@ -573,7 +606,82 @@ function Students() {
                 {formatSchedule(classSchedule)}
               </MenuItem>
             ))}
+          </TextField> */}
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: colors.inputBorder },
+                "&:hover fieldset": { borderColor: colors.midGreen },
+                "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                // Đảm bảo chiều cao không bị thu hẹp
+                height: "44px", // Chiều cao tiêu chuẩn của TextField
+              },
+              "& .MuiInputLabel-root": { color: colors.darkGray },
+              "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+              "& .MuiSelect-select": {
+                height: "100%", // Đảm bảo nội dung select đầy đủ chiều cao
+                display: "flex",
+                alignItems: "center",
+              },
+            }}
+            select
+            label="Class Schedule"
+            fullWidth
+            margin="normal"
+            value={studentData.classID}
+            onChange={handleClassScheduleChange}
+            renderValue={() => {
+              const selectedSchedule = classSchedules.find(
+                (schedule) => schedule.class.id === studentData.classID
+              );
+              return selectedSchedule
+                ? renderClassScheduleLabel(selectedSchedule)
+                : "Select Class Schedule";
+            }}
+          >
+            {/* Tạo dropdown từ các class duy nhất */}
+            {Array.from(new Set(classSchedules.map((schedule) => schedule.class.id))).map(
+              (uniqueClassId) => {
+                const classSchedule = classSchedules.find(
+                  (schedule) => schedule.class.id === uniqueClassId
+                );
+                return (
+                  <MenuItem key={uniqueClassId} value={uniqueClassId}>
+                    {renderClassScheduleLabel(classSchedule)}
+                  </MenuItem>
+                );
+              }
+            )}
           </TextField>
+
+          {/* Hiển thị tất cả các schedule của class đã chọn */}
+          {selectedClassSchedules.length > 0 && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" sx={{ color: colors.midGreen, mb: 1 }}>
+                Class Schedules
+              </Typography>
+              {selectedClassSchedules.map((schedule, index) => (
+                <Box
+                  key={schedule.id}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 1,
+                    p: 1,
+                    backgroundColor: colors.white,
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography sx={{ mr: 2 }}>{dayNames[schedule.schedule.dayOfWeek]}</Typography>
+                  <Typography>
+                    {schedule.schedule.startTime.substring(0, 5)} -{" "}
+                    {schedule.schedule.endTime.substring(0, 5)}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+
           <TextField
             label="User name"
             fullWidth

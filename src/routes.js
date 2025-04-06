@@ -83,7 +83,6 @@ import CreateNotificationByAdmin from "layouts/notification";
 import DoHomework from "pages/students/DoHomework";
 import ContentPageManagement from "pages/admin/contentpageManagement";
 import EvaluationManagement from "pages/admin/evaluationManagement";
-
 const routes = [
   {
     // type: "collapse",
@@ -162,30 +161,30 @@ const routes = [
   //     </PrivateRoute>
   //   ),
   // },
-  {
-    type: "collapse",
-    name: "Lessons",
-    key: "lessons",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/lessons",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <Lessons />
-      </PrivateRoute>
-    ),
-  },
-  {
-    type: "collapse",
-    name: "Homeworks",
-    key: "homeworks",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/homeworks",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <HomeWorks />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Lessons",
+  //   key: "lessons",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/lessons",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <Lessons />
+  //     </PrivateRoute>
+  //   ),
+  // },
+  // {
+  //   type: "collapse",
+  //   name: "Homeworks",
+  //   key: "homeworks",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/homeworks",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <HomeWorks />
+  //     </PrivateRoute>
+  //   ),
+  // },
   // {
   //   type: "collapse",
   //   name: "Lesson by schedule",
@@ -420,17 +419,17 @@ const routes = [
       </PrivateRoute>
     ),
   },
-  {
-    name: "Attendance Check",
-    key: "attendanceCheck",
-    icon: <Icon fontSize="small">Create Lesson</Icon>,
-    route: "/teacherpage/attendanceCheck",
-    component: (
-      <PrivateRoute allowedRoles={["admin", "teacher"]}>
-        <AttendancePage />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   name: "Attendance Check",
+  //   key: "attendanceCheck",
+  //   icon: <Icon fontSize="small">Create Lesson</Icon>,
+  //   route: "/teacherpage/attendanceCheck",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin", "teacher"]}>
+  //       <AttendancePage />
+  //     </PrivateRoute>
+  //   ),
+  // },
   {
     name: "Create Class",
     route: "/classes/create-class",

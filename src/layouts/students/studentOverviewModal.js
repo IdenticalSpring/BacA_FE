@@ -6,9 +6,8 @@ import {
   DialogActions,
   Button,
   Card,
-  CardContent,
-  Divider,
-  Avatar,
+  Grid,
+  Pagination,
 } from "@mui/material";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -16,12 +15,11 @@ import { colors } from "assets/theme/color";
 import feedbackService from "services/feedbackService";
 import PropTypes from "prop-types";
 import { format } from "date-fns";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import { Pie } from "react-chartjs-2"; // Import Pie
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js"; // Import ChartJS và các thành phần
-import studentService from "services/studentService"; // Import studentService
-import lessonByScheduleService from "services/lessonByScheduleService"; // Import lessonByScheduleService
-import checkinService from "services/checkinService"; // Import checkinService
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import studentService from "services/studentService";
+import lessonByScheduleService from "services/lessonByScheduleService";
+import checkinService from "services/checkinService";
 import StudentScoreTab from "pages/students/studentScoreTab";
 import MDAvatar from "components/MDAvatar";
 
@@ -35,6 +33,8 @@ export default function StudentOverviewModal({ open, onClose, student }) {
   const [chartData, setChartData] = useState({});
   const [loadingChart, setLoadingChart] = useState(false);
   const [errorChart, setErrorChart] = useState("");
+  const [currentPage, setCurrentPage] = useState(1); // Thêm state cho trang hiện tại
+  const feedbacksPerPage = 3; // Số feedback mỗi trang
 
   useEffect(() => {
     if (!student || !open) return;
@@ -110,6 +110,16 @@ export default function StudentOverviewModal({ open, onClose, student }) {
     return format(new Date(isoString), "dd/MM/yyyy HH:mm");
   };
 
+  // Logic phân trang cho feedback
+  const totalFeedbackPages = Math.ceil(feedbacks.length / feedbacksPerPage);
+  const indexOfLastFeedback = currentPage * feedbacksPerPage;
+  const indexOfFirstFeedback = indexOfLastFeedback - feedbacksPerPage;
+  const currentFeedbacks = feedbacks.slice(indexOfFirstFeedback, indexOfLastFeedback);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl">
       <DialogTitle sx={{ backgroundColor: colors.deepGreen, color: colors.white }}>
@@ -133,47 +143,74 @@ export default function StudentOverviewModal({ open, onClose, student }) {
             <MDTypography variant="body2" color="error">
               {errorFeedback}
             </MDTypography>
-          ) : feedbacks.length > 0 ? (
-            feedbacks.map((fb, index) => (
-              <Card
-                key={index}
-                sx={{
-                  mb: 2,
-                  boxShadow: 3,
-                  borderLeft:
-                    fb.type === "positive"
-                      ? `4px solid ${colors.midGreen}`
-                      : `4px solid ${colors.error}`,
-                }}
-              >
-                <CardContent sx={{ display: "flex", alignItems: "center" }}>
-                  <MDAvatar src={fb.student.imgUrl} alt={fb.student.name} size="sm" />
-                  <MDBox mx={3}>
-                    <MDTypography
-                      variant="h6"
-                      sx={{ fontWeight: "medium", color: colors.darkGreen }}
-                    >
-                      {fb.title || "No Title"}
-                    </MDTypography>
-                    <MDTypography
-                      variant="body2"
-                      sx={{ mt: 1, color: colors.textSecondary, lineHeight: 1.5 }}
-                    >
-                      {fb.description || "No Description"}
-                    </MDTypography>
-                    <Divider sx={{ my: 1 }} />
-                    <MDTypography variant="caption" color="textSecondary">
-                      Date: {fb.datetime ? formatDate(fb.datetime) : "N/A"}
-                    </MDTypography>
-                  </MDBox>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
+          ) : feedbacks.length === 0 ? (
             <MDTypography variant="body2">No feedback available.</MDTypography>
+          ) : (
+            <>
+              <Grid container spacing={2}>
+                {currentFeedbacks.map((fb) => (
+                  <Grid item xs={12} sm={6} md={4} key={fb.id}>
+                    <Card
+                      sx={{
+                        padding: 2,
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+                        borderLeft:
+                          fb.type === "positive"
+                            ? `4px solid ${colors.midGreen}`
+                            : `4px solid ${colors.error}`,
+                      }}
+                    >
+                      <MDBox display="flex" alignItems="center" mb={1}>
+                        <MDAvatar src={fb.student?.imgUrl} alt={fb.student?.name} size="sm" />
+                        <MDTypography
+                          variant="h6"
+                          sx={{
+                            ml: 2,
+                            fontWeight: "medium",
+                            color: colors.darkGreen,
+                          }}
+                        >
+                          {fb.title || "No Title"}
+                        </MDTypography>
+                      </MDBox>
+                      {/* <MDTypography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Student ID:</strong> {fb.student?.id || "N/A"}
+                      </MDTypography> */}
+                      <MDTypography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Description:</strong> {fb.description || "No Description"}
+                      </MDTypography>
+                      <MDTypography variant="body2">
+                        <strong>Created At:</strong> {fb.datetime ? formatDate(fb.datetime) : "N/A"}
+                      </MDTypography>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+              <MDBox display="flex" justifyContent="center" mt={3}>
+                <Pagination
+                  count={totalFeedbackPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      color: colors.midGreen,
+                      "&.Mui-selected": {
+                        backgroundColor: colors.highlightGreen,
+                        color: colors.white,
+                      },
+                      "&:hover": {
+                        backgroundColor: colors.lightGreen,
+                      },
+                    },
+                  }}
+                />
+              </MDBox>
+            </>
           )}
 
-          {/* Phần Check-in Statistics (chỉ hiển thị biểu đồ Pie) */}
+          {/* Phần Check-in Statistics */}
           <MDTypography variant="h6" mt={3} sx={{ mb: 2, color: colors.deepGreen }}>
             Check-in Statistics
           </MDTypography>

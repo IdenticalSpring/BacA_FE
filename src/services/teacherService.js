@@ -16,6 +16,19 @@ const teacherService = {
     }
   },
 
+  getTeacherById: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/teachers/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching teacher list";
+    }
+  },
+
   createTeacher: async (teacherData, files) => {
     try {
       const formData = new FormData();
