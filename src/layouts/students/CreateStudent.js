@@ -34,7 +34,7 @@ function CreateStudent() {
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
-    yearOfBirth: "",
+    // yearOfBirth: "",
     phone: "",
     imgUrl: "",
     username: "",
@@ -68,13 +68,13 @@ function CreateStudent() {
     fetchLevels();
   }, []);
   const dayNames = {
-    1: "Thứ Hai",
-    2: "Thứ Ba",
-    3: "Thứ Tư",
-    4: "Thứ Năm",
-    5: "Thứ Sáu",
-    6: "Thứ Bảy",
-    7: "Chủ Nhật",
+    1: "Chủ Nhật",
+    2: "Thứ Hai",
+    3: "Thứ Ba",
+    4: "Thứ Tư",
+    5: "Thứ Năm",
+    6: "Thứ Sáu",
+    7: "Thứ Bảy",
   };
 
   const renderClassScheduleLabel = (classSchedule) => {
@@ -198,7 +198,7 @@ function CreateStudent() {
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
+              {/* <TextField
                 fullWidth
                 margin="normal"
                 type="date"
@@ -206,7 +206,7 @@ function CreateStudent() {
                 InputLabelProps={{ shrink: true }}
                 value={studentData.yearOfBirth}
                 onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
-              />
+              /> */}
               <TextField
                 label="Phone"
                 fullWidth
