@@ -704,7 +704,7 @@ const TeacherPage = () => {
         selectedClass={selectedClass}
         onSelectClass={handleSelectClass}
         setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
-        googleDriveLink={teacherData.linkDrive}
+        googleDriveLink={teacherData?.linkDrive || ""}
       />
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
         <Header

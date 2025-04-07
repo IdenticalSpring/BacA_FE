@@ -99,7 +99,8 @@ const StudentPage = () => {
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
   const [isLessonSent, setIsLessonSent] = useState(false); // Mặc định là false (không hiển thị)
   const [isHomeWorkSent, setIsHomeWorkSent] = useState(false); // Mặc định là false (không hiển thị)
-
+  const [wordwallEmbed, setWordwallEmbed] = useState(null); // Mã nhúng từ oEmbed
+  const [isModalWordWallVisible, setIsModalWordWallVisible] = useState(false); // Trạng thái Modal
   const lessonRef = useRef(null);
   const progressRef = useRef(null);
 
@@ -115,7 +116,7 @@ const StudentPage = () => {
   };
   const handlePractice = (link) => {
     if (link) {
-      window.location.href = link;
+      fetchWordwallEmbed(link);
     } else {
       message.error("Không có link luyện tập nào được cung cấp!");
     }
@@ -222,7 +223,19 @@ const StudentPage = () => {
       setIsHomeWorkSent(0);
     }
   }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
-
+  // Hàm lấy mã nhúng từ Wordwall oEmbed
+  const fetchWordwallEmbed = async (resourceUrl) => {
+    try {
+      const response = await fetch(
+        `https://wordwall.net/api/oembed?url=${encodeURIComponent(resourceUrl)}` // Sửa endpoint thành oEmbed chính xác
+      );
+      const data = await response.json();
+      setWordwallEmbed(data.html); // Lưu mã nhúng vào state
+      setIsModalWordWallVisible(true); // Mở Modal sau khi lấy được mã nhúng
+    } catch (error) {
+      console.error("Error fetching Wordwall oEmbed:", error);
+    }
+  };
   const fetchHomeworkByLesson = async (homeworkId) => {
     try {
       setLoadingHomework(true);
@@ -238,7 +251,11 @@ const StudentPage = () => {
   const handleViewNotification = () => {
     setOpenNotification(!openNotification);
   };
-
+  // Đóng Modal
+  const handleModalWordWallClose = () => {
+    setIsModalWordWallVisible(false);
+    setWordwallEmbed(null); // Xóa mã nhúng khi đóng Modal (tùy chọn)
+  };
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     window.location.href = "/login/student";
@@ -867,6 +884,22 @@ const StudentPage = () => {
         style={{ top: 20 }}
       >
         <StudentScoreTab studentId={studentId} colors={colors} />
+      </Modal>
+      <Modal
+        title="Wordwall Activity"
+        open={isModalWordWallVisible}
+        onCancel={handleModalWordWallClose}
+        footer={null}
+        width={600} // Điều chỉnh chiều rộng Modal
+      >
+        {wordwallEmbed ? (
+          <div
+            style={{ textAlign: "center" }}
+            dangerouslySetInnerHTML={{ __html: wordwallEmbed }}
+          />
+        ) : (
+          <p>Đang tải nội dung...</p>
+        )}
       </Modal>
     </Layout>
   );

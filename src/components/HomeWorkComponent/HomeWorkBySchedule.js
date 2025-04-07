@@ -1,6 +1,6 @@
-import { Empty, Modal, Select } from "antd";
+import { Empty, Modal, Pagination, Select } from "antd";
 import { colors } from "assets/theme/color";
-import React from "react";
+import React, { useState } from "react";
 import lessonByScheduleService from "services/lessonByScheduleService";
 const { Option } = Select;
 import PropTypes from "prop-types";
@@ -13,6 +13,14 @@ export default function HomeWorkBySchedule({
   selected,
   setSelected,
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  const paginatedData = lessonByScheduleData?.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const handleUpdateLessonBySchedule = async (id, lessonByScheduleData) => {
     try {
       await lessonByScheduleService.updateLessonBySchedule(id, lessonByScheduleData);
@@ -36,148 +44,98 @@ export default function HomeWorkBySchedule({
     });
   };
   return (
-    <div style={{ width: "90%", margin: "15px 0" }}>
-      {lessonByScheduleData?.length > 0 ? (
-        lessonByScheduleData?.map((item, index) => {
-          return !item.homeWorkId ? (
-            <div
-              key={index}
-              style={
-                selected.has(item.id)
-                  ? {
-                      padding: "16px",
-                      marginBottom: "12px",
-                      border: `1px solid ${colors.borderGreen}`,
-                      borderRadius: "8px",
-                      backgroundColor: colors.paleGreen,
-                      display: "flex",
-                      flexDirection: isMobile ? "column" : "row",
-                      justifyContent: "space-between",
-                      alignItems: isMobile ? "flex-start" : "center",
-                      gap: "10px",
-                      height: isMobile ? "15%" : "15%",
-                      width: "100%",
-                      transition: "all 0.3s ease-in-out",
-                      cursor: "pointer",
-                      border: "2px solid #2ECC71" /* Xanh lá cây sáng */,
-                      backgroundColor: "#27AE60" /* Xanh lá cây đậm */,
-                      boxShadow: "0 4px 10px rgba(194, 240, 215, 0.8)" /* Xanh lá pastel nhẹ */,
+    <div style={{ width: "90%", margin: "15px 0", height: "80%" }}>
+      {paginatedData?.length > 0 ? (
+        <>
+          {paginatedData.map((item, index) => {
+            const realIndex = (currentPage - 1) * pageSize + index;
 
-                      transform: "scale(1.1)",
-                    }
-                  : {
-                      padding: "16px",
-                      marginBottom: "12px",
-                      border: `1px solid ${colors.lightGreen}`,
-                      borderRadius: "8px",
-                      backgroundColor: colors.paleGreen,
-                      display: "flex",
-                      flexDirection: isMobile ? "column" : "row",
-                      justifyContent: "space-between",
-                      alignItems: isMobile ? "flex-start" : "center",
-                      gap: "10px",
-                      height: isMobile ? "15%" : "15%",
-                      width: "100%",
-                      transition: "all 0.3s ease-in-out",
-                      cursor: "pointer",
-                    }
-              }
-              onClick={() => handleSelect(item.id)}
-            >
-              <div
-                style={{
-                  fontWeight: 600,
-                  color: selected.has(index) ? "#fff" : colors.darkGreen,
-                  flex: 1,
-                  marginBottom: isMobile ? "10px" : 0,
-                }}
-              >
-                📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
-                {item.schedule.startTime} - {item.schedule.endTime}
-              </div>
+            const isSelected = selected.has(item.id);
+            const isAssigned = !!item.homeWorkId;
 
-              {/* <Select
-                style={{ width: isMobile ? "100%" : "48%" }}
-                placeholder="Select lesson"
-                value={
-                  homeWorksData.some((homeWork) => homeWork.id === item.homeWorkId)
-                    ? item.homeWorkId
-                    : undefined
-                }
-                onChange={(value) => {
-                  const newData = [...lessonByScheduleData];
-                  newData[index] = { ...newData[index], homeWorkId: value };
-                  setLessonByScheduleData(newData);
-                  handleUpdateLessonBySchedule(item.id, { homeWorkId: value });
-                }}
-              >
-                {homeWorksData?.map((homeWork) => (
-                  <Option key={homeWork.id} value={homeWork.id}>
-                    {homeWork.title}
-                  </Option>
-                ))}
-              </Select> */}
-            </div>
-          ) : (
-            <div
-              key={index}
-              style={{
-                padding: "16px",
-                marginBottom: "12px",
-                border: `2px solid #BDC3C7`, // Màu xám nhạt
-                borderRadius: "8px",
-                backgroundColor: "#ECF0F1", // Xám sáng
-                color: "#7F8C8D", // Chữ xám nhạt
-                display: "flex",
-                flexDirection: isMobile ? "column" : "row",
-                justifyContent: "space-between",
-                alignItems: isMobile ? "flex-start" : "center",
-                gap: "10px",
-                height: "15%",
-                width: "100%",
-                transition: "all 0.3s ease-in-out",
-                opacity: 0.6, // Làm mờ
-                cursor: "not-allowed", // Hiển thị chuột không thể click
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 600,
-                  color: "#7F8C8D",
-                  flex: 1,
-                  marginBottom: isMobile ? "10px" : 0,
-                }}
-              >
-                📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
-                {item.schedule.startTime} - {item.schedule.endTime}
-              </div>
+            const commonStyle = {
+              padding: "16px",
+              marginBottom: "12px",
+              borderRadius: "8px",
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              justifyContent: "space-between",
+              alignItems: isMobile ? "flex-start" : "center",
+              gap: "10px",
+              height: "15%",
+              width: "100%",
+              transition: "all 0.3s ease-in-out",
+            };
 
-              {/* <Select
-            style={{ width: isMobile ? "100%" : "48%" }}
-            placeholder="Select lesson"
-            value={
-              lessonsData.some((lesson) => lesson.id === item.lessonID)
-                ? item.lessonID
-                : undefined
+            if (!isAssigned) {
+              return (
+                <div
+                  key={realIndex}
+                  style={{
+                    ...commonStyle,
+                    border: isSelected ? "2px solid #2ECC71" : `1px solid ${colors.lightGreen}`,
+                    backgroundColor: isSelected ? "#27AE60" : colors.paleGreen,
+                    boxShadow: isSelected ? "0 4px 10px rgba(194, 240, 215, 0.8)" : "none",
+                    transform: isSelected ? "scale(1.1)" : "none",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleSelect(item.id)}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: isSelected ? "#fff" : colors.darkGreen,
+                      flex: 1,
+                      marginBottom: isMobile ? "10px" : 0,
+                    }}
+                  >
+                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                    {item.schedule.startTime} - {item.schedule.endTime}
+                  </div>
+                </div>
+              );
+            } else {
+              return (
+                <div
+                  key={realIndex}
+                  style={{
+                    ...commonStyle,
+                    border: "2px solid #BDC3C7",
+                    backgroundColor: "#ECF0F1",
+                    color: "#7F8C8D",
+                    opacity: 0.6,
+                    cursor: "not-allowed",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: "#7F8C8D",
+                      flex: 1,
+                      marginBottom: isMobile ? "10px" : 0,
+                    }}
+                  >
+                    📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
+                    {item.schedule.startTime} - {item.schedule.endTime}
+                  </div>
+                </div>
+              );
             }
-            onChange={(value) => {
-              const newData = [...lessonByScheduleData];
-              newData[index] = { ...newData[index], lessonID: value };
-              setLessonByScheduleData(newData);
-              handleUpdateLessonBySchedule(item.id, { lessonID: value });
-            }}
-          >
-            {lessonsData?.map((lesson) => (
-              <Option key={lesson.id} value={lesson.id}>
-                {lesson.name}
-              </Option>
-            ))}
-          </Select> */}
-            </div>
-          );
-        })
+          })}
+
+          {/* Pagination */}
+          {lessonByScheduleData.length > pageSize && (
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={lessonByScheduleData.length}
+              onChange={(page) => setCurrentPage(page)}
+              style={{ textAlign: "center", marginTop: 20 }}
+            />
+          )}
+        </>
       ) : (
-        <Empty description="No lesson schedules found" />
+        <Empty description="Không có lịch học nào." />
       )}
     </div>
   );

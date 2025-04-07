@@ -294,7 +294,7 @@ const Sidebar = ({
           padding: "5px 3px",
           cursor: "pointer",
         }}
-        onClick={() => fetchWordwallEmbed("https://wordwall.net/resource/89987459/exam")}
+        onClick={() => window.open("https://wordwall.net/myactivities")}
       >
         <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
         <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
