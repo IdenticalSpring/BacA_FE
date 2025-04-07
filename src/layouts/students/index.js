@@ -227,8 +227,8 @@ function Students() {
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
-      const nameMatch = row.name.toLowerCase().includes(searchName.toLowerCase());
-      const scheduleMatch = row.note.toLowerCase().includes(searchSchedule.toLowerCase());
+      const nameMatch = (row.name || "").toLowerCase().includes(searchName.toLowerCase());
+      const scheduleMatch = (row.note || "").toLowerCase().includes(searchSchedule.toLowerCase());
       return nameMatch && scheduleMatch;
     });
   }, [rows, searchName, searchSchedule]);
