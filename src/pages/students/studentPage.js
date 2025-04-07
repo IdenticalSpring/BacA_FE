@@ -51,11 +51,13 @@ import user_notificationService from "services/user_notificationService";
 import student_homework_countService from "services/student_homework_countService";
 import student_lesson_countService from "services/student_lesson_countService";
 import EvaluationStudent from "./evaluationStudent"; // Thêm import
+import { Collapse } from "antd";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
 const { TabPane } = Tabs;
+const { Panel } = Collapse;
 
 const getTimeElapsed = (createdAt) => {
   const created = new Date(createdAt);
@@ -94,6 +96,8 @@ const StudentPage = () => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [loadingSubmitHomework, setLoadingSubmitHomework] = useState(false);
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
+  const [isLessonSent, setIsLessonSent] = useState(false); // Mặc định là false (không hiển thị)
+  const [isHomeWorkSent, setIsHomeWorkSent] = useState(false); // Mặc định là false (không hiển thị)
 
   const lessonRef = useRef(null);
   const progressRef = useRef(null);
@@ -107,6 +111,13 @@ const StudentPage = () => {
       message.success("Copied to clipboard!");
       setTimeout(() => setCopySuccess(false), 2000);
     });
+  };
+  const handlePractice = (link) => {
+    if (link) {
+      window.location.href = link;
+    } else {
+      message.error("Không có link luyện tập nào được cung cấp!");
+    }
   };
 
   useEffect(() => {
@@ -181,6 +192,9 @@ const StudentPage = () => {
         try {
           const data = await lessonService.getLessonById(findSelectedLessonBySchedule.lessonID);
           setLessons([data]);
+          setIsLessonSent(!!findSelectedLessonBySchedule.isLessonSent); // Chuyển đổi sang boolean nếu cần
+          setIsHomeWorkSent(!!findSelectedLessonBySchedule.isHomeWorkSent); // Chuyển đổi sang boolean nếu cần
+          console.log("lessonBySchedule", findSelectedLessonBySchedule);
           const student_lesson_countData = {
             lessonId: +findSelectedLessonBySchedule.lessonID,
             studentId: +studentId,
@@ -195,12 +209,16 @@ const StudentPage = () => {
           console.error("Error fetching lesson:", error);
           setLessons([]);
           setHomework([]);
+          setIsLessonSent(0);
+          setIsHomeWorkSent(0);
         }
       };
       fetchLessonById();
     } else {
       setLessons([]);
       setHomework([]);
+      setIsLessonSent(0);
+      setIsHomeWorkSent(0);
     }
   }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
 
@@ -216,7 +234,6 @@ const StudentPage = () => {
       setLoadingHomework(false);
     }
   };
-
   const handleViewNotification = () => {
     setOpenNotification(!openNotification);
   };
@@ -298,73 +315,104 @@ const StudentPage = () => {
         <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
           <BookOutlined /> Bài Học
         </Title>
-        <List
-          itemLayout="vertical"
-          size="large"
-          dataSource={lessons}
-          renderItem={(lesson) => (
-            <Card
-              style={{
-                marginBottom: 16,
-                borderRadius: 12,
-                boxShadow: `0 2px 8px ${colors.softShadow}`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-                <Avatar
-                  style={{ backgroundColor: colors.deepGreen, color: colors.white }}
-                  icon={<BookOutlined />}
-                  size={40}
-                />
-                <div style={{ marginLeft: 12 }}>
-                  <Text strong style={{ fontSize: 16, display: "block", color: colors.darkGreen }}>
-                    {lesson.name}
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
-                  </Text>
-                </div>
-              </div>
-              <Paragraph
-                ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-                style={{ marginBottom: 16 }}
+        {isLessonSent ? (
+          <List
+            itemLayout="vertical"
+            size="large"
+            dataSource={lessons}
+            renderItem={(lesson) => (
+              <Card
+                style={{
+                  marginBottom: 16,
+                  borderRadius: 12,
+                  boxShadow: `0 2px 8px ${colors.softShadow}`,
+                }}
               >
-                {lesson.description || " "}
-              </Paragraph>
-              {(lesson.linkYoutube || lesson.linkSpeech) && (
-                <div
-                  style={{
-                    backgroundColor: colors.paleGreen,
-                    padding: 12,
-                    borderRadius: 8,
-                    marginBottom: 16,
-                  }}
-                >
-                  {lesson.linkYoutube && (
-                    <iframe
-                      width="100%"
-                      height="315"
-                      src={lesson.linkYoutube.replace("watch?v=", "embed/")}
-                      title="Lesson Video"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  )}
-                  {lesson.linkSpeech && (
-                    <audio controls style={{ width: "100%", marginTop: 16 }}>
-                      <source
-                        src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
-                        type="audio/mpeg"
-                      />
-                      Trình duyệt của bạn không hỗ trợ phát audio.
-                    </audio>
-                  )}
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                  <Avatar
+                    style={{ backgroundColor: colors.deepGreen, color: colors.white }}
+                    icon={<BookOutlined />}
+                    size={40}
+                  />
+                  <div style={{ marginLeft: 12 }}>
+                    <Text
+                      strong
+                      style={{ fontSize: 16, display: "block", color: colors.darkGreen }}
+                    >
+                      {lesson.name}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {getRandomTime()} · Cấp độ: {lesson.level || "N/A"} · ID: {lesson.id}
+                    </Text>
+                  </div>
                 </div>
-              )}
-            </Card>
-          )}
-        />
+                <Collapse
+                  defaultActiveKey={[]} // Mặc định thu gọn
+                  bordered={false}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Panel header="Xem mô tả" key="1">
+                    <div dangerouslySetInnerHTML={{ __html: lesson.description || " " }} />
+                  </Panel>
+                </Collapse>
+                {(lesson.linkYoutube || lesson.linkSpeech) && (
+                  <div
+                    style={{
+                      backgroundColor: colors.paleGreen,
+                      padding: 12,
+                      borderRadius: 8,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {lesson.linkYoutube && (
+                      <iframe
+                        width="100%"
+                        height="315"
+                        src={lesson.linkYoutube.replace("watch?v=", "embed/")}
+                        title="Lesson Video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    )}
+                    {lesson.linkSpeech && (
+                      <audio controls style={{ width: "100%", marginTop: 16 }}>
+                        <source
+                          src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
+                          type="audio/mpeg"
+                        />
+                        Trình duyệt của bạn không hỗ trợ phát audio.
+                      </audio>
+                    )}
+                  </div>
+                )}
+                {/* Thêm nút Luyện tập */}
+                {lesson.linkGame && (
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Button
+                      type="primary"
+                      onClick={() => handlePractice(lesson.linkGame)}
+                      style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                    >
+                      Luyện tập
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            )}
+          />
+        ) : (
+          <Empty
+            description="Bài học này chưa được gửi đến bạn."
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            style={{
+              margin: "40px 0",
+              padding: "20px",
+              backgroundColor: colors.paleGreen,
+              borderRadius: "12px",
+            }}
+          />
+        )}
       </div>
       <Divider />
       <div ref={progressRef}>
@@ -383,91 +431,126 @@ const StudentPage = () => {
           <Spin />
           <div>Đang tải dữ liệu bài tập...</div>
         </div>
-      ) : homework.length > 0 ? (
-        <List
-          itemLayout="vertical"
-          size="large"
-          dataSource={homework}
-          renderItem={(hw) => (
-            <Card
-              style={{
-                marginBottom: 16,
-                borderRadius: 12,
-                boxShadow: `0 2px 8px ${colors.softShadow}`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-                <Avatar
-                  style={{ backgroundColor: colors.mintGreen, color: colors.deepGreen }}
-                  icon={<FileTextOutlined />}
-                  size={40}
-                />
-                <div style={{ marginLeft: 12 }}>
-                  <Text strong style={{ fontSize: 16, display: "block", color: colors.darkGreen }}>
-                    {hw.title || "Bài tập"}
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Hạn nộp: {hw.dueDate || "Chưa có hạn nộp"} · Trạng thái:{" "}
-                    {hw.status || "Chưa nộp"} · ID: {hw.id}
-                  </Text>
-                </div>
-              </div>
-              <Paragraph
-                ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-                style={{ marginBottom: 16 }}
+      ) : isHomeWorkSent ? (
+        homework.length > 0 ? (
+          <List
+            itemLayout="vertical"
+            size="large"
+            dataSource={homework}
+            renderItem={(hw) => (
+              <Card
+                style={{
+                  marginBottom: 16,
+                  borderRadius: 12,
+                  boxShadow: `0 2px 8px ${colors.softShadow}`,
+                }}
               >
-                {hw.description || "Chưa có mô tả cho bài tập này."}
-              </Paragraph>
-              {hw.linkSpeech && (
-                <div
-                  style={{
-                    marginBottom: 16,
-                    backgroundColor: colors.paleGreen,
-                    padding: 16,
-                    borderRadius: 8,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                    <SoundOutlined style={{ marginRight: 8, color: colors.deepGreen }} />
-                    <Text strong style={{ color: colors.deepGreen }}>
-                      Audio bài tập:
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                  <Avatar
+                    style={{ backgroundColor: colors.mintGreen, color: colors.deepGreen }}
+                    icon={<FileTextOutlined />}
+                    size={40}
+                  />
+                  <div style={{ marginLeft: 12 }}>
+                    <Text
+                      strong
+                      style={{ fontSize: 16, display: "block", color: colors.darkGreen }}
+                    >
+                      {hw.title || "Bài tập"}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Hạn nộp: {hw.dueDate || "Chưa có hạn nộp"} · Trạng thái:{" "}
+                      {hw.status || "Chưa nộp"} · ID: {hw.id}
                     </Text>
                   </div>
-                  <audio controls style={{ width: "100%", marginTop: hw.linkYoutube ? 16 : 0 }}>
-                    <source src={hw.linkSpeech} type="audio/mpeg" />
-                    Trình duyệt của bạn không hỗ trợ phát audio.
-                  </audio>
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                    <Button
-                      type="link"
-                      icon={<LinkOutlined />}
-                      href={hw.linkSpeech}
-                      target="_blank"
-                      style={{ color: colors.deepGreen, padding: 0 }}
-                    >
-                      Tải xuống audio
-                    </Button>
-                  </div>
                 </div>
-              )}
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    handleSubmitHomework(hw.id);
-                    setHomeworkZaloLink(hw.linkZalo);
-                  }}
-                  style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                <Collapse
+                  defaultActiveKey={[]} // Mặc định thu gọn
+                  bordered={false}
+                  style={{ marginBottom: 16 }}
                 >
-                  {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
-                </Button>
-              </div>
-            </Card>
-          )}
-        />
+                  <Panel header="Xem mô tả" key="1">
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: hw.description || "Chưa có mô tả cho bài tập này.",
+                      }}
+                    />
+                  </Panel>
+                </Collapse>
+                {hw.linkSpeech && (
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      backgroundColor: colors.paleGreen,
+                      padding: 16,
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                      <SoundOutlined style={{ marginRight: 8, color: colors.deepGreen }} />
+                      <Text strong style={{ color: colors.deepGreen }}>
+                        Audio bài tập:
+                      </Text>
+                    </div>
+                    <audio controls style={{ width: "100%", marginTop: hw.linkYoutube ? 16 : 0 }}>
+                      <source src={hw.linkSpeech} type="audio/mpeg" />
+                      Trình duyệt của bạn không hỗ trợ phát audio.
+                    </audio>
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                      <Button
+                        type="link"
+                        icon={<LinkOutlined />}
+                        href={hw.linkSpeech}
+                        target="_blank"
+                        style={{ color: colors.deepGreen, padding: 0 }}
+                      >
+                        Tải xuống audio
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                  {/* Nút Luyện tập */}
+                  {hw.linkGame && (
+                    <Button
+                      type="primary"
+                      onClick={() => handlePractice(hw.linkGame)}
+                      style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                    >
+                      Luyện tập
+                    </Button>
+                  )}
+                  {/* Nút Nộp bài */}
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      handleSubmitHomework(hw.id);
+                      handlePractice(hw.linkGame);
+                      // setHomeworkZaloLink(hw.linkZalo);
+                    }}
+                    style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                  >
+                    {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
+                  </Button>
+                </div>
+              </Card>
+            )}
+          />
+        ) : (
+          <Empty
+            description="Không có bài tập nào cho bài học này"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            style={{
+              margin: "40px 0",
+              padding: "20px",
+              backgroundColor: colors.paleGreen,
+              borderRadius: "12px",
+            }}
+          />
+        )
       ) : (
         <Empty
-          description="Không có bài tập nào cho bài học này"
+          description="Bài tập này chưa được gửi đến bạn."
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           style={{
             margin: "40px 0",
