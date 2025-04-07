@@ -21,6 +21,7 @@ import teacherService from "services/teacherService";
 import { useNavigate } from "react-router-dom";
 import { colors } from "assets/theme/color";
 import TeacherOverViewModal from "./teacherOverviewModal"; // Import modal mới
+import link from "assets/theme/components/link";
 
 function Teachers() {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ function Teachers() {
     username: "",
     password: "",
     startDate: "",
+    linkDrive: "",
     endDate: "",
   });
   const [files, setFiles] = useState([]);
@@ -58,6 +60,7 @@ function Teachers() {
         id: teacher.id,
         name: teacher.name,
         startDate: teacher.startDate,
+        linkDrive: teacher.linkDrive,
         endDate: teacher.endDate,
         fileUrl: teacher.fileUrls
           ? teacher.fileUrls.map((url, index) => (
@@ -109,6 +112,7 @@ function Teachers() {
       name: teacher.name,
       username: teacher.username,
       password: teacher.password,
+      linkDrive: teacher.linkDrive,
       startDate: teacher.startDate,
       endDate: teacher.endDate,
     });
@@ -172,6 +176,7 @@ function Teachers() {
             name: createdTeacher.name,
             startDate: createdTeacher.startDate,
             endDate: createdTeacher.endDate,
+            linkDrive: createdTeacher.linkDrive,
             fileUrl: createdTeacher.fileUrls
               ? createdTeacher.fileUrls.map((url, index) => (
                   <div key={index}>
@@ -345,6 +350,13 @@ function Teachers() {
             InputLabelProps={{ shrink: true }}
             value={teacherData.endDate}
             onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
+          />
+          <TextField
+            label="Link Drive"
+            fullWidth
+            margin="normal"
+            value={teacherData.linkDrive}
+            onChange={(e) => setTeacherData({ ...teacherData, linkDrive: e.target.value })}
           />
           <TextField
             fullWidth

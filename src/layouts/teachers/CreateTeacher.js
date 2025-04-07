@@ -16,6 +16,7 @@ function CreateTeacher() {
     username: "",
     password: "",
     startDate: "",
+    linkDrive: "",
     endDate: "",
   });
   const [files, setFiles] = useState([]); // Thay đổi từ file thành files để lưu mảng
@@ -95,6 +96,13 @@ function CreateTeacher() {
                 InputLabelProps={{ shrink: true }}
                 value={teacherData.endDate}
                 onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
+              />
+              <TextField
+                label="Link Drive"
+                fullWidth
+                margin="normal"
+                value={teacherData.linkDrive}
+                onChange={(e) => setTeacherData({ ...teacherData, linkDrive: e.target.value })}
               />
               {/* Trường upload file với hỗ trợ nhiều file */}
               <TextField
