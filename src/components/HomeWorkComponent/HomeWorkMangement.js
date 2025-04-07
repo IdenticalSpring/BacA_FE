@@ -342,20 +342,20 @@ export default function HomeWorkMangement({
         </Typography.Text>
       ),
     },
-    {
-      title: "Link Speech bài tập",
-      dataIndex: "linkSpeech",
-      key: "linkSpeech",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Speech bài tập",
+    //   dataIndex: "linkSpeech",
+    //   key: "linkSpeech",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     {
       title: "Mô tả",
       dataIndex: "description",

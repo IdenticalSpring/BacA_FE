@@ -319,20 +319,20 @@ export default function LessonMangement({
         </Typography.Text>
       ),
     },
-    {
-      title: "Link Speech",
-      dataIndex: "linkSpeech",
-      key: "linkSpeech",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Speech",
+    //   dataIndex: "linkSpeech",
+    //   key: "linkSpeech",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     {
       title: "Mô tả",
       dataIndex: "description",
