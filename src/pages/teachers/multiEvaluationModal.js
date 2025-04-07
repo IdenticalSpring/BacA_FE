@@ -36,6 +36,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [allSkills, setAllSkills] = useState([]);
   const [studentEvaluations, setStudentEvaluations] = useState([]);
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const fetchSkillsAndBehaviors = async () => {
@@ -68,6 +69,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
       const initialEvaluations = students.map((student) => ({
         studentId: student.id,
         studentName: student.name,
+        scheduleID: student.schedule.id,
         skills: {}, // { skillName: rating }
         behaviors: {}, // { behaviorName: rating }
         comment: "",
@@ -159,7 +161,8 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
         const commentPayload = {
           teacherID,
           studentID: studentEval.studentId,
-          scheduleID: selectedSchedule,
+          scheduleID: studentEval.scheduleID,
+          date: today,
           comment: studentEval.comment,
         };
         const commentResponse = await TeacherService.evaluationStudent(commentPayload);
@@ -179,6 +182,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
                 score: rating,
                 teacherComment: teacherCommentID,
                 skill: skillData.id,
+                date: today,
               })
             );
           }
@@ -195,6 +199,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
                 score: rating,
                 teacherComment: teacherCommentID,
                 skill: behaviorData.id,
+                date: today,
               })
             );
           }
@@ -280,12 +285,14 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
     },
   ];
 
-  const currentSchedule = schedules.find((s) => s.id === selectedSchedule) || schedules[0];
+  const currentSchedule = today;
+  // schedules.find((s) => s.id === selectedSchedule) || schedules[0];
 
   return (
     <Modal
       title={`Evaluation for ${students.length} Students - Schedule: ${
-        currentSchedule ? `${currentSchedule.startTime} - ${currentSchedule.endTime}` : "N/A"
+        currentSchedule
+        // currentSchedule ? `${currentSchedule.startTime} - ${currentSchedule.endTime}` : "N/A"
       }`}
       open={visible}
       onCancel={onClose}

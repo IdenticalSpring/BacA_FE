@@ -51,6 +51,19 @@ const lessonService = {
       throw new Error("Failed to enhance description. Please try again!");
     }
   },
+  enhanceLessonPlan: async (description) => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/chatbot/enhance-lesson-plan`, // Đường dẫn tới endpoint NestJS
+        { description },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data.response; // Trả về nội dung đã cải thiện
+    } catch (error) {
+      console.error("Error enhancing lesson plan:", error);
+      throw new Error("Failed to enhance lesson plan. Please try again!");
+    }
+  },
   getLessonByTeacherId: async (TeacherId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/lessons/teacher/${TeacherId}`, {

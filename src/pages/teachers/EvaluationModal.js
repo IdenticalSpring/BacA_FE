@@ -37,6 +37,7 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
   const [loading, setLoading] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [allSkills, setAllSkills] = useState([]); // Lưu toàn bộ skill từ API để lấy skillID
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const fetchSkillsAndBehaviors = async () => {
@@ -129,7 +130,8 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
         const commentPayload = {
           teacherID,
           studentID: student.id,
-          scheduleID: selectedSchedule,
+          scheduleID: student.schedule.id,
+          date: today,
           comment: evaluation,
         };
         const commentResponse = await TeacherService.evaluationStudent(commentPayload);
@@ -149,6 +151,7 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
                 score: skill.rating,
                 teacherComment: teacherCommentID,
                 skill: skillData.id,
+                date: today,
               })
             );
           }
@@ -165,6 +168,7 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
                 score: behavior.rating,
                 teacherComment: teacherCommentID,
                 skill: behaviorData.id,
+                date: today,
               })
             );
           }
@@ -185,15 +189,13 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
     }
   };
 
-  const currentSchedule = schedules.find((s) => s.id === selectedSchedule) || schedules[0];
+  const currentSchedule = today;
 
   return (
     <Modal
       title={`Evaluation for ${
         students.length > 1 ? `${students.length} Students` : students[0]?.name || "Unknown"
-      } - Schedule: ${
-        currentSchedule ? `${currentSchedule.startTime} - ${currentSchedule.endTime}` : "N/A"
-      }`}
+      } - Schedule: ${currentSchedule}`}
       open={visible}
       onCancel={onClose}
       footer={[

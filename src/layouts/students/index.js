@@ -339,7 +339,7 @@ function Students() {
                   imgUrl: updatedStudent.imgUrl,
                   startDate: updatedStudent.startDate,
                   endDate: updatedStudent.endDate,
-                  note: formatSchedule(updatedStudent),
+                  note: updatedStudent.class.name,
                   rawLevel: updatedStudent.level,
                 }
               : row
