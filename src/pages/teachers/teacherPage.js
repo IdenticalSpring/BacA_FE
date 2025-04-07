@@ -146,6 +146,8 @@ const TeacherPage = () => {
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState(null);
   const [isMultiStudentEvaluationModalVisible, setIsMultiStudentEvaluationModalVisible] =
     useState(false);
+
+  const [allStudentsSelected, setAllStudentsSelected] = useState(false);
   // Homework form states
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkDescription, setHomeworkDescription] = useState("");
@@ -242,6 +244,17 @@ const TeacherPage = () => {
   useEffect(() => {
     fetchLessons();
   }, [loadingCreateLesson]);
+
+  // Hàm chọn tất cả học sinh
+  const handleSelectAllStudents = () => {
+    if (allStudentsSelected) {
+      setSelectedStudents([]); // Bỏ chọn tất cả
+      setAllStudentsSelected(false);
+    } else {
+      setSelectedStudents(students); // Chọn tất cả học sinh
+      setAllStudentsSelected(true);
+    }
+  };
 
   useEffect(() => {
     const fetchTeacherData = async () => {
@@ -467,14 +480,31 @@ const TeacherPage = () => {
     }
   };
 
+  // const handleSelectStudent = (student) => {
+  //   setSelectedStudents((prev) => {
+  //     if (prev.some((s) => s.id === student.id)) {
+  //       // Nếu học sinh đã được chọn, xóa khỏi danh sách
+  //       return prev.filter((s) => s.id !== student.id);
+  //     } else {
+  //       // Nếu chưa được chọn, thêm vào danh sách
+  //       return [...prev, student];
+  //     }
+  //   });
+  // };
+
+  // Hàm xử lý chọn từng học sinh (cập nhật để đồng bộ với allStudentsSelected)
   const handleSelectStudent = (student) => {
     setSelectedStudents((prev) => {
       if (prev.some((s) => s.id === student.id)) {
-        // Nếu học sinh đã được chọn, xóa khỏi danh sách
-        return prev.filter((s) => s.id !== student.id);
+        const newSelected = prev.filter((s) => s.id !== student.id);
+        setAllStudentsSelected(false); // Nếu bỏ chọn một học sinh, bỏ trạng thái "chọn tất cả"
+        return newSelected;
       } else {
-        // Nếu chưa được chọn, thêm vào danh sách
-        return [...prev, student];
+        const newSelected = [...prev, student];
+        if (newSelected.length === students.length) {
+          setAllStudentsSelected(true); // Nếu tất cả học sinh được chọn, bật trạng thái "chọn tất cả"
+        }
+        return newSelected;
       }
     });
   };
@@ -805,6 +835,28 @@ const TeacherPage = () => {
           }}
           onClick={() => setOpenNotification(false)}
         >
+          {selectedClass && (
+            <div
+              style={{
+                width: "100%",
+                paddingBottom: "16px",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                type="primary"
+                onClick={handleSelectAllStudents}
+                disabled={isAttendanceMode || students.length === 0}
+                style={{
+                  backgroundColor: allStudentsSelected ? colors.errorRed : colors.deepGreen,
+                  borderColor: allStudentsSelected ? colors.errorRed : colors.deepGreen,
+                }}
+              >
+                {allStudentsSelected ? "Deselect All Students" : "Select All Students"}
+              </Button>
+            </div>
+          )}
           {students?.map((student) => {
             const studentAttendance = attendance.find((a) => a.studentId === student.id) || {
               present: 1,

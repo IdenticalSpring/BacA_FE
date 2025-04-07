@@ -35,7 +35,7 @@ const EnterTestScore = () => {
   const [classTestSchedules, setClassTestSchedules] = useState([]);
   const [selectedClassTest, setSelectedClassTest] = useState(null);
   const [students, setStudents] = useState([]);
-  const [selectedStudents, setSelectedStudents] = useState([]); // Thay đổi thành mảng
+  const [selectedStudents, setSelectedStudents] = useState([]);
   const [testSkills, setTestSkills] = useState([]);
   const [selectedTestSkills, setSelectedTestSkills] = useState([]);
   const [assessments, setAssessments] = useState([]);
@@ -258,6 +258,14 @@ const EnterTestScore = () => {
     navigate(-1);
   };
 
+  // Hàm chọn tất cả học sinh
+  const handleSelectAllStudents = () => {
+    const allStudentIds = students.map((student) => student.id);
+    setSelectedStudents(allStudentIds);
+    setSelectedTestSkills([]); // Reset các kỹ năng đã chọn khi thay đổi danh sách học sinh
+    form.resetFields(); // Reset form để tránh xung đột dữ liệu
+  };
+
   const scoreColumns = [
     {
       title: "Student",
@@ -354,24 +362,34 @@ const EnterTestScore = () => {
 
               <Col xs={24} md={12}>
                 <Form.Item label="Select Students">
-                  <Select
-                    mode="multiple" // Cho phép chọn nhiều học sinh
-                    placeholder="Select students"
-                    value={selectedStudents}
-                    onChange={(value) => {
-                      setSelectedStudents(value);
-                      setSelectedTestSkills([]);
-                      form.resetFields();
-                    }}
-                    style={{ width: "100%" }}
-                    disabled={!selectedClassTest}
-                  >
-                    {students.map((student) => (
-                      <Option key={student.id} value={student.id}>
-                        {student.name}
-                      </Option>
-                    ))}
-                  </Select>
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Select
+                      mode="multiple"
+                      placeholder="Select students"
+                      value={selectedStudents}
+                      onChange={(value) => {
+                        setSelectedStudents(value);
+                        setSelectedTestSkills([]);
+                        form.resetFields();
+                      }}
+                      style={{ width: "100%" }}
+                      disabled={!selectedClassTest}
+                    >
+                      {students.map((student) => (
+                        <Option key={student.id} value={student.id}>
+                          {student.name}
+                        </Option>
+                      ))}
+                    </Select>
+                    <Button
+                      type="link"
+                      onClick={handleSelectAllStudents}
+                      disabled={!selectedClassTest || students.length === 0}
+                      style={{ padding: 0, color: colors.deepGreen }}
+                    >
+                      Select All Students
+                    </Button>
+                  </Space>
                 </Form.Item>
               </Col>
             </Row>
