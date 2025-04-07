@@ -33,9 +33,9 @@ function Students() {
   const [levels, setLevels] = useState([]);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
-    { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
+    // { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
     { Header: "Level", accessor: "level", width: "15%" },
-    { Header: "Schedule", accessor: "note", width: "15%" },
+    { Header: "Class", accessor: "note", width: "15%" },
     { Header: "Phone", accessor: "phone", width: "15%" },
     { Header: "Avatar", accessor: "avatar", width: "10%" },
     { Header: "Start Date", accessor: "startDate", width: "10%" },
@@ -56,7 +56,7 @@ function Students() {
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
-    yearOfBirth: "",
+    // yearOfBirth: "",
     phone: "",
     classID: "",
     imgUrl: "",
@@ -151,7 +151,7 @@ function Students() {
           id: student.id,
           name: student.name,
           level: levelName, // Hiển thị tên thay vì ID
-          yearOfBirth: student.yearOfBirth,
+          // yearOfBirth: student.yearOfBirth,
           phone: student.phone,
           avatar: (
             <Box display="flex" justifyContent="center">
@@ -240,10 +240,10 @@ function Students() {
       name: student.name,
       username: student.username || "",
       password: student.password || "",
-      yearOfBirth: student.yearOfBirth,
+      // yearOfBirth: student.yearOfBirth,
       phone: student.phone,
       imgUrl: student.imgUrl,
-      classID: student.schedule.id,
+      classID: student.class?.name,
       level: +student.level,
       startDate: student.startDate,
       endDate: student.endDate,
@@ -295,7 +295,7 @@ function Students() {
         name: studentData.name,
         username: studentData.username,
         password: studentData.password,
-        yearOfBirth: studentData.yearOfBirth,
+        // yearOfBirth: studentData.yearOfBirth,
         classID: studentData.classID,
         phone: studentData.phone,
         level: studentData.level,
@@ -319,7 +319,7 @@ function Students() {
                   ...row,
                   name: updatedStudent.name,
                   level: levels.find((lv) => lv.id === +updatedStudent.level)?.name || "N/A",
-                  yearOfBirth: updatedStudent.yearOfBirth,
+                  // yearOfBirth: updatedStudent.yearOfBirth,
                   phone: updatedStudent.phone,
                   avatar: (
                     <Box display="flex" justifyContent="center">
@@ -351,7 +351,7 @@ function Students() {
       setStudentData({
         name: "",
         level: "",
-        yearOfBirth: "",
+        // yearOfBirth: "",
         phone: "",
         classID: "",
         imgUrl: "",
@@ -419,7 +419,7 @@ function Students() {
                   sx={{ backgroundColor: "white", borderRadius: "4px" }}
                 />
                 <TextField
-                  label="Search by Schedule"
+                  label="Search by Class"
                   variant="outlined"
                   size="small"
                   value={searchSchedule}
@@ -487,7 +487,7 @@ function Students() {
               </MenuItem>
             ))}
           </TextField>
-          <TextField
+          {/* <TextField
             fullWidth
             margin="normal"
             type="date"
@@ -495,7 +495,7 @@ function Students() {
             InputLabelProps={{ shrink: true }}
             value={studentData.yearOfBirth}
             onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
-          />
+          /> */}
           <TextField
             label="Phone"
             fullWidth
