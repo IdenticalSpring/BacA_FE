@@ -18,7 +18,7 @@ import padletIcon from "assets/icon/padlet-logo.png";
 import blootket from "assets/icon/Blooket-Logo.png";
 import baamboozle from "assets/icon/baamboozle.png";
 import wordwallIcon from "assets/icon/wordwall-icon.png"; // Icon cho Wordwall
-
+import googleDriveIcon from "assets/icon/icons8-google-drive.svg";
 const { Sider } = Layout;
 const { Text } = Typography;
 
@@ -39,6 +39,7 @@ const Sidebar = ({
   selectedClass,
   onSelectClass,
   setOpenHomeworkStatisticsDashboard,
+  googleDriveLink,
 }) => {
   const [visible, setVisible] = useState(false); // Trạng thái Drawer
   const [isMobile, setIsMobile] = useState(false); // Kiểm tra mobile
@@ -143,7 +144,7 @@ const Sidebar = ({
         style={{
           padding: "0",
           overflowY: "auto",
-          maxHeight: "30%",
+          maxHeight: "25%",
           overflowX: "hidden",
         }}
       >
@@ -297,6 +298,24 @@ const Sidebar = ({
       >
         <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
         <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => window.open(googleDriveLink)}
+      >
+        <img src={googleDriveIcon} alt="googleDrive" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Google Drive</Text>
       </div>
 
       {/* Công cụ giao bài tập */}
@@ -476,6 +495,7 @@ Sidebar.propTypes = {
   selectedClass: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onSelectClass: PropTypes.func.isRequired,
   setOpenHomeworkStatisticsDashboard: PropTypes.func.isRequired,
+  googleDriveLink: PropTypes.string.isRequired,
 };
 
 Sidebar.defaultProps = {

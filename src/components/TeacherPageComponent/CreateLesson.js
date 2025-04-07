@@ -304,6 +304,7 @@ export default function CreateLesson({
             </Form.Item>
             <Form.Item name="description" label="Mô tả">
               <ReactQuill
+                placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
                 theme="snow"
                 modules={modules}
                 formats={quillFormats}
@@ -338,6 +339,7 @@ export default function CreateLesson({
                 modules={modules}
                 formats={quillFormats}
                 ref={quillRefLessonPlan}
+                placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
                 style={{
                   height: "250px",
                   marginBottom: "10px",
