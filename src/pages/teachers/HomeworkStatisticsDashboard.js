@@ -360,7 +360,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
                   display: "flex",
                   justifyContent: "center",
                   gap: "10px",
-                  flexWrap: "nowrap",
+                  flexWrap: isMobile ? "wrap" : "nowrap",
                   // width: "100px",
                 }}
               >
@@ -384,48 +384,66 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
               </span>
             ),
             children: (
-              <Row gutter={[16, 16]}>
-                <Col xs={24} sm={12} md={6}>
-                  <Card style={{ ...cardStyle, borderTop: `3px solid ${colors.deepGreen}` }}>
-                    <Statistic
-                      title="Tổng số bài nộp"
-                      value={totalSubmissions}
-                      prefix={<FileDoneOutlined />}
-                      valueStyle={{ color: colors.deepGreen }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <Card style={{ ...cardStyle, borderTop: `3px solid ${colors.accent}` }}>
-                    <Statistic
-                      title="Học sinh tham gia"
-                      value={totalStudents}
-                      prefix={<UserOutlined />}
-                      valueStyle={{ color: colors.accent }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <Card style={{ ...cardStyle, borderTop: `3px solid ${colors.midGreen}` }}>
-                    <Statistic
-                      title="Bài học đã hoàn thành"
-                      value={totalLessons}
-                      prefix={<BookOutlined />}
-                      valueStyle={{ color: colors.midGreen }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                  <Card style={{ ...cardStyle, borderTop: `3px solid ${colors.emerald}` }}>
-                    <Statistic
-                      title="Trung bình / học sinh"
-                      value={averageSubmissionsPerStudent}
-                      prefix={<CheckCircleOutlined />}
-                      valueStyle={{ color: colors.emerald }}
-                    />
-                  </Card>
-                </Col>
-              </Row>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 16,
+                  flexWrap: "nowrap",
+                  overflowX: "auto",
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
+                <Card
+                  style={{ ...cardStyle, borderTop: `3px solid ${colors.deepGreen}`, flexGrow: 1 }}
+                >
+                  <Statistic
+                    title="Tổng số bài học đã giao"
+                    value={totalSubmissions}
+                    prefix={<FileDoneOutlined />}
+                    valueStyle={{ color: colors.deepGreen }}
+                  />
+                </Card>
+                <Card
+                  style={{ ...cardStyle, borderTop: `3px solid ${colors.deepGreen}`, flexGrow: 1 }}
+                >
+                  <Statistic
+                    title="Tổng số bài tập đã giao"
+                    value={totalSubmissions}
+                    prefix={<FileDoneOutlined />}
+                    valueStyle={{ color: colors.deepGreen }}
+                  />
+                </Card>
+                <Card
+                  style={{ ...cardStyle, borderTop: `3px solid ${colors.midGreen}`, flexGrow: 1 }}
+                >
+                  <Statistic
+                    title="Số lượt xem bài học"
+                    value={totalSubmissions}
+                    prefix={<FileDoneOutlined />}
+                    valueStyle={{ color: colors.deepGreen }}
+                  />
+                </Card>
+                <Card
+                  style={{ ...cardStyle, borderTop: `3px solid ${colors.accent}`, flexGrow: 1 }}
+                >
+                  <Statistic
+                    title="Số lượt xem bài tập"
+                    value={totalSubmissions}
+                    prefix={<FileDoneOutlined />}
+                    valueStyle={{ color: colors.deepGreen }}
+                  />
+                </Card>
+                <Card
+                  style={{ ...cardStyle, borderTop: `3px solid ${colors.emerald}`, flexGrow: 1 }}
+                >
+                  <Statistic
+                    title="Điểm danh"
+                    value={averageSubmissionsPerStudent}
+                    prefix={<FileDoneOutlined />}
+                    valueStyle={{ color: colors.deepGreen }}
+                  />
+                </Card>
+              </div>
             ),
           },
           // {
@@ -578,7 +596,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
               return originalElement;
             },
           }}
-          style={{ borderRadius: 8 }}
+          style={{ borderRadius: 8, maxWidth: "100%", overflowX: "auto" }}
           rowKey="id"
         />
       </Card>
