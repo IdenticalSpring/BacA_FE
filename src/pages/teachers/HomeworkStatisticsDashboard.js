@@ -577,7 +577,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
                     >
                       <Statistic
                         title="Điểm danh"
-                        value={averageCheckin + "%"}
+                        value={totalCheckin + "/" + totalStudents}
                         prefix={<CheckCircleOutlined />}
                         valueStyle={{
                           color: averageCheckin >= 50 ? colors.deepGreen : colors.errorRed,

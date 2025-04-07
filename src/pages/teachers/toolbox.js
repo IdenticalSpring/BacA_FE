@@ -21,7 +21,14 @@ export const colors = {
   emerald: "#2ECC71",
 };
 
-const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAttendanceCheck }) => {
+const Toolbox = ({
+  onHomework,
+  onAssignment,
+  onClassReview,
+  onEnterScores,
+  onAttendanceCheck,
+  setOpenHomeworkStatisticsDashboard,
+}) => {
   return (
     <div
       style={{
@@ -97,10 +104,22 @@ const Toolbox = ({ onHomework, onAssignment, onClassReview, onEnterScores, onAtt
         >
           <span className="button-text">Điểm Danh</span>
         </Button>
+        <Button
+          type="primary"
+          icon={<BarChartOutlined />}
+          onClick={() => setOpenHomeworkStatisticsDashboard(true)}
+          style={{
+            backgroundColor: colors.safeGreen,
+            borderColor: colors.safeGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">Tình hình lớp học</span>
+        </Button>
       </Space>
 
       <style>{`
-        @media (max-width: 576px) {
+        @media (max-width: 1200px) {
           .button-text {
             display: none;
           }
@@ -117,6 +136,7 @@ Toolbox.propTypes = {
   onClassReview: PropTypes.func.isRequired,
   onEnterScores: PropTypes.func.isRequired,
   onAttendanceCheck: PropTypes.func.isRequired,
+  setOpenHomeworkStatisticsDashboard: PropTypes.func.isRequired,
 };
 
 export default Toolbox;

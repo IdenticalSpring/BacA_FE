@@ -1045,6 +1045,7 @@ const TeacherPage = () => {
               onClassReview={handleOpenEvaluationModal}
               onEnterScores={handleEnterTestScores}
               onAttendanceCheck={handleAttendanceCheck}
+              setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
             />
           </div>
         )}

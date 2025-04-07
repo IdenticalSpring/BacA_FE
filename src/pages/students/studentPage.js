@@ -52,6 +52,7 @@ import student_homework_countService from "services/student_homework_countServic
 import student_lesson_countService from "services/student_lesson_countService";
 import EvaluationStudent from "./evaluationStudent"; // Thêm import
 import { Collapse } from "antd";
+import ConvertTTS from "./ConvertTTS";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -349,6 +350,7 @@ const StudentPage = () => {
                     </Text>
                   </div>
                 </div>
+                <ConvertTTS audioTag={"audio-player-lesson"} />
                 <Collapse
                   defaultActiveKey={[]} // Mặc định thu gọn
                   bordered={false}
@@ -467,6 +469,7 @@ const StudentPage = () => {
                     </Text>
                   </div>
                 </div>
+                <ConvertTTS audioTag={"audio-player-homework"} />
                 <Collapse
                   defaultActiveKey={[]} // Mặc định thu gọn
                   bordered={false}

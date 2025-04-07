@@ -47,7 +47,7 @@ const Sidebar = ({
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 1200);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -355,7 +355,7 @@ const Sidebar = ({
       </div>
 
       {/* Chi tiết tình hình học */}
-      <div
+      {/* <div
         style={{
           margin: "0 auto",
           padding: "5px 0",
@@ -378,7 +378,7 @@ const Sidebar = ({
           <BarChartOutlined style={{ marginRight: "3px" }} />
           Tình hình lớp học
         </Text>
-      </div>
+      </div> */}
     </>
   );
 
