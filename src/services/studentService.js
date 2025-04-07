@@ -116,6 +116,34 @@ const studentService = {
     }
   },
 
+  async getEvaluationStudent(id) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/teacher-comments/student/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error in evaluationStudent:", error);
+      throw error;
+    }
+  },
+
+  async getEvaluationSkillStudent(id) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/studentskillbehaviorscores/student/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error in evaluationStudent:", error);
+      throw error;
+    }
+  },
+
   deleteStudent: async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/students/${id}`, {

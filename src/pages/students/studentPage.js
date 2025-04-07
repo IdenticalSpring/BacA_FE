@@ -50,6 +50,7 @@ import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import student_homework_countService from "services/student_homework_countService";
 import student_lesson_countService from "services/student_lesson_countService";
+import EvaluationStudent from "./evaluationStudent"; // Thêm import
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -81,7 +82,7 @@ const StudentPage = () => {
   const userName = userId.username || "Student";
   const [lessonsBySchedule, setLessonsBySchedule] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("lessons"); // Mặc định là "lessons"
+  const [activeTab, setActiveTab] = useState("lessons");
   const [loadingHomework, setLoadingHomework] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -94,8 +95,8 @@ const StudentPage = () => {
   const [loadingSubmitHomework, setLoadingSubmitHomework] = useState(false);
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
 
-  const lessonRef = useRef(null); // Ref để cuộn tới section Bài Học
-  const progressRef = useRef(null); // Ref để cuộn tới section Tình Hình Học Tập
+  const lessonRef = useRef(null);
+  const progressRef = useRef(null);
 
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -154,7 +155,6 @@ const StudentPage = () => {
     };
     fetchStudentById();
   }, [studentId]);
-  // console.log(student);
 
   useEffect(() => {
     if (student && student.class.id) {
@@ -368,12 +368,7 @@ const StudentPage = () => {
       </div>
       <Divider />
       <div ref={progressRef}>
-        <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-          <BarChartOutlined /> Tình hình học tập
-        </Title>
-        <Text style={{ fontSize: 16, color: colors.darkGreen }}>
-          Tính năng này đang được phát triển. Vui lòng quay lại sau!
-        </Text>
+        <EvaluationStudent studentId={studentId} colors={colors} />
       </div>
     </>
   );
@@ -616,10 +611,7 @@ const StudentPage = () => {
               </Text>
             </div>
           ) : (
-            <Tabs
-              activeKey={activeTab}
-              tabBarStyle={{ display: "none" }} // Ẩn thanh Tab mặc định
-            >
+            <Tabs activeKey={activeTab} tabBarStyle={{ display: "none" }}>
               <TabPane key="lessons">{renderLessonContent()}</TabPane>
               <TabPane key="homework">{renderHomeworkContent()}</TabPane>
             </Tabs>

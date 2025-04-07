@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Avatar, Typography, Button, Drawer } from "antd";
+import { Layout, Menu, Avatar, Typography, Button, Drawer, Modal } from "antd"; // Thêm Modal
 import {
   BookOutlined,
   MenuOutlined,
@@ -12,11 +12,12 @@ import {
 import PropTypes from "prop-types";
 
 // Giả sử các icon được đặt trong thư mục src/assets
-import kahootIcon from "assets/icon/kahoot-icon.png"; // Thay bằng đường dẫn thực tế
+import kahootIcon from "assets/icon/kahoot-icon.png";
 import quizizzIcon from "assets/icon/quizizz-icon.png";
 import padletIcon from "assets/icon/padlet-logo.png";
 import blootket from "assets/icon/Blooket-Logo.png";
 import baamboozle from "assets/icon/baamboozle.png";
+import wordwallIcon from "assets/icon/wordwall-icon.png"; // Icon cho Wordwall
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -39,8 +40,10 @@ const Sidebar = ({
   onSelectClass,
   setOpenHomeworkStatisticsDashboard,
 }) => {
-  const [visible, setVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [visible, setVisible] = useState(false); // Trạng thái Drawer
+  const [isMobile, setIsMobile] = useState(false); // Kiểm tra mobile
+  const [wordwallEmbed, setWordwallEmbed] = useState(null); // Mã nhúng từ oEmbed
+  const [isModalVisible, setIsModalVisible] = useState(false); // Trạng thái Modal
 
   useEffect(() => {
     const checkMobile = () => {
@@ -51,6 +54,26 @@ const Sidebar = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Hàm lấy mã nhúng từ Wordwall oEmbed
+  const fetchWordwallEmbed = async (resourceUrl) => {
+    try {
+      const response = await fetch(
+        `https://wordwall.net/api/oembed?url=${encodeURIComponent(resourceUrl)}` // Sửa endpoint thành oEmbed chính xác
+      );
+      const data = await response.json();
+      setWordwallEmbed(data.html); // Lưu mã nhúng vào state
+      setIsModalVisible(true); // Mở Modal sau khi lấy được mã nhúng
+    } catch (error) {
+      console.error("Error fetching Wordwall oEmbed:", error);
+    }
+  };
+
+  // Đóng Modal
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setWordwallEmbed(null); // Xóa mã nhúng khi đóng Modal (tùy chọn)
+  };
+
   const showDrawer = () => setVisible(true);
   const onClose = () => setVisible(false);
 
@@ -59,7 +82,6 @@ const Sidebar = ({
     if (isMobile) onClose();
   };
 
-  // Hàm chuyển hướng đến trang web của từng ứng dụng
   const openLink = (url) => {
     window.open(url, "_blank");
   };
@@ -255,7 +277,26 @@ const Sidebar = ({
         onClick={() => openLink("https://www.baamboozle.com/")}
       >
         <img src={baamboozle} alt="Baamboozle" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Quizizz</Text>
+        <Text style={{ color: colors.darkGreen }}>Baamboozle</Text>
+      </div>
+      {/* Thêm Wordwall */}
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => fetchWordwallEmbed("https://wordwall.net/resource/89987459/exam")}
+      >
+        <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
       </div>
 
       {/* Công cụ giao bài tập */}
@@ -309,7 +350,7 @@ const Sidebar = ({
         }}
         onClick={() => openLink("https://www.blooket.com/")}
       >
-        <img src={blootket} alt="BookWidgets" style={{ width: 20, height: 20 }} />
+        <img src={blootket} alt="Blooket" style={{ width: 20, height: 20 }} />
         <Text style={{ color: colors.darkGreen }}>Blooket</Text>
       </div>
 
@@ -402,6 +443,24 @@ const Sidebar = ({
           <SidebarContent />
         </Sider>
       )}
+
+      {/* Modal hiển thị nội dung Wordwall */}
+      <Modal
+        title="Wordwall Activity"
+        open={isModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={600} // Điều chỉnh chiều rộng Modal
+      >
+        {wordwallEmbed ? (
+          <div
+            style={{ textAlign: "center" }}
+            dangerouslySetInnerHTML={{ __html: wordwallEmbed }}
+          />
+        ) : (
+          <p>Đang tải nội dung...</p>
+        )}
+      </Modal>
     </>
   );
 };

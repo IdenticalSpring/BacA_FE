@@ -11,7 +11,7 @@ import {
   Space,
   Typography,
 } from "antd";
-import { SaveOutlined, RobotOutlined, SendOutlined } from "@ant-design/icons"; // Thêm RobotOutlined cho nút Enhance
+import { SaveOutlined, RobotOutlined, SendOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -32,6 +32,7 @@ const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
 ];
+
 export default function CreateLesson({
   toolbar,
   quillFormats,
@@ -51,26 +52,35 @@ export default function CreateLesson({
   students,
 }) {
   const [form] = Form.useForm();
-  const quillRef = useRef(null);
-  const [quill, setQuill] = useState(null);
+  const quillRefDescription = useRef(null); // Ref cho description
+  const quillRefLessonPlan = useRef(null); // Ref cho lessonPlan
+  const [quillDescription, setQuillDescription] = useState(null); // Quill instance cho description
+  const [quillLessonPlan, setQuillLessonPlan] = useState(null); // Quill instance cho lessonPlan
   const [selected, setSelected] = useState(new Set());
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
-  const [loadingEnhance, setLoadingEnhance] = useState(false); // Thêm trạng thái loading cho nút Enhance
+  const [loadingEnhanceDescription, setLoadingEnhanceDescription] = useState(false); // Loading cho description
+  const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false); // Loading cho lessonPlan
   const [gender, setGender] = useState(1);
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
+
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
   };
+
   useEffect(() => {
-    if (quillRef.current) {
-      const editor = quillRef.current.getEditor();
-      setQuill(editor);
+    if (quillRefDescription.current) {
+      const editor = quillRefDescription.current.getEditor();
+      setQuillDescription(editor);
     }
-  }, [quillRef]);
+    if (quillRefLessonPlan.current) {
+      const editor = quillRefLessonPlan.current.getEditor();
+      setQuillLessonPlan(editor);
+    }
+  }, [quillRefDescription, quillRefLessonPlan]);
 
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
@@ -90,8 +100,8 @@ export default function CreateLesson({
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
+        if (response.status === 201 && quillRefDescription.current) {
+          const editor = quillRefDescription.current.getEditor();
           const range = editor.getSelection(true);
           editor.insertEmbed(range.index, "image", response.data.url);
         } else {
@@ -113,26 +123,47 @@ export default function CreateLesson({
     },
   };
 
-  // Hàm gọi Gemini API để cải thiện description
   const enhanceDescription = async () => {
-    if (!quill) return;
+    if (!quillDescription) return;
 
-    const currentContent = quill.getText(); // Lấy nội dung từ ReactQuill
+    const currentContent = quillDescription.getText();
     if (!currentContent.trim()) {
       message.warning("Please enter a description first!");
       return;
     }
 
-    setLoadingEnhance(true);
+    setLoadingEnhanceDescription(true);
     try {
       const enhancedText = await lessonService.enhanceDescription(currentContent);
-      quill.setText(enhancedText); // Cập nhật lại nội dung trong ReactQuill
+      quillDescription.setText(enhancedText);
       message.success("Description enhanced successfully!");
     } catch (error) {
       console.error("Error enhancing description:", error);
       message.error("Failed to enhance description. Please try again!");
     } finally {
-      setLoadingEnhance(false);
+      setLoadingEnhanceDescription(false);
+    }
+  };
+
+  const enhanceLessonPlan = async () => {
+    if (!quillLessonPlan) return;
+
+    const currentContent = quillLessonPlan.getText();
+    if (!currentContent.trim()) {
+      message.warning("Please enter a lesson plan first!");
+      return;
+    }
+
+    setLoadingEnhanceLessonPlan(true);
+    try {
+      const enhancedText = await lessonService.enhanceLessonPlan(currentContent);
+      quillLessonPlan.setText(enhancedText);
+      message.success("Lesson plan enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing lesson plan:", error);
+      message.error("Failed to enhance lesson plan. Please try again!");
+    } finally {
+      setLoadingEnhanceLessonPlan(false);
     }
   };
 
@@ -144,7 +175,8 @@ export default function CreateLesson({
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
-      formData.append("description", quill.getText()); // Lấy nội dung từ ReactQuill
+      formData.append("description", quillDescription.getText()); // Lấy nội dung từ description
+      formData.append("lessonPlan", quillLessonPlan.getText()); // Lấy nội dung từ lessonPlan
       formData.append("teacherId", teacherId);
 
       if (mp3file) {
@@ -159,68 +191,20 @@ export default function CreateLesson({
         );
       }
 
-      // await Promise.all(userNotificationCreate);
       message.success("Lesson created successfully!");
       form.resetFields();
       setTextToSpeech("");
       setMp3file(null);
       setMp3Url("");
+      quillDescription.setText(""); // Reset description
+      quillLessonPlan.setText(""); // Reset lessonPlan
     } catch (err) {
       message.error("Failed to create lesson. Please try again." + err);
     } finally {
       setLoadingCreateLesson(false);
     }
   };
-  const handleUpdateSendingLessonStatus = async (id) => {
-    try {
-      setLoadingSchedule(true);
-      const data = await lessonByScheduleService.updateSendingLessonStatus(id, true);
-      const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
-        if (item.id === id) {
-          return { ...item, isLessonSent: true };
-        }
-        return item;
-      });
-      setLessonByScheduleData(lessonByScheduleDataUpdated);
-      let detailStr = "Bạn mới có bài học mới vào ngày:";
-      // console.log(data);
-      const date = lessonByScheduleDataUpdated.find((item) => item.id === id)?.date || null;
-      // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
-      detailStr +=
-        " " +
-          (date &&
-            new Date(date).toLocaleDateString("vi-VN", {
-              timeZone: "UTC",
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })) || "Không có ngày";
-      const notificationData = {
-        title: "Bài học mới",
-        general: false,
-        classID: classID,
-        detail: detailStr,
-        createdAt: new Date(),
-      };
-      const notificationRes = await notificationService.createNotification(notificationData);
-      const userNotificationCreate = students.forEach(async (element) => {
-        const userNotificationData = {
-          status: false,
-          notificationID: notificationRes.id,
-          studentID: element.id,
-        };
-        const userNotificationRes = await user_notificationService.createUserNotification(
-          userNotificationData
-        );
-      });
-      message.success("Đã gửi bài học thành công!");
-    } catch (err) {
-      message.error("Lỗi khi gửi bài học! " + err);
-    } finally {
-      setLoadingSchedule(false);
-    }
-  };
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTSLesson(true);
@@ -299,6 +283,7 @@ export default function CreateLesson({
               linkYoutube: "",
               linkGame: "",
               description: "",
+              lessonPlan: "",
             }}
           >
             <Form.Item
@@ -362,11 +347,7 @@ export default function CreateLesson({
                 </div>
               </Form.Item>
             )}
-            <Form.Item
-              name="linkYoutube"
-              label="Link Youtube bài học"
-              // rules={[{ required: true, message: "Please enter the lesson link" }]}
-            >
+            <Form.Item name="linkYoutube" label="Link Youtube bài học">
               <Input
                 placeholder="Nhập link youtube bài học"
                 style={{
@@ -384,19 +365,15 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item
-              name="description"
-              label="Mô tả"
-              // rules={[{ required: true, message: "Please enter a description" }]}
-            >
+            <Form.Item name="description" label="Mô tả">
               <ReactQuill
                 theme="snow"
                 modules={modules}
                 formats={quillFormats}
-                ref={quillRef}
+                ref={quillRefDescription}
                 style={{
                   height: "250px",
-                  marginBottom: "10px", // Giảm margin để nút gần hơn
+                  marginBottom: "10px",
                   borderRadius: "6px",
                   border: `1px solid ${colors.inputBorder}`,
                 }}
@@ -405,9 +382,9 @@ export default function CreateLesson({
             <Button
               icon={<RobotOutlined />}
               onClick={enhanceDescription}
-              loading={loadingEnhance}
+              loading={loadingEnhanceDescription}
               style={{
-                alignSelf: "flex-start", // Căn trái nút
+                alignSelf: "flex-start",
                 marginTop: "50px",
                 borderRadius: "6px",
                 backgroundColor: colors.emerald,
@@ -416,6 +393,37 @@ export default function CreateLesson({
               }}
             >
               Cải thiện mô tả
+            </Button>
+
+            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
+              <ReactQuill
+                theme="snow"
+                modules={modules}
+                formats={quillFormats}
+                ref={quillRefLessonPlan}
+                style={{
+                  height: "250px",
+                  marginBottom: "10px",
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.inputBorder}`,
+                }}
+              />
+            </Form.Item>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={enhanceLessonPlan}
+              loading={loadingEnhanceLessonPlan}
+              style={{
+                alignSelf: "flex-start",
+                marginTop: "50px",
+                marginBottom: "20px",
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+              }}
+            >
+              Cải thiện kế hoạch bài học
             </Button>
           </Form>
         </Card>
@@ -443,7 +451,6 @@ export default function CreateLesson({
           <Button
             type="primary"
             htmlType="submit"
-            // loading={loadingClass}
             icon={<SendOutlined />}
             style={{
               borderRadius: "6px",
@@ -501,7 +508,6 @@ export default function CreateLesson({
             <Button
               type="primary"
               htmlType="submit"
-              // loading={loadingClass}
               icon={<SendOutlined />}
               style={{
                 borderRadius: "6px",
@@ -525,12 +531,10 @@ export default function CreateLesson({
         footer={<></>}
         centered
         width={isMobile ? "90%" : "60%"}
-        // style={{ display: "flex", justifyContent: "center" }}
       >
         <div
           style={{
             width: "100%",
-            // margin: "15px 0",
             display: "flex",
             justifyContent: "center",
             flexDirection: "column",
@@ -592,20 +596,20 @@ export default function CreateLesson({
 }
 
 CreateLesson.propTypes = {
-  toolbar: PropTypes.array.isRequired, // Sửa PropTypes cho đúng kiểu dữ liệu
+  toolbar: PropTypes.array.isRequired,
   quillFormats: PropTypes.array.isRequired,
   levels: PropTypes.array.isRequired,
   isMobile: PropTypes.bool.isRequired,
   loadingCreateLesson: PropTypes.bool.isRequired,
   setLoadingCreateLesson: PropTypes.func.isRequired,
-  teacherId: PropTypes.string.isRequired, // Giả sử teacherId là string
+  teacherId: PropTypes.string.isRequired,
   lessonByScheduleData: PropTypes.array.isRequired,
   daysOfWeek: PropTypes.array.isRequired,
   lessonsData: PropTypes.array.isRequired,
   setLessonByScheduleData: PropTypes.func.isRequired,
   loadingTTSLesson: PropTypes.bool.isRequired,
   setLoadingTTSLesson: PropTypes.func.isRequired,
-  level: PropTypes.number.isRequired, // Giả sử level là string
-  classID: PropTypes.number.isRequired, // Giả sử level là string
-  students: PropTypes.array.isRequired, // Giả sử level là string
+  level: PropTypes.number.isRequired,
+  classID: PropTypes.number.isRequired,
+  students: PropTypes.array.isRequired,
 };
