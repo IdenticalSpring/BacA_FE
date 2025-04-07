@@ -35,6 +35,7 @@ import teacherService from "services/teacherService";
 import lessonService from "services/lessonService";
 import homeWorkService from "services/homeWorkService";
 import checkinService from "services/checkinService";
+import pagevisitService from "services/pagevisitService";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -42,6 +43,7 @@ function Dashboard() {
     teachers: 0,
     lessons: 0,
     homeworks: 0,
+    visitCount: 0,
   });
 
   const [attendanceChartData, setAttendanceChartData] = useState({
@@ -57,11 +59,12 @@ function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [students, teachers, lessons, homeworks] = await Promise.all([
+        const [students, teachers, lessons, homeworks, visitCount] = await Promise.all([
           studentService.getAllStudents(),
           teacherService.getAllTeachers(),
           lessonService.getAllLessons(),
           homeWorkService.getAllHomeWork(),
+          pagevisitService.getCountVisitor(),
         ]);
 
         setStats({
@@ -69,6 +72,7 @@ function Dashboard() {
           teachers: teachers.length,
           lessons: lessons.length,
           homeworks: homeworks.length,
+          visitCount: visitCount.visitCount,
         });
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
@@ -189,6 +193,17 @@ function Dashboard() {
                 title="Homeworks"
                 count={stats.homeworks}
                 percentage={{ color: "success", amount: "", label: "Total homeworks" }}
+              />
+            </MDBox>
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <MDBox mb={1.5}>
+              <ComplexStatisticsCard
+                color="info" // Chọn màu phù hợp với giao diện
+                icon="visibility" // Icon đại diện cho visitor (có thể thay đổi)
+                title="Visitors"
+                count={stats.visitCount} // Hiển thị số lượt truy cập
+                percentage={{ color: "success", amount: "", label: "Total visitors" }}
               />
             </MDBox>
           </Grid>

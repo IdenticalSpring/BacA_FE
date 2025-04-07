@@ -37,6 +37,7 @@ import contentPageService from "services/contentpageService";
 
 // Thêm import CSS nếu cần
 import "./Homepage.css"; // Tạo file này nếu chưa có
+import pagevisitService from "services/pagevisitService";
 
 export default function Homepage() {
   const [visible, setVisible] = useState({
@@ -71,6 +72,19 @@ export default function Homepage() {
     };
     fetchContentData();
   }, []);
+
+  // Increment visit count when Homepage is loaded
+  useEffect(() => {
+    const incrementPageVisit = async () => {
+      try {
+        await pagevisitService.incrementVisit();
+        console.log("Visit incremented successfully");
+      } catch (error) {
+        console.error("Error incrementing visit:", error);
+      }
+    };
+    incrementPageVisit();
+  }, []); // Mảng rỗng để chỉ chạy một lần khi component mount
 
   useEffect(() => {
     const handleResize = () => {
