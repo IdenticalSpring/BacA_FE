@@ -194,7 +194,7 @@ const StudentPage = () => {
           setLessons([data]);
           setIsLessonSent(!!findSelectedLessonBySchedule.isLessonSent); // Chuyển đổi sang boolean nếu cần
           setIsHomeWorkSent(!!findSelectedLessonBySchedule.isHomeWorkSent); // Chuyển đổi sang boolean nếu cần
-          console.log("lessonBySchedule", findSelectedLessonBySchedule);
+          // console.log("lessonBySchedule", findSelectedLessonBySchedule);
           const student_lesson_countData = {
             lessonId: +findSelectedLessonBySchedule.lessonID,
             studentId: +studentId,
@@ -258,6 +258,9 @@ const StudentPage = () => {
 
   const handleSubmitHomework = async (homeworkId) => {
     try {
+      console.log();
+
+      setHomeworkZaloLink(homework[0]?.linkZalo);
       setLoadingSubmitHomework(true);
       setOpenSubmitHomework(true);
       const student_homework_countData = { homeworkId, studentId };
@@ -525,7 +528,7 @@ const StudentPage = () => {
                     type="primary"
                     onClick={() => {
                       handleSubmitHomework(hw.id);
-                      handlePractice(hw.linkGame);
+                      // handlePractice(hw.linkGame);
                       // setHomeworkZaloLink(hw.linkZalo);
                     }}
                     style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
@@ -837,6 +840,15 @@ const StudentPage = () => {
                 type={copySuccess ? "default" : "primary"}
               >
                 {copySuccess ? "Copied!" : "Copy Link nộp bài tập"}
+              </Button>
+              <Button
+                icon={<LinkOutlined />}
+                onClick={() => {
+                  window.open(homeworkZaloLink);
+                }}
+                type={"primary"}
+              >
+                {"Truy cập link"}
               </Button>
             </Space>
           </Card>
