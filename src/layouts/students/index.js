@@ -171,7 +171,7 @@ function Students() {
           imgUrl: student.imgUrl,
           startDate: student.startDate,
           endDate: student.endDate,
-          note: student.class.name,
+          note: student.class?.name,
           rawLevel: student.level, // Giữ lại ID gốc nếu cần dùng sau này
           actions: (
             <>
@@ -212,8 +212,8 @@ function Students() {
 
   const formatSchedule = (student) => {
     let scheduleInfo = "";
-    if (student.class && student.class.name) {
-      scheduleInfo += `Class: ${student.class.name}`;
+    if (student.class && student.class?.name) {
+      scheduleInfo += `Class: ${student.class?.name}`;
     }
     if (student.schedule) {
       const { startTime, endTime, dayOfWeek } = student.schedule;
@@ -339,7 +339,7 @@ function Students() {
                   imgUrl: updatedStudent.imgUrl,
                   startDate: updatedStudent.startDate,
                   endDate: updatedStudent.endDate,
-                  note: updatedStudent.class.name,
+                  note: updatedStudent.class?.name,
                   rawLevel: updatedStudent.level,
                 }
               : row
