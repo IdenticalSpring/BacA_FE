@@ -117,7 +117,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
     const fetchCheckinData = async () => {
       try {
         // setLoading(true);
-        const data = await checkinService.getAllCheckinOfLessonBySchedule(selectedSchedule.id);
+        const data = await checkinService.getAllCheckinOfLessonBySchedule(selectedSchedule?.id);
         setCheckinData(data);
       } catch (err) {
         console.log(err);
@@ -286,28 +286,28 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   // console.log(lessonByScheduleData[0], selectedSchedule, student_lesson_countData);
   // console.log(checkinData, students);
 
-  const totalLessonSubmissions = student_lesson_countData.reduce((sum, item) => {
+  const totalLessonSubmissions = student_lesson_countData?.reduce((sum, item) => {
     // console.log(item?.lessonByScheduleId === selectedSchedule?.id && sum + item?.count, item);
     return item?.lessonByScheduleId === selectedSchedule?.id ? sum + item?.count : sum + 0;
   }, 0);
-  const totalHomeworkSubmissions = student_homework_countData.reduce((sum, item) => {
+  const totalHomeworkSubmissions = student_homework_countData?.reduce((sum, item) => {
     // console.log(item?.lessonByScheduleId === selectedSchedule?.id && sum + item?.count, item);
     return item?.lessonByScheduleId === selectedSchedule?.id ? sum + item?.count : sum + 0;
   }, 0);
-  const totalLessonAssign = lessonByScheduleData.reduce(
+  const totalLessonAssign = lessonByScheduleData?.reduce(
     (sum, item) =>
       item?.class?.id === selectedSchedule?.class?.id && item?.isLessonSent ? sum + 1 : sum + 0,
     0
   );
-  const totalHomeworkAssign = lessonByScheduleData.reduce(
+  const totalHomeworkAssign = lessonByScheduleData?.reduce(
     (sum, item) =>
       item?.class?.id === selectedSchedule?.class?.id && item?.isHomeWorkSent ? sum + 1 : sum + 0,
     0
   );
-  const totalStudents = [...new Set(students.map((item) => item.id))].length;
-  const totalLessons = [...new Set(student_lesson_countData.map((item) => item.lessonId))].length;
+  const totalStudents = [...new Set(students?.map((item) => item.id))].length;
+  // const totalLessons = [...new Set(student_lesson_countData?.map((item) => item.lessonId))].length;
   const totalCheckin = [
-    ...new Set(checkinData.filter((item) => item.present === 1 || item.present === 2)),
+    ...new Set(checkinData?.filter((item) => item.present === 1 || item.present === 2)),
   ].length;
   const averageCheckin = totalStudents ? (totalCheckin / totalStudents).toFixed(4) * 100 : 0;
   // console.log(
@@ -318,26 +318,26 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   // );
 
   // Find top performing students
-  const studentCounts = student_lesson_countData.reduce((acc, item) => {
-    acc[item.studentId] = (acc[item.studentId] || 0) + item.count;
-    return acc;
-  }, {});
+  // const studentCounts = student_lesson_countData.reduce((acc, item) => {
+  //   acc[item.studentId] = (acc[item.studentId] || 0) + item.count;
+  //   return acc;
+  // }, {});
 
-  const topStudents = Object.entries(studentCounts)
-    .map(([studentId, count]) => ({ studentId: parseInt(studentId), count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  // const topStudents = Object.entries(studentCounts)
+  //   .map(([studentId, count]) => ({ studentId: parseInt(studentId), count }))
+  //   .sort((a, b) => b.count - a.count)
+  //   .slice(0, 5);
 
   // Find most active lessons
-  const lessonCounts = student_lesson_countData.reduce((acc, item) => {
-    acc[item.lessonId] = (acc[item.lessonId] || 0) + item.count;
-    return acc;
-  }, {});
+  // const lessonCounts = student_lesson_countData.reduce((acc, item) => {
+  //   acc[item.lessonId] = (acc[item.lessonId] || 0) + item.count;
+  //   return acc;
+  // }, {});
 
-  const topLessons = Object.entries(lessonCounts)
-    .map(([lessonId, count]) => ({ lessonId: parseInt(lessonId), count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  // const topLessons = Object.entries(lessonCounts)
+  //   .map(([lessonId, count]) => ({ lessonId: parseInt(lessonId), count }))
+  //   .sort((a, b) => b.count - a.count)
+  //   .slice(0, 5);
 
   // Handle page change
   const handlePageChange = (page) => {
@@ -372,31 +372,31 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   //   },
   // ];
 
-  const lessonColumns = [
-    {
-      title: "Lesson ID",
-      dataIndex: "lessonId",
-      key: "lessonId",
-      render: (text) => <div style={{ fontWeight: 500, color: colors.deepGreen }}>{text}</div>,
-    },
-    {
-      title: "Completion Count",
-      dataIndex: "count",
-      key: "count",
-      sorter: (a, b) => a.count - b.count,
-      render: (count) => (
-        <Progress
-          percent={Math.min(count * 5, 100)}
-          strokeColor={{
-            "0%": colors.accent,
-            "100%": colors.safeGreen,
-          }}
-          strokeWidth={8}
-          format={() => count}
-        />
-      ),
-    },
-  ];
+  // const lessonColumns = [
+  //   {
+  //     title: "Lesson ID",
+  //     dataIndex: "lessonId",
+  //     key: "lessonId",
+  //     render: (text) => <div style={{ fontWeight: 500, color: colors.deepGreen }}>{text}</div>,
+  //   },
+  //   {
+  //     title: "Completion Count",
+  //     dataIndex: "count",
+  //     key: "count",
+  //     sorter: (a, b) => a.count - b.count,
+  //     render: (count) => (
+  //       <Progress
+  //         percent={Math.min(count * 5, 100)}
+  //         strokeColor={{
+  //           "0%": colors.accent,
+  //           "100%": colors.safeGreen,
+  //         }}
+  //         strokeWidth={8}
+  //         format={() => count}
+  //       />
+  //     ),
+  //   },
+  // ];
 
   // Card style
   const cardStyle = {
@@ -427,7 +427,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   // }
 
   return (
-    <div style={{ background: colors.gray, padding: "16px", borderRadius: 8 }}>
+    <div style={{ padding: "16px", borderRadius: 8 }}>
       <div
         style={{
           background: colors.headerBg,
@@ -622,33 +622,33 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
               //     </Card>
               //   ),
               // },
-              {
-                key: "lessons",
-                label: (
-                  <span>
-                    <BookOutlined /> Bài học
-                  </span>
-                ),
-                children: (
-                  <Card
-                    title="Bài học được hoàn thành nhiều nhất"
-                    style={cardStyle}
-                    headStyle={headerStyle}
-                  >
-                    {topLessons.length > 0 ? (
-                      <Table
-                        dataSource={topLessons}
-                        columns={lessonColumns}
-                        pagination={false}
-                        rowKey="lessonId"
-                        style={{ borderRadius: 8 }}
-                      />
-                    ) : (
-                      <Empty description="Không có dữ liệu" />
-                    )}
-                  </Card>
-                ),
-              },
+              // {
+              //   key: "lessons",
+              //   label: (
+              //     <span>
+              //       <BookOutlined /> Bài học
+              //     </span>
+              //   ),
+              //   children: (
+              //     <Card
+              //       title="Bài học được hoàn thành nhiều nhất"
+              //       style={cardStyle}
+              //       headStyle={headerStyle}
+              //     >
+              //       {topLessons.length > 0 ? (
+              //         <Table
+              //           dataSource={topLessons}
+              //           columns={lessonColumns}
+              //           pagination={false}
+              //           rowKey="lessonId"
+              //           style={{ borderRadius: 8 }}
+              //         />
+              //       ) : (
+              //         <Empty description="Không có dữ liệu" />
+              //       )}
+              //     </Card>
+              //   ),
+              // },
             ]}
           />
 

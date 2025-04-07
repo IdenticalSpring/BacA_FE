@@ -302,7 +302,66 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
+            <Form.Item name="description" label="Mô tả">
+              <ReactQuill
+                theme="snow"
+                modules={modules}
+                formats={quillFormats}
+                ref={quillRefDescription}
+                style={{
+                  height: "250px",
+                  marginBottom: "10px",
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.inputBorder}`,
+                }}
+              />
+            </Form.Item>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={enhanceDescription}
+              loading={loadingEnhanceDescription}
+              style={{
+                alignSelf: "flex-start",
+                marginTop: "50px",
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+              }}
+            >
+              Cải thiện mô tả
+            </Button>
 
+            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
+              <ReactQuill
+                theme="snow"
+                modules={modules}
+                formats={quillFormats}
+                ref={quillRefLessonPlan}
+                style={{
+                  height: "250px",
+                  marginBottom: "10px",
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.inputBorder}`,
+                }}
+              />
+            </Form.Item>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={enhanceLessonPlan}
+              loading={loadingEnhanceLessonPlan}
+              style={{
+                alignSelf: "flex-start",
+                marginTop: "50px",
+                marginBottom: "20px",
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+              }}
+            >
+              Cải thiện kế hoạch bài học
+            </Button>
             <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}
@@ -365,66 +424,6 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item name="description" label="Mô tả">
-              <ReactQuill
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRefDescription}
-                style={{
-                  height: "250px",
-                  marginBottom: "10px",
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
-                }}
-              />
-            </Form.Item>
-            <Button
-              icon={<RobotOutlined />}
-              onClick={enhanceDescription}
-              loading={loadingEnhanceDescription}
-              style={{
-                alignSelf: "flex-start",
-                marginTop: "50px",
-                borderRadius: "6px",
-                backgroundColor: colors.emerald,
-                borderColor: colors.emerald,
-                color: colors.white,
-              }}
-            >
-              Cải thiện mô tả
-            </Button>
-
-            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
-              <ReactQuill
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRefLessonPlan}
-                style={{
-                  height: "250px",
-                  marginBottom: "10px",
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
-                }}
-              />
-            </Form.Item>
-            <Button
-              icon={<RobotOutlined />}
-              onClick={enhanceLessonPlan}
-              loading={loadingEnhanceLessonPlan}
-              style={{
-                alignSelf: "flex-start",
-                marginTop: "50px",
-                marginBottom: "20px",
-                borderRadius: "6px",
-                backgroundColor: colors.emerald,
-                borderColor: colors.emerald,
-                color: colors.white,
-              }}
-            >
-              Cải thiện kế hoạch bài học
-            </Button>
           </Form>
         </Card>
       </div>
