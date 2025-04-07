@@ -16,6 +16,23 @@ const checkinService = {
       throw error.response?.data?.message || "Error fetching checkin";
     }
   },
+  getAllCheckinOfLessonBySchedule: async (lessonByScheduleId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/checkins/lesson-by-schedule/${lessonByScheduleId}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+
+      throw error.response?.data?.message || "Error fetching checkin";
+    }
+  },
   getAllCheckins: async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/checkins`, {
