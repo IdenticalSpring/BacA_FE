@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react"; // Thêm useEffect
 import PropTypes from "prop-types";
 import { Layout, Typography, List, Divider } from "antd";
 import { CalendarOutlined } from "@ant-design/icons";
@@ -33,7 +33,7 @@ const Sidebar = ({
       return lessonDate.isSame(today) || lessonDate.isBefore(today);
     })
     .sort((a, b) => {
-      return dayjs(b.date).valueOf() - dayjs(a.date).valueOf();
+      return dayjs(b.date).valueOf() - dayjs(a.date).valueOf(); // Sắp xếp giảm dần (mới nhất trước)
     });
 
   // Lọc ra các bài học sắp tới
@@ -43,12 +43,20 @@ const Sidebar = ({
       return lessonDate.isAfter(today);
     })
     .sort((a, b) => {
-      return dayjs(a.date).valueOf() - dayjs(b.date).valueOf();
+      return dayjs(a.date).valueOf() - dayjs(b.date).valueOf(); // Sắp xếp tăng dần
     });
+
+  // Thêm useEffect để chọn bài học mới nhất mặc định
+  useEffect(() => {
+    if (!selectedLessonBySchedule && filteredLessons.length > 0) {
+      // Nếu chưa có bài học nào được chọn và có bài học trong filteredLessons
+      const latestLesson = filteredLessons[0]; // Bài học mới nhất (đầu tiên trong danh sách đã sắp xếp)
+      onSelectLessonBySchedule(latestLesson.id); // Chọn bài học mới nhất
+    }
+  }, [lessonsBySchedule, selectedLessonBySchedule, onSelectLessonBySchedule, filteredLessons]);
 
   // Hàm render danh sách bài học chung
   const renderLessonList = (lessons, isSelectable = true) => {
-    // Thay đổi mặc định thành true
     if (lessons.length === 0) {
       return (
         <div
@@ -332,7 +340,7 @@ const Sidebar = ({
               flex: 1,
             }}
           >
-            {renderLessonList(upcomingLessons, true)} {/* Thay đổi thành true */}
+            {renderLessonList(upcomingLessons, true)}
           </div>
         </div>
       </div>
