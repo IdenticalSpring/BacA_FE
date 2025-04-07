@@ -161,32 +161,32 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
               )?.present ?? -1,
           };
         });
-        homeworkCountData = homeworkCountData.map((item) => {
+        homeworkCountData = homeworkCountData?.map((item) => {
           return {
-            id: item.id,
-            count: item.count,
-            studentId: item.student.id,
-            studentName: item.student.name,
-            studentImage: item.student.imgUrl,
-            homeworkId: item.homework.id,
-            homeworkTitle: item.homework.title,
-            level: item.student.level,
-            isDelete: item.student.isDelete ? 1 : 0,
-            lessonByScheduleId: item.lessonBySchedule.id,
+            id: item?.id,
+            count: item?.count,
+            studentId: item?.student.id,
+            studentName: item?.student.name,
+            studentImage: item?.student.imgUrl,
+            homeworkId: item?.homework?.id,
+            homeworkTitle: item?.homework.title,
+            level: item?.student.level,
+            isDelete: item?.student.isDelete ? 1 : 0,
+            lessonByScheduleId: item?.lessonBySchedule?.id,
           };
         });
-        lessonCountData = lessonCountData.map((item) => {
+        lessonCountData = lessonCountData?.map((item) => {
           return {
-            id: item.id,
-            count: item.count,
-            studentId: item.student.id,
-            studentName: item.student.name,
-            studentImage: item.student.imgUrl,
-            lessonId: item.lesson.id,
-            lessonName: item.lesson.name,
-            level: item.student.level,
-            isDelete: item.student.isDelete ? 1 : 0,
-            lessonByScheduleId: item.lessonBySchedule.id,
+            id: item?.id,
+            count: item?.count,
+            studentId: item?.student?.id,
+            studentName: item?.student.name,
+            studentImage: item?.student.imgUrl,
+            lessonId: item?.lesson?.id,
+            lessonName: item?.lesson.name,
+            level: item?.student.level,
+            isDelete: item?.student.isDelete ? 1 : 0,
+            lessonByScheduleId: item?.lessonBySchedule?.id,
           };
         });
         // console.log(homeworkCountData, lessonCountData);
