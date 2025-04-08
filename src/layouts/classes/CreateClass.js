@@ -1221,6 +1221,12 @@ function CreateClass() {
                   sx={{
                     width: "10vw",
                     minWidth: "80px",
+                    "& .MuiInputBase-root": {
+                      height: "48px", // Tăng chiều cao của TextField (mặc định thường là 40px hoặc 56px tùy theme)
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      padding: "14px 14px", // Điều chỉnh padding để nội dung bên trong không bị cắt
+                    },
                   }}
                 >
                   <MenuItem value="">
