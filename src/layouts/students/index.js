@@ -440,7 +440,7 @@ function Students() {
                   <DataTable
                     table={{ columns, rows: filteredRows }}
                     isSorted={false}
-                    entriesPerPage={false}
+                    entriesPerPage={5}
                     showTotalEntries={false}
                     noEndBorder
                   />

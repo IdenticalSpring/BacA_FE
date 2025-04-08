@@ -1198,7 +1198,7 @@ function CreateClass() {
                   <DataTable
                     table={{ columns: classColumns, rows: classRows }}
                     isSorted={false}
-                    entriesPerPage={false}
+                    entriesPerPage={5}
                     showTotalEntries={false}
                     noEndBorder
                   />

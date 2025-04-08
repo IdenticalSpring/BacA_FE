@@ -5,7 +5,7 @@ import {
   FormOutlined,
   BarChartOutlined,
   EditOutlined,
-  EllipsisOutlined,
+  PieChartOutlined,
   QqOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
@@ -69,7 +69,7 @@ const Toolbox = ({
         </Button>
         <Button
           type="primary"
-          icon={<BarChartOutlined />}
+          icon={<PieChartOutlined />}
           onClick={onClassReview}
           style={{
             backgroundColor: colors.safeGreen,

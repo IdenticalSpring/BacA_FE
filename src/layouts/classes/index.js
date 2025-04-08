@@ -332,7 +332,7 @@ function Classes() {
                   <DataTable
                     table={{ columns, rows }}
                     isSorted={false}
-                    entriesPerPage={false}
+                    entriesPerPage={5}
                     showTotalEntries={false}
                     noEndBorder
                   />
