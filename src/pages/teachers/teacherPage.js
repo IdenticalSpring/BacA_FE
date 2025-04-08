@@ -371,7 +371,6 @@ const TeacherPage = () => {
         endTime: schedule.schedule.endTime,
       }));
 
-    console.log("Schedule IDs for today:", todaySchedules);
     return todaySchedules;
   };
 
@@ -386,7 +385,7 @@ const TeacherPage = () => {
   const schedulesForToday = getSchedulesForToday();
 
   // Hàm để kích hoạt chế độ điểm danh
-  const handleAttendanceCheck = () => {
+  const handleAttendanceCheck = async () => {
     if (!hasClassToday) {
       notification.warning({
         message: "Warning",
@@ -397,15 +396,92 @@ const TeacherPage = () => {
       return;
     }
 
-    // Chọn toàn bộ học sinh và đặt mặc định là "Present" (1)
-    const initialAttendance = students.map((student) => ({
-      studentId: student.id,
-      present: 1, // Mặc định là có mặt
-      note: "",
-    }));
-    setAttendance(initialAttendance);
-    setIsAttendanceMode(true); // Chuyển sang chế độ điểm danh
-    setIsAttendanceGuideVisible(true); // Hiển thị phần hướng dẫn
+    try {
+      setLoading(true);
+
+      // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0];
+
+      // Lấy dữ liệu điểm danh hiện có cho ngày hôm nay
+      const existingAttendance = await teacherService.getAttendanceByDate(today);
+
+      // Khởi tạo attendance mặc định cho tất cả học sinh
+      const initialAttendance = students.map((student) => ({
+        studentId: student.id,
+        present: 1, // Mặc định là có mặt
+        note: "",
+      }));
+
+      // Nếu đã có dữ liệu điểm danh từ server
+      if (existingAttendance && existingAttendance.length > 0) {
+        // Cập nhật attendance dựa trên dữ liệu hiện có
+        const updatedAttendance = initialAttendance.map((initial) => {
+          const existing = existingAttendance.find((att) => att.studentId === initial.studentId);
+          return existing
+            ? { ...initial, present: existing.present, note: existing.note || "" }
+            : initial;
+        });
+        setAttendance(updatedAttendance);
+        notification.info({
+          message: "Attendance Loaded",
+          description: "Existing attendance data has been loaded",
+          placement: "topRight",
+          duration: 4,
+        });
+      } else {
+        // Nếu chưa có dữ liệu, thực hiện điểm danh mới
+        const todaySchedules = getSchedulesForToday();
+        if (todaySchedules.length === 0) {
+          notification.warning({
+            message: "Warning",
+            description: "No class scheduled for today",
+            placement: "topRight",
+            duration: 4,
+          });
+          return;
+        }
+
+        const selectedLessonByScheduleId = lessonByScheduleData.find(
+          (schedule) => schedule.schedule.id === todaySchedules[0]?.id
+        )?.id;
+
+        if (!selectedLessonByScheduleId) {
+          notification.warning({
+            message: "Warning",
+            description: "Cannot find lesson schedule for today",
+            placement: "topRight",
+            duration: 4,
+          });
+          return;
+        }
+
+        await teacherService.attendanceStudent({
+          lessonByScheduleId: selectedLessonByScheduleId,
+          attendanceData: initialAttendance,
+        });
+
+        setAttendance(initialAttendance);
+        notification.success({
+          message: "Attendance Initiated",
+          description: "New attendance has been started",
+          placement: "topRight",
+          duration: 4,
+        });
+      }
+
+      setIsAttendanceMode(true);
+      setIsAttendanceGuideVisible(true);
+    } catch (error) {
+      console.error("Error in attendance check:", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to process attendance",
+        placement: "topRight",
+        duration: 4,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStatusChange = (studentId, present) => {
@@ -435,49 +511,36 @@ const TeacherPage = () => {
 
     try {
       setLoading(true);
-      const todaySchedules = getSchedulesForToday();
-      if (todaySchedules.length === 0) {
-        notification.warning({
-          message: "Warning",
-          description: "No class scheduled for today",
-          placement: "topRight",
-          duration: 4,
-        });
-        return;
-      }
 
-      const selectedLessonByScheduleId = lessonByScheduleData.find(
-        (schedule) => schedule.schedule.id === todaySchedules[0]?.id
-      )?.id;
+      // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0];
 
-      if (!selectedLessonByScheduleId) {
-        notification.warning({
-          message: "Warning",
-          description: "Cannot find lesson schedule for today",
-          placement: "topRight",
-          duration: 4,
-        });
-        return;
-      }
+      // Chuẩn bị payload cho update
+      const payload = {
+        attendanceData: attendance.map((item) => ({
+          studentId: item.studentId,
+          present: item.present,
+          note: item.note,
+        })),
+      };
 
-      await teacherService.attendanceStudent({
-        lessonByScheduleId: selectedLessonByScheduleId,
-        attendanceData: attendance,
-      });
+      // Gọi API updateAttendanceByDate
+      await teacherService.updateAttendanceByDate(payload, today);
 
       notification.success({
         message: "Success",
-        description: "Attendance submitted successfully",
+        description: "Attendance updated successfully",
         placement: "topRight",
         duration: 4,
       });
-      setIsAttendanceMode(false); // Thoát chế độ điểm danh
-      setIsAttendanceGuideVisible(false); // Ẩn phần hướng dẫn
+
+      setIsAttendanceMode(false);
+      setIsAttendanceGuideVisible(false);
     } catch (error) {
-      console.error("Error submitting attendance:", error);
+      console.error("Error updating attendance:", error);
       notification.error({
         message: "Error",
-        description: "Failed to submit attendance",
+        description: "Failed to update attendance",
         placement: "topRight",
         duration: 4,
       });
@@ -485,7 +548,6 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
-
   // const handleSelectStudent = (student) => {
   //   setSelectedStudents((prev) => {
   //     if (prev.some((s) => s.id === student.id)) {
@@ -1346,7 +1408,7 @@ const TeacherPage = () => {
         ) : (
           <div
             style={{
-              maxHeight: "75vh",
+              maxHeight: "70vh",
               width: "100%",
               display: "flex",
               flexWrap: "wrap",

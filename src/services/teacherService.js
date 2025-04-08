@@ -134,6 +134,47 @@ const teacherService = {
       throw error;
     }
   },
+  async updateAttendanceByDate(payload, date) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/checkins/date/${date}`, payload, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      console.log("Payload gửi lên:", payload);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in attendanceStudent:", error);
+      throw error;
+    }
+  },
+
+  getAllCheckins: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/checkins`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching checkins list";
+    }
+  },
+  // Trong teacherService.js
+  getAttendanceByDate: async (date) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/checkins/date/${date}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching attendance by date";
+    }
+  },
 };
 
 export default teacherService;
