@@ -285,13 +285,13 @@ export default function LessonMangement({
       key: "name",
       width: "20%",
     },
-    {
-      title: "Cấp độ",
-      dataIndex: "level",
-      key: "level",
-      width: "15%",
-      render: (text) => levels?.find((level) => level.id === text)?.name,
-    },
+    // {
+    //   title: "Cấp độ",
+    //   dataIndex: "level",
+    //   key: "level",
+    //   width: "15%",
+    //   render: (text) => levels?.find((level) => level.id === text)?.name,
+    // },
     {
       title: "Link Youtube",
       dataIndex: "linkYoutube",

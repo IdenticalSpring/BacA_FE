@@ -122,7 +122,30 @@ function CreateClass() {
     "Friday",
     "Saturday",
   ];
-
+  const [filterLevel, setFilterLevel] = useState("");
+  useEffect(() => {
+    if (rawClasses.length > 0 && levels.length > 0) {
+      // Filter rawClasses if filterLevel is selected
+      const filteredRawClasses = filterLevel
+        ? rawClasses.filter((cls) => cls.level === filterLevel)
+        : rawClasses;
+      const formattedRows = filteredRawClasses.map((cls) => ({
+        id: cls.id,
+        name: cls.name,
+        level: levels.find((lv) => lv.id === cls.level)?.name || "N/A",
+        teacher: cls.teacher?.name || "N/A",
+        accessId: cls.accessId || "N/A",
+        actions: (
+          <>
+            <IconButton color="primary" onClick={() => handleEdit(cls)}>
+              <EditIcon />
+            </IconButton>
+          </>
+        ),
+      }));
+      setClassRows(formattedRows);
+    }
+  }, [rawClasses, levels, filterLevel]);
   // State cho LevelManagement
   const [levelName, setLevelName] = useState("");
   const [levelDescription, setLevelDescription] = useState("");
@@ -1173,9 +1196,9 @@ function CreateClass() {
             <Card>
               <MDBox
                 mx={2}
-                mt={-3}
-                py={3}
-                px={2}
+                mt={0}
+                // py={3}
+                // px={2}
                 variant="gradient"
                 borderRadius="lg"
                 sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
@@ -1184,6 +1207,31 @@ function CreateClass() {
                   Class Tables
                 </MDTypography>
               </MDBox>
+              {/* Filter Dropdown */}
+              <MDBox pt={2} px={2}>
+                <TextField
+                  select
+                  label="Filter by Level"
+                  variant="outlined"
+                  value={filterLevel} // Controlled value
+                  defaultValue="" // Default value – "All Levels"
+                  onChange={(e) => setFilterLevel(e.target.value)}
+                  sx={{
+                    width: "5vw",
+                    minWidth: "80px",
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Levels</em>
+                  </MenuItem>
+                  {levels.map((level) => (
+                    <MenuItem key={level.id} value={level.id}>
+                      {level.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </MDBox>
+
               <MDBox pt={3}>
                 {loadingClass ? (
                   <MDTypography variant="h6" color="info" align="center">

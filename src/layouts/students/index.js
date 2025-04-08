@@ -26,7 +26,9 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import classService from "services/classService";
 import levelService from "services/levelService";
 import StudentOverviewModal from "./studentOverviewModal";
-
+import InputAdornment from "@mui/material/InputAdornment";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 function Students() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -66,6 +68,7 @@ function Students() {
   });
   const [searchName, setSearchName] = useState("");
   const [searchSchedule, setSearchSchedule] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const fetchLevels = async () => {
@@ -693,9 +696,24 @@ function Students() {
             label="Password"
             fullWidth
             margin="normal"
-            type="password"
+            // Toggle type between "text" and "password"
+            type={showPassword ? "text" : "password"}
             value={studentData.password}
             onChange={(e) => setStudentData({ ...studentData, password: e.target.value })}
+            // Add an adornment with an icon button
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Start Date"

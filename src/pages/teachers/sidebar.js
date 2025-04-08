@@ -264,7 +264,24 @@ const Sidebar = ({
         <Text style={{ color: colors.darkGreen }}>Baamboozle</Text>
       </div>
       {/* Thêm Wordwall */}
-
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => window.open(googleDriveLink)}
+      >
+        <img src={googleDriveIcon} alt="googleDrive" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Đề thi, Đề ôn tập</Text>
+      </div>
       {/* Công cụ giao bài tập */}
       <div
         style={{
@@ -354,24 +371,6 @@ const Sidebar = ({
       >
         <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
         <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => window.open(googleDriveLink)}
-      >
-        <img src={googleDriveIcon} alt="googleDrive" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Đề thi, Đề ôn tập</Text>
       </div>
 
       {/* Chi tiết tình hình học */}

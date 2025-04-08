@@ -341,15 +341,21 @@ const TeacherPage = () => {
   const checkClassScheduleForToday = () => {
     if (!lessonByScheduleData || lessonByScheduleData.length === 0) return false;
 
-    // Get today's date in YYYY-MM-DD format
+    // Get today's date using local time
     const today = new Date();
+    const padZero = (num) => String(num).padStart(2, "0");
+    const todayFormatted = `${today.getFullYear()}-${padZero(today.getMonth() + 1)}-${padZero(
+      today.getDate()
+    )}`;
 
-    const todayFormatted = today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
-    console.log("Today is " + todayFormatted);
-    // Check if any lesson schedule matches today's date
+    console.log("Today (raw):", today);
+    console.log("Today (formatted):", todayFormatted);
+
+    // Check if any lesson schedule matches today's formatted date
     const todaySchedule = lessonByScheduleData.find((schedule) => schedule.date === todayFormatted);
     return todaySchedule !== undefined;
   };
+
   const getSchedulesForToday = () => {
     if (!lessonByScheduleData || lessonByScheduleData.length === 0) return [];
 
