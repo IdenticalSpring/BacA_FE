@@ -448,7 +448,7 @@ export default function CreateHomeWork({
         gap: "10px",
         maxHeight: "70vh",
         overflow: "auto",
-        height: "70vh",
+        // height: "70vh",
       }}
     >
       <div style={{ maxHeight: "60vh", overflow: "auto", width: isMobile ? "100%" : "70%" }}>

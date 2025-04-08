@@ -1346,7 +1346,7 @@ const TeacherPage = () => {
         ) : (
           <div
             style={{
-              maxHeight: "70vh",
+              maxHeight: "75vh",
               width: "100%",
               display: "flex",
               flexWrap: "wrap",

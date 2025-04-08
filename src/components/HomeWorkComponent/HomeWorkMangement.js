@@ -87,7 +87,7 @@ export default function HomeWorkMangement({
   };
   const handleEdit = (homeWork) => {
     setEditingHomeWork(homeWork);
-    setSelectedHomeWorkId(homeWork.id);
+    setSelectedHomeWorkId(homeWork?.id);
     form.setFieldsValue({
       title: homeWork.title,
       linkYoutube: homeWork.linkYoutube,
@@ -539,7 +539,11 @@ export default function HomeWorkMangement({
             key="submit"
             type="primary"
             onClick={() => {
-              setOpenSend(true);
+              // setOpenSend(true);
+              const entity = lessonByScheduleData?.find(
+                (item) => item.homeWorkId === selectedHomeWorkId
+              );
+              handleUpdateSendingHomeworkStatus(entity.id);
             }}
             style={{
               backgroundColor: colors.emerald,

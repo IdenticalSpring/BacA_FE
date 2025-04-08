@@ -333,7 +333,7 @@ export default function CreateLesson({
     >
       <div
         style={{
-          // height: "70vh",
+          height: "60vh",
           maxHeight: "60vh",
           overflow: "auto",
           width: isMobile ? "100%" : "70%",
@@ -398,22 +398,24 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Button
-              icon={<RobotOutlined />}
-              onClick={enhanceDescription}
-              loading={loadingEnhanceDescription}
-              style={{
-                alignSelf: "flex-start",
-                marginTop: "50px",
-                borderRadius: "6px",
-                backgroundColor: colors.emerald,
-                borderColor: colors.emerald,
-                color: colors.white,
-              }}
-            >
-              Cải thiện mô tả
-            </Button>
-
+            <Form.Item>
+              <Button
+                icon={<RobotOutlined />}
+                onClick={enhanceDescription}
+                loading={loadingEnhanceDescription}
+                style={{
+                  alignSelf: "flex-start",
+                  marginTop: isMobile ? "100px" : "20px",
+                  marginBottom: "20px",
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  color: colors.white,
+                }}
+              >
+                Cải thiện mô tả
+              </Button>
+            </Form.Item>
             <Form.Item name="lessonPlan" label="Kế hoạch bài học">
               <ReactQuill
                 theme="snow"
@@ -429,22 +431,24 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Button
-              icon={<RobotOutlined />}
-              onClick={enhanceLessonPlan}
-              loading={loadingEnhanceLessonPlan}
-              style={{
-                alignSelf: "flex-start",
-                marginTop: "50px",
-                marginBottom: "20px",
-                borderRadius: "6px",
-                backgroundColor: colors.emerald,
-                borderColor: colors.emerald,
-                color: colors.white,
-              }}
-            >
-              Cải thiện kế hoạch bài học
-            </Button>
+            <Form.Item>
+              <Button
+                icon={<RobotOutlined />}
+                onClick={enhanceLessonPlan}
+                loading={loadingEnhanceLessonPlan}
+                style={{
+                  alignSelf: "flex-start",
+                  marginTop: isMobile ? "100px" : "20px",
+                  marginBottom: "20px",
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  color: colors.white,
+                }}
+              >
+                Cải thiện kế hoạch bài học
+              </Button>
+            </Form.Item>
             <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}

@@ -516,7 +516,11 @@ export default function LessonMangement({
             key="submit"
             type="primary"
             onClick={() => {
-              setOpenSend(true);
+              // setOpenSend(true);
+              const entity = lessonByScheduleData?.find(
+                (item) => item.lessonID === selectedLessonId
+              );
+              handleUpdateSendingLessonStatus(entity.id);
             }}
             style={{
               backgroundColor: colors.emerald,
