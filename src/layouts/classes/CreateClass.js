@@ -1197,8 +1197,8 @@ function CreateClass() {
               <MDBox
                 mx={2}
                 mt={0}
-                // py={3}
-                // px={2}
+                py={3}
+                px={2}
                 variant="gradient"
                 borderRadius="lg"
                 sx={{ backgroundColor: colors.deepGreen, color: colors.white }}
@@ -1208,8 +1208,10 @@ function CreateClass() {
                 </MDTypography>
               </MDBox>
               {/* Filter Dropdown */}
-              <MDBox pt={2} px={2}>
+              <MDBox mt={2} px={2}>
                 <TextField
+                  py={3}
+                  px={2}
                   select
                   label="Filter by Level"
                   variant="outlined"
@@ -1217,7 +1219,7 @@ function CreateClass() {
                   defaultValue="" // Default value – "All Levels"
                   onChange={(e) => setFilterLevel(e.target.value)}
                   sx={{
-                    width: "5vw",
+                    width: "10vw",
                     minWidth: "80px",
                   }}
                 >
