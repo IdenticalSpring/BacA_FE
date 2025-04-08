@@ -148,7 +148,8 @@ export default function LessonMangement({
       formData.append("name", values.name);
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
-      formData.append("linkGame", values.linkGame);
+      // formData.append("linkGame", values.linkGame);
+      formData.append("linkGame", "meomeo");
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
       if (mp3file) {
@@ -305,20 +306,20 @@ export default function LessonMangement({
         </Typography.Text>
       ),
     },
-    {
-      title: "Link Game",
-      dataIndex: "linkGame",
-      key: "linkGame",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Game",
+    //   dataIndex: "linkGame",
+    //   key: "linkGame",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     // {
     //   title: "Link Speech",
     //   dataIndex: "linkSpeech",
@@ -348,6 +349,29 @@ export default function LessonMangement({
       ),
     },
     {
+      title: "Ngày học",
+      dataIndex: "id",
+      key: "id",
+      width: "25%",
+      render: (text) => {
+        const date = lessonByScheduleData?.filter((item) => item.lessonID === text)[0]?.date;
+        // console.log(lessonByScheduleData.filter((item) => item.lessonID === text));
+
+        return (
+          <p>
+            {(date &&
+              new Date(date).toLocaleDateString("vi-VN", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })) ||
+              "Không có ngày"}
+          </p>
+        );
+      },
+    },
+    {
       title: "Trạng thái",
       dataIndex: "id",
       key: "id",
@@ -355,7 +379,7 @@ export default function LessonMangement({
       render: (text) => {
         // console.log(text);
 
-        const length = lessonByScheduleData.filter((item) => item.lessonID === text).length;
+        const length = lessonByScheduleData?.filter((item) => item.lessonID === text).length;
         const isSentLength = lessonByScheduleData.filter(
           (item) => item.lessonID === text && item.isLessonSent === true
         ).length;
@@ -416,7 +440,7 @@ export default function LessonMangement({
       ),
     },
   ];
-  console.log(selectedLessonId);
+  // console.log(selectedLessonId);
 
   return (
     <div style={{ padding: "14px" }}>
@@ -594,7 +618,7 @@ export default function LessonMangement({
               }}
             />
           </Form.Item>
-          <Form.Item name="linkGame" label="Link game bài học">
+          {/* <Form.Item name="linkGame" label="Link game bài học">
             <Input
               placeholder="Nhập link game bài học"
               style={{
@@ -602,7 +626,7 @@ export default function LessonMangement({
                 borderColor: colors.inputBorder,
               }}
             />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item
             name="description"
             label="Mô tả"

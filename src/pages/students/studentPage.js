@@ -409,7 +409,7 @@ const StudentPage = () => {
                   </div>
                 )}
                 {/* Thêm nút Luyện tập */}
-                {lesson.linkGame && (
+                {/* {lesson.linkGame && (
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
                     <Button
                       type="primary"
@@ -419,7 +419,7 @@ const StudentPage = () => {
                       Luyện tập
                     </Button>
                   </div>
-                )}
+                )} */}
               </Card>
             )}
           />

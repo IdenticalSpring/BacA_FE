@@ -226,24 +226,7 @@ const Sidebar = ({
         <LaptopOutlined />
         <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giảng dạy</Text>
       </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => openLink("https://kahoot.com")}
-      >
-        <img src={kahootIcon} alt="Kahoot" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Kahoot</Text>
-      </div>
+
       <div
         style={{
           margin: "0 auto",
@@ -281,42 +264,6 @@ const Sidebar = ({
         <Text style={{ color: colors.darkGreen }}>Baamboozle</Text>
       </div>
       {/* Thêm Wordwall */}
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => window.open("https://wordwall.net/myactivities")}
-      >
-        <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => window.open(googleDriveLink)}
-      >
-        <img src={googleDriveIcon} alt="googleDrive" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Google Drive</Text>
-      </div>
 
       {/* Công cụ giao bài tập */}
       <div
@@ -371,6 +318,60 @@ const Sidebar = ({
       >
         <img src={blootket} alt="Blooket" style={{ width: 20, height: 20 }} />
         <Text style={{ color: colors.darkGreen }}>Blooket</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => openLink("https://kahoot.com")}
+      >
+        <img src={kahootIcon} alt="Kahoot" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Kahoot</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => window.open("https://wordwall.net/myactivities")}
+      >
+        <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
+      </div>
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          cursor: "pointer",
+        }}
+        onClick={() => window.open(googleDriveLink)}
+      >
+        <img src={googleDriveIcon} alt="googleDrive" style={{ width: 20, height: 20 }} />
+        <Text style={{ color: colors.darkGreen }}>Đề thi, Đề ôn tập</Text>
       </div>
 
       {/* Chi tiết tình hình học */}

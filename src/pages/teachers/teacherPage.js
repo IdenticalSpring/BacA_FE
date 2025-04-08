@@ -1351,9 +1351,9 @@ const TeacherPage = () => {
           >
             <div
               style={{
-                maxHeight: "60vh",
+                maxHeight: "70vh",
                 width: "100%",
-                height: "60vh",
+                height: "70vh",
               }}
             >
               <CreateLesson
@@ -1466,9 +1466,9 @@ const TeacherPage = () => {
           >
             <div
               style={{
-                maxHeight: "60vh",
+                maxHeight: "70vh",
                 width: "100%",
-                height: "60vh",
+                height: "70vh",
               }}
             >
               <CreateHomeWork
@@ -1488,6 +1488,7 @@ const TeacherPage = () => {
                 level={classData?.level}
                 classID={selectedClass}
                 students={students}
+                homeworkZaloLink={homeWorks}
               />
             </div>
             {/* <div

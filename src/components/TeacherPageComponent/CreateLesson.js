@@ -65,7 +65,7 @@ export default function CreateLesson({
   const [gender, setGender] = useState(1);
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
-
+  const [loadingCreateAndSend, setLoadingCreateAndSend] = useState(false);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -167,14 +167,25 @@ export default function CreateLesson({
     }
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, status) => {
     try {
-      setLoadingCreateLesson(true);
+      if (selected.size === 0) {
+        message.warning("Vui lòng chọn ít nhất 1 ngày");
+        return;
+      }
+      if (!status) {
+        setLoadingCreateLesson(true);
+      }
+      if (status) {
+        setLoadingCreateAndSend(true);
+      }
+      // if(status ===1){
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
-      formData.append("linkGame", values.linkGame);
+      // formData.append("linkGame", values.linkGame);
+      formData.append("linkGame", "meomeo");
       formData.append("description", quillDescription.getText()); // Lấy nội dung từ description
       formData.append("lessonPlan", quillLessonPlan.getText()); // Lấy nội dung từ lessonPlan
       formData.append("teacherId", teacherId);
@@ -184,14 +195,66 @@ export default function CreateLesson({
       }
 
       const lessonData = await lessonService.createLesson(formData);
+      let selectedSchedule = null;
       for (const item of selected) {
         const data = await lessonByScheduleService.updateLessonOfLessonBySchedule(
           item,
           lessonData.id
         );
+        selectedSchedule = data;
       }
+      if (status !== true) {
+        message.success("Lesson created successfully!");
+      }
+      // }
+      if (status === true) {
+        const data = await lessonByScheduleService.updateSendingLessonStatus(
+          selectedSchedule?.id,
+          true
+        );
+        const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+          if (item.id === selectedSchedule?.id) {
+            return { ...item, lessonID: lessonData.id, isLessonSent: true };
+          }
+          return item;
+        });
+        setLessonByScheduleData(lessonByScheduleDataUpdated);
+        let detailStr = "Bạn mới có bài học mới vào ngày:";
+        // console.log(data);
+        const date =
+          lessonByScheduleDataUpdated.find((item) => item.id === selectedSchedule?.id)?.date ||
+          null;
+        // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
-      message.success("Lesson created successfully!");
+        detailStr +=
+          " " +
+            (date &&
+              new Date(date).toLocaleDateString("vi-VN", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })) || "Không có ngày";
+        const notificationData = {
+          title: "Bài học mới",
+          general: false,
+          classID: classID,
+          detail: detailStr,
+          createdAt: new Date(),
+        };
+        const notificationRes = await notificationService.createNotification(notificationData);
+        const userNotificationCreate = students.forEach(async (element) => {
+          const userNotificationData = {
+            status: false,
+            notificationID: notificationRes.id,
+            studentID: element.id,
+          };
+          const userNotificationRes = await user_notificationService.createUserNotification(
+            userNotificationData
+          );
+        });
+        message.success("Đã gửi bài học thành công!");
+      }
       form.resetFields();
       setTextToSpeech("");
       setMp3file(null);
@@ -202,9 +265,19 @@ export default function CreateLesson({
       message.error("Failed to create lesson. Please try again." + err);
     } finally {
       setLoadingCreateLesson(false);
+      setLoadingCreateAndSend(false);
     }
   };
-
+  const onSubmitWithStatus = (status) => {
+    form
+      .validateFields()
+      .then((values) => {
+        handleSubmit(values, status);
+      })
+      .catch((err) => {
+        console.error("Validation failed:", err);
+      });
+  };
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTSLesson(true);
@@ -253,22 +326,30 @@ export default function CreateLesson({
         flexWrap: "wrap",
         justifyContent: "space-between",
         gap: "10px",
-        maxHeight: "60vh",
+        maxHeight: "70vh",
         overflow: "auto",
+        height: "70vh",
       }}
     >
-      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "60%" }}>
+      <div
+        style={{
+          // height: "70vh",
+          maxHeight: "60vh",
+          overflow: "auto",
+          width: isMobile ? "100%" : "70%",
+        }}
+      >
         <Card
           style={{
             borderRadius: "12px",
-            boxShadow: "0 4px 12px " + colors.softShadow,
+            // boxShadow: "0 4px 12px " + colors.softShadow,
             background: colors.white,
-            maxWidth: "800px",
-            margin: "0 auto",
+            maxWidth: "100%",
+            margin: "0 10px",
           }}
         >
           <div style={{ marginBottom: isMobile ? "" : "14px" }}>
-            <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
+            <Title level={5} style={{ margin: "5px 0", color: colors.darkGreen }}>
               Tạo bài học mới
             </Title>
             <Divider style={{ borderColor: colors.paleGreen }} />
@@ -276,7 +357,7 @@ export default function CreateLesson({
           <Form
             form={form}
             layout="vertical"
-            onFinish={handleSubmit}
+            // onFinish={(values) => handleSubmit(values, false)}
             initialValues={{
               name: "",
               level: "",
@@ -304,7 +385,7 @@ export default function CreateLesson({
             </Form.Item>
             <Form.Item name="description" label="Mô tả">
               <ReactQuill
-                placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+                // placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
                 theme="snow"
                 modules={modules}
                 formats={quillFormats}
@@ -417,7 +498,7 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item name="linkGame" label="Link game bài học">
+            {/* <Form.Item name="linkGame" label="Link game bài học">
               <Input
                 placeholder="Nhập link game bài học"
                 style={{
@@ -425,7 +506,7 @@ export default function CreateLesson({
                   borderColor: colors.inputBorder,
                 }}
               />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
         </Card>
       </div>
@@ -443,15 +524,14 @@ export default function CreateLesson({
               borderColor: colors.emerald,
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
-            onClick={() => {
-              form.submit();
-            }}
+            onClick={() => onSubmitWithStatus(false)}
           >
             Lưu
           </Button>
           <Button
             type="primary"
             htmlType="submit"
+            loading={loadingCreateAndSend}
             icon={<SendOutlined />}
             style={{
               borderRadius: "6px",
@@ -459,9 +539,7 @@ export default function CreateLesson({
               borderColor: colors.emerald,
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
-            onClick={() => {
-              setOpenSend(true);
-            }}
+            onClick={() => onSubmitWithStatus(true)}
           >
             Gửi link
           </Button>
@@ -469,9 +547,9 @@ export default function CreateLesson({
       )}
       <div
         style={{
-          maxHeight: "50vh",
+          maxHeight: "60vh",
           overflow: "auto",
-          width: isMobile ? "100%" : "39%",
+          width: isMobile ? "100%" : "29%",
           display: "flex",
           justifyContent: "center",
         }}
@@ -500,15 +578,14 @@ export default function CreateLesson({
                 borderColor: colors.emerald,
                 boxShadow: "0 2px 0 " + colors.softShadow,
               }}
-              onClick={() => {
-                form.submit();
-              }}
+              onClick={() => onSubmitWithStatus(false)}
             >
               Lưu
             </Button>
             <Button
               type="primary"
               htmlType="submit"
+              loading={loadingCreateAndSend}
               icon={<SendOutlined />}
               style={{
                 borderRadius: "6px",
@@ -516,9 +593,7 @@ export default function CreateLesson({
                 borderColor: colors.emerald,
                 boxShadow: "0 2px 0 " + colors.softShadow,
               }}
-              onClick={() => {
-                setOpenSend(true);
-              }}
+              onClick={() => onSubmitWithStatus(true)}
             >
               Gửi link
             </Button>

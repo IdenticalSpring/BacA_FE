@@ -71,6 +71,7 @@ export default function HomeWorkMangement({
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [selectedHomeWorkId, setSelectedHomeWorkId] = useState(null);
+
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -369,6 +370,29 @@ export default function HomeWorkMangement({
           {text?.replace(/<[^>]*>?/gm, "") || ""}
         </Typography.Paragraph>
       ),
+    },
+    {
+      title: "Ngày học",
+      dataIndex: "id",
+      key: "id",
+      width: "25%",
+      render: (text) => {
+        const date = lessonByScheduleData?.filter((item) => item.homeWorkId === text)[0]?.date;
+        // console.log(lessonByScheduleData.filter((item) => item.lessonID === text));
+
+        return (
+          <p>
+            {(date &&
+              new Date(date).toLocaleDateString("vi-VN", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })) ||
+              "Không có ngày"}
+          </p>
+        );
+      },
     },
     {
       title: "Trạng thái",

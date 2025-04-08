@@ -38,13 +38,15 @@ export default function HomeWorkBySchedule({
       if (newSet.has(index)) {
         newSet.delete(index);
       } else {
-        newSet.add(index);
+        if (newSet.size === 0) {
+          newSet.add(index);
+        }
       }
       return newSet;
     });
   };
   return (
-    <div style={{ width: "90%", margin: "15px 0", height: "80%" }}>
+    <div style={{ width: "90%", height: "80%" }}>
       {paginatedData?.length > 0 ? (
         <>
           {paginatedData.map((item, index) => {

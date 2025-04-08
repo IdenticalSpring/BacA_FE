@@ -58,6 +58,7 @@ export default function CreateHomeWork({
   setLessonByScheduleData,
   classID,
   students,
+  homeworkZaloLink,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -74,6 +75,8 @@ export default function CreateHomeWork({
   const [gender, setGender] = useState(1);
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
+  const [loadingCreateAndSend, setLoadingCreateAndSend] = useState(false);
+  const [zaloLink, setZaloLink] = useState("");
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -93,6 +96,12 @@ export default function CreateHomeWork({
       setQuill(editor);
     }
   }, [quillRef]);
+  // useEffect(() => {
+  //   const lastHomework = homeworks[homeworks.length - 1];
+  //   console.log(lastHomework);
+
+  //   setZaloLink(lastHomework?.linkZalo);
+  // }, [homeworks]);
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -138,9 +147,18 @@ export default function CreateHomeWork({
       },
     },
   };
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, status) => {
     try {
-      setLoadingCreateHomeWork(true);
+      if (selected.size === 0) {
+        message.warning("Vui lòng chọn ít nhất 1 ngày");
+        return;
+      }
+      if (!status) {
+        setLoadingCreateHomeWork(true);
+      }
+      if (status) {
+        setLoadingCreateAndSend(true);
+      }
 
       // Tạo FormData
       const formData = new FormData();
@@ -161,15 +179,65 @@ export default function CreateHomeWork({
       }
 
       const homeworkData = await homeWorkService.createHomeWork(formData);
-
+      let selectedSchedule = null;
       for (const item of selected) {
         const data = await lessonByScheduleService.updateHomeWorkLessonBySchedule(
           item,
           homeworkData.id
         );
+        selectedSchedule = data;
       }
+      if (status !== true) {
+        message.success("Homework created successfully!");
+      }
+      if (status === true) {
+        const data = await lessonByScheduleService.updateSendingHomeworkStatus(
+          selectedSchedule?.id,
+          true
+        );
+        const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+          if (item.id === selectedSchedule?.id) {
+            return { ...item, homeWorkId: homeworkData.id, isHomeWorkSent: true };
+          }
+          return item;
+        });
+        setLessonByScheduleData(lessonByScheduleDataUpdated);
+        let detailStr = "Bạn mới có bài tập mới vào ngày:";
+        // console.log(data);
+        const date =
+          lessonByScheduleDataUpdated.find((item) => item.id === selectedSchedule?.id)?.date ||
+          null;
+        // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
-      message.success("Homework created successfully!");
+        detailStr +=
+          " " +
+            (date &&
+              new Date(date).toLocaleDateString("vi-VN", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })) || "Không có ngày";
+        const notificationData = {
+          title: "Bài tập mới",
+          general: false,
+          classID: classID,
+          detail: detailStr,
+          createdAt: new Date(),
+        };
+        const notificationRes = await notificationService.createNotification(notificationData);
+        const userNotificationCreate = students.forEach(async (element) => {
+          const userNotificationData = {
+            status: false,
+            notificationID: notificationRes.id,
+            studentID: element.id,
+          };
+          const userNotificationRes = await user_notificationService.createUserNotification(
+            userNotificationData
+          );
+        });
+        message.success("Đã gửi bài tập thành công!");
+      }
       form.resetFields();
       setTextToSpeech("");
       setMp3file(null);
@@ -178,6 +246,7 @@ export default function CreateHomeWork({
       message.error("Failed to create lesson. Please try again.");
     } finally {
       setLoadingCreateHomeWork(false);
+      setLoadingCreateAndSend(false);
     }
   };
   const handleUpdateSendingHomeworkStatus = async (id) => {
@@ -229,6 +298,16 @@ export default function CreateHomeWork({
     } finally {
       setLoadingSchedule(false);
     }
+  };
+  const onSubmitWithStatus = (status) => {
+    form
+      .validateFields()
+      .then((values) => {
+        handleSubmit(values, status);
+      })
+      .catch((err) => {
+        console.error("Validation failed:", err);
+      });
   };
   // console.log(
   //   new Date("2025-03-28").toLocaleDateString("vi-VN", {
@@ -367,18 +446,19 @@ export default function CreateHomeWork({
         flexWrap: "wrap",
         justifyContent: "space-between",
         gap: "10px",
-        maxHeight: "60vh",
+        maxHeight: "70vh",
         overflow: "auto",
+        height: "70vh",
       }}
     >
-      <div style={{ maxHeight: "50vh", overflow: "auto", width: isMobile ? "100%" : "60%" }}>
+      <div style={{ maxHeight: "60vh", overflow: "auto", width: isMobile ? "100%" : "70%" }}>
         <Card
           style={{
             borderRadius: "12px",
-            boxShadow: "0 4px 12px " + colors.softShadow,
+            // boxShadow: "0 4px 12px " + colors.softShadow,
             background: colors.white,
-            maxWidth: "800px",
-            margin: "0 auto",
+            maxWidth: "100%",
+            margin: "0 10px",
           }}
         >
           <div style={{ marginBottom: isMobile ? "" : "14px" }}>
@@ -394,7 +474,7 @@ export default function CreateHomeWork({
                         >
                           Back to Lessons
                         </Button> */}
-            <Title level={3} style={{ margin: "16px 0", color: colors.darkGreen }}>
+            <Title level={5} style={{ margin: "5px 0", color: colors.darkGreen }}>
               Tạo bài tập
             </Title>
             <Divider style={{ borderColor: colors.paleGreen }} />
@@ -403,7 +483,7 @@ export default function CreateHomeWork({
           <Form
             form={form}
             layout="vertical"
-            onFinish={handleSubmit}
+            // onFinish={handleSubmit}
             initialValues={{
               title: "",
               level: "",
@@ -564,6 +644,8 @@ export default function CreateHomeWork({
                   borderRadius: "6px",
                   borderColor: colors.inputBorder,
                 }}
+                value={zaloLink}
+                onChange={(e) => setZaloLink(e.target.value)}
               />
             </Form.Item>
           </Form>
@@ -582,16 +664,14 @@ export default function CreateHomeWork({
               borderColor: colors.emerald,
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
-            onClick={() => {
-              form.submit();
-            }}
+            onClick={() => onSubmitWithStatus(false)}
           >
             Lưu
           </Button>
           <Button
             type="primary"
             htmlType="submit"
-            // loading={loadingCreateHomeWork}
+            loading={loadingCreateAndSend}
             icon={<SendOutlined />}
             style={{
               borderRadius: "6px",
@@ -599,9 +679,7 @@ export default function CreateHomeWork({
               borderColor: colors.emerald,
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
-            onClick={() => {
-              setOpenSend(true);
-            }}
+            onClick={() => onSubmitWithStatus(true)}
           >
             Gửi link
           </Button>
@@ -609,9 +687,9 @@ export default function CreateHomeWork({
       )}
       <div
         style={{
-          maxHeight: "50vh",
+          maxHeight: "60vh",
           overflow: "auto",
-          width: isMobile ? "100%" : "39%",
+          width: isMobile ? "100%" : "29%",
           display: "flex",
           justifyContent: "center",
         }}
@@ -640,16 +718,14 @@ export default function CreateHomeWork({
                 borderColor: colors.emerald,
                 boxShadow: "0 2px 0 " + colors.softShadow,
               }}
-              onClick={() => {
-                form.submit();
-              }}
+              onClick={() => onSubmitWithStatus(false)}
             >
               Lưu
             </Button>
             <Button
               type="primary"
               htmlType="submit"
-              // loading={loadingClass}
+              loading={loadingCreateAndSend}
               icon={<SendOutlined />}
               style={{
                 borderRadius: "6px",
@@ -657,9 +733,7 @@ export default function CreateHomeWork({
                 borderColor: colors.emerald,
                 boxShadow: "0 2px 0 " + colors.softShadow,
               }}
-              onClick={() => {
-                setOpenSend(true);
-              }}
+              onClick={() => onSubmitWithStatus(true)}
             >
               Gửi link
             </Button>
@@ -795,4 +869,5 @@ CreateHomeWork.propTypes = {
   level: PropTypes.number.isRequired,
   classID: PropTypes.number.isRequired, // Giả sử level là string
   students: PropTypes.array.isRequired, // Giả sử level là string
+  homeworkZaloLink: PropTypes.array.isRequired,
 };
