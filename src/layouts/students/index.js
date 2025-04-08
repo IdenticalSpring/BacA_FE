@@ -29,6 +29,7 @@ import StudentOverviewModal from "./studentOverviewModal";
 import InputAdornment from "@mui/material/InputAdornment";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { message, Spin } from "antd";
 function Students() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -46,6 +47,7 @@ function Students() {
   ]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false); // State cho modal chi tiết
@@ -246,7 +248,7 @@ function Students() {
       // yearOfBirth: student.yearOfBirth,
       phone: student.phone,
       imgUrl: student.imgUrl,
-      classID: student.class?.name,
+      classID: student.class?.id,
       level: +student.level,
       startDate: student.startDate,
       endDate: student.endDate,
@@ -294,6 +296,7 @@ function Students() {
 
   const handleSave = async () => {
     try {
+      setLoadingEdit(true);
       const dataToSubmit = {
         name: studentData.name,
         username: studentData.username,
@@ -344,6 +347,31 @@ function Students() {
                   endDate: updatedStudent.endDate,
                   note: updatedStudent.class?.name,
                   rawLevel: updatedStudent.level,
+                  actions: (
+                    <>
+                      <IconButton
+                        sx={{
+                          color: colors.deepGreen,
+                          "&:hover": { backgroundColor: colors.highlightGreen },
+                        }}
+                        onClick={() => handleViewDetail(updatedStudent)}
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                      <IconButton
+                        sx={{
+                          color: colors.midGreen,
+                          "&:hover": { backgroundColor: colors.highlightGreen },
+                        }}
+                        onClick={() => handleEdit(updatedStudent)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton color="error" onClick={() => handleDelete(updatedStudent.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </>
+                  ),
                 }
               : row
           )
@@ -365,9 +393,13 @@ function Students() {
       setPreviewImage(null);
       setEditMode(false);
       setSelectedStudent(null);
+      message.success("Saving succcess");
     } catch (error) {
       console.error("Error saving student:", error);
-      alert("Error saving student!");
+      // alert("Error saving student!");
+      message.error("Error saving student! " + error);
+    } finally {
+      setLoadingEdit(false);
     }
   };
 
@@ -698,6 +730,7 @@ function Students() {
             margin="normal"
             // Toggle type between "text" and "password"
             type={showPassword ? "text" : "password"}
+            // type={"text"}
             value={studentData.password}
             onChange={(e) => setStudentData({ ...studentData, password: e.target.value })}
             // Add an adornment with an icon button
@@ -750,12 +783,14 @@ function Students() {
           </Button>
           <Button
             onClick={handleSave}
+            disabled={loadingEdit}
             sx={{
               backgroundColor: colors.midGreen,
               color: colors.white,
               "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
             }}
           >
+            {loadingEdit && <Spin style={{ marginRight: "5px" }} />}
             {editMode ? "Save" : "Create"}
           </Button>
         </DialogActions>
