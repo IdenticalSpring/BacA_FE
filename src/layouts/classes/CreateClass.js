@@ -79,6 +79,7 @@ function CreateClass() {
   });
   const [dayOfWeekForCreate, setDayOfWeekForCreate] = useState(0);
   const [dayOfWeekForUpdate, setDayOfWeekForUpdate] = useState(0);
+  const [filterSchedule, setFilterSchedule] = useState(""); // State cho filter Schedule
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedulesForCreate, setSelectedSchedulesForCreate] = useState([]);
@@ -89,6 +90,7 @@ function CreateClass() {
     { Header: "Level", accessor: "level", width: "10%" },
     { Header: "Teacher", accessor: "teacher", width: "20%" },
     { Header: "Access ID", accessor: "accessId", width: "20%" },
+    { Header: "Schedule", accessor: "schedule", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ]);
   const [scheduleColumns] = useState([
@@ -125,16 +127,29 @@ function CreateClass() {
   const [filterLevel, setFilterLevel] = useState("");
   useEffect(() => {
     if (rawClasses.length > 0 && levels.length > 0) {
-      // Filter rawClasses if filterLevel is selected
-      const filteredRawClasses = filterLevel
-        ? rawClasses.filter((cls) => cls.level === filterLevel)
-        : rawClasses;
-      const formattedRows = filteredRawClasses.map((cls) => ({
+      let filteredClasses = rawClasses;
+
+      // Áp dụng bộ lọc nếu có filterSchedule
+      if (filterSchedule) {
+        filteredClasses = rawClasses.filter((cls) =>
+          cls.schedules?.some((sch) => sch.dayOfWeek === parseInt(filterSchedule))
+        );
+      }
+
+      // Định dạng dữ liệu để hiển thị trong bảng
+      const formattedRows = filteredClasses.map((cls) => ({
         id: cls.id,
         name: cls.name,
         level: levels.find((lv) => lv.id === cls.level)?.name || "N/A",
         teacher: cls.teacher?.name || "N/A",
         accessId: cls.accessId || "N/A",
+        schedule:
+          cls.schedules?.length > 0
+            ? cls.schedules
+                .slice(0, 2)
+                .map((sch) => `${daysOfWeek[sch.dayOfWeek]}: ${sch.startTime}-${sch.endTime}`)
+                .join(", ") + (cls.schedules.length > 2 ? "..." : "")
+            : "No Schedule",
         actions: (
           <>
             <IconButton color="primary" onClick={() => handleEdit(cls)}>
@@ -145,7 +160,7 @@ function CreateClass() {
       }));
       setClassRows(formattedRows);
     }
-  }, [rawClasses, levels, filterLevel]);
+  }, [rawClasses, levels, filterSchedule]);
   // State cho LevelManagement
   const [levelName, setLevelName] = useState("");
   const [levelDescription, setLevelDescription] = useState("");
@@ -242,23 +257,17 @@ function CreateClass() {
   const fetchClasses = async () => {
     try {
       setLoadingClass(true);
-      const data = await classService.getAllClasses();
-      setRawClasses(data);
-      // const formattedRows = data.map((cls) => ({
-      //   id: cls.id,
-      //   name: cls.name,
-      //   level: levels?.find((lv) => lv.id === cls.level)?.name,
-      //   teacher: cls.teacher?.name || "N/A",
-      //   accessId: cls.accessId || "N/A",
-      //   actions: (
-      //     <>
-      //       <IconButton color="primary" onClick={() => handleEdit(cls)}>
-      //         <EditIcon />
-      //       </IconButton>
-      //     </>
-      //   ),
-      // }));
-      // setClassRows(formattedRows);
+      const data = await classService.getAllClasses(); // Lấy danh sách lớp học
+
+      // Fetch schedules cho tất cả lớp học đồng thời
+      const classesWithSchedules = await Promise.all(
+        data.map(async (cls) => {
+          const schedules = await lessonByScheduleService.getSchedulesByClass(cls.id);
+          return { ...cls, schedules };
+        })
+      );
+
+      setRawClasses(classesWithSchedules); // Lưu dữ liệu đầy đủ vào rawClasses
     } catch (err) {
       setErrorClass("Lỗi khi tải dữ liệu lớp học!");
     } finally {
@@ -1208,8 +1217,15 @@ function CreateClass() {
                 </MDTypography>
               </MDBox>
               {/* Filter Dropdown */}
-              <MDBox mt={2} px={2}>
-                <TextField
+              <MDBox
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={2}
+                px={2}
+                py={1}
+              >
+                {/* <TextField
                   py={3}
                   px={2}
                   select
@@ -1237,6 +1253,39 @@ function CreateClass() {
                       {level.name}
                     </MenuItem>
                   ))}
+                </TextField> */}
+                {/* Filter Schedule */}
+                <TextField
+                  select
+                  label="Filter by Schedule"
+                  variant="outlined"
+                  value={filterSchedule}
+                  defaultValue=""
+                  onChange={(e) => setFilterSchedule(e.target.value)}
+                  sx={{
+                    width: "10vw",
+                    minWidth: "80px",
+                    "& .MuiInputBase-root": {
+                      height: "48px",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      padding: "14px 14px",
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Schedules</em>
+                  </MenuItem>
+                  {daysOfWeek.slice(1).map(
+                    (
+                      day,
+                      index // Bỏ "Choose day of week" bằng slice(1)
+                    ) => (
+                      <MenuItem key={index} value={index + 1}>
+                        {day}
+                      </MenuItem>
+                    )
+                  )}
                 </TextField>
               </MDBox>
 
