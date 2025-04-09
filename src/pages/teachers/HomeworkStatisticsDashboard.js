@@ -69,7 +69,7 @@ const getStatusTag = (status) => {
     case 2:
       return (
         <Tag style={{ margin: 0 }} color="gold">
-          Có phép
+          Đi trễ
         </Tag>
       );
     default:
@@ -159,6 +159,11 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
                 (item) =>
                   item.student?.id === std?.id && item.lessonBySchedule?.id === selectedSchedule?.id
               )?.present ?? -1,
+            checkinNote:
+              checkinData?.find(
+                (item) =>
+                  item.student?.id === std?.id && item.lessonBySchedule?.id === selectedSchedule?.id
+              )?.note ?? "",
           };
         });
         homeworkCountData = homeworkCountData?.map((item) => {
@@ -727,6 +732,14 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
 
                     return getStatusTag(text);
                   },
+                },
+                {
+                  title: "Ghi chú",
+                  dataIndex: "checkinNote",
+                  key: "checkinNote",
+                  render: (text) => (
+                    <span style={{ color: colors.darkGreen, fontWeight: 500 }}> {text}</span>
+                  ),
                 },
               ]}
               pagination={{
