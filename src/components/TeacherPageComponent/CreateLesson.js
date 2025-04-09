@@ -217,7 +217,7 @@ export default function CreateLesson({
           selectedSchedule?.id,
           true
         );
-        const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+        const lessonByScheduleDataUpdated = lessonByScheduleData?.map((item) => {
           if (item.id === selectedSchedule?.id) {
             return { ...item, lessonID: lessonData.id, isLessonSent: true };
           }
@@ -227,7 +227,7 @@ export default function CreateLesson({
         let detailStr = "Bạn mới có bài học mới vào ngày:";
         // console.log(data);
         const date =
-          lessonByScheduleDataUpdated.find((item) => item.id === selectedSchedule?.id)?.date ||
+          lessonByScheduleDataUpdated.find((item) => item?.id === selectedSchedule?.id)?.date ||
           null;
         // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
@@ -251,8 +251,8 @@ export default function CreateLesson({
         const userNotificationCreate = students.forEach(async (element) => {
           const userNotificationData = {
             status: false,
-            notificationID: notificationRes.id,
-            studentID: element.id,
+            notificationID: notificationRes?.id,
+            studentID: element?.id,
           };
           const userNotificationRes = await user_notificationService.createUserNotification(
             userNotificationData

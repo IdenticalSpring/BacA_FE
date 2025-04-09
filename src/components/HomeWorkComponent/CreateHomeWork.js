@@ -197,9 +197,9 @@ export default function CreateHomeWork({
           selectedSchedule?.id,
           true
         );
-        const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
+        const lessonByScheduleDataUpdated = lessonByScheduleData?.map((item) => {
           if (item.id === selectedSchedule?.id) {
-            return { ...item, homeWorkId: homeworkData.id, isHomeWorkSent: true };
+            return { ...item, homeWorkId: homeworkData?.id, isHomeWorkSent: true };
           }
           return item;
         });
@@ -207,7 +207,7 @@ export default function CreateHomeWork({
         let detailStr = "Bạn mới có bài tập mới vào ngày:";
         // console.log(data);
         const date =
-          lessonByScheduleDataUpdated.find((item) => item.id === selectedSchedule?.id)?.date ||
+          lessonByScheduleDataUpdated.find((item) => item?.id === selectedSchedule?.id)?.date ||
           null;
         // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
@@ -231,8 +231,8 @@ export default function CreateHomeWork({
         const userNotificationCreate = students.forEach(async (element) => {
           const userNotificationData = {
             status: false,
-            notificationID: notificationRes.id,
-            studentID: element.id,
+            notificationID: notificationRes?.id,
+            studentID: element?.id,
           };
           const userNotificationRes = await user_notificationService.createUserNotification(
             userNotificationData
@@ -431,7 +431,7 @@ export default function CreateHomeWork({
       try {
         setLoadingClass(true);
         const data = await classService.getClassById(classID);
-        setAccessId(data.accessId);
+        setAccessId(data?.accessId);
       } catch (err) {
         setAccessId(err);
       } finally {

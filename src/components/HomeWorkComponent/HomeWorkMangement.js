@@ -9,6 +9,7 @@ import {
   Radio,
   Select,
   Space,
+  Spin,
   Table,
   Tag,
   Typography,
@@ -22,8 +23,10 @@ import PropTypes from "prop-types";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  CopyOutlined,
   DeleteOutlined,
   EditOutlined,
+  ReadOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
 import { jwtDecode } from "jwt-decode";
@@ -33,6 +36,7 @@ import axios from "axios";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
+import classService from "services/classService";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -71,7 +75,20 @@ export default function HomeWorkMangement({
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [selectedHomeWorkId, setSelectedHomeWorkId] = useState(null);
+  const [showAccessId, setShowAccessId] = useState(false);
+  const [accessId, setAccessId] = useState("");
+  const [loadingClass, setLoadingClass] = useState(false);
+  const homeworkLink = "https://happyclass.com.vn/do-homework";
+  const [copySuccess, setCopySuccess] = useState(false);
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(homeworkLink).then(() => {
+      setCopySuccess(true);
+      message.success("Copied to clipboard!"); // Hiển thị thông báo
 
+      // Reset hiệu ứng sau 2 giây
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -144,6 +161,20 @@ export default function HomeWorkMangement({
       }
     }
   }, [mp3Url]);
+  useEffect(() => {
+    const fetchClass = async () => {
+      try {
+        setLoadingClass(true);
+        const data = await classService.getClassById(classID);
+        setAccessId(data?.accessId);
+      } catch (err) {
+        setAccessId(err);
+      } finally {
+        setLoadingClass(false);
+      }
+    };
+    fetchClass();
+  }, [classID]);
   const handleSave = async () => {
     try {
       setLoadingUpdate(true);
@@ -187,8 +218,8 @@ export default function HomeWorkMangement({
     try {
       const response = await lessonByScheduleService.updateSendingHomeworkStatus(id, true);
       console.log("Update response:", response);
-      const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
-        if (item.id === id) {
+      const lessonByScheduleDataUpdated = lessonByScheduleData?.map((item) => {
+        if (item?.id === id) {
           return { ...item, isHomeWorkSent: true };
         }
         return item;
@@ -196,7 +227,7 @@ export default function HomeWorkMangement({
       setLessonByScheduleData(lessonByScheduleDataUpdated);
       let detailStr = "Bạn mới có bài tập mới vào ngày:";
       // console.log(data);
-      const date = lessonByScheduleDataUpdated.find((item) => item.id === id)?.date || null;
+      const date = lessonByScheduleDataUpdated.find((item) => item?.id === id)?.date || null;
       // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
       detailStr +=
@@ -219,18 +250,20 @@ export default function HomeWorkMangement({
       const userNotificationCreate = students.forEach(async (element) => {
         const userNotificationData = {
           status: false,
-          notificationID: notificationRes.id,
-          studentID: element.id,
+          notificationID: notificationRes?.id,
+          studentID: element?.id,
         };
         const userNotificationRes = await user_notificationService.createUserNotification(
           userNotificationData
         );
       });
+
       message.success("Gửi bài tập thành công!");
+      setShowAccessId(true);
       // setOpenSend(false);
     } catch (error) {
       console.error("Error updating sending homework status:", error);
-      message.error("Có lỗi xảy ra trong quá trình gửi bài tập");
+      message.error("Có lỗi xảy ra trong quá trình gửi bài tập" + error);
     } finally {
       setLoadingSchedule(false);
     }
@@ -543,7 +576,7 @@ export default function HomeWorkMangement({
               const entity = lessonByScheduleData?.find(
                 (item) => item.homeWorkId === selectedHomeWorkId
               );
-              handleUpdateSendingHomeworkStatus(entity.id);
+              handleUpdateSendingHomeworkStatus(entity?.id);
             }}
             style={{
               backgroundColor: colors.emerald,
@@ -788,6 +821,46 @@ export default function HomeWorkMangement({
             <Text>Không có bài học nào</Text>
           )}
         </div>
+      </Modal>
+      <Modal
+        open={showAccessId}
+        onCancel={() => setShowAccessId(false)}
+        onClose={() => setShowAccessId(false)}
+        footer={<></>}
+      >
+        {loadingClass ? (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              marginTop: "10px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Spin />
+          </div>
+        ) : (
+          <Card style={{ maxWidth: "90%", margin: "auto", textAlign: "center" }}>
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <ReadOutlined style={{ fontSize: 32, color: "#1890ff" }} />
+              <Text strong style={{ fontSize: 16 }}>
+                Mã lớp của bạn là: <Text type="danger">{accessId}</Text>
+              </Text>
+              <Input value={homeworkLink} readOnly style={{ textAlign: "center", width: "100%" }} />
+
+              {/* Nút Copy với hiệu ứng */}
+              <Button
+                icon={<CopyOutlined />}
+                onClick={copyToClipboard}
+                type={copySuccess ? "default" : "primary"}
+              >
+                {copySuccess ? "Copied!" : "Copy Link bài tập"}
+              </Button>
+            </Space>
+          </Card>
+        )}
       </Modal>
     </div>
   );
