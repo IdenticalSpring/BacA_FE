@@ -27,5 +27,17 @@ const pagevisitService = {
       throw error.response?.data?.message || "Error fetching count visiter";
     }
   },
+  getStatsVisitor: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/pagevisit/stats`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching count visiter";
+    }
+  },
 };
 export default pagevisitService;

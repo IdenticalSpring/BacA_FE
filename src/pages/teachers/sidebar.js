@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Avatar, Typography, Button, Drawer, Modal } from "antd"; // Thêm Modal
+import { Layout, Menu, Avatar, Typography, Button, Drawer, Modal } from "antd";
 import {
   BookOutlined,
   MenuOutlined,
@@ -10,15 +10,8 @@ import {
   BarChartOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
+import sidebarLinkService from "services/sidebarLinkService"; // Import service
 
-// Giả sử các icon được đặt trong thư mục src/assets
-import kahootIcon from "assets/icon/kahoot-icon.png";
-import quizizzIcon from "assets/icon/quizizz-icon.png";
-import padletIcon from "assets/icon/padlet-logo.png";
-import blootket from "assets/icon/Blooket-Logo.png";
-import baamboozle from "assets/icon/baamboozle.png";
-import wordwallIcon from "assets/icon/wordwall-icon.png"; // Icon cho Wordwall
-import googleDriveIcon from "assets/icon/icons8-google-drive.svg";
 const { Sider } = Layout;
 const { Text } = Typography;
 
@@ -41,10 +34,11 @@ const Sidebar = ({
   setOpenHomeworkStatisticsDashboard,
   googleDriveLink,
 }) => {
-  const [visible, setVisible] = useState(false); // Trạng thái Drawer
-  const [isMobile, setIsMobile] = useState(false); // Kiểm tra mobile
-  const [wordwallEmbed, setWordwallEmbed] = useState(null); // Mã nhúng từ oEmbed
-  const [isModalVisible, setIsModalVisible] = useState(false); // Trạng thái Modal
+  const [visible, setVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [wordwallEmbed, setWordwallEmbed] = useState(null);
+  const [sidebarLinks, setSidebarLinks] = useState([]); // State để lưu danh sách sidebar links
 
   useEffect(() => {
     const checkMobile = () => {
@@ -55,24 +49,35 @@ const Sidebar = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Hàm lấy mã nhúng từ Wordwall oEmbed
+  // Fetch sidebar links từ API khi component mount
+  useEffect(() => {
+    const fetchSidebarLinks = async () => {
+      try {
+        const data = await sidebarLinkService.getAllSidebars();
+        setSidebarLinks(data);
+      } catch (error) {
+        console.error("Error fetching sidebar links:", error);
+      }
+    };
+    fetchSidebarLinks();
+  }, []);
+
   const fetchWordwallEmbed = async (resourceUrl) => {
     try {
       const response = await fetch(
-        `https://wordwall.net/api/oembed?url=${encodeURIComponent(resourceUrl)}` // Sửa endpoint thành oEmbed chính xác
+        `https://wordwall.net/api/oembed?url=${encodeURIComponent(resourceUrl)}`
       );
       const data = await response.json();
-      setWordwallEmbed(data.html); // Lưu mã nhúng vào state
-      setIsModalVisible(true); // Mở Modal sau khi lấy được mã nhúng
+      setWordwallEmbed(data.html);
+      setIsModalVisible(true);
     } catch (error) {
       console.error("Error fetching Wordwall oEmbed:", error);
     }
   };
 
-  // Đóng Modal
   const handleModalClose = () => {
     setIsModalVisible(false);
-    setWordwallEmbed(null); // Xóa mã nhúng khi đóng Modal (tùy chọn)
+    setWordwallEmbed(null);
   };
 
   const showDrawer = () => setVisible(true);
@@ -227,61 +232,34 @@ const Sidebar = ({
         <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giảng dạy</Text>
       </div>
 
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => openLink("https://quizizz.com")}
-      >
-        <img src={quizizzIcon} alt="Quizizz" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Quizizz</Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => openLink("https://www.baamboozle.com/")}
-      >
-        <img src={baamboozle} alt="Baamboozle" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Baamboozle</Text>
-      </div>
-      {/* Thêm Wordwall */}
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => window.open(googleDriveLink)}
-      >
-        <img src={googleDriveIcon} alt="googleDrive" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Đề thi, Đề ôn tập</Text>
-      </div>
+      {sidebarLinks
+        .filter((link) => link.type === 0)
+        .map((link) => (
+          <div
+            key={link.id}
+            style={{
+              margin: "0 auto",
+              padding: "5px 0",
+              width: "80%",
+              textAlign: "start",
+              marginBottom: "10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "5px 3px",
+              cursor: "pointer",
+            }}
+            onClick={() => openLink(link.link)}
+          >
+            {link.imgUrl ? (
+              <img src={link.imgUrl} alt={link.name} style={{ width: 20, height: 20 }} />
+            ) : (
+              <LaptopOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
+            )}
+            <Text style={{ color: colors.darkGreen }}>{link.name}</Text>
+          </div>
+        ))}
+
       {/* Công cụ giao bài tập */}
       <div
         style={{
@@ -300,104 +278,34 @@ const Sidebar = ({
         <EditOutlined />
         <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giao bài tập</Text>
       </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => openLink("https://padlet.com")}
-      >
-        <img src={padletIcon} alt="Padlet" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Padlet</Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => openLink("https://www.blooket.com/")}
-      >
-        <img src={blootket} alt="Blooket" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Blooket</Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => openLink("https://kahoot.com")}
-      >
-        <img src={kahootIcon} alt="Kahoot" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Kahoot</Text>
-      </div>
-      <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "5px 3px",
-          cursor: "pointer",
-        }}
-        onClick={() => window.open("https://wordwall.net/myactivities")}
-      >
-        <img src={wordwallIcon} alt="Wordwall" style={{ width: 20, height: 20 }} />
-        <Text style={{ color: colors.darkGreen }}>Wordwall</Text>
-      </div>
 
-      {/* Chi tiết tình hình học */}
-      {/* <div
-        style={{
-          margin: "0 auto",
-          padding: "5px 0",
-          width: "80%",
-          textAlign: "start",
-          borderBottom: `1px solid ${colors.lightGreen}`,
-          marginBottom: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          padding: "5px 3px",
-          transition: "all 0.1s ease-in-out",
-        }}
-        className="HomeworkStatisticsDashboard"
-        onClick={() => setOpenHomeworkStatisticsDashboard(true)}
-      >
-        <Text style={{ fontWeight: 700 }} className="hoverChangeColor">
-          <BarChartOutlined style={{ marginRight: "3px" }} />
-          Tình hình lớp học
-        </Text>
-      </div> */}
+      {sidebarLinks
+        .filter((link) => link.type === 1)
+        .map((link) => (
+          <div
+            key={link.id}
+            style={{
+              margin: "0 auto",
+              padding: "5px 0",
+              width: "80%",
+              textAlign: "start",
+              marginBottom: "10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "5px 3px",
+              cursor: "pointer",
+            }}
+            onClick={() => openLink(link.link)}
+          >
+            {link.imgUrl ? (
+              <img src={link.imgUrl} alt={link.name} style={{ width: 20, height: 20 }} />
+            ) : (
+              <EditOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
+            )}
+            <Text style={{ color: colors.darkGreen }}>{link.name}</Text>
+          </div>
+        ))}
     </>
   );
 
@@ -463,13 +371,12 @@ const Sidebar = ({
         </Sider>
       )}
 
-      {/* Modal hiển thị nội dung Wordwall */}
       <Modal
         title="Wordwall Activity"
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
-        width={600} // Điều chỉnh chiều rộng Modal
+        width={600}
       >
         {wordwallEmbed ? (
           <div

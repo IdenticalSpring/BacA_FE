@@ -83,6 +83,8 @@ import CreateNotificationByAdmin from "layouts/notification";
 import DoHomework from "pages/students/DoHomework";
 import ContentPageManagement from "pages/admin/contentpageManagement";
 import EvaluationManagement from "pages/admin/evaluationManagement";
+import SidebarLinkManagement from "pages/admin/sidebarLinkManagement";
+import CreateSidebarLink from "pages/admin/createSidebarLink";
 const routes = [
   {
     // type: "collapse",
@@ -440,6 +442,29 @@ const routes = [
       </PrivateRoute>
     ),
   },
+  {
+    type: "collapse",
+    name: "Link management",
+    route: "/linkManagement",
+    key: "linkManagement",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <SidebarLinkManagement />
+      </PrivateRoute>
+    ),
+  },
+  {
+    name: "Link Management Create",
+    route: "/linkManagement/create",
+    key: "linkManagementCreate",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <CreateSidebarLink />
+      </PrivateRoute>
+    ),
+  },
+
   {
     name: "Create Schedule",
     route: "/schedules/create-schedule",

@@ -14,6 +14,10 @@ Coded by www.creative-tim.com
 
 // @mui material components
 import Grid from "@mui/material/Grid";
+import FormControl from "@mui/material/FormControl"; // Thêm FormControl
+import InputLabel from "@mui/material/InputLabel"; // Thêm InputLabel
+import Select from "@mui/material/Select"; // Thêm Select
+import MenuItem from "@mui/material/MenuItem"; // Thêm MenuItem
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -23,6 +27,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
+import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 
 // Dashboard components
@@ -55,16 +60,22 @@ function Dashboard() {
     ],
   });
 
+  const [visitorChartData, setVisitorChartData] = useState({
+    labels: [],
+    datasets: [{ label: "Visitors", data: [], color: "info" }],
+  });
+
+  const [period, setPeriod] = useState("weekly"); // Mặc định là tuần
+
   // Lấy dữ liệu tổng quan
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [students, teachers, lessons, homeworks, visitCount] = await Promise.all([
+        const [students, teachers, lessons, homeworks] = await Promise.all([
           studentService.getAllStudents(),
           teacherService.getAllTeachers(),
           lessonService.getAllLessons(),
           homeWorkService.getAllHomeWork(),
-          pagevisitService.getCountVisitor(),
         ]);
 
         setStats({
@@ -72,7 +83,6 @@ function Dashboard() {
           teachers: teachers.length,
           lessons: lessons.length,
           homeworks: homeworks.length,
-          visitCount: visitCount.visitCount,
         });
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
@@ -86,19 +96,16 @@ function Dashboard() {
   useEffect(() => {
     const fetchAttendanceStats = async () => {
       try {
-        // Lấy tất cả check-ins từ API
         const checkins = await checkinService.getAllCheckins();
-
-        console.log("Fetched checkins:", checkins); // Debug dữ liệu đầu vào
+        console.log("Fetched checkins:", checkins);
 
         if (!checkins || checkins.length === 0) {
           console.warn("No checkin data available");
           return;
         }
 
-        // Nhóm dữ liệu theo ngày từ dữ liệu fetch
         const groupedByDate = checkins.reduce((acc, checkin) => {
-          const date = checkin.lessonBySchedule?.date; // Lấy ngày từ lessonBySchedule
+          const date = checkin.lessonBySchedule?.date;
           if (!date) {
             console.warn("Missing date in checkin:", checkin);
             return acc;
@@ -112,10 +119,7 @@ function Dashboard() {
           return acc;
         }, {});
 
-        console.log("Grouped by date:", groupedByDate); // Debug dữ liệu sau khi nhóm
-
-        // Chuẩn bị dữ liệu cho biểu đồ
-        const dates = Object.keys(groupedByDate).sort(); // Sắp xếp ngày
+        const dates = Object.keys(groupedByDate).sort();
         if (dates.length === 0) {
           console.warn("No dates found in grouped data");
           return;
@@ -136,8 +140,6 @@ function Dashboard() {
           ],
         };
 
-        console.log("Chart data:", chartData); // Debug dữ liệu biểu đồ
-
         setAttendanceChartData(chartData);
       } catch (error) {
         console.error("Error fetching attendance stats:", error);
@@ -146,6 +148,72 @@ function Dashboard() {
 
     fetchAttendanceStats();
   }, []);
+
+  // Lấy và xử lý dữ liệu thống kê lượt truy cập
+  useEffect(() => {
+    const fetchVisitorStats = async () => {
+      try {
+        const stats = await pagevisitService.getStatsVisitor();
+        console.log("Visitor stats:", stats);
+
+        if (!stats || stats.length === 0) {
+          console.warn("No visitor data available");
+          return;
+        }
+
+        // Hàm tính số tuần (ISO week) từ ngày
+        const getWeekNumber = (date) => {
+          const d = new Date(date);
+          d.setHours(0, 0, 0, 0);
+          d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+          const yearStart = new Date(d.getFullYear(), 0, 1);
+          return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+        };
+
+        // Nhóm dữ liệu theo tuần hoặc tháng
+        const groupedData = stats.reduce((acc, entry) => {
+          const date = new Date(entry.date);
+          let key;
+
+          if (period === "weekly") {
+            const year = date.getFullYear();
+            const week = getWeekNumber(date);
+            key = `${year}-W${week}`; // Ví dụ: "2025-W15"
+          } else {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            key = `${year}-${month}`; // Ví dụ: "2025-04"
+          }
+
+          if (!acc[key]) {
+            acc[key] = 0;
+          }
+          acc[key] += entry.visitCount;
+          return acc;
+        }, {});
+
+        const labels = Object.keys(groupedData).sort();
+        const visitData = labels.map((label) => groupedData[label]);
+
+        const chartData = {
+          labels,
+          datasets: [
+            {
+              label: "Visitors",
+              data: visitData,
+              color: "info",
+            },
+          ],
+        };
+
+        setVisitorChartData(chartData);
+      } catch (error) {
+        console.error("Error fetching visitor stats:", error);
+      }
+    };
+
+    fetchVisitorStats();
+  }, [period]);
 
   return (
     <DashboardLayout>
@@ -196,21 +264,10 @@ function Dashboard() {
               />
             </MDBox>
           </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                color="info" // Chọn màu phù hợp với giao diện
-                icon="visibility" // Icon đại diện cho visitor (có thể thay đổi)
-                title="Visitors"
-                count={stats.visitCount} // Hiển thị số lượt truy cập
-                percentage={{ color: "success", amount: "", label: "Total visitors" }}
-              />
-            </MDBox>
-          </Grid>
         </Grid>
 
         {/* Grid 2: Thống kê điểm danh theo biểu đồ đường */}
-        <MDBox mt={4.5}>
+        {/* <MDBox mt={4.5}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={12} lg={12}>
               <MDBox mb={3}>
@@ -224,9 +281,50 @@ function Dashboard() {
               </MDBox>
             </Grid>
           </Grid>
+        </MDBox> */}
+
+        {/* Grid 3: Thống kê lượt truy cập theo biểu đồ đường DefaultLineChart */}
+        <MDBox mt={4.5}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={12} lg={12}>
+              <MDBox mb={3} sx={{ backgroundColor: "#fff", padding: "10px", borderRadius: "8px" }}>
+                <FormControl
+                  sx={{
+                    minWidth: 120,
+                    mb: 2,
+                    "& .MuiInputBase-root": {
+                      height: "40px",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      padding: "14px 14px",
+                    },
+                    padding: "10px 10px",
+                  }}
+                >
+                  <InputLabel id="period-select-label">Period</InputLabel>
+                  <Select
+                    labelId="period-select-label"
+                    id="period-select"
+                    value={period}
+                    label="Period"
+                    onChange={(e) => setPeriod(e.target.value)}
+                  >
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                  </Select>
+                </FormControl>
+                <DefaultLineChart
+                  icon={{ color: "info", component: "visibility" }}
+                  title={`Visitor Statistics (${period === "weekly" ? "Weekly" : "Monthly"})`}
+                  description="Trends of page visits"
+                  chart={visitorChartData}
+                />
+              </MDBox>
+            </Grid>
+          </Grid>
         </MDBox>
 
-        {/* Grid 3: Projects và OrdersOverview */}
+        {/* Grid 4: Projects và OrdersOverview */}
         <MDBox>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} lg={8}>
