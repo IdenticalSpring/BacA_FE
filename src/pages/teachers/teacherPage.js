@@ -188,6 +188,7 @@ const TeacherPage = () => {
   const [openHomeworkStatisticsDashboard, setOpenHomeworkStatisticsDashboard] = useState(false);
   const [isTeacherProfileModalVisible, setIsTeacherProfileModalVisible] = useState(false);
   const [teacherData, setTeacherData] = useState(null);
+  const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -305,6 +306,7 @@ const TeacherPage = () => {
       }
       const data = await homeWorkService.getHomeWorkByTeacherId(decoded.userId);
       setHomeWorks(data);
+      setHomeworkZaloLink(data && data[data?.length - 1]?.linkZalo);
     } catch (err) {
       console.log(err);
 
@@ -1441,6 +1443,8 @@ const TeacherPage = () => {
                 level={classData?.level}
                 classID={selectedClass}
                 students={students}
+                lessons={lessons}
+                setLessons={setLessons}
               />
             </div>
             {/* <div
@@ -1556,7 +1560,9 @@ const TeacherPage = () => {
                 level={classData?.level}
                 classID={selectedClass}
                 students={students}
-                homeworkZaloLink={homeWorks}
+                homeworkZaloLink={homeworkZaloLink}
+                homeWorks={homeWorks}
+                setHomeWorks={setHomeWorks}
               />
             </div>
             {/* <div

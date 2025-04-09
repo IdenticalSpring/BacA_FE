@@ -59,6 +59,8 @@ export default function CreateHomeWork({
   classID,
   students,
   homeworkZaloLink,
+  homeWorks,
+  setHomeWorks,
 }) {
   const [form] = Form.useForm();
   const quillRef = useRef(null);
@@ -96,12 +98,11 @@ export default function CreateHomeWork({
       setQuill(editor);
     }
   }, [quillRef]);
-  // useEffect(() => {
-  //   const lastHomework = homeworks[homeworks.length - 1];
-  //   console.log(lastHomework);
+  useEffect(() => {
+    setZaloLink(homeworkZaloLink);
+  }, [homeworkZaloLink]);
+  console.log(zaloLink);
 
-  //   setZaloLink(lastHomework?.linkZalo);
-  // }, [homeworks]);
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -166,7 +167,7 @@ export default function CreateHomeWork({
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
-      formData.append("linkZalo", values.linkZalo);
+      formData.append("linkZalo", zaloLink);
       formData.append("description", values.description);
       formData.append("teacherId", teacherId);
       // if (selected.size > 0) {
@@ -179,6 +180,7 @@ export default function CreateHomeWork({
       }
 
       const homeworkData = await homeWorkService.createHomeWork(formData);
+      setHomeWorks((homework) => [...homework, homeworkData]);
       let selectedSchedule = null;
       for (const item of selected) {
         const data = await lessonByScheduleService.updateHomeWorkLessonBySchedule(
@@ -237,8 +239,10 @@ export default function CreateHomeWork({
           );
         });
         message.success("Đã gửi bài tập thành công!");
+        setShowAccessId(true);
       }
       form.resetFields();
+      setSelected(new Set());
       setTextToSpeech("");
       setMp3file(null);
       setMp3Url("");
@@ -261,7 +265,7 @@ export default function CreateHomeWork({
       });
       setLessonByScheduleData(lessonByScheduleDataUpdated);
       let detailStr = "Bạn mới có bài tập mới vào ngày:";
-      console.log(data);
+      // console.log(data);
       const date = lessonByScheduleDataUpdated.find((item) => item.id === id)?.date || null;
       // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
 
@@ -436,7 +440,7 @@ export default function CreateHomeWork({
     };
     fetchClass();
   }, [classID]);
-  // console.log(homeWorksData);
+  // console.log(homeworkZaloLink);
 
   return (
     <div
@@ -637,7 +641,7 @@ export default function CreateHomeWork({
                 }}
               />
             </Form.Item>
-            <Form.Item name="linkZalo" label="Link Zalo bài tập">
+            <Form.Item label="Link Zalo bài tập">
               <Input
                 placeholder="Nhập link zalo bài tập"
                 style={{
@@ -664,7 +668,9 @@ export default function CreateHomeWork({
               borderColor: colors.emerald,
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
-            onClick={() => onSubmitWithStatus(false)}
+            onClick={() => {
+              onSubmitWithStatus(false);
+            }}
           >
             Lưu
           </Button>
@@ -679,7 +685,9 @@ export default function CreateHomeWork({
               borderColor: colors.emerald,
               boxShadow: "0 2px 0 " + colors.softShadow,
             }}
-            onClick={() => onSubmitWithStatus(true)}
+            onClick={() => {
+              onSubmitWithStatus(true);
+            }}
           >
             Gửi link
           </Button>
@@ -733,7 +741,9 @@ export default function CreateHomeWork({
                 borderColor: colors.emerald,
                 boxShadow: "0 2px 0 " + colors.softShadow,
               }}
-              onClick={() => onSubmitWithStatus(true)}
+              onClick={() => {
+                onSubmitWithStatus(true);
+              }}
             >
               Gửi link
             </Button>
@@ -869,5 +879,7 @@ CreateHomeWork.propTypes = {
   level: PropTypes.number.isRequired,
   classID: PropTypes.number.isRequired, // Giả sử level là string
   students: PropTypes.array.isRequired, // Giả sử level là string
-  homeworkZaloLink: PropTypes.array.isRequired,
+  homeworkZaloLink: PropTypes.string.isRequired,
+  homeWorks: PropTypes.array.isRequired,
+  setHomeWorks: PropTypes.func.isRequired,
 };

@@ -274,6 +274,20 @@ function CreateClass() {
       setLoadingClass(false);
     }
   };
+  const handleDeleteClass = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
+      try {
+        setLoadingClass(true);
+        await classService.deleteClass(id);
+        setClassRows((pre) => pre?.filter((cls) => cls.id !== id));
+        message.success("delete class success");
+      } catch (err) {
+        message.error("delete class failed! " + err);
+      } finally {
+        setLoadingClass(false);
+      }
+    }
+  };
   useEffect(() => {
     if (rawClasses.length > 0 && levels.length > 0) {
       const formattedRows = rawClasses.map((cls) => ({
@@ -286,6 +300,9 @@ function CreateClass() {
           <>
             <IconButton color="primary" onClick={() => handleEdit(cls)}>
               <EditIcon />
+            </IconButton>
+            <IconButton color="secondary" onClick={() => handleDeleteClass(cls.id)}>
+              <DeleteIcon />
             </IconButton>
           </>
         ),
@@ -540,6 +557,9 @@ function CreateClass() {
             <>
               <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
                 <EditIcon />
+              </IconButton>
+              <IconButton color="secondary" onClick={() => handleDeleteClass(classEntity?.id)}>
+                <DeleteIcon />
               </IconButton>
             </>
           ),

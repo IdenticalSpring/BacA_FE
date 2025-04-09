@@ -50,6 +50,8 @@ export default function CreateLesson({
   level,
   classID,
   students,
+  lessons,
+  setLessons,
 }) {
   const [form] = Form.useForm();
   const quillRefDescription = useRef(null); // Ref cho description
@@ -195,6 +197,9 @@ export default function CreateLesson({
       }
 
       const lessonData = await lessonService.createLesson(formData);
+      // console.log(lessons, lessonData);
+
+      setLessons((lesson) => [...lesson, lessonData]);
       let selectedSchedule = null;
       for (const item of selected) {
         const data = await lessonByScheduleService.updateLessonOfLessonBySchedule(
@@ -255,6 +260,7 @@ export default function CreateLesson({
         });
         message.success("Đã gửi bài học thành công!");
       }
+      setSelected(new Set());
       form.resetFields();
       setTextToSpeech("");
       setMp3file(null);
@@ -692,4 +698,6 @@ CreateLesson.propTypes = {
   level: PropTypes.number.isRequired,
   classID: PropTypes.number.isRequired,
   students: PropTypes.array.isRequired,
+  lessons: PropTypes.array.isRequired,
+  setLessons: PropTypes.func.isRequired,
 };
