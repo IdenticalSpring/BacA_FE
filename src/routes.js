@@ -444,7 +444,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Link management",
+    name: "Link Management",
     route: "/linkManagement",
     key: "linkManagement",
     icon: <Icon fontSize="small">table_view</Icon>,
