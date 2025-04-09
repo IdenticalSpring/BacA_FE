@@ -13,6 +13,7 @@ import authService from "services/authService";
 const { Title, Text } = Typography;
 
 const LoginForTeacher = () => {
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
@@ -141,6 +142,7 @@ const LoginForTeacher = () => {
           </div>
 
           <Form
+            form={form}
             name="login_form"
             initialValues={{ remember: true }}
             onFinish={onFinish}
@@ -154,6 +156,10 @@ const LoginForTeacher = () => {
                   required: true,
                   message: "Vui lòng nhập tên đăng nhập để tiếp tục!",
                 },
+                {
+                  whitespace: false,
+                  message: "Tên đăng nhập không được chứa khoảng trắng!",
+                },
               ]}
             >
               <Input
@@ -165,12 +171,36 @@ const LoginForTeacher = () => {
                   padding: "12px 16px",
                   height: "auto",
                 }}
+                onChange={(e) => {
+                  const cleanValue = e.target.value.replace(/\s/g, "");
+                  form.setFieldsValue({ username: cleanValue });
+                }}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData("text");
+                  const cleanText = pastedText.replace(/\s/g, "");
+                  form.setFieldsValue({ username: cleanText });
+                }}
               />
             </Form.Item>
 
             <Form.Item
               name="password"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập mật khẩu!",
+                },
+                {
+                  whitespace: false,
+                  message: "Mật khẩu không được chứa khoảng trắng!",
+                },
+                {
+                  pattern: /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]*$/,
+                  message:
+                    "Mật khẩu chỉ được dùng ký tự tiếng Anh (chữ cái, số và ký tự đặc biệt cơ bản)!",
+                },
+              ]}
             >
               <div style={{ position: "relative" }}>
                 <Input
@@ -182,6 +212,28 @@ const LoginForTeacher = () => {
                     borderColor: colors.lightGreen,
                     padding: "12px 16px",
                     height: "auto",
+                  }}
+                  onChange={(e) => {
+                    // Loại bỏ ký tự tiếng Việt và khoảng trắng
+                    const cleanValue = e.target.value
+                      .normalize("NFKD") // Phân tách ký tự có dấu
+                      .replace(/[\u0300-\u036f]/g, "") // Loại bỏ dấu
+                      .replace(/đ/g, "d") // Thay đ thành d
+                      .replace(/Đ/g, "D") // Thay Đ thành D
+                      .replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/g, ""); // Chỉ giữ ký tự tiếng Anh
+                    form.setFieldsValue({ password: cleanValue });
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pastedText = e.clipboardData.getData("text");
+                    // Loại bỏ ký tự tiếng Việt và khoảng trắng khi paste
+                    const cleanText = pastedText
+                      .normalize("NFKD")
+                      .replace(/[\u0300-\u036f]/g, "")
+                      .replace(/đ/g, "d")
+                      .replace(/Đ/g, "D")
+                      .replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/g, "");
+                    form.setFieldsValue({ password: cleanText });
                   }}
                 />
                 <Button
