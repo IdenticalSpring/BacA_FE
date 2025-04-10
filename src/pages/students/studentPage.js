@@ -208,28 +208,34 @@ const StudentPage = () => {
     const findSelectedLessonBySchedule = lessonsBySchedule?.find(
       (lessonBySchedule) => lessonBySchedule.id === selectedLessonBySchedule
     );
-    if (
-      findSelectedLessonBySchedule &&
-      (findSelectedLessonBySchedule?.lessonID || findSelectedLessonBySchedule?.homeWorkId)
-    ) {
+    console.log(findSelectedLessonBySchedule);
+
+    if (findSelectedLessonBySchedule) {
       const fetchLessonById = async () => {
         try {
           if (findSelectedLessonBySchedule?.lessonID) {
             const data = await lessonService.getLessonById(findSelectedLessonBySchedule?.lessonID);
             setLessons([data]);
+            console.log(data, findSelectedLessonBySchedule?.lessonID);
           }
+
           if (findSelectedLessonBySchedule?.homeWorkId) {
-            fetchHomeworkByLesson(findSelectedLessonBySchedule?.homeWorkId);
+            fetchHomeworkByLesson(
+              findSelectedLessonBySchedule?.homeWorkId,
+              findSelectedLessonBySchedule?.homeWorkId
+            );
           }
           setIsLessonSent(findSelectedLessonBySchedule.isLessonSent); // Chuyển đổi sang boolean nếu cần
           setIsHomeWorkSent(findSelectedLessonBySchedule.isHomeWorkSent); // Chuyển đổi sang boolean nếu cần
           // console.log("lessonBySchedule", findSelectedLessonBySchedule);
-          const student_lesson_countData = {
-            lessonId: +findSelectedLessonBySchedule.lessonID,
-            studentId: +studentId,
-          };
+          if (findSelectedLessonBySchedule?.lessonID) {
+            const student_lesson_countData = {
+              lessonId: +findSelectedLessonBySchedule.lessonID,
+              studentId: +studentId,
+            };
 
-          await student_lesson_countService.updateCount(student_lesson_countData);
+            await student_lesson_countService.updateCount(student_lesson_countData);
+          }
           // if (findSelectedLessonBySchedule.homeWorkId) {
 
           // } else {
@@ -251,7 +257,7 @@ const StudentPage = () => {
       setIsHomeWorkSent(0);
     }
   }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
-  console.log(isHomeWorkSent);
+  // console.log(isHomeWorkSent);
 
   // Hàm lấy mã nhúng từ Wordwall oEmbed
   const fetchWordwallEmbed = async (resourceUrl) => {
@@ -359,7 +365,7 @@ const StudentPage = () => {
       setActiveTab("homework");
     }
   };
-  console.log(notifications);
+  // console.log(notifications);
 
   const renderLessonContent = () => (
     <>
