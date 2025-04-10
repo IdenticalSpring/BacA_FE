@@ -225,6 +225,8 @@ const StudentPage = () => {
       setIsHomeWorkSent(0);
     }
   }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
+  console.log(isHomeWorkSent);
+
   // Hàm lấy mã nhúng từ Wordwall oEmbed
   const fetchWordwallEmbed = async (resourceUrl) => {
     try {
