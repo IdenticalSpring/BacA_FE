@@ -34,6 +34,15 @@ const NotificationSection = ({
   setNotificationsCount,
 }) => {
   // Modal state
+  console.log(
+    notifications,
+    setNotifications,
+    loadingNotification,
+    errorNotification,
+    notificationsCount,
+    setNotificationsCount
+  );
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   //   console.log(notifications);

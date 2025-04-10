@@ -280,7 +280,8 @@ const StudentPage = () => {
 
       setHomeworkZaloLink(homework[0]?.linkZalo);
       setLoadingSubmitHomework(true);
-      setOpenSubmitHomework(true);
+      // setOpenSubmitHomework(true);
+      window.open(homework[0]?.linkZalo);
       const student_homework_countData = { homeworkId, studentId };
       await student_homework_countService.updateCount(student_homework_countData);
     } catch {
@@ -367,7 +368,7 @@ const StudentPage = () => {
                     </Text>
                   </div>
                 </div>
-                <ConvertTTS audioTag={"audio-player-lesson"} />
+                {/* <ConvertTTS audioTag={"audio-player-lesson"} /> */}
                 <Collapse
                   defaultActiveKey={[]} // Mặc định thu gọn
                   bordered={false}
