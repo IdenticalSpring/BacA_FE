@@ -80,7 +80,7 @@ export default function CreateHomeWork({
   const [loadingCreateAndSend, setLoadingCreateAndSend] = useState(false);
   const [zaloLink, setZaloLink] = useState("");
   const onChangeGender = ({ target: { value } }) => {
-    console.log("radio3 checked", value);
+    // console.log("radio3 checked", value);
     setGender(value);
   };
   const copyToClipboard = () => {
@@ -101,7 +101,7 @@ export default function CreateHomeWork({
   useEffect(() => {
     setZaloLink(homeworkZaloLink);
   }, [homeworkZaloLink]);
-  console.log(zaloLink);
+  // console.log(zaloLink);
 
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
@@ -122,7 +122,7 @@ export default function CreateHomeWork({
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-        console.log(response.data.url);
+        // console.log(response.data.url);
 
         // const result = await response.json();
 
@@ -395,7 +395,7 @@ export default function CreateHomeWork({
       // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
       let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
       setMp3file(audioBlob);
-      console.log(audioBlob);
+      // console.log(audioBlob);
 
       // if (mp3Url) {
       //   const audioElement = document.getElementById("audio-player");
