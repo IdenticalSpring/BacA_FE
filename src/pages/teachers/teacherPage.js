@@ -355,6 +355,7 @@ const TeacherPage = () => {
 
     // Check if any lesson schedule matches today's formatted date
     const todaySchedule = lessonByScheduleData.find((schedule) => schedule.date === todayFormatted);
+
     return todaySchedule !== undefined;
   };
 
@@ -432,8 +433,7 @@ const TeacherPage = () => {
         });
       } else {
         // Nếu chưa có dữ liệu, thực hiện điểm danh mới
-        const todaySchedules = getSchedulesForToday();
-        if (todaySchedules.length === 0) {
+        if (!hasClassToday) {
           notification.warning({
             message: "Warning",
             description: "No class scheduled for today",
@@ -442,10 +442,18 @@ const TeacherPage = () => {
           });
           return;
         }
+        const today = new Date();
+        const padZero = (num) => String(num).padStart(2, "0");
+        const todayFormatted = `${today.getFullYear()}-${padZero(today.getMonth() + 1)}-${padZero(
+          today.getDate()
+        )}`;
 
-        const selectedLessonByScheduleId = lessonByScheduleData.find(
-          (schedule) => schedule.schedule.id === todaySchedules[0]?.id
-        )?.id;
+        const todaySchedule = lessonByScheduleData.find(
+          (schedule) => schedule.date === todayFormatted
+        );
+        console.log("todaySchedule", todaySchedule);
+
+        const selectedLessonByScheduleId = todaySchedule.id;
 
         if (!selectedLessonByScheduleId) {
           notification.warning({
