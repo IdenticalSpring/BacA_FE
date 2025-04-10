@@ -26,7 +26,7 @@ const RATING_DESCRIPTIONS = {
   5: "Xuất sắc",
 };
 
-const EvaluationModal = ({ visible, onClose, students, schedules }) => {
+const EvaluationModal = ({ visible, onClose, students }) => {
   const [skills, setSkills] = useState([]);
   const [availableSkills, setAvailableSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
@@ -63,10 +63,6 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
 
     if (visible) {
       fetchSkillsAndBehaviors();
-      if (schedules.length > 0) {
-        setSelectedSchedule(schedules[0].id);
-      }
-    } else {
       setSkills([]);
       setSelectedSkill("");
       setBehaviors([]);
@@ -77,7 +73,7 @@ const EvaluationModal = ({ visible, onClose, students, schedules }) => {
       setAvailableBehaviors([]);
       setAllSkills([]);
     }
-  }, [visible, schedules]);
+  }, [visible]);
 
   const handleAddSkill = () => {
     if (selectedSkill && !skills.some((s) => s.name === selectedSkill)) {
@@ -329,13 +325,6 @@ EvaluationModal.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  schedules: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      startTime: PropTypes.string.isRequired,
-      endTime: PropTypes.string.isRequired,
     })
   ).isRequired,
 };

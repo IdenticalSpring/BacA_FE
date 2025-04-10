@@ -359,24 +359,6 @@ const TeacherPage = () => {
     return todaySchedule !== undefined;
   };
 
-  const getSchedulesForToday = () => {
-    if (!lessonByScheduleData || lessonByScheduleData.length === 0) return [];
-
-    // Lấy ngày hôm nay theo format YYYY-MM-DD
-    const today = new Date().toISOString().split("T")[0];
-
-    // Lọc danh sách các schedule có ngày trùng với hôm nay
-    const todaySchedules = lessonByScheduleData
-      .filter((schedule) => schedule.date.startsWith(today)) // Lọc đúng ngày
-      .map((schedule) => ({
-        id: schedule.schedule.id,
-        startTime: schedule.schedule.startTime,
-        endTime: schedule.schedule.endTime,
-      }));
-
-    return todaySchedules;
-  };
-
   useEffect(() => {
     // Check for class today whenever lesson schedule data changes
     if (lessonByScheduleData.length > 0) {
@@ -384,8 +366,6 @@ const TeacherPage = () => {
       setHasClassToday(hasClass);
     }
   }, [lessonByScheduleData]);
-
-  const schedulesForToday = getSchedulesForToday();
 
   // Hàm để kích hoạt chế độ điểm danh
   const handleAttendanceCheck = async () => {
@@ -451,7 +431,6 @@ const TeacherPage = () => {
         const todaySchedule = lessonByScheduleData.find(
           (schedule) => schedule.date === todayFormatted
         );
-        console.log("todaySchedule", todaySchedule);
 
         const selectedLessonByScheduleId = todaySchedule.id;
 
@@ -1095,7 +1074,6 @@ const TeacherPage = () => {
             visible={isEvaluationModalVisible}
             onClose={() => setIsEvaluationModalVisible(false)}
             students={selectedStudents}
-            schedules={schedulesForToday}
           />
         )}
 
@@ -1120,7 +1098,6 @@ const TeacherPage = () => {
             visible={isMultiStudentEvaluationModalVisible}
             onClose={() => setIsMultiStudentEvaluationModalVisible(false)}
             students={selectedStudents}
-            schedules={schedulesForToday}
           />
         )}
 

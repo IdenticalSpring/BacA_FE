@@ -25,7 +25,7 @@ const RATING_DESCRIPTIONS = {
   5: "Excellent",
 };
 
-const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) => {
+const MultiStudentEvaluationModal = ({ visible, onClose, students }) => {
   const [skills, setSkills] = useState([]);
   const [availableSkills, setAvailableSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState("");
@@ -62,9 +62,6 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
 
     if (visible) {
       fetchSkillsAndBehaviors();
-      if (schedules.length > 0) {
-        setSelectedSchedule(schedules[0].id);
-      }
       // Initialize evaluation data for each student
       const initialEvaluations = students.map((student) => ({
         studentId: student.id,
@@ -86,7 +83,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
       setAllSkills([]);
       setStudentEvaluations([]);
     }
-  }, [visible, students, schedules]);
+  }, [visible, students]);
 
   const handleAddSkill = () => {
     if (selectedSkill && !skills.includes(selectedSkill)) {
@@ -286,7 +283,6 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students, schedules }) 
   ];
 
   const currentSchedule = today;
-  // schedules.find((s) => s.id === selectedSchedule) || schedules[0];
 
   return (
     <Modal
@@ -381,13 +377,6 @@ MultiStudentEvaluationModal.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  schedules: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      startTime: PropTypes.string.isRequired,
-      endTime: PropTypes.string.isRequired,
     })
   ).isRequired,
 };
