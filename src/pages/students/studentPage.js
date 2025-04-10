@@ -372,15 +372,19 @@ const StudentPage = () => {
                   </div>
                 </div>
                 {/* <ConvertTTS audioTag={"audio-player-lesson"} /> */}
-                <Collapse
+                {/* <Collapse
                   defaultActiveKey={[]} // Mặc định thu gọn
                   bordered={false}
                   style={{ marginBottom: 16 }}
                 >
                   <Panel header="Xem mô tả" key="1">
-                    <div dangerouslySetInnerHTML={{ __html: lesson.description || " " }} />
+                    
                   </Panel>
-                </Collapse>
+                </Collapse> */}
+                <div
+                  style={{ margin: "10px 0" }}
+                  dangerouslySetInnerHTML={{ __html: lesson.description || " " }}
+                />
                 {(lesson.linkYoutube || lesson.linkSpeech) && (
                   <div
                     style={{
@@ -490,20 +494,22 @@ const StudentPage = () => {
                     </Text>
                   </div>
                 </div>
-                <ConvertTTS audioTag={"audio-player-homework"} />
-                <Collapse
+                {/* <ConvertTTS audioTag={"audio-player-homework"} /> */}
+                {/* <Collapse
                   defaultActiveKey={[]} // Mặc định thu gọn
                   bordered={false}
                   style={{ marginBottom: 16 }}
                 >
                   <Panel header="Xem mô tả" key="1">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: hw.description || "Chưa có mô tả cho bài tập này.",
-                      }}
-                    />
+                    
                   </Panel>
-                </Collapse>
+                </Collapse> */}
+                <div
+                  style={{ margin: "10px 0" }}
+                  dangerouslySetInnerHTML={{
+                    __html: hw.description || "Chưa có mô tả cho bài tập này.",
+                  }}
+                />
                 {hw.linkSpeech && (
                   <div
                     style={{
