@@ -208,9 +208,16 @@ const StudentPage = () => {
     const findSelectedLessonBySchedule = lessonsBySchedule?.find(
       (lessonBySchedule) => lessonBySchedule.id === selectedLessonBySchedule
     );
-    console.log(findSelectedLessonBySchedule);
-
+    // console.log(findSelectedLessonBySchedule);
     if (findSelectedLessonBySchedule) {
+      if (findSelectedLessonBySchedule?.lessonID) {
+        setLessons([]);
+        setIsLessonSent(0);
+      }
+      if (findSelectedLessonBySchedule?.homeWorkId) {
+        setHomework([]);
+        setIsHomeWorkSent(0);
+      }
       const fetchLessonById = async () => {
         try {
           if (findSelectedLessonBySchedule?.lessonID) {

@@ -197,6 +197,7 @@ const TeacherPage = () => {
   const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    [{ size: ["small", false, "large", "huge"] }],
     ["bold", "italic", "underline", "code-block"],
     ["link", "image"],
     [{ list: "ordered" }, { list: "bullet" }],
@@ -223,6 +224,8 @@ const TeacherPage = () => {
     "color",
     "background",
     "align",
+    "audio",
+    "size",
   ];
   useEffect(() => {
     const fetchNotification = async () => {

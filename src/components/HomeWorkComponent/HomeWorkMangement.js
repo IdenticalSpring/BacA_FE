@@ -16,7 +16,7 @@ import {
 } from "antd";
 import { colors } from "assets/theme/color";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 const { Title } = Typography;
 const { Option } = Select;
 import PropTypes from "prop-types";
@@ -28,6 +28,7 @@ import {
   EditOutlined,
   ReadOutlined,
   SyncOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import { jwtDecode } from "jwt-decode";
 import homeWorkService from "services/homeWorkService";
@@ -42,6 +43,24 @@ const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
 ];
+const BlockEmbed = Quill.import("blots/block/embed");
+
+class AudioBlot extends BlockEmbed {
+  static create(url) {
+    const node = super.create();
+    node.setAttribute("src", url);
+    node.setAttribute("controls", true);
+    return node;
+  }
+
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+
+AudioBlot.blotName = "audio";
+AudioBlot.tagName = "audio";
+Quill.register(AudioBlot);
 export default function HomeWorkMangement({
   toolbar,
   quillFormats,
@@ -111,13 +130,32 @@ export default function HomeWorkMangement({
       linkGame: homeWork.linkGame,
       linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
-      description: homeWork.description,
+      // description: homeWork.description,
     });
+    // if (quill && homeWork?.description) {
+    //   setTimeout(() => {
+    //     quill.clipboard.dangerouslyPasteHTML(0, homeWork.description);
+    //   }, 1000);
+    // }
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
   };
   // console.log(textToSpeech);
-
+  useEffect(() => {
+    if (
+      modalUpdateHomeWorkVisible &&
+      quillRef.current?.getEditor() &&
+      editingHomeWork?.description
+    ) {
+      // Thêm delay nhẹ để chắc chắn editor đã render xong
+      setTimeout(() => {
+        quillRef.current?.getEditor().setContents([]); // reset
+        quillRef.current
+          ?.getEditor()
+          .clipboard.dangerouslyPasteHTML(0, editingHomeWork.description);
+      }, 100); // thử 100ms nếu 0ms chưa đủ
+    }
+  }, [modalUpdateHomeWorkVisible, editingHomeWork, quillRef.current?.getEditor()]);
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) {
       return;
@@ -185,7 +223,7 @@ export default function HomeWorkMangement({
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
       formData.append("linkZalo", values.linkZalo);
-      formData.append("description", values.description);
+      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
@@ -310,7 +348,42 @@ export default function HomeWorkMangement({
       }
     };
   }, []);
+  const audioHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
 
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
   const modules = {
     toolbar: {
       container: toolbar,
@@ -617,8 +690,20 @@ export default function HomeWorkMangement({
               }}
             />
           </Form.Item>
+          <Button
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+              margin: "10px 0",
+            }}
+            icon={<UploadOutlined />}
+            onClick={audioHandler}
+          >
+            Tải audio lên
+          </Button>
           <Form.Item
-            name="description"
+            // name="description"
             label="Mô tả"
             // rules={[{ required: true, message: "Please enter a description" }]}
           >
