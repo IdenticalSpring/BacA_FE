@@ -33,6 +33,7 @@ import {
   LinkOutlined,
   BarChartOutlined,
   CopyOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -53,6 +54,8 @@ import student_lesson_countService from "services/student_lesson_countService";
 import EvaluationStudent from "./evaluationStudent"; // Thêm import
 import { Collapse } from "antd";
 import ConvertTTS from "./ConvertTTS";
+import ProfileModal from "./profileModal";
+import StudentFeedbackModal from "./feedbackModal";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -101,8 +104,10 @@ const StudentPage = () => {
   const [isHomeWorkSent, setIsHomeWorkSent] = useState(false); // Mặc định là false (không hiển thị)
   const [wordwallEmbed, setWordwallEmbed] = useState(null); // Mã nhúng từ oEmbed
   const [isModalWordWallVisible, setIsModalWordWallVisible] = useState(false); // Trạng thái Modal
+  const [profileModalVisible, setProfileModalVisible] = useState(false); // Thêm state cho modal profile
   const lessonRef = useRef(null);
   const progressRef = useRef(null);
+  const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
 
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -120,6 +125,18 @@ const StudentPage = () => {
     } else {
       message.error("Không có link luyện tập nào được cung cấp!");
     }
+  };
+
+  const handleStudentUpdated = (updatedStudent) => {
+    setStudent(updatedStudent); // Cập nhật student trong state
+  };
+
+  const handleShowFeedback = () => {
+    setFeedbackModalVisible(true); // Mở modal khi chọn Feedback
+  };
+
+  const handleShowProfile = () => {
+    setProfileModalVisible(true); // Mở modal khi chọn Profile
   };
 
   useEffect(() => {
@@ -272,10 +289,6 @@ const StudentPage = () => {
     setSidebarVisible(!sidebarVisible);
   };
 
-  const showComingSoon = () => {
-    message.info("Coming soon!");
-  };
-
   const handleSubmitHomework = async (homeworkId) => {
     try {
       console.log();
@@ -295,8 +308,11 @@ const StudentPage = () => {
 
   const menu = (
     <Menu style={{ backgroundColor: colors.paleGreen, borderRadius: "8px" }}>
-      <Menu.Item key="profile" icon={<UserOutlined />} onClick={showComingSoon}>
+      <Menu.Item key="profile" icon={<UserOutlined />} onClick={handleShowProfile}>
         Profile
+      </Menu.Item>
+      <Menu.Item key="feedback" icon={<MessageOutlined />} onClick={handleShowFeedback}>
+        Feedback
       </Menu.Item>
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
         Đăng xuất
@@ -675,15 +691,15 @@ const StudentPage = () => {
             </Button>
             <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
               <Avatar
-                style={{
-                  backgroundColor: colors.deepGreen,
-                  color: colors.white,
-                  cursor: "pointer",
-                  border: `2px solid ${colors.borderGreen}`,
+                src={student?.imgUrl}
+                alt={student?.name}
+                sx={{
+                  width: 50,
+                  height: 50,
+                  border: `1px solid ${colors.lightGrey}`,
                 }}
-                icon={<UserOutlined />}
               >
-                {userName.charAt(0)}
+                {student?.name.charAt(0)}
               </Avatar>
             </Dropdown>
           </div>
@@ -911,6 +927,19 @@ const StudentPage = () => {
           <p>Đang tải nội dung...</p>
         )}
       </Modal>
+      {/* Thêm StudentProfileModal */}
+      <ProfileModal
+        open={profileModalVisible}
+        onClose={() => setProfileModalVisible(false)}
+        student={student}
+        onStudentUpdated={handleStudentUpdated}
+      />
+      {/* Thêm StudentFeedbackModal */}
+      <StudentFeedbackModal
+        visible={feedbackModalVisible}
+        onClose={() => setFeedbackModalVisible(false)}
+        studentId={studentId}
+      />
     </Layout>
   );
 };
