@@ -138,9 +138,9 @@ const StudentPage = () => {
         count += res.length;
         setNotificationsCount(count);
         const fullData = [...res, ...studentNotificationsData];
-        console.log(fullData, res, studentNotificationsData);
+        // console.log(fullData, res, studentNotificationsData);
 
-        if (res[0]?.createdAt) {
+        if (fullData[0]?.createdAt) {
           const sortedData = [...fullData]?.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
           );
