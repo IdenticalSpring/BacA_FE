@@ -131,18 +131,20 @@ const StudentPage = () => {
         const studentNotification = await user_notificationService.getAllUserNotificationsOfStudent(
           studentId
         );
-        const studentNotificationsData = studentNotification.map((noti) => {
+        const studentNotificationsData = studentNotification?.map((noti) => {
           if (!noti.status) count++;
           return { ...noti.notification, status: noti.status, user_notificationID: noti.id };
         });
         count += res.length;
         setNotificationsCount(count);
         const fullData = [...res, ...studentNotificationsData];
+        console.log(fullData);
+
         if (res[0]?.createdAt) {
-          const sortedData = [...fullData].sort(
+          const sortedData = [...fullData]?.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
           );
-          const data = sortedData.map((item) => ({
+          const data = sortedData?.map((item) => ({
             ...item,
             timeElapsed: getTimeElapsed(item.createdAt),
           }));
