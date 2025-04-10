@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Avatar, Typography, Button, Drawer, Modal } from "antd";
+import { Layout, Menu, Avatar, Typography, Button, Modal } from "antd";
 import {
   BookOutlined,
-  MenuOutlined,
-  CloseOutlined,
   TeamOutlined,
   LaptopOutlined,
   EditOutlined,
-  BarChartOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
-import sidebarLinkService from "services/sidebarLinkService"; // Import service
+import sidebarLinkService from "services/sidebarLinkService";
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -33,23 +31,13 @@ const Sidebar = ({
   onSelectClass,
   setOpenHomeworkStatisticsDashboard,
   googleDriveLink,
+  isMobile,
+  onClose,
 }) => {
-  const [visible, setVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordwallEmbed, setWordwallEmbed] = useState(null);
-  const [sidebarLinks, setSidebarLinks] = useState([]); // State để lưu danh sách sidebar links
+  const [sidebarLinks, setSidebarLinks] = useState([]);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 1200);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // Fetch sidebar links từ API khi component mount
   useEffect(() => {
     const fetchSidebarLinks = async () => {
       try {
@@ -79,9 +67,6 @@ const Sidebar = ({
     setIsModalVisible(false);
     setWordwallEmbed(null);
   };
-
-  const showDrawer = () => setVisible(true);
-  const onClose = () => setVisible(false);
 
   const handleClassSelect = (classId) => {
     onSelectClass(classId);
@@ -213,7 +198,6 @@ const Sidebar = ({
         )}
       </div>
 
-      {/* Công cụ giảng dạy */}
       <div
         style={{
           margin: "0 auto",
@@ -260,7 +244,6 @@ const Sidebar = ({
           </div>
         ))}
 
-      {/* Công cụ giao bài tập */}
       <div
         style={{
           margin: "0 auto",
@@ -328,32 +311,7 @@ const Sidebar = ({
         `}
       </style>
       {isMobile ? (
-        <>
-          <Button
-            type="primary"
-            icon={<MenuOutlined />}
-            onClick={showDrawer}
-            style={{
-              position: "fixed",
-              left: 20,
-              top: 20,
-              zIndex: 99,
-              backgroundColor: colors.deepGreen,
-              borderColor: colors.deepGreen,
-            }}
-          />
-          <Drawer
-            placement="left"
-            closable={false}
-            onClose={onClose}
-            open={visible}
-            width={260}
-            bodyStyle={{ padding: 0, backgroundColor: colors.paleGreen }}
-            headerStyle={{ display: "none" }}
-          >
-            <SidebarContent />
-          </Drawer>
-        </>
+        <SidebarContent />
       ) : (
         <Sider
           width={260}
@@ -403,6 +361,8 @@ Sidebar.propTypes = {
   onSelectClass: PropTypes.func.isRequired,
   setOpenHomeworkStatisticsDashboard: PropTypes.func.isRequired,
   googleDriveLink: PropTypes.string.isRequired,
+  isMobile: PropTypes.bool.isRequired,
+  onClose: PropTypes.func,
 };
 
 Sidebar.defaultProps = {

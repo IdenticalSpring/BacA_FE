@@ -327,11 +327,11 @@ function Dashboard() {
         {/* Grid 4: Projects và OrdersOverview */}
         <MDBox>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={8}>
+            <Grid item xs={12} md={6} lg={6}>
               <Projects />
             </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              {/* <OrdersOverview /> */}
+            <Grid item xs={12} md={6} lg={6}>
+              <OrdersOverview />
             </Grid>
           </Grid>
         </MDBox>

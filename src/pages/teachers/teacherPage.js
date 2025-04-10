@@ -21,6 +21,7 @@ import {
   Badge,
   Space,
   Tag,
+  Drawer,
 } from "antd";
 import {
   UserOutlined,
@@ -37,6 +38,9 @@ import {
   SmileOutlined,
   FrownOutlined,
   MehOutlined,
+  MenuOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -146,6 +150,7 @@ const TeacherPage = () => {
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState(null);
   const [isMultiStudentEvaluationModalVisible, setIsMultiStudentEvaluationModalVisible] =
     useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const [allStudentsSelected, setAllStudentsSelected] = useState(false);
   // Homework form states
@@ -173,6 +178,7 @@ const TeacherPage = () => {
   const teacherId = userId.userId;
   const userName = userId.username || "Teacher";
   const navigate = useNavigate();
+
   //Student information
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
@@ -792,16 +798,62 @@ const TeacherPage = () => {
     }
   };
 
+  const showDrawer = () => setSidebarVisible(true);
+  const onClose = () => setSidebarVisible(false);
+  const toggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
+
   return (
     <Layout style={{ minHeight: "99vh" }}>
-      <Sidebar
-        teacherName={userName}
-        classes={classes}
-        selectedClass={selectedClass}
-        onSelectClass={handleSelectClass}
-        setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
-        googleDriveLink={teacherData?.linkDrive || ""}
-      />
+      {isMobile && (
+        <>
+          <Button
+            type="primary"
+            icon={<MenuOutlined />}
+            onClick={showDrawer}
+            style={{
+              position: "fixed",
+              left: 20,
+              top: 20,
+              zIndex: 99,
+              backgroundColor: colors.deepGreen,
+              borderColor: colors.deepGreen,
+            }}
+          />
+          <Drawer
+            placement="left"
+            closable={false}
+            onClose={onClose}
+            open={sidebarVisible}
+            width={260}
+            bodyStyle={{ padding: 0, backgroundColor: colors.paleGreen }}
+            headerStyle={{ display: "none" }}
+          >
+            <Sidebar
+              teacherName={userName}
+              classes={classes}
+              selectedClass={selectedClass}
+              onSelectClass={handleSelectClass}
+              setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
+              googleDriveLink={teacherData?.linkDrive || ""}
+              isMobile={isMobile}
+              onClose={onClose}
+            />
+          </Drawer>
+        </>
+      )}
+      {!isMobile && (
+        <Sidebar
+          teacherName={userName}
+          classes={classes}
+          selectedClass={selectedClass}
+          onSelectClass={handleSelectClass}
+          setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
+          googleDriveLink={teacherData?.linkDrive || ""}
+          isMobile={isMobile}
+        />
+      )}
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
         <Header
           style={{
@@ -821,11 +873,26 @@ const TeacherPage = () => {
             style={{ display: "flex", alignItems: "center" }}
             onClick={() => setOpenNotification(false)}
           >
+            {isMobile && (
+              <Button
+                type="text"
+                icon={sidebarVisible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+                onClick={toggleSidebar}
+                style={{ fontSize: "16px", marginRight: "12px", color: colors.darkGreen }}
+              />
+            )}
             <Title
               level={isMobile ? 5 : 4}
-              style={{ margin: 0, color: colors.darkGreen, marginLeft: isMobile ? "25%" : "0" }}
+              style={{
+                margin: 0,
+                color: colors.darkGreen,
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
             >
-              HappyClass
+              Happy Class
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 0 }}>

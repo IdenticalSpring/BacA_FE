@@ -14,6 +14,7 @@ import {
   Progress,
   Statistic,
   Table,
+  Modal, // Thêm Modal vào import
 } from "antd";
 import {
   TrophyOutlined,
@@ -37,6 +38,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
   const [assessmentData, setAssessmentData] = useState([]);
   const [studentInfo, setStudentInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false); // State cho Modal
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,6 +120,16 @@ const StudentScoreTab = ({ studentId, colors }) => {
 
     fetchData();
   }, [studentId]);
+
+  // Hàm xử lý khi nhấp vào avatar
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  // Hàm đóng Modal
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
 
   const groupScoresByTest = () => {
     const grouped = {};
@@ -221,33 +233,32 @@ const StudentScoreTab = ({ studentId, colors }) => {
   const recentScores = getMostRecentScores();
   const chartData = getScoresForChart();
 
-  // Cấu hình dữ liệu cho DefaultLineChart với 5 đường (Avg + 4 kỹ năng)
   const lineChartData = {
     labels: chartData.map((item) => new Date(item.date).toLocaleDateString()),
     datasets: [
       {
         label: "Điểm trung bình",
-        color: "info", // Sử dụng màu "info" của Material Dashboard (thường là xanh dương)
+        color: "info",
         data: chartData.map((item) => item.average),
       },
       {
         label: "Viết",
-        color: "warning", // Sử dụng màu "warning" (thường là cam)
+        color: "warning",
         data: chartData.map((item) => item.writing),
       },
       {
         label: "Đọc",
-        color: "success", // Sử dụng màu "success" (thường là xanh lá)
+        color: "success",
         data: chartData.map((item) => item.reading),
       },
       {
         label: "Nói",
-        color: "error", // Sử dụng màu "error" (thường là đỏ)
+        color: "error",
         data: chartData.map((item) => item.speaking),
       },
       {
         label: "Nghe",
-        color: "secondary", // Sử dụng màu "secondary" (thường là tím hoặc xám)
+        color: "secondary",
         data: chartData.map((item) => item.listening),
       },
     ],
@@ -398,8 +409,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
               style={{
                 backgroundColor: colors.deepGreen || "#1890ff",
                 boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
+                cursor: "pointer", // Thêm con trỏ tay để biểu thị có thể nhấp
               }}
               src={studentInfo?.imgUrl}
+              onClick={showModal} // Gắn sự kiện nhấp chuột
             />
           </Col>
           <Col xs={24} sm={10} md={11}>
@@ -436,6 +449,24 @@ const StudentScoreTab = ({ studentId, colors }) => {
           </Col>
         </Row>
       </Card>
+
+      {/* Modal hiển thị avatar phóng to */}
+      <Modal
+        visible={isModalVisible}
+        onCancel={handleCloseModal}
+        footer={null}
+        centered
+        bodyStyle={{ padding: 0, textAlign: "center" }}
+      >
+        <img
+          src={
+            studentInfo?.imgUrl ||
+            "https://th.bing.com/th/id/R.f12f27774ae0581703453af531f3e839?rik=WQri2jZdiFUpEQ&pid=ImgRaw&r=0"
+          } // Hình mặc định nếu không có URL
+          alt={studentInfo?.name || "Student Avatar"}
+          style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 8 }}
+        />
+      </Modal>
 
       {recentScores && (
         <Card

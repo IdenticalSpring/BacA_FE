@@ -116,7 +116,7 @@ function Projects() {
       <MDBox display="flex" justifyContent="space-between" alignItems="center" p={3}>
         <MDBox>
           <MDTypography variant="h6" gutterBottom>
-            Feedbacks
+            Student Feedbacks
           </MDTypography>
           <MDBox display="flex" alignItems="center" lineHeight={0}>
             <MDTypography variant="button" fontWeight="regular" color="text">
@@ -133,15 +133,20 @@ function Projects() {
       </MDBox>
       <MDBox>
         <DataTable
-          table={{ columns, rows }}
-          showTotalEntries={true} // Hiển thị tổng số entries
+          // table={{ columns, rows }}
+          // showTotalEntries={true} // Hiển thị tổng số entries
+          // isSorted={false}
+          // noEndBorder
+          // entriesPerPage={false} // Cấu hình phân trang
+          // canSearch={false} // Không cần tìm kiếm
+          // pagination={{ variant: "gradient", color: "info" }} // Kiểu phân trang
+          // onPageChange={handlePageChange} // Xử lý khi đổi trang
+          // totalEntries={feedbacks.length} // Tổng số feedback
+          table={{ columns: columns, rows: rows }}
           isSorted={false}
+          entriesPerPage={false}
+          showTotalEntries={false}
           noEndBorder
-          entriesPerPage={{ defaultValue: feedbacksPerPage, entries: [5, 10, 15] }} // Cấu hình phân trang
-          canSearch={false} // Không cần tìm kiếm
-          pagination={{ variant: "gradient", color: "info" }} // Kiểu phân trang
-          onPageChange={handlePageChange} // Xử lý khi đổi trang
-          totalEntries={feedbacks.length} // Tổng số feedback
         />
       </MDBox>
     </Card>

@@ -13,68 +13,134 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+import { useState, useEffect } from "react";
+
 // @mui material components
 import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+import MDAvatar from "components/MDAvatar";
 
-// Material Dashboard 2 React example components
-import TimelineItem from "examples/Timeline/TimelineItem";
+// Material Dashboard 2 React examples
+import DataTable from "examples/Tables/DataTable";
+import teacherFeedbackService from "services/teacherFeedbackService"; // Import service
 
 function OrdersOverview() {
+  const [menu, setMenu] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const feedbacksPerPage = 5;
+
+  // Fetch teacher feedback data when component mounts
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      try {
+        const feedbackData = await teacherFeedbackService.getAllteacherFeedbackk();
+        setFeedbacks(feedbackData);
+      } catch (error) {
+        console.error("Error fetching teacher feedbacks:", error);
+      }
+    };
+
+    fetchFeedbacks();
+  }, []);
+
+  const openMenu = ({ currentTarget }) => setMenu(currentTarget);
+  const closeMenu = () => setMenu(null);
+
+  const renderMenu = (
+    <Menu
+      id="simple-menu"
+      anchorEl={menu}
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "left",
+      }}
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      open={Boolean(menu)}
+      onClose={closeMenu}
+    >
+      <MenuItem onClick={closeMenu}>Action</MenuItem>
+      <MenuItem onClick={closeMenu}>Another action</MenuItem>
+      <MenuItem onClick={closeMenu}>Something else</MenuItem>
+    </Menu>
+  );
+
+  // Define columns for DataTable
+  const columns = [
+    {
+      Header: "Teacher Name",
+      accessor: "name",
+      width: "15%",
+      align: "center",
+    },
+    {
+      Header: "Feedback Title",
+      accessor: "title",
+      width: "60%",
+      align: "left",
+    },
+  ];
+
+  // Calculate pagination data
+  const indexOfLastFeedback = currentPage * feedbacksPerPage;
+  const indexOfFirstFeedback = indexOfLastFeedback - feedbacksPerPage;
+  const currentFeedbacks = feedbacks.slice(indexOfFirstFeedback, indexOfLastFeedback);
+
+  // Prepare data for rows
+  const rows = currentFeedbacks.map((feedback) => ({
+    name: (
+      <MDTypography variant="button" fontWeight="regular" color="text">
+        {feedback.teacher?.name}
+      </MDTypography>
+    ),
+    title: (
+      <MDTypography variant="button" fontWeight="regular" color="text">
+        {feedback.title}
+      </MDTypography>
+    ),
+  }));
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
     <Card sx={{ height: "100%" }}>
-      <MDBox pt={3} px={3}>
-        <MDTypography variant="h6" fontWeight="medium">
-          Orders overview
-        </MDTypography>
-        <MDBox mt={0} mb={2}>
-          <MDTypography variant="button" color="text" fontWeight="regular">
-            <MDTypography display="inline" variant="body2" verticalAlign="middle">
-              <Icon sx={{ color: ({ palette: { success } }) => success.main }}>arrow_upward</Icon>
-            </MDTypography>
-            &nbsp;
-            <MDTypography variant="button" color="text" fontWeight="medium">
-              24%
-            </MDTypography>{" "}
-            this month
+      <MDBox display="flex" justifyContent="space-between" alignItems="center" p={3}>
+        <MDBox>
+          <MDTypography variant="h6" gutterBottom>
+            Teacher Feedback
           </MDTypography>
+          <MDBox display="flex" alignItems="center" lineHeight={0}>
+            <MDTypography variant="button" fontWeight="regular" color="text">
+              &nbsp;<strong>{feedbacks.length} feedbacks</strong> received
+            </MDTypography>
+          </MDBox>
         </MDBox>
+        <MDBox color="text" px={2}>
+          <Icon sx={{ cursor: "pointer", fontWeight: "bold" }} fontSize="small" onClick={openMenu}>
+            more_vert
+          </Icon>
+        </MDBox>
+        {renderMenu}
       </MDBox>
-      <MDBox p={2}>
-        <TimelineItem
-          color="success"
-          icon="notifications"
-          title="$2400, Design changes"
-          dateTime="22 DEC 7:20 PM"
-        />
-        <TimelineItem
-          color="error"
-          icon="inventory_2"
-          title="New order #1832412"
-          dateTime="21 DEC 11 PM"
-        />
-        <TimelineItem
-          color="info"
-          icon="shopping_cart"
-          title="Server payments for April"
-          dateTime="21 DEC 9:34 PM"
-        />
-        <TimelineItem
-          color="warning"
-          icon="payment"
-          title="New card added for order #4395133"
-          dateTime="20 DEC 2:20 AM"
-        />
-        <TimelineItem
-          color="primary"
-          icon="vpn_key"
-          title="New card added for order #4395133"
-          dateTime="18 DEC 4:54 AM"
-          lastItem
+      <MDBox>
+        <DataTable
+          table={{ columns, rows }}
+          isSorted={false}
+          entriesPerPage={false}
+          showTotalEntries={false}
+          noEndBorder
         />
       </MDBox>
     </Card>
