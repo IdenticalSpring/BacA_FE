@@ -330,6 +330,7 @@ const StudentPage = () => {
       setActiveTab("homework");
     }
   };
+  console.log(notifications);
 
   const renderLessonContent = () => (
     <>
