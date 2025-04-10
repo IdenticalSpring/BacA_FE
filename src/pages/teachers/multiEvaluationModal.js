@@ -66,7 +66,7 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students }) => {
       const initialEvaluations = students.map((student) => ({
         studentId: student.id,
         studentName: student.name,
-        scheduleID: student.schedule.id,
+        scheduleID: student.schedule?.id,
         skills: {}, // { skillName: rating }
         behaviors: {}, // { behaviorName: rating }
         comment: "",

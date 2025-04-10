@@ -336,10 +336,14 @@ const TeacherPage = () => {
     setIsProfileModalVisible(true);
   };
   const openAssignmentModal = () => {
+    setSelectedStudents([]);
+    setAllStudentsSelected(false);
     setAssignmentModal(true);
   };
 
   const openHomeworkModal = () => {
+    setSelectedStudents([]);
+    setAllStudentsSelected(false);
     setHomeworkModal(true);
   };
 
@@ -372,6 +376,8 @@ const TeacherPage = () => {
 
   // Hàm để kích hoạt chế độ điểm danh
   const handleAttendanceCheck = async () => {
+    setSelectedStudents([]);
+    setAllStudentsSelected(false);
     if (!hasClassToday) {
       notification.warning({
         message: "Warning",
@@ -386,10 +392,14 @@ const TeacherPage = () => {
       setLoading(true);
 
       // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date();
+      const padZero = (num) => String(num).padStart(2, "0");
+      const todayFormatted = `${today.getFullYear()}-${padZero(today.getMonth() + 1)}-${padZero(
+        today.getDate()
+      )}`;
 
-      // Lấy dữ liệu điểm danh hiện có cho ngày hôm nay
-      const existingAttendance = await teacherService.getAttendanceByDate(today);
+      // Lấy dữ liệu điểm danh hiện có từ server cho ngày hôm nay
+      const existingAttendance = await teacherService.getAttendanceByDate(todayFormatted);
 
       // Khởi tạo attendance mặc định cho tất cả học sinh
       const initialAttendance = students.map((student) => ({
@@ -398,55 +408,78 @@ const TeacherPage = () => {
         note: "",
       }));
 
-      // Nếu đã có dữ liệu điểm danh từ server
-      if (existingAttendance && existingAttendance.length > 0) {
-        // Cập nhật attendance dựa trên dữ liệu hiện có
-        const updatedAttendance = initialAttendance.map((initial) => {
-          const existing = existingAttendance.find((att) => att.studentId === initial.studentId);
-          return existing
-            ? { ...initial, present: existing.present, note: existing.note || "" }
-            : initial;
-        });
-        setAttendance(updatedAttendance);
-        notification.info({
-          message: "Attendance Loaded",
-          description: "Existing attendance data has been loaded",
+      // Lấy ngày hiện tại để tìm lịch học
+
+      const todaySchedule = lessonByScheduleData.find(
+        (schedule) => schedule.date === todayFormatted
+      );
+
+      if (!todaySchedule) {
+        notification.warning({
+          message: "Warning",
+          description: "Cannot find lesson schedule for today",
           placement: "topRight",
           duration: 4,
         });
-      } else {
-        // Nếu chưa có dữ liệu, thực hiện điểm danh mới
-        if (!hasClassToday) {
-          notification.warning({
-            message: "Warning",
-            description: "No class scheduled for today",
-            placement: "topRight",
-            duration: 4,
-          });
-          return;
-        }
-        const today = new Date();
-        const padZero = (num) => String(num).padStart(2, "0");
-        const todayFormatted = `${today.getFullYear()}-${padZero(today.getMonth() + 1)}-${padZero(
-          today.getDate()
-        )}`;
+        setLoading(false);
+        return;
+      }
 
-        const todaySchedule = lessonByScheduleData.find(
-          (schedule) => schedule.date === todayFormatted
+      const selectedLessonByScheduleId = todaySchedule.id;
+
+      // Kiểm tra xem có dữ liệu điểm danh nào từ server không
+      if (existingAttendance && existingAttendance.length > 0) {
+        // Lọc các StudentID từ dữ liệu server
+        const existingStudentIds = existingAttendance.map((att) => att.student.id);
+
+        // So sánh với danh sách StudentID khởi tạo
+        const matchedAttendance = initialAttendance.filter((init) =>
+          existingStudentIds.includes(init.studentId)
         );
 
-        const selectedLessonByScheduleId = todaySchedule.id;
+        if (matchedAttendance.length > 0) {
+          // Nếu có StudentID trùng khớp, cập nhật điểm danh
+          const payload = {
+            attendanceData: matchedAttendance.map((item) => ({
+              studentId: item.studentId,
+              present: item.present,
+              note: item.note,
+            })),
+          };
 
-        if (!selectedLessonByScheduleId) {
-          notification.warning({
-            message: "Warning",
-            description: "Cannot find lesson schedule for today",
+          await teacherService.updateAttendanceByDate(payload, todayFormatted);
+
+          notification.success({
+            message: "Attendance Updated",
+            description: "Attendance for matching students has been updated",
             placement: "topRight",
             duration: 4,
           });
-          return;
+        } else {
+          // Nếu không có StudentID nào trùng khớp, tạo mới điểm danh
+          await teacherService.attendanceStudent({
+            lessonByScheduleId: selectedLessonByScheduleId,
+            attendanceData: initialAttendance,
+          });
+
+          notification.success({
+            message: "Attendance Initiated",
+            description: "New attendance has been created",
+            placement: "topRight",
+            duration: 4,
+          });
         }
 
+        // Cập nhật state attendance với dữ liệu đã xử lý
+        const updatedAttendance = initialAttendance.map((init) => {
+          const existing = existingAttendance.find((att) => att.studentId === init.studentId);
+          return existing
+            ? { ...init, present: existing.present, note: existing.note || "" }
+            : init;
+        });
+        setAttendance(updatedAttendance);
+      } else {
+        // Nếu không có dữ liệu điểm danh nào từ server, tạo mới
         await teacherService.attendanceStudent({
           lessonByScheduleId: selectedLessonByScheduleId,
           attendanceData: initialAttendance,
@@ -505,7 +538,11 @@ const TeacherPage = () => {
       setLoading(true);
 
       // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date();
+      const padZero = (num) => String(num).padStart(2, "0");
+      const todayFormatted = `${today.getFullYear()}-${padZero(today.getMonth() + 1)}-${padZero(
+        today.getDate()
+      )}`;
 
       // Chuẩn bị payload cho update
       const payload = {
@@ -517,7 +554,7 @@ const TeacherPage = () => {
       };
 
       // Gọi API updateAttendanceByDate
-      await teacherService.updateAttendanceByDate(payload, today);
+      await teacherService.updateAttendanceByDate(payload, todayFormatted);
 
       notification.success({
         message: "Success",
@@ -701,6 +738,8 @@ const TeacherPage = () => {
 
   // Enter Test Score
   const handleEnterTestScores = () => {
+    setSelectedStudents([]);
+    setAllStudentsSelected(false);
     if (!selectedClass) {
       notification.warning({
         message: "No Class Selected",
