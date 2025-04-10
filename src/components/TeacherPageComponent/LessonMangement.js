@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { colors } from "assets/theme/color";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 const { Title } = Typography;
 const { Option } = Select;
 import PropTypes from "prop-types";
@@ -25,6 +25,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   SyncOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import lessonService from "services/lessonService";
 import { jwtDecode } from "jwt-decode";
@@ -33,11 +34,30 @@ import homeWorkService from "services/homeWorkService";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import lessonByScheduleService from "services/lessonByScheduleService";
+import axios from "axios";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
 ];
+const BlockEmbed = Quill.import("blots/block/embed");
+
+class AudioBlot extends BlockEmbed {
+  static create(url) {
+    const node = super.create();
+    node.setAttribute("src", url);
+    node.setAttribute("controls", true);
+    return node;
+  }
+
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+
+AudioBlot.blotName = "audio";
+AudioBlot.tagName = "audio";
+Quill.register(AudioBlot);
 export default function LessonMangement({
   toolbar,
   quillFormats,
@@ -92,11 +112,22 @@ export default function LessonMangement({
       linkYoutube: lesson.linkYoutube,
       linkGame: lesson.linkGame,
       linkSpeech: lesson.linkSpeech,
-      description: lesson.description,
+      // description: lesson.description,
     });
     setMp3Url(lesson.linkSpeech);
     setModalUpdateLessonVisible(true);
   };
+  useEffect(() => {
+    if (modalUpdateLessonVisible && quillRef.current?.getEditor() && editingLesson?.description) {
+      // Thêm delay nhẹ để chắc chắn editor đã render xong
+      console.log(editingLesson.description);
+
+      setTimeout(() => {
+        quillRef.current?.getEditor().setContents([]); // reset
+        quillRef.current?.getEditor().clipboard.dangerouslyPasteHTML(0, editingLesson.description);
+      }, 100); // thử 100ms nếu 0ms chưa đủ
+    }
+  }, [modalUpdateLessonVisible, editingLesson, quillRef.current?.getEditor()]);
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) {
       return;
@@ -150,16 +181,16 @@ export default function LessonMangement({
       formData.append("linkYoutube", values.linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
-      formData.append("description", values.description);
+      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
       }
       if (editingLesson) {
-        await lessonService.editLesson(editingLesson.id, formData);
+        const lessonEntity = await lessonService.editLesson(editingLesson.id, formData);
         setLessons(
           lessons?.map((lesson) =>
-            lesson.id === editingLesson.id ? { ...lesson, ...values } : lesson
+            lesson.id === editingLesson.id ? { ...lesson, ...lessonEntity } : lesson
           )
         );
         message.success("Lesson updated successfully");
@@ -268,7 +299,42 @@ export default function LessonMangement({
       }
     };
   }, []);
+  const audioHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
 
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
   const modules = {
     toolbar: {
       container: toolbar,
@@ -551,7 +617,36 @@ export default function LessonMangement({
           >
             <Input placeholder="Nhập tên bài học" />
           </Form.Item>
-
+          <Button
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+              margin: "10px 0",
+            }}
+            icon={<UploadOutlined />}
+            onClick={audioHandler}
+          >
+            Tải audio lên
+          </Button>
+          <Form.Item
+            // name="description"
+            label="Mô tả"
+            // rules={[{ required: true, message: "Please enter a description" }]}
+          >
+            <ReactQuill
+              theme="snow"
+              modules={modules}
+              formats={quillFormats}
+              ref={quillRef}
+              style={{
+                height: "250px",
+                marginBottom: "60px", // Consider reducing this
+                borderRadius: "6px",
+                border: `1px solid ${colors.inputBorder}`,
+              }}
+            />
+          </Form.Item>
           {/* <Form.Item
             name="level"
             label="Level"
@@ -631,24 +726,6 @@ export default function LessonMangement({
               }}
             />
           </Form.Item> */}
-          <Form.Item
-            name="description"
-            label="Mô tả"
-            rules={[{ required: true, message: "Please enter a description" }]}
-          >
-            <ReactQuill
-              theme="snow"
-              modules={modules}
-              formats={quillFormats}
-              ref={quillRef}
-              style={{
-                height: "250px",
-                marginBottom: "60px", // Consider reducing this
-                borderRadius: "6px",
-                border: `1px solid ${colors.inputBorder}`,
-              }}
-            />
-          </Form.Item>
         </Form>
       </Modal>
       <Modal

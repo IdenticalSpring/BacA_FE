@@ -18,10 +18,11 @@ import {
   ReadOutlined,
   SaveOutlined,
   SendOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 import { colors } from "assets/theme/color";
 import axios from "axios";
 import lessonService from "services/lessonService";
@@ -41,6 +42,24 @@ const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
 ];
+const BlockEmbed = Quill.import("blots/block/embed");
+
+class AudioBlot extends BlockEmbed {
+  static create(url) {
+    const node = super.create();
+    node.setAttribute("src", url);
+    node.setAttribute("controls", true);
+    return node;
+  }
+
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+
+AudioBlot.blotName = "audio";
+AudioBlot.tagName = "audio";
+Quill.register(AudioBlot);
 export default function CreateHomeWork({
   toolbar,
   quillFormats,
@@ -139,7 +158,42 @@ export default function CreateHomeWork({
       }
     };
   }, []);
+  const audioHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
 
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
   const modules = {
     toolbar: {
       container: toolbar,
@@ -168,7 +222,7 @@ export default function CreateHomeWork({
       formData.append("linkYoutube", values.linkYoutube);
       formData.append("linkGame", values.linkGame);
       formData.append("linkZalo", zaloLink);
-      formData.append("description", values.description);
+      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
       // if (selected.size > 0) {
       //   formData.append("status", 1);
@@ -528,8 +582,20 @@ export default function CreateHomeWork({
                 }}
               />
             </Form.Item>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px 0",
+              }}
+              icon={<UploadOutlined />}
+              onClick={audioHandler}
+            >
+              Tải audio lên
+            </Button>
             <Form.Item
-              name="description"
+              // name="description"
               label="Mô tả"
               // rules={[{ required: true, message: "Please enter a description" }]}
             >

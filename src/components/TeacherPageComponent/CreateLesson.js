@@ -9,12 +9,13 @@ import {
   Radio,
   Select,
   Space,
+  Tag,
   Typography,
 } from "antd";
-import { SaveOutlined, RobotOutlined, SendOutlined } from "@ant-design/icons";
+import { SaveOutlined, RobotOutlined, SendOutlined, UploadOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 import { colors } from "assets/theme/color";
 import axios from "axios";
 import lessonService from "services/lessonService";
@@ -32,7 +33,24 @@ const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
 ];
+const BlockEmbed = Quill.import("blots/block/embed");
 
+class AudioBlot extends BlockEmbed {
+  static create(url) {
+    const node = super.create();
+    node.setAttribute("src", url);
+    node.setAttribute("controls", true);
+    return node;
+  }
+
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+
+AudioBlot.blotName = "audio";
+AudioBlot.tagName = "audio";
+Quill.register(AudioBlot);
 export default function CreateLesson({
   toolbar,
   quillFormats,
@@ -115,6 +133,42 @@ export default function CreateLesson({
       }
     };
   }, []);
+  const audioHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRefDescription.current) {
+          const editor = quillRefDescription.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
 
   const modules = {
     toolbar: {
@@ -188,7 +242,10 @@ export default function CreateLesson({
       formData.append("linkYoutube", values.linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
-      formData.append("description", quillDescription.getText()); // Lấy nội dung từ description
+      formData.append(
+        "description",
+        quillRefDescription.current?.getEditor()?.root.innerHTML || ""
+      ); // Lấy nội dung từ description
       formData.append("lessonPlan", quillLessonPlan.getText()); // Lấy nội dung từ lessonPlan
       formData.append("teacherId", teacherId);
 
@@ -389,7 +446,22 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item name="description" label="Mô tả">
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px 0",
+              }}
+              icon={<UploadOutlined />}
+              onClick={audioHandler}
+            >
+              Tải audio lên
+            </Button>
+            <Form.Item
+              // name="description"
+              label="Mô tả"
+            >
               <ReactQuill
                 // placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
                 theme="snow"
@@ -411,7 +483,7 @@ export default function CreateLesson({
                 loading={loadingEnhanceDescription}
                 style={{
                   alignSelf: "flex-start",
-                  marginTop: isMobile ? "100px" : "20px",
+                  marginTop: isMobile ? "100px" : "40px",
                   marginBottom: "20px",
                   borderRadius: "6px",
                   backgroundColor: colors.emerald,
@@ -422,6 +494,7 @@ export default function CreateLesson({
                 Cải thiện mô tả
               </Button>
             </Form.Item>
+
             <Form.Item name="lessonPlan" label="Kế hoạch bài học">
               <ReactQuill
                 theme="snow"
@@ -444,7 +517,7 @@ export default function CreateLesson({
                 loading={loadingEnhanceLessonPlan}
                 style={{
                   alignSelf: "flex-start",
-                  marginTop: isMobile ? "100px" : "20px",
+                  marginTop: isMobile ? "100px" : "40px",
                   marginBottom: "20px",
                   borderRadius: "6px",
                   backgroundColor: colors.emerald,
