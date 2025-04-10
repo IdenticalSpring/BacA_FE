@@ -205,27 +205,36 @@ const StudentPage = () => {
   }, [student]);
 
   useEffect(() => {
-    const findSelectedLessonBySchedule = lessonsBySchedule.find(
+    const findSelectedLessonBySchedule = lessonsBySchedule?.find(
       (lessonBySchedule) => lessonBySchedule.id === selectedLessonBySchedule
     );
-    if (findSelectedLessonBySchedule && findSelectedLessonBySchedule.lessonID) {
+    if (
+      findSelectedLessonBySchedule &&
+      (findSelectedLessonBySchedule?.lessonID || findSelectedLessonBySchedule?.homeWorkId)
+    ) {
       const fetchLessonById = async () => {
         try {
-          const data = await lessonService.getLessonById(findSelectedLessonBySchedule.lessonID);
-          setLessons([data]);
-          setIsLessonSent(!!findSelectedLessonBySchedule.isLessonSent); // Chuyển đổi sang boolean nếu cần
-          setIsHomeWorkSent(!!findSelectedLessonBySchedule.isHomeWorkSent); // Chuyển đổi sang boolean nếu cần
+          if (findSelectedLessonBySchedule?.lessonID) {
+            const data = await lessonService.getLessonById(findSelectedLessonBySchedule?.lessonID);
+            setLessons([data]);
+          }
+          if (findSelectedLessonBySchedule?.homeWorkId) {
+            fetchHomeworkByLesson(findSelectedLessonBySchedule?.homeWorkId);
+          }
+          setIsLessonSent(findSelectedLessonBySchedule.isLessonSent); // Chuyển đổi sang boolean nếu cần
+          setIsHomeWorkSent(findSelectedLessonBySchedule.isHomeWorkSent); // Chuyển đổi sang boolean nếu cần
           // console.log("lessonBySchedule", findSelectedLessonBySchedule);
           const student_lesson_countData = {
             lessonId: +findSelectedLessonBySchedule.lessonID,
             studentId: +studentId,
           };
+
           await student_lesson_countService.updateCount(student_lesson_countData);
-          if (findSelectedLessonBySchedule.homeWorkId) {
-            fetchHomeworkByLesson(findSelectedLessonBySchedule.homeWorkId);
-          } else {
-            fetchHomeworkByLesson(findSelectedLessonBySchedule.id);
-          }
+          // if (findSelectedLessonBySchedule.homeWorkId) {
+
+          // } else {
+          //   fetchHomeworkByLesson(findSelectedLessonBySchedule.id);
+          // }
         } catch (error) {
           console.error("Error fetching lesson:", error);
           setLessons([]);
