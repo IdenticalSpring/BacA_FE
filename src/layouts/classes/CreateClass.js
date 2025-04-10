@@ -125,15 +125,28 @@ function CreateClass() {
     "Saturday",
   ];
   const [filterLevel, setFilterLevel] = useState("");
+  const [filterClass, setFilterClass] = useState("");
   useEffect(() => {
     if (rawClasses.length > 0 && levels.length > 0) {
       let filteredClasses = rawClasses;
 
-      // Áp dụng bộ lọc nếu có filterSchedule
+      // Áp dụng bộ lọc theo Schedule
       if (filterSchedule) {
-        filteredClasses = rawClasses.filter((cls) =>
+        filteredClasses = filteredClasses.filter((cls) =>
           cls.schedules?.some((sch) => sch.dayOfWeek === parseInt(filterSchedule))
         );
+      }
+
+      // Áp dụng bộ lọc theo Class Name
+      if (filterClass) {
+        filteredClasses = filteredClasses.filter((cls) =>
+          cls.name.toLowerCase().includes(filterClass.toLowerCase())
+        );
+      }
+
+      // Áp dụng bộ lọc theo Level
+      if (filterLevel) {
+        filteredClasses = filteredClasses.filter((cls) => cls.level === filterLevel);
       }
 
       // Định dạng dữ liệu để hiển thị trong bảng
@@ -155,12 +168,15 @@ function CreateClass() {
             <IconButton color="primary" onClick={() => handleEdit(cls)}>
               <EditIcon />
             </IconButton>
+            <IconButton color="secondary" onClick={() => handleDeleteClass(cls.id)}>
+              <DeleteIcon />
+            </IconButton>
           </>
         ),
       }));
       setClassRows(formattedRows);
     }
-  }, [rawClasses, levels, filterSchedule]);
+  }, [rawClasses, levels, filterSchedule, filterClass, filterLevel]); // Thêm filterClass và filterLevel vào dependencies
   // State cho LevelManagement
   const [levelName, setLevelName] = useState("");
   const [levelDescription, setLevelDescription] = useState("");
@@ -1245,7 +1261,24 @@ function CreateClass() {
                 px={2}
                 py={1}
               >
-                {/* <TextField
+                {/* Filter by Class */}
+                <TextField
+                  label="Filter by Class"
+                  variant="outlined"
+                  value={filterClass}
+                  onChange={(e) => setFilterClass(e.target.value)}
+                  sx={{
+                    width: "10vw",
+                    minWidth: "120px",
+                    "& .MuiInputBase-root": {
+                      height: "48px",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      padding: "14px 14px",
+                    },
+                  }}
+                />
+                <TextField
                   py={3}
                   px={2}
                   select
@@ -1273,7 +1306,7 @@ function CreateClass() {
                       {level.name}
                     </MenuItem>
                   ))}
-                </TextField> */}
+                </TextField>
                 {/* Filter Schedule */}
                 <TextField
                   select
