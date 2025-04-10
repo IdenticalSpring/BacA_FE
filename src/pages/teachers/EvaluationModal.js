@@ -44,11 +44,11 @@ const EvaluationModal = ({ visible, onClose, students }) => {
       try {
         const skillData = await skillService.getAllSkill();
         const fetchedSkills = skillData
-          .filter((item) => item.type === 1)
-          .map((skill) => skill.name);
+          .filter((item) => item?.type === 1)
+          .map((skill) => skill?.name);
         const fetchedBehaviors = skillData
-          .filter((item) => item.type === 0)
-          .map((behavior) => behavior.name);
+          .filter((item) => item?.type === 0)
+          .map((behavior) => behavior?.name);
 
         setAvailableSkills(fetchedSkills);
         setAvailableBehaviors(fetchedBehaviors);
@@ -126,7 +126,7 @@ const EvaluationModal = ({ visible, onClose, students }) => {
         const commentPayload = {
           teacherID,
           studentID: student.id,
-          scheduleID: student.schedule.id,
+          scheduleID: student.schedule?.id,
           date: today,
           comment: evaluation,
         };
