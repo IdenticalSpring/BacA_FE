@@ -24,6 +24,7 @@ import PropTypes from "prop-types";
 import Compressor from "compressorjs";
 import DataTable from "examples/Tables/DataTable";
 import { EditIcon } from "lucide-react";
+import { DeleteFilled } from "@ant-design/icons";
 const typeOptions = [
   { label: "Teacher", value: true },
   { label: "Student", value: false },
@@ -305,6 +306,17 @@ export default function CreateNotificationByAdmin() {
       },
     },
   };
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this notification?")) {
+      try {
+        await notificationService.deleteNotification(id);
+        setOnSaveUpdate(!onSaveUpdate);
+        message.success("Notification deleted successfully");
+      } catch (err) {
+        message.error("Error deleting notification!");
+      }
+    }
+  };
   const handleSaveNotification = async () => {
     try {
       setLoadingCreateNotification(true);
@@ -327,6 +339,15 @@ export default function CreateNotificationByAdmin() {
               onClick={() => handleEdit(res)}
             >
               <EditIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                color: colors.errorRed,
+                " &:hover": { backgroundColor: colors.errorRed, color: colors.white },
+              }}
+              onClick={() => handleDelete(res.id)}
+            >
+              <DeleteFilled />
             </IconButton>
           </>
         ),
@@ -411,6 +432,15 @@ export default function CreateNotificationByAdmin() {
               onClick={() => handleEdit(notification)}
             >
               <EditIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                color: colors.errorRed,
+                " &:hover": { backgroundColor: colors.errorRed, color: colors.white },
+              }}
+              onClick={() => handleDelete(notification.id)}
+            >
+              <DeleteFilled />
             </IconButton>
           </>
         ),
