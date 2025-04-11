@@ -13,6 +13,7 @@ import {
 import { colors } from "assets/theme/color";
 import { useNavigate } from "react-router-dom";
 import Logo from "assets/images/logos/logo.png";
+import contentPageService from "services/contentpageService";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
