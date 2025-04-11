@@ -50,8 +50,8 @@ const Sidebar = ({
   useEffect(() => {
     if (!selectedLessonBySchedule && filteredLessons.length > 0) {
       // Nếu chưa có bài học nào được chọn và có bài học trong filteredLessons
-      const latestLesson = filteredLessons[0]; // Bài học mới nhất (đầu tiên trong danh sách đã sắp xếp)
-      onSelectLessonBySchedule(latestLesson.id); // Chọn bài học mới nhất
+      // const latestLesson = filteredLessons[0]; // Bài học mới nhất (đầu tiên trong danh sách đã sắp xếp)
+      // onSelectLessonBySchedule(latestLesson.id); // Chọn bài học mới nhất
     }
   }, [lessonsBySchedule, selectedLessonBySchedule, onSelectLessonBySchedule, filteredLessons]);
 

@@ -16,7 +16,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import MDBox from "components/MDBox";
 import { colors } from "assets/theme/color";
 import MDTypography from "components/MDTypography";
-import { Form, Input, message, Modal, notification, Radio, Spin } from "antd";
+import { Form, Input, message, Modal, notification, Radio, Spin, Select } from "antd";
 import ReactQuill from "react-quill";
 import axios from "axios";
 import notificationService from "services/notificationService";
@@ -25,10 +25,19 @@ import Compressor from "compressorjs";
 import DataTable from "examples/Tables/DataTable";
 import { EditIcon } from "lucide-react";
 import { DeleteFilled } from "@ant-design/icons";
+
 const typeOptions = [
   { label: "Teacher", value: true },
   { label: "Student", value: false },
 ];
+
+// Thêm tùy chọn cho bộ lọc
+const filterOptions = [
+  { label: "All", value: "all" },
+  { label: "Teacher", value: true },
+  { label: "Student", value: false },
+];
+
 export default function CreateNotificationByAdmin() {
   const [notificationData, setNotificationData] = useState({
     title: "",
@@ -50,6 +59,7 @@ export default function CreateNotificationByAdmin() {
   const [loadingUpdateNotification, setLoadingUpdateNotification] = useState(false);
   const [title, setTitle] = useState("");
   const [onSaveUpdate, setOnSaveUpdate] = useState(false);
+  const [filterType, setFilterType] = useState("all"); // Thêm state cho bộ lọc
   const [columns] = useState([
     {
       Header: "Notification Title",
@@ -59,10 +69,6 @@ export default function CreateNotificationByAdmin() {
         <span
           style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
-          // onClick={() => {
-          //   setSelectedLessonDetail(row.original);
-          //   setDetailModalOpen(true);
-          // }}
         >
           {row.values.title}
         </span>
@@ -76,10 +82,6 @@ export default function CreateNotificationByAdmin() {
         <span
           style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
-          // onClick={() => {
-          //   setSelectedLessonDetail(row.original);
-          //   setDetailModalOpen(true);
-          // }}
         >
           {(row.values.createdAt &&
             new Date(row.values.createdAt).toLocaleDateString("vi-VN", {
@@ -100,10 +102,6 @@ export default function CreateNotificationByAdmin() {
         <span
           style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
-          // onClick={() => {
-          //   setSelectedLessonDetail(row.original);
-          //   setDetailModalOpen(true);
-          // }}
         >
           <div
             style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
@@ -122,10 +120,6 @@ export default function CreateNotificationByAdmin() {
         <span
           style={{ cursor: "pointer", textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
-          // onClick={() => {
-          //   setSelectedLessonDetail(row.original);
-          //   setDetailModalOpen(true);
-          // }}
         >
           {row.values.type ? "Teacher" : "Student"}
         </span>
@@ -138,12 +132,14 @@ export default function CreateNotificationByAdmin() {
     },
   ]);
   const [rows, setRows] = useState([]);
+
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       setQuill(editor);
     }
   }, [quillRef]);
+
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline", "code-block"],
@@ -173,6 +169,7 @@ export default function CreateNotificationByAdmin() {
     "background",
     "align",
   ];
+
   useEffect(() => {
     const quill = quillRef.current?.getEditor();
     if (!quill) return;
@@ -185,13 +182,11 @@ export default function CreateNotificationByAdmin() {
 
       for (const item of items) {
         if (item.type.indexOf("image") !== -1) {
-          e.preventDefault(); // chặn mặc định Quill xử lý
-
+          e.preventDefault();
           const file = item.getAsFile();
 
           if (!file) return;
 
-          // 👇 Resize trước khi upload như trong imageHandler
           new Compressor(file, {
             quality: 0.8,
             maxWidth: 800,
@@ -220,7 +215,7 @@ export default function CreateNotificationByAdmin() {
             },
           });
 
-          break; // chỉ xử lý ảnh đầu tiên
+          break;
         }
       }
     };
@@ -232,6 +227,7 @@ export default function CreateNotificationByAdmin() {
       editor?.removeEventListener("paste", handlePaste);
     };
   }, [quillRef]);
+
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -242,34 +238,9 @@ export default function CreateNotificationByAdmin() {
       const file = input.files[0];
       if (!file) return;
 
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // // console.log([...formData]);
-
-      // try {
-      //   const response = await axios.post(
-      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-      //     formData
-      //   );
-      //   // console.log(response.data.url);
-
-      //   // const result = await response.json();
-
-      //   if (response.status === 201 && quillRef.current) {
-      //     const editor = quillRef.current.getEditor();
-      //     const range = editor.getSelection(true);
-      //     editor.insertEmbed(range.index, "image", response.data.url);
-      //   } else {
-      //     message.error("Upload failed. Try again!");
-      //   }
-      // } catch (error) {
-      //   console.error("Error uploading image:", error);
-      //   message.error("Upload error. Please try again!");
-      // }
       new Compressor(file, {
-        quality: 0.8, // Giảm dung lượng, 1 là giữ nguyên
-        maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-        maxHeight: 800, // Optional, resize chiều cao nếu cần
+        quality: 0.8,
+        maxWidth: 800,
         success(compressedFile) {
           const formData = new FormData();
           formData.append("file", compressedFile);
@@ -306,6 +277,7 @@ export default function CreateNotificationByAdmin() {
       },
     },
   };
+
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this notification?")) {
       try {
@@ -317,6 +289,7 @@ export default function CreateNotificationByAdmin() {
       }
     }
   };
+
   const handleSaveNotification = async () => {
     try {
       setLoadingCreateNotification(true);
@@ -362,57 +335,43 @@ export default function CreateNotificationByAdmin() {
       setTitle("");
       setType(true);
 
-      // Reset editor content
       if (quillRef.current) {
         const editor = quillRef.current.getEditor();
-        editor.setContents([]); // Clear Quill content
+        editor.setContents([]);
       }
     }
   };
+
   const onChangeType = ({ target: { value } }) => {
-    console.log("radio3 checked", value);
     setType(value);
   };
+
   const handleEdit = (notification) => {
     setEditMode(true);
     setSelectedNotification(notification);
-    // console.log(notification);
-
-    // setEditNotification({
-    //   title: notification.title,
-    //   // createdAt: notification.createdAt,
-    //   detail: notification.detail,
-    //   type: notification.type,
-    // });
     form.setFieldsValue({
       title: notification.title,
-      // createdAt: notification.createdAt,
-      // detail: notification.detail,
       type: notification.type,
     });
-    // setOpen(true);
   };
-  useEffect(() => {
-    // console.log(editMode, selectedNotification?.detail, quillUpdateRef.current?.getEditor());
 
+  useEffect(() => {
     setTimeout(() => {
       if (editMode && quillUpdateRef.current?.getEditor() && selectedNotification?.detail) {
-        // Thêm delay nhẹ để chắc chắn editor đã render xong
-        // console.log(editingLesson.description);
-        // console.log(selectedNotification);
-
         setTimeout(() => {
-          quillUpdateRef.current?.getEditor().setContents([]); // reset
+          quillUpdateRef.current?.getEditor().setContents([]);
           quillUpdateRef.current
             ?.getEditor()
             .clipboard.dangerouslyPasteHTML(0, selectedNotification.detail);
-        }, 100); // thử 100ms nếu 0ms chưa đủ
+        }, 100);
       }
     }, 500);
-  }, [editMode, selectedNotification, quillUpdateRef.current?.getEditor()]);
+  }, [editMode, selectedNotification]);
+
   useEffect(() => {
     fetchNotifications();
   }, [onSaveUpdate]);
+
   const fetchNotifications = async () => {
     try {
       const data = await notificationService.getAllGeneralNotifications();
@@ -452,26 +411,18 @@ export default function CreateNotificationByAdmin() {
       setLoading(false);
     }
   };
-  // console.log(notificationData);
+
   const handleSaveUpdateNotification = async () => {
     try {
       setLoadingUpdateNotification(true);
       const values = await form.validateFields();
-      // const formData = new FormData();
-      // formData.append("title", values.title);
-      // formData.append("type", values.type);
-      // formData.append("detail", quillUpdateRef.current?.getEditor()?.root?.innerHTML || "");
-      // console.log(formData);
       const dataNoti = {
         title: values.title,
         type: values.type,
         detail: quillUpdateRef.current?.getEditor()?.root?.innerHTML || "",
       };
       if (selectedNotification) {
-        const notificationEntity = await notificationService.editNotification(
-          selectedNotification?.id,
-          dataNoti
-        );
+        await notificationService.editNotification(selectedNotification?.id, dataNoti);
         message.success("Notification updated successfully");
       }
       setEditMode(false);
@@ -483,6 +434,13 @@ export default function CreateNotificationByAdmin() {
       setLoadingUpdateNotification(false);
     }
   };
+
+  // Hàm lọc dữ liệu dựa trên filterType
+  const filteredRows = rows.filter((row) => {
+    if (filterType === "all") return true;
+    return row.type === filterType;
+  });
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -492,27 +450,26 @@ export default function CreateNotificationByAdmin() {
           sx={{
             display: "flex",
             gap: "30px",
-            justifyContent: "center", // Custom gap size
+            justifyContent: "center",
           }}
         >
           <Grid
             item
             xs={10}
-            // md={5.5}
             sx={{
               borderRadius: "20px",
               backgroundColor: colors.white,
-              padding: "20px", // Add padding instead of margin
+              padding: "20px",
             }}
           >
             <Card
               sx={{
                 padding: 3,
-                backgroundColor: "rgba(255, 255, 255, 0.1)", // Màu nền trong suốt nhẹ
-                backdropFilter: "blur(10px)", // Hiệu ứng kính mờ
-                boxShadow: "0px 4px 10px rgba(255, 255, 255, 0.2)", // Đổ bóng nhẹ
-                borderRadius: "12px", // Bo góc
-                border: "1px solid rgba(255, 255, 255, 0.3)", // Viền nhẹ
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0px 4px 10px rgba(255, 255, 255, 0.2)",
+                borderRadius: "12px",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
               }}
             >
               <MDBox
@@ -558,7 +515,7 @@ export default function CreateNotificationByAdmin() {
                   ref={quillRef}
                   style={{
                     height: "250px",
-                    marginBottom: "60px", // Consider reducing this
+                    marginBottom: "60px",
                     borderRadius: "6px",
                     border: `1px solid ${colors.inputBorder}`,
                   }}
@@ -592,19 +549,29 @@ export default function CreateNotificationByAdmin() {
           sx={{
             display: "flex",
             gap: "30px",
-            justifyContent: "center", // Custom gap size
+            justifyContent: "center",
           }}
         >
           <Grid
             item
             xs={10}
-            // md={5.5}
             sx={{
               borderRadius: "20px",
               backgroundColor: colors.white,
-              padding: "20px", // Add padding instead of margin
+              padding: "20px",
             }}
           >
+            <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <MDTypography variant="h6" sx={{ color: "#7b809a" }}>
+                Filter Notifications
+              </MDTypography>
+              <Select
+                value={filterType}
+                onChange={(value) => setFilterType(value)}
+                style={{ width: 200 }}
+                options={filterOptions}
+              />
+            </MDBox>
             {loading ? (
               <MDTypography variant="h6" color="info" align="center">
                 Loading...
@@ -615,7 +582,7 @@ export default function CreateNotificationByAdmin() {
               </MDTypography>
             ) : (
               <DataTable
-                table={{ columns, rows }}
+                table={{ columns, rows: filteredRows }} // Sử dụng filteredRows thay vì rows
                 isSorted={false}
                 entriesPerPage={false}
                 showTotalEntries={false}
@@ -661,7 +628,6 @@ export default function CreateNotificationByAdmin() {
               name="notificationForm"
               initialValues={{
                 title: "",
-                // createdAt: notification.createdAt,
                 detail: "",
                 type: "",
               }}
@@ -670,12 +636,7 @@ export default function CreateNotificationByAdmin() {
                 <Input placeholder="Input title" />
               </Form.Item>
               <Form.Item name="type" label="Notification For">
-                <Radio.Group
-                  options={typeOptions}
-                  // onChange={onChangeType}
-                  // value={type}
-                  optionType="button"
-                />
+                <Radio.Group options={typeOptions} optionType="button" />
               </Form.Item>
               <Form.Item label="Description">
                 <ReactQuill
@@ -685,7 +646,7 @@ export default function CreateNotificationByAdmin() {
                   ref={quillUpdateRef}
                   style={{
                     height: "250px",
-                    marginBottom: "60px", // Consider reducing this
+                    marginBottom: "60px",
                     borderRadius: "6px",
                     border: `1px solid ${colors.inputBorder}`,
                   }}
@@ -714,6 +675,7 @@ export default function CreateNotificationByAdmin() {
     </DashboardLayout>
   );
 }
+
 CreateNotificationByAdmin.propTypes = {
-  row: PropTypes.object.isRequired,
+  row: PropTypes.object,
 };
