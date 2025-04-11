@@ -41,6 +41,20 @@ export default function MainLogin() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const [contentData, setContentData] = useState(null);
+
+  useEffect(() => {
+    const fetchContentData = async () => {
+      try {
+        const data = await contentPageService.getAllContentPages();
+        setContentData(data[0]); // Lấy phần tử đầu tiên từ danh sách
+      } catch (error) {
+        console.error("Error fetching content page data:", error);
+      }
+    };
+    fetchContentData();
+  }, []);
+
   // Fade-in effect on page load
   useEffect(() => {
     setFadeIn(true);
@@ -247,7 +261,7 @@ export default function MainLogin() {
                   animation: "shimmer 8s linear infinite",
                 }}
               >
-                HAPPY CLASS
+                {contentData?.name}
               </Title>
 
               {/* Login Buttons */}

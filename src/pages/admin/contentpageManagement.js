@@ -74,7 +74,7 @@ function ContentPageManagement() {
 
   // Cột cho tab Information Management
   const informationColumns = [
-    { Header: "Footer Description", accessor: "footerDescription", width: "40%" },
+    { Header: "Name", accessor: "name", width: "40%" },
     { Header: "Footer Email", accessor: "footerEmail", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ];
@@ -113,7 +113,7 @@ function ContentPageManagement() {
   const informationRows =
     contentPages.length > 0
       ? contentPages.map((page) => ({
-          footerDescription: page.footerDescription || "No Description",
+          name: page.name || "No name",
           footerEmail: page.footerEmail || "No Email",
           actions: (
             <MDBox display="flex" gap={2}>
@@ -981,6 +981,26 @@ function ContentPageManagement() {
             </>
           ) : (
             <>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Name"
+                type="text"
+                fullWidth
+                value={currentEditItem?.name || ""}
+                onChange={(e) => setCurrentEditItem({ ...currentEditItem, name: e.target.value })}
+                error={errors.editHomepageMainTitle}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
+
               <TextField
                 autoFocus
                 margin="dense"

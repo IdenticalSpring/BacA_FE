@@ -56,6 +56,7 @@ import { Collapse } from "antd";
 import ConvertTTS from "./ConvertTTS";
 import ProfileModal from "./profileModal";
 import StudentFeedbackModal from "./feedbackModal";
+import contentPageService from "services/contentpageService";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -126,6 +127,20 @@ const StudentPage = () => {
       message.error("Link không hợp lệ!");
     }
   };
+
+  const [contentData, setContentData] = useState(null);
+
+  useEffect(() => {
+    const fetchContentData = async () => {
+      try {
+        const data = await contentPageService.getAllContentPages();
+        setContentData(data[0]); // Lấy phần tử đầu tiên từ danh sách
+      } catch (error) {
+        console.error("Error fetching content page data:", error);
+      }
+    };
+    fetchContentData();
+  }, []);
 
   const handleStudentUpdated = (updatedStudent) => {
     setStudent(updatedStudent); // Cập nhật student trong state
@@ -683,7 +698,7 @@ const StudentPage = () => {
                 textOverflow: "ellipsis",
               }}
             >
-              Happy Class
+              {contentData?.name}
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>

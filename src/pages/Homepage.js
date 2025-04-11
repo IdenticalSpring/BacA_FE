@@ -197,7 +197,7 @@ export default function Homepage() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            HAPPY CLASS
+            {contentData?.name}
           </h1>
         </div>
 
@@ -1011,7 +1011,7 @@ export default function Homepage() {
                   fontWeight: "bold",
                 }}
               >
-                HAPPY CLASS
+                {contentData?.name}
               </h3>
             </div>
             <p style={{ marginBottom: "1.5rem" }}>

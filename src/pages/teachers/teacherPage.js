@@ -70,6 +70,7 @@ import NotificationSection from "components/TeacherPageComponent/NotificationCom
 import notificationService from "services/notificationService";
 import HomeworkStatisticsDashboard from "./HomeworkStatisticsDashboard";
 import TeacherFeedbackModal from "./teacherFeedbackModal";
+import contentPageService from "services/contentpageService";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -195,6 +196,7 @@ const TeacherPage = () => {
   const [isTeacherProfileModalVisible, setIsTeacherProfileModalVisible] = useState(false);
   const [teacherData, setTeacherData] = useState(null);
   const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
+  const [contentData, setContentData] = useState(null);
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     [{ size: ["small", false, "large", "huge"] }],
@@ -253,7 +255,16 @@ const TeacherPage = () => {
   }, []);
   useEffect(() => {
     fetchLessons();
+    fetchContentData();
   }, [loadingCreateLesson]);
+  const fetchContentData = async () => {
+    try {
+      const data = await contentPageService.getAllContentPages();
+      setContentData(data[0]); // Lấy phần tử đầu tiên từ danh sách
+    } catch (error) {
+      console.error("Error fetching content page data:", error);
+    }
+  };
 
   // Hàm chọn tất cả học sinh
   const handleSelectAllStudents = () => {
@@ -895,7 +906,7 @@ const TeacherPage = () => {
                 textOverflow: "ellipsis",
               }}
             >
-              Happy Class
+              {contentData?.name}
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
