@@ -457,6 +457,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
         footer={null}
         centered
         bodyStyle={{ padding: 0, textAlign: "center" }}
+        zIndex={2000}
       >
         <img
           src={

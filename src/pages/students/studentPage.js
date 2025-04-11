@@ -121,9 +121,9 @@ const StudentPage = () => {
   };
   const handlePractice = (link) => {
     if (link) {
-      fetchWordwallEmbed(link);
+      window.open(link, "_blank");
     } else {
-      message.error("Không có link luyện tập nào được cung cấp!");
+      message.error("Link không hợp lệ!");
     }
   };
 
@@ -266,19 +266,6 @@ const StudentPage = () => {
   }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
   // console.log(isHomeWorkSent);
 
-  // Hàm lấy mã nhúng từ Wordwall oEmbed
-  const fetchWordwallEmbed = async (resourceUrl) => {
-    try {
-      const response = await fetch(
-        `https://wordwall.net/api/oembed?url=${encodeURIComponent(resourceUrl)}` // Sửa endpoint thành oEmbed chính xác
-      );
-      const data = await response.json();
-      setWordwallEmbed(data.html); // Lưu mã nhúng vào state
-      setIsModalWordWallVisible(true); // Mở Modal sau khi lấy được mã nhúng
-    } catch (error) {
-      console.error("Error fetching Wordwall oEmbed:", error);
-    }
-  };
   const fetchHomeworkByLesson = async (homeworkId) => {
     try {
       setLoadingHomework(true);
@@ -583,16 +570,21 @@ const StudentPage = () => {
                   </div>
                 )}
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-                  {/* Nút Luyện tập */}
-                  {hw.linkGame && (
-                    <Button
-                      type="primary"
-                      onClick={() => handlePractice(hw.linkGame)}
-                      style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-                    >
-                      Luyện tập
-                    </Button>
-                  )}
+                  {/* Render multiple practice buttons if linkGame contains multiple links */}
+                  {hw.linkGame &&
+                    hw.linkGame.split(",").map((link, index) => (
+                      <Button
+                        key={`practice-${hw.id}-${index}`}
+                        type="primary"
+                        onClick={() => handlePractice(link.trim())}
+                        style={{
+                          backgroundColor: colors.deepGreen,
+                          borderColor: colors.deepGreen,
+                        }}
+                      >
+                        Luyện tập {index + 1}
+                      </Button>
+                    ))}
                   {/* Nút Nộp bài */}
                   <Button
                     type="primary"

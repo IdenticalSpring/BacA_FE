@@ -586,7 +586,7 @@ export default function LessonMangement({
               const entity = lessonByScheduleData?.find(
                 (item) => item.lessonID === selectedLessonId
               );
-              handleUpdateSendingLessonStatus(entity.id);
+              handleUpdateSendingLessonStatus(entity?.id);
             }}
             style={{
               backgroundColor: colors.emerald,

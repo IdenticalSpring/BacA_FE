@@ -89,7 +89,11 @@ function ContentPageManagement() {
             <MDBox display="flex" gap={2}>
               <MDButton
                 variant="text"
-                sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+                sx={{
+                  color: colors.white,
+                  backgroundColor: colors.deepGreen,
+                  " &:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
+                }}
                 onClick={() => handleEditClick(page)}
               >
                 Edit
@@ -115,7 +119,11 @@ function ContentPageManagement() {
             <MDBox display="flex" gap={2}>
               <MDButton
                 variant="text"
-                sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+                sx={{
+                  color: colors.white,
+                  backgroundColor: colors.deepGreen,
+                  " &:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
+                }}
                 onClick={() => handleEditClick(page)}
               >
                 Edit
