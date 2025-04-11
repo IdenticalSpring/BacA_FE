@@ -129,6 +129,12 @@ const StudentPage = () => {
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
 
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarVisible(true);
+    }
+  }, [isMobile]);
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkZaloLink).then(() => {
       setCopySuccess(true);
