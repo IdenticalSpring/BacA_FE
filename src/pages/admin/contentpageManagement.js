@@ -66,7 +66,7 @@ function ContentPageManagement() {
 
   // Cột cho tab Content Page Management
   const contentPageColumns = [
-    { Header: "Homepage Main Title", accessor: "homepageMainTitle", width: "30%" },
+    { Header: "Name Web", accessor: "homepageMainTitle", width: "30%" },
     { Header: "Feature Main Title", accessor: "featureMainTitle", width: "30%" },
     { Header: "Works Main Title", accessor: "worksMainTitle", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },

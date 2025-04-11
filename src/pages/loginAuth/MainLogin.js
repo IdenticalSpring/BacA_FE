@@ -262,7 +262,7 @@ export default function MainLogin() {
                   animation: "shimmer 8s linear infinite",
                 }}
               >
-                {contentData?.name}
+                {contentData?.homepageMainTitle}
               </Title>
 
               {/* Login Buttons */}
