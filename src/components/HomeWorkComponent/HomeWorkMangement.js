@@ -38,6 +38,7 @@ import lessonByScheduleService from "services/lessonByScheduleService";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import classService from "services/classService";
+import Compressor from "compressorjs";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -99,6 +100,9 @@ export default function HomeWorkMangement({
   const [loadingClass, setLoadingClass] = useState(false);
   const homeworkLink = "https://happyclass.com.vn/do-homework";
   const [copySuccess, setCopySuccess] = useState(false);
+  const [gameLinks, setGameLinks] = useState([]);
+  const [currentLink, setCurrentLink] = useState("");
+  const [editIndex, setEditIndex] = useState(null);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -124,10 +128,14 @@ export default function HomeWorkMangement({
   const handleEdit = (homeWork) => {
     setEditingHomeWork(homeWork);
     setSelectedHomeWorkId(homeWork?.id);
+    const links = homeWork?.linkGame.split(", ");
+    const filterLinks = links?.filter((link) => link !== "");
+    // console.log(links, filterLinks);
+    setGameLinks(filterLinks);
     form.setFieldsValue({
       title: homeWork.title,
       linkYoutube: homeWork.linkYoutube,
-      linkGame: homeWork.linkGame,
+      // linkGame: homeWork.linkGame,
       linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
       // description: homeWork.description,
@@ -218,10 +226,14 @@ export default function HomeWorkMangement({
       setLoadingUpdate(true);
       const values = await form.validateFields();
       const formData = new FormData();
+      let linkGame = "";
+      if (gameLinks?.length > 0) {
+        gameLinks.map((link) => (linkGame += link + ", "));
+      }
       formData.append("title", values.title);
       formData.append("level", level);
       formData.append("linkYoutube", values.linkYoutube);
-      formData.append("linkGame", values.linkGame);
+      formData.append("linkGame", linkGame);
       formData.append("linkZalo", values.linkZalo);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
@@ -245,6 +257,7 @@ export default function HomeWorkMangement({
       setTextToSpeech("");
       setMp3file(null);
       setMp3Url("");
+      setCurrentLink("");
     } catch (err) {
       message.error("Please check your input and try again" + err);
     } finally {
@@ -312,6 +325,65 @@ export default function HomeWorkMangement({
       setQuill(editor);
     }
   }, [quillRef]);
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const handlePaste = (e) => {
+      const clipboardData = e.clipboardData;
+      const items = clipboardData?.items;
+
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault(); // chặn mặc định Quill xử lý
+
+          const file = item.getAsFile();
+
+          if (!file) return;
+
+          // 👇 Resize trước khi upload như trong imageHandler
+          new Compressor(file, {
+            quality: 0.8,
+            maxWidth: 800,
+            success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", compressedFile);
+
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+            },
+            error(err) {
+              console.error("Compression error:", err);
+              message.error("Image compression failed!");
+            },
+          });
+
+          break; // chỉ xử lý ảnh đầu tiên
+        }
+      }
+    };
+
+    const editor = quill?.root;
+    editor?.addEventListener("paste", handlePaste);
+
+    return () => {
+      editor?.removeEventListener("paste", handlePaste);
+    };
+  }, [quillRef]);
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -322,30 +394,59 @@ export default function HomeWorkMangement({
       const file = input.files[0];
       if (!file) return;
 
-      const formData = new FormData();
-      formData.append("file", file);
-      // console.log([...formData]);
+      // const formData = new FormData();
+      // formData.append("file", file);
+      // // console.log([...formData]);
 
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
-        console.log(response.data.url);
+      // try {
+      //   const response = await axios.post(
+      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     formData
+      //   );
+      //   console.log(response.data.url);
 
-        // const result = await response.json();
+      //   // const result = await response.json();
 
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
-        } else {
-          message.error("Upload failed. Try again!");
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        message.error("Upload error. Please try again!");
-      }
+      //   if (response.status === 201 && quillRef.current) {
+      //     const editor = quillRef.current.getEditor();
+      //     const range = editor.getSelection(true);
+      //     editor.insertEmbed(range.index, "image", response.data.url);
+      //   } else {
+      //     message.error("Upload failed. Try again!");
+      //   }
+      // } catch (error) {
+      //   console.error("Error uploading image:", error);
+      //   message.error("Upload error. Please try again!");
+      // }
+      new Compressor(file, {
+        quality: 0.8, // Giảm dung lượng, 1 là giữ nguyên
+        maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+        maxHeight: 800, // Optional, resize chiều cao nếu cần
+        success(compressedFile) {
+          const formData = new FormData();
+          formData.append("file", compressedFile);
+
+          axios
+            .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+            .then((response) => {
+              if (response.status === 201 && quillRef.current) {
+                const editor = quillRef.current?.getEditor();
+                const range = editor.getSelection(true);
+                editor.insertEmbed(range.index, "image", response.data.url);
+              } else {
+                message.error("Upload failed. Try again!");
+              }
+            })
+            .catch((err) => {
+              console.error("Upload error:", err);
+              message.error("Upload error. Please try again!");
+            });
+        },
+        error(err) {
+          console.error("Compression error:", err);
+          message.error("Image compression failed!");
+        },
+      });
     };
   }, []);
   const audioHandler = useCallback(() => {
@@ -624,6 +725,7 @@ export default function HomeWorkMangement({
               setModalUpdateHomeWorkVisible(false);
               form.resetFields();
               setEditingHomeWork(null);
+              setCurrentLink("");
             }}
           >
             Hủy
@@ -642,7 +744,7 @@ export default function HomeWorkMangement({
           </Button>,
           <Button
             loading={loadingSchedule}
-            key="submit"
+            key="send"
             type="primary"
             onClick={() => {
               // setOpenSend(true);
@@ -818,7 +920,7 @@ export default function HomeWorkMangement({
               }}
             />
           </Form.Item>
-          <Form.Item name="linkGame" label="Link Game bài tập">
+          {/* <Form.Item name="linkGame" label="Link Game bài tập">
             <Input
               placeholder="Nhập link game bài tập"
               style={{
@@ -826,7 +928,88 @@ export default function HomeWorkMangement({
                 borderColor: colors.inputBorder,
               }}
             />
+          </Form.Item> */}
+          <Form.Item label="Link game bài tập">
+            <Input.Group compact>
+              <Input
+                value={currentLink}
+                placeholder="Nhập link game bài tập"
+                style={{
+                  width: "calc(100% - 120px)",
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+                onChange={(e) => setCurrentLink(e.target.value)}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (!currentLink) return;
+                  if (editIndex !== null) {
+                    const updated = [...gameLinks];
+                    updated[editIndex] = currentLink;
+                    setGameLinks(updated);
+                    setEditIndex(null);
+                  } else {
+                    setGameLinks([...gameLinks, currentLink]);
+                  }
+                  setCurrentLink("");
+                }}
+              >
+                {editIndex !== null ? "Cập nhật" : "Thêm"}
+              </Button>
+            </Input.Group>
           </Form.Item>
+          {gameLinks?.length > 0 && (
+            <Table
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "index",
+                  render: (_, __, i) => i + 1,
+                },
+                {
+                  title: "Link Game",
+                  dataIndex: "link",
+                },
+                {
+                  title: "Hành động",
+                  render: (_, record, index) => (
+                    <>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setCurrentLink(record.link);
+                          setEditIndex(index);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          const updated = gameLinks.filter((_, i) => i !== index);
+                          setGameLinks(updated);
+                          if (editIndex === index) {
+                            setCurrentLink("");
+                            setEditIndex(null);
+                          }
+                        }}
+                      >
+                        Xoá
+                      </Button>
+                    </>
+                  ),
+                },
+              ]}
+              dataSource={gameLinks.map((link, index) => {
+                return { key: `${link}-${index}`, link };
+              })}
+              pagination={false}
+            />
+          )}
+
           <Form.Item name="linkZalo" label="Link Zalo bài tập">
             <Input
               placeholder="Nhập link zalo bài tập"

@@ -35,6 +35,7 @@ import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import axios from "axios";
+import Compressor from "compressorjs";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -263,6 +264,65 @@ export default function LessonMangement({
       setQuill(editor);
     }
   }, [quillRef]);
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const handlePaste = (e) => {
+      const clipboardData = e.clipboardData;
+      const items = clipboardData?.items;
+
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault(); // chặn mặc định Quill xử lý
+
+          const file = item.getAsFile();
+
+          if (!file) return;
+
+          // 👇 Resize trước khi upload như trong imageHandler
+          new Compressor(file, {
+            quality: 0.8,
+            maxWidth: 800,
+            success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", compressedFile);
+
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+            },
+            error(err) {
+              console.error("Compression error:", err);
+              message.error("Image compression failed!");
+            },
+          });
+
+          break; // chỉ xử lý ảnh đầu tiên
+        }
+      }
+    };
+
+    const editor = quill?.root;
+    editor?.addEventListener("paste", handlePaste);
+
+    return () => {
+      editor?.removeEventListener("paste", handlePaste);
+    };
+  }, [quillRef]);
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -273,30 +333,59 @@ export default function LessonMangement({
       const file = input.files[0];
       if (!file) return;
 
-      const formData = new FormData();
-      formData.append("file", file);
-      // console.log([...formData]);
+      // const formData = new FormData();
+      // formData.append("file", file);
+      // // console.log([...formData]);
 
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
-        console.log(response.data.url);
+      // try {
+      //   const response = await axios.post(
+      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     formData
+      //   );
+      //   console.log(response.data.url);
 
-        // const result = await response.json();
+      //   // const result = await response.json();
 
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
-        } else {
-          message.error("Upload failed. Try again!");
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        message.error("Upload error. Please try again!");
-      }
+      //   if (response.status === 201 && quillRef.current) {
+      //     const editor = quillRef.current.getEditor();
+      //     const range = editor.getSelection(true);
+      //     editor.insertEmbed(range.index, "image", response.data.url);
+      //   } else {
+      //     message.error("Upload failed. Try again!");
+      //   }
+      // } catch (error) {
+      //   console.error("Error uploading image:", error);
+      //   message.error("Upload error. Please try again!");
+      // }
+      new Compressor(file, {
+        quality: 0.8, // Giảm dung lượng, 1 là giữ nguyên
+        maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+        maxHeight: 800, // Optional, resize chiều cao nếu cần
+        success(compressedFile) {
+          const formData = new FormData();
+          formData.append("file", compressedFile);
+
+          axios
+            .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+            .then((response) => {
+              if (response.status === 201 && quillRef.current) {
+                const editor = quillRef.current?.getEditor();
+                const range = editor.getSelection(true);
+                editor.insertEmbed(range.index, "image", response.data.url);
+              } else {
+                message.error("Upload failed. Try again!");
+              }
+            })
+            .catch((err) => {
+              console.error("Upload error:", err);
+              message.error("Upload error. Please try again!");
+            });
+        },
+        error(err) {
+          console.error("Compression error:", err);
+          message.error("Image compression failed!");
+        },
+      });
     };
   }, []);
   const audioHandler = useCallback(() => {
@@ -579,7 +668,7 @@ export default function LessonMangement({
           </Button>,
           <Button
             loading={loadingSchedule}
-            key="submit"
+            key="send"
             type="primary"
             onClick={() => {
               // setOpenSend(true);

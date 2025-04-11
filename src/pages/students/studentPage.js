@@ -77,7 +77,23 @@ const getTimeElapsed = (createdAt) => {
       Math.floor(diffInSeconds / 86400) !== 1 ? "s" : ""
     }`;
 };
+const extractDomain = (url) => {
+  const match = url.match(/^https?:\/\/(?:www\.)?([^\/]+)/i);
+  return match ? match[1].replace(/\.(com|net|org|edu|vn|info|io|app)$/i, "") : null;
+};
+const getPlatformName = (url) => {
+  const domain = extractDomain(url);
+  if (!domain) return "Không rõ";
 
+  if (domain.includes("kahoot")) return "Kahoot";
+  if (domain.includes("quizizz")) return "Quizizz";
+  if (domain.includes("blooket")) return "Blooket";
+  if (domain.includes("wordwall")) return "Wordwall";
+  if (domain.includes("google")) return "Google Form";
+
+  // fallback: capitalize domain name
+  return domain.charAt(0).toUpperCase() + domain.slice(1);
+};
 const StudentPage = () => {
   const [classes, setClasses] = useState([]);
   const [selectedLessonBySchedule, setSelectedLessonBySchedule] = useState(null);
@@ -111,7 +127,7 @@ const StudentPage = () => {
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
 
   const screens = useBreakpoint();
-  const isMobile = !screens.md;
+  const isMobile = !screens.lg;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkZaloLink).then(() => {
@@ -424,7 +440,7 @@ const StudentPage = () => {
                   </Panel>
                 </Collapse> */}
                 <div
-                  style={{ margin: "10px 0" }}
+                  style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{ __html: lesson.description || " " }}
                 />
                 {(lesson.linkYoutube || lesson.linkSpeech) && (
@@ -494,7 +510,7 @@ const StudentPage = () => {
   );
 
   const renderHomeworkContent = () => (
-    <>
+    <div style={{ maxWidth: "100%", overflowX: "auto" }}>
       <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
         <FileTextOutlined /> Bài Tập
       </Title>
@@ -547,7 +563,7 @@ const StudentPage = () => {
                   </Panel>
                 </Collapse> */}
                 <div
-                  style={{ margin: "10px 0" }}
+                  style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{
                     __html: hw.description || "Chưa có mô tả cho bài tập này.",
                   }}
@@ -587,19 +603,23 @@ const StudentPage = () => {
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
                   {/* Render multiple practice buttons if linkGame contains multiple links */}
                   {hw.linkGame &&
-                    hw.linkGame.split(",").map((link, index) => (
-                      <Button
-                        key={`practice-${hw.id}-${index}`}
-                        type="primary"
-                        onClick={() => handlePractice(link.trim())}
-                        style={{
-                          backgroundColor: colors.deepGreen,
-                          borderColor: colors.deepGreen,
-                        }}
-                      >
-                        Luyện tập {index + 1}
-                      </Button>
-                    ))}
+                    hw.linkGame.split(",").map((link, index) => {
+                      const trimmed = link.trim();
+                      const platform = getPlatformName(trimmed);
+                      return (
+                        <Button
+                          key={`practice-${hw.id}-${index}`}
+                          type="primary"
+                          onClick={() => handlePractice(link.trim())}
+                          style={{
+                            backgroundColor: colors.deepGreen,
+                            borderColor: colors.deepGreen,
+                          }}
+                        >
+                          Luyện tập bằng {platform}
+                        </Button>
+                      );
+                    })}
                   {/* Nút Nộp bài */}
                   <Button
                     type="primary"
@@ -640,7 +660,7 @@ const StudentPage = () => {
           }}
         />
       )}
-    </>
+    </div>
   );
 
   return (
