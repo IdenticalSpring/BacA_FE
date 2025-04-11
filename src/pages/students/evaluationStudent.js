@@ -158,7 +158,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
                       </Text>
                     </List.Item>
                   )}
-                  locale={{ emptyText: "Chưa có kỹ năng học tập." }}
+                  locale={{ emptyText: "Chưa có kỹ năng." }}
                 />
               </Col>
               <Col span={12}>
@@ -205,12 +205,12 @@ const EvaluationStudent = ({ studentId, colors }) => {
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Kỹ năng
           </Divider>
-          {renderSkillsChart("1", "Kỹ năng học tập")}
+          {renderSkillsChart("1", " Kỹ năng")}
 
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Tình hình học tập
           </Divider>
-          {renderSkillsChart("0", "Kỹ năng hành vi")}
+          {renderSkillsChart("0", "Tình hình học tập")}
         </>
       ) : (
         <Text>Chưa có đánh giá nào.</Text>

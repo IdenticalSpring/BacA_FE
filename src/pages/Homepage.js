@@ -197,7 +197,7 @@ export default function Homepage() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            {contentData?.name}
+            {contentData?.homepageMainTitle}
           </h1>
         </div>
 
@@ -411,7 +411,7 @@ export default function Homepage() {
                 lineHeight: "1.2",
               }}
             >
-              {contentData?.homepageMainTitle || "Learn Happy, Study Smarter"}
+              {contentData?.name || "Learn Happy, Study Smarter"}
             </h1>
             <p
               style={{
@@ -1011,7 +1011,7 @@ export default function Homepage() {
                   fontWeight: "bold",
                 }}
               >
-                {contentData?.name}
+                {contentData?.homepageMainTitle}
               </h3>
             </div>
             <p style={{ marginBottom: "1.5rem" }}>
