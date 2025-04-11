@@ -175,7 +175,8 @@ const StudentPage = () => {
       try {
         setLoadingNotification(true);
         let count = 0;
-        const res = await notificationService.getAllGeneralNotifications();
+        const dataNoti = { type: false };
+        const res = await notificationService.getAllGeneralNotificationsByType(dataNoti);
         const studentNotification = await user_notificationService.getAllUserNotificationsOfStudent(
           studentId
         );

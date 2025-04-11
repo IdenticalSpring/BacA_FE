@@ -233,7 +233,10 @@ const TeacherPage = () => {
     const fetchNotification = async () => {
       try {
         setLoadingNotification(true);
-        const res = await notificationService.getAllGeneralNotifications();
+        const notiData = {
+          type: true,
+        };
+        const res = await notificationService.getAllGeneralNotificationsByType(notiData);
 
         if (res[0]?.createdAt) {
           const sortedData = [...res].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
