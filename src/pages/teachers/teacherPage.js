@@ -266,6 +266,12 @@ const TeacherPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarVisible(true);
+    }
+  }, [isMobile]);
+
   // Hàm chọn tất cả học sinh
   const handleSelectAllStudents = () => {
     if (allStudentsSelected) {
