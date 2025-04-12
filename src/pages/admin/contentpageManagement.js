@@ -1112,7 +1112,7 @@ function ContentPageManagement() {
                 fullWidth
                 value={currentEditItem?.linkYoutube || ""}
                 onChange={(e) =>
-                  setCurrentEditItem({ ...currentEditItem, linkFacebook: e.target.value })
+                  setCurrentEditItem({ ...currentEditItem, linkYoutube: e.target.value })
                 }
                 sx={{
                   "& .MuiOutlinedInput-root": {
