@@ -1107,6 +1107,25 @@ function ContentPageManagement() {
               />
               <TextField
                 margin="dense"
+                label="Youtube Link"
+                type="text"
+                fullWidth
+                value={currentEditItem?.linkYoutube || ""}
+                onChange={(e) =>
+                  setCurrentEditItem({ ...currentEditItem, linkYoutube: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
+              <TextField
+                margin="dense"
                 label="Zalo Link"
                 type="text"
                 fullWidth
