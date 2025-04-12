@@ -606,7 +606,8 @@ export default function CreateLesson({
             <Form.Item>
               <Button
                 icon={<RobotOutlined />}
-                onClick={enhanceLessonPlan}
+                // onClick={enhanceLessonPlan}
+                onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
                 loading={loadingEnhanceLessonPlan}
                 style={{
                   alignSelf: "flex-start",
