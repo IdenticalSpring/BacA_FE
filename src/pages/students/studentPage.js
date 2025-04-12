@@ -142,11 +142,23 @@ const StudentPage = () => {
       setTimeout(() => setCopySuccess(false), 2000);
     });
   };
-  const handlePractice = (link) => {
-    if (link) {
-      window.open(link, "_blank");
-    } else {
+  const handlePractice = async (link) => {
+    if (!link) {
       message.error("Link không hợp lệ!");
+      return;
+    }
+
+    const platform = getPlatformName(link);
+    if (platform === "Wordwall") {
+      const embedCode = await fetchWordwallEmbed(link);
+      if (embedCode) {
+        setWordwallEmbed(embedCode);
+        setIsModalWordWallVisible(true);
+      } else {
+        message.error("Không thể tải nội dung từ Wordwall!");
+      }
+    } else {
+      window.open(link, "_blank");
     }
   };
 
@@ -399,6 +411,19 @@ const StudentPage = () => {
   };
   // console.log(notifications);
 
+  const fetchWordwallEmbed = async (url) => {
+    try {
+      const response = await fetch(
+        `https://www.wordwall.net/api/oembed?url=${encodeURIComponent(url)}`
+      );
+      const data = await response.json();
+      return data.html; // Trả về mã HTML của iframe
+    } catch (error) {
+      console.error("Error fetching Wordwall oEmbed:", error);
+      return null;
+    }
+  };
+
   const renderLessonContent = () => (
     <>
       <div ref={lessonRef}>
@@ -616,7 +641,7 @@ const StudentPage = () => {
                   }}
                 >
                   {/* Render multiple practice buttons if linkGame contains multiple links */}
-                  {hw.linkGame &&
+                  {/* {hw.linkGame &&
                     hw.linkGame.split(",").map((link, index) => {
                       const trimmed = link.trim();
                       const platform = getPlatformName(trimmed);
@@ -624,13 +649,31 @@ const StudentPage = () => {
                         <Button
                           key={`practice-${hw.id}-${index}`}
                           type="primary"
-                          onClick={() => handlePractice(link.trim())}
+                          onClick={() => handlePractice(trimmed)}
                           style={{
                             backgroundColor: colors.deepGreen,
                             borderColor: colors.deepGreen,
                           }}
                         >
                           Luyện tập bằng {platform}
+                        </Button>
+                      );
+                    })} */}
+
+                  {hw.linkGame &&
+                    hw.linkGame.split(",").map((link, index) => {
+                      const trimmed = link.trim();
+                      return (
+                        <Button
+                          key={`practice-${hw.id}-${index}`}
+                          type="primary"
+                          onClick={() => handlePractice(trimmed)}
+                          style={{
+                            backgroundColor: colors.deepGreen,
+                            borderColor: colors.deepGreen,
+                          }}
+                        >
+                          Luyện tập {index + 1}
                         </Button>
                       );
                     })}
@@ -1008,6 +1051,22 @@ const StudentPage = () => {
         onClose={() => setFeedbackModalVisible(false)}
         studentId={studentId}
       />
+      <Modal
+        title="Wordwall Activity"
+        open={isModalWordWallVisible}
+        onCancel={handleModalWordWallClose}
+        footer={null}
+        width={600} // Điều chỉnh chiều rộng Modal
+      >
+        {wordwallEmbed ? (
+          <div
+            style={{ textAlign: "center" }}
+            dangerouslySetInnerHTML={{ __html: wordwallEmbed }}
+          />
+        ) : (
+          <p>Đang tải nội dung...</p>
+        )}
+      </Modal>
     </Layout>
   );
 };
