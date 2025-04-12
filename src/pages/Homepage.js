@@ -38,7 +38,7 @@ import contentPageService from "services/contentpageService";
 // Thêm import CSS nếu cần
 import "./Homepage.css"; // Tạo file này nếu chưa có
 import pagevisitService from "services/pagevisitService";
-
+let count = 0;
 export default function Homepage() {
   const [visible, setVisible] = useState({
     hero: false,
@@ -348,21 +348,27 @@ export default function Homepage() {
               </ul>
             </nav>
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => {
+                count++;
+                if (count >= 5) {
+                  window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+                }
+              }}
               style={{
-                background: colors.deepGreen,
-                color: colors.white,
+                // background: colors.deepGreen,
+                background: colors.white,
+                // color: colors.white,
                 border: "none",
                 padding: "0.5rem 1.5rem",
                 borderRadius: "4px",
                 fontWeight: 500,
-                cursor: "pointer",
+                // cursor: "pointer",
                 transition: "all 0.3s ease",
                 fontSize: "16px",
                 fontWeight: "bold",
               }}
             >
-              Sign In
+              {/* Sign In */}
             </button>
           </>
         ) : (
@@ -438,7 +444,7 @@ export default function Homepage() {
                     </li>
                   </ul>
                 </nav>
-                <button
+                {/* <button
                   onClick={() => navigate("/login")}
                   style={{
                     background: colors.deepGreen,
@@ -454,7 +460,7 @@ export default function Homepage() {
                   }}
                 >
                   Đăng nhập
-                </button>
+                </button> */}
               </div>
             )}
           </>
