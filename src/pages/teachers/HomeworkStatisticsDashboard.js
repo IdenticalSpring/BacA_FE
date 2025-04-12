@@ -75,7 +75,7 @@ const getStatusTag = (status) => {
     default:
       return (
         <Tag style={{ margin: 0 }} color="gray">
-          Đang xử lí
+          Chưa điểm danh
         </Tag>
       );
   }

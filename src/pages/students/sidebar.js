@@ -36,11 +36,26 @@ const Sidebar = ({
       return dayjs(b.date).valueOf() - dayjs(a.date).valueOf(); // Sắp xếp giảm dần (mới nhất trước)
     });
 
+  // // Lọc ra các bài học sắp tới
+  // const upcomingLessons = lessonsBySchedule
+  //   .filter((lesson) => {
+  //     const lessonDate = dayjs(lesson.date).startOf("day");
+  //     return lessonDate.isAfter(today);
+  //   })
+  //   .sort((a, b) => {
+  //     return dayjs(a.date).valueOf() - dayjs(b.date).valueOf(); // Sắp xếp tăng dần
+  //   });
+
   // Lọc ra các bài học sắp tới
   const upcomingLessons = lessonsBySchedule
     .filter((lesson) => {
       const lessonDate = dayjs(lesson.date).startOf("day");
-      return lessonDate.isAfter(today);
+      console.log("lesson.isHomeWorkSent", lesson.isHomeWorkSent);
+      console.log("lesson.isLessonSent", lesson.isLessonSent);
+      return (
+        lessonDate.isAfter(today) &&
+        (lesson.isHomeWorkSent === true || lesson.isLessonSent === true)
+      );
     })
     .sort((a, b) => {
       return dayjs(a.date).valueOf() - dayjs(b.date).valueOf(); // Sắp xếp tăng dần
