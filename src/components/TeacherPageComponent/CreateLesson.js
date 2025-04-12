@@ -122,8 +122,9 @@ export default function CreateLesson({
 
           // 👇 Resize trước khi upload như trong imageHandler
           new Compressor(file, {
-            quality: 0.8,
-            maxWidth: 800,
+            quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+            maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+            maxHeight: 350,
             success(compressedFile) {
               const formData = new FormData();
               formData.append("file", compressedFile);
@@ -191,9 +192,9 @@ export default function CreateLesson({
       //   message.error("Upload error. Please try again!");
       // }
       new Compressor(file, {
-        quality: 0.8, // Giảm dung lượng, 1 là giữ nguyên
-        maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-        maxHeight: 800, // Optional, resize chiều cao nếu cần
+        quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+        maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+        maxHeight: 350, // Optional, resize chiều cao nếu cần
         success(compressedFile) {
           const formData = new FormData();
           formData.append("file", compressedFile);
@@ -410,7 +411,11 @@ export default function CreateLesson({
       setTextToSpeech("");
       setMp3file(null);
       setMp3Url("");
-      quillDescription.setText(""); // Reset description
+      // quillDescription.setText(""); // Reset description
+      if (quillRefDescription.current) {
+        const editor = quillRefDescription.current.getEditor();
+        editor.setContents([]);
+      }
       quillLessonPlan.setText(""); // Reset lessonPlan
     } catch (err) {
       message.error("Failed to create lesson. Please try again." + err);

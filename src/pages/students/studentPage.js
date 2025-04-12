@@ -607,7 +607,14 @@ const StudentPage = () => {
                     </div>
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "10px",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   {/* Render multiple practice buttons if linkGame contains multiple links */}
                   {hw.linkGame &&
                     hw.linkGame.split(",").map((link, index) => {
@@ -635,7 +642,10 @@ const StudentPage = () => {
                       // handlePractice(hw.linkGame);
                       // setHomeworkZaloLink(hw.linkZalo);
                     }}
-                    style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
+                    style={{
+                      backgroundColor: colors.deepGreen,
+                      borderColor: colors.deepGreen,
+                    }}
                   >
                     {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
                   </Button>

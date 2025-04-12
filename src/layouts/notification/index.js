@@ -188,8 +188,9 @@ export default function CreateNotificationByAdmin() {
           if (!file) return;
 
           new Compressor(file, {
-            quality: 0.8,
-            maxWidth: 800,
+            quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+            maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+            maxHeight: 350,
             success(compressedFile) {
               const formData = new FormData();
               formData.append("file", compressedFile);
@@ -239,8 +240,9 @@ export default function CreateNotificationByAdmin() {
       if (!file) return;
 
       new Compressor(file, {
-        quality: 0.8,
-        maxWidth: 800,
+        quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+        maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+        maxHeight: 350,
         success(compressedFile) {
           const formData = new FormData();
           formData.append("file", compressedFile);
