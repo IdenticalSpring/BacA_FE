@@ -85,6 +85,7 @@ import ContentPageManagement from "pages/admin/contentpageManagement";
 import EvaluationManagement from "pages/admin/evaluationManagement";
 import SidebarLinkManagement from "pages/admin/sidebarLinkManagement";
 import CreateSidebarLink from "pages/admin/createSidebarLink";
+import CheckinManagement from "pages/admin/checkinManagement";
 const routes = [
   {
     // type: "collapse",
@@ -148,6 +149,19 @@ const routes = [
     component: (
       <PrivateRoute allowedRoles={["admin"]}>
         <CreateClass />
+      </PrivateRoute>
+    ),
+  },
+
+  {
+    type: "collapse",
+    name: "Checkin Management",
+    key: "checkinManagement",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/checkinManagement",
+    component: (
+      <PrivateRoute allowedRoles={["admin"]}>
+        <CheckinManagement />
       </PrivateRoute>
     ),
   },
