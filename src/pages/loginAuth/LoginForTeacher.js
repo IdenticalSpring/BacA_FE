@@ -48,7 +48,7 @@ const LoginForTeacher = () => {
     }
   };
   const handleBack = () => {
-    navigate("/login");
+    navigate("/");
   };
   const isMobile = windowWidth < 768;
   return (

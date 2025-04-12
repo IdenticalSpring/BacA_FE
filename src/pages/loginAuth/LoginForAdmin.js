@@ -51,7 +51,7 @@ const LoginForAdmin = () => {
   };
 
   const handleBack = () => {
-    navigate("/login");
+    navigate("/");
   };
 
   const isMobile = windowWidth < 768;
