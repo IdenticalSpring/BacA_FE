@@ -60,7 +60,107 @@ export default function Homepage() {
   });
   const [contentData, setContentData] = useState(null);
   const navigate = useNavigate();
+  const [buttonHover, setButtonHover] = useState({ student: false, teacher: false });
+  const containerStyle = {
+    padding: "20px",
+    maxWidth: "1200px",
+    margin: "0 auto",
+  };
 
+  const cardStyle = {
+    border: "1px solid #e8e8e8",
+    borderRadius: "8px",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+    overflow: "hidden",
+  };
+
+  const sloganBoxStyle = {
+    border: "1px solid #e8e8e8",
+    borderRadius: "8px",
+    padding: "12px 20px",
+    textAlign: "center",
+    margin: "15px 0",
+  };
+
+  const textBoxStyle = {
+    position: "relative",
+    border: "1px solid #e8e8e8",
+    borderRadius: "8px",
+    padding: "6px 12px",
+    background: "white",
+    fontSize: "14px",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+    display: "inline-block",
+  };
+
+  const videoContainerStyle = {
+    border: "1px solid #e8e8e8",
+    borderRadius: "8px",
+    padding: "15px",
+    height: "250px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: "20px",
+  };
+
+  const characterContainerStyle = {
+    position: "relative",
+    display: "flex",
+    justifyContent: "center",
+    margin: "20px 0",
+  };
+
+  const iframeStyle = {
+    width: "100%",
+    height: "100%",
+    border: "none",
+  };
+  const gradientKeyframes = `
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  `;
+  const floatingKeyframes = `
+    @keyframes floating {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+  `;
+
+  const shimmerKeyframes = `
+    @keyframes shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+  `;
+
+  const rotateKeyframes = `
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  `;
+
+  const pulseKeyframes = `
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  `;
+  const navigateToStudentLogin = () => {
+    navigate("/login/student");
+  };
+
+  const navigateToTeacherLogin = () => {
+    navigate("/login/teacher");
+  };
+  // Determine if we should show mobile or desktop layout
+  const isMobile = window.innerWidth < 900;
   useEffect(() => {
     const fetchContentData = async () => {
       try {
@@ -116,22 +216,24 @@ export default function Homepage() {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight;
       const width = window.innerWidth;
+      // console.log(scrollPosition);
+
       if (width < 768) {
-        if (scrollPosition > 2250) setVisible((prev) => ({ ...prev, features: true }));
+        if (scrollPosition > 2350) setVisible((prev) => ({ ...prev, features: true }));
         if (scrollPosition > 1500) setVisible((prev) => ({ ...prev, statistics: true }));
         if (scrollPosition > 4400) setVisible((prev) => ({ ...prev, howItWorks: true }));
-        if (scrollPosition > 5900) setVisible((prev) => ({ ...prev, testimonials: true }));
-        if (scrollPosition > 7100) setVisible((prev) => ({ ...prev, pricing: true }));
-        if (scrollPosition > 9100) setVisible((prev) => ({ ...prev, faq: true }));
-        if (scrollPosition > 10000) setVisible((prev) => ({ ...prev, cta: true }));
+        if (scrollPosition > 5850) setVisible((prev) => ({ ...prev, testimonials: true }));
+        // if (scrollPosition > 7100) setVisible((prev) => ({ ...prev, pricing: true }));
+        // if (scrollPosition > 9100) setVisible((prev) => ({ ...prev, faq: true }));
+        if (scrollPosition > 7000) setVisible((prev) => ({ ...prev, cta: true }));
       } else {
-        if (scrollPosition > 1000) setVisible((prev) => ({ ...prev, features: true }));
-        if (scrollPosition > 790) setVisible((prev) => ({ ...prev, statistics: true }));
-        if (scrollPosition > 2000) setVisible((prev) => ({ ...prev, howItWorks: true }));
-        if (scrollPosition > 3200) setVisible((prev) => ({ ...prev, testimonials: true }));
-        if (scrollPosition > 3900) setVisible((prev) => ({ ...prev, pricing: true }));
-        if (scrollPosition > 4600) setVisible((prev) => ({ ...prev, faq: true }));
-        if (scrollPosition > 5400) setVisible((prev) => ({ ...prev, cta: true }));
+        if (scrollPosition > 1800) setVisible((prev) => ({ ...prev, features: true }));
+        if (scrollPosition > 1500) setVisible((prev) => ({ ...prev, statistics: true }));
+        if (scrollPosition > 2750) setVisible((prev) => ({ ...prev, howItWorks: true }));
+        if (scrollPosition > 4000) setVisible((prev) => ({ ...prev, testimonials: true }));
+        // if (scrollPosition > 4850) setVisible((prev) => ({ ...prev, pricing: true }));
+        // if (scrollPosition > 4600) setVisible((prev) => ({ ...prev, faq: true }));
+        if (scrollPosition > 4600) setVisible((prev) => ({ ...prev, cta: true }));
       }
     };
 
@@ -165,6 +267,13 @@ export default function Homepage() {
         overflow: "hidden",
       }}
     >
+      <style>
+        {gradientKeyframes}
+        {floatingKeyframes}
+        {shimmerKeyframes}
+        {rotateKeyframes}
+        {pulseKeyframes}
+      </style>
       {/* Header */}
       <header
         style={{
@@ -356,7 +465,8 @@ export default function Homepage() {
       <section
         id="home"
         style={{
-          background: `linear-gradient(135deg, ${colors.lightGreen} 0%, ${colors.deepGreen} 100%)`,
+          // background: `linear-gradient(135deg, ${colors.lightGreen} 0%, ${colors.deepGreen} 100%)`,
+          background: "linear-gradient(135deg,rgb(206, 248, 218),rgb(224, 255, 233))",
           padding: "8rem 2rem",
           color: colors.white,
           position: "relative",
@@ -402,7 +512,17 @@ export default function Homepage() {
             transition: "all 1s ease-out",
           }}
         >
-          <div style={{ flex: "1", minWidth: "300px" }}>
+          <div
+            style={{
+              minWidth: "300px",
+              width: "100%",
+              justifyContent: "center",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              color: colors.deepGreen,
+            }}
+          >
             <h1
               style={{
                 fontSize: "3.5rem",
@@ -426,10 +546,196 @@ export default function Homepage() {
           </div>
           <div
             style={{
+              minWidth: "300px",
+              width: "100%",
+              justifyContent: "center",
+              display: "flex",
+              flexWrap: isMobile ? "nowrap" : "wrap",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            {!isMobile && (
+              <Button
+                type="primary"
+                size="large"
+                icon={<UserOutlined />}
+                onClick={navigateToStudentLogin}
+                onMouseEnter={() => setButtonHover({ ...buttonHover, student: true })}
+                onMouseLeave={() => setButtonHover({ ...buttonHover, student: false })}
+                style={{
+                  height: "54px",
+                  borderRadius: "30px",
+                  background: buttonHover.student
+                    ? "linear-gradient(90deg, #66BB6A, #81C784)"
+                    : "linear-gradient(90deg, #81C784, #66BB6A)",
+                  borderColor: "#66BB6A",
+                  fontSize: "16px",
+                  boxShadow: buttonHover.student
+                    ? "0 6px 15px rgba(102, 187, 106, 0.4)"
+                    : "0 4px 10px rgba(102, 187, 106, 0.3)",
+                  width: "20%",
+                  transition: "all 0.3s ease",
+                  transform: buttonHover.student ? "translateY(-3px)" : "translateY(0)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <span style={{ position: "relative", zIndex: 2 }}>Login for Students</span>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-50%",
+                    left: "-50%",
+                    right: "-50%",
+                    bottom: "-50%",
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                    animation: buttonHover.student ? "shimmer 1.5s infinite" : "none",
+                    transform: "rotate(30deg)",
+                    zIndex: 1,
+                  }}
+                />
+              </Button>
+            )}
+            {isMobile && (
+              <div style={{ width: "49%", display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<UserOutlined />}
+                  onClick={navigateToStudentLogin}
+                  onMouseEnter={() => setButtonHover({ ...buttonHover, student: true })}
+                  onMouseLeave={() => setButtonHover({ ...buttonHover, student: false })}
+                  style={{
+                    height: "54px",
+                    borderRadius: "30px",
+                    background: buttonHover.student
+                      ? "linear-gradient(90deg, #66BB6A, #81C784)"
+                      : "linear-gradient(90deg, #81C784, #66BB6A)",
+                    borderColor: "#66BB6A",
+                    fontSize: "16px",
+                    boxShadow: buttonHover.student
+                      ? "0 6px 15px rgba(102, 187, 106, 0.4)"
+                      : "0 4px 10px rgba(102, 187, 106, 0.3)",
+                    width: "100%",
+                    transition: "all 0.3s ease",
+                    transform: buttonHover.student ? "translateY(-3px)" : "translateY(0)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <span style={{ position: "relative", zIndex: 2 }}>Login for Students</span>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "-50%",
+                      left: "-50%",
+                      right: "-50%",
+                      bottom: "-50%",
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                      animation: buttonHover.student ? "shimmer 1.5s infinite" : "none",
+                      transform: "rotate(30deg)",
+                      zIndex: 1,
+                    }}
+                  />
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<BookOutlined />}
+                  onClick={navigateToTeacherLogin}
+                  onMouseEnter={() => setButtonHover({ ...buttonHover, teacher: true })}
+                  onMouseLeave={() => setButtonHover({ ...buttonHover, teacher: false })}
+                  style={{
+                    height: "54px",
+                    borderRadius: "30px",
+                    background: buttonHover.teacher
+                      ? "linear-gradient(90deg, #43A047, #4CAF50)"
+                      : "linear-gradient(90deg, #4CAF50, #43A047)",
+                    borderColor: "#43A047",
+                    fontSize: "16px",
+                    boxShadow: buttonHover.teacher
+                      ? "0 6px 15px rgba(67, 160, 71, 0.4)"
+                      : "0 4px 10px rgba(67, 160, 71, 0.3)",
+                    width: "100%",
+                    transition: "all 0.3s ease",
+                    transform: buttonHover.teacher ? "translateY(-3px)" : "translateY(0)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <span style={{ position: "relative", zIndex: 2 }}>Login for Teachers</span>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "-50%",
+                      left: "-50%",
+                      right: "-50%",
+                      bottom: "-50%",
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                      animation: buttonHover.teacher ? "shimmer 1.5s infinite" : "none",
+                      transform: "rotate(30deg)",
+                      zIndex: 1,
+                    }}
+                  />
+                </Button>
+              </div>
+            )}
+            {!isMobile && <img src="giaovien.png" style={{ width: "300px" }}></img>}
+            <img src="hocsinh.png" style={{ width: isMobile ? "49%" : "300px" }}></img>
+            {!isMobile && (
+              <Button
+                type="primary"
+                size="large"
+                icon={<BookOutlined />}
+                onClick={navigateToTeacherLogin}
+                onMouseEnter={() => setButtonHover({ ...buttonHover, teacher: true })}
+                onMouseLeave={() => setButtonHover({ ...buttonHover, teacher: false })}
+                style={{
+                  height: "54px",
+                  borderRadius: "30px",
+                  background: buttonHover.teacher
+                    ? "linear-gradient(90deg, #43A047, #4CAF50)"
+                    : "linear-gradient(90deg, #4CAF50, #43A047)",
+                  borderColor: "#43A047",
+                  fontSize: "16px",
+                  boxShadow: buttonHover.teacher
+                    ? "0 6px 15px rgba(67, 160, 71, 0.4)"
+                    : "0 4px 10px rgba(67, 160, 71, 0.3)",
+                  width: "20%",
+                  transition: "all 0.3s ease",
+                  transform: buttonHover.teacher ? "translateY(-3px)" : "translateY(0)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <span style={{ position: "relative", zIndex: 2 }}>Login for Teachers</span>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-50%",
+                    left: "-50%",
+                    right: "-50%",
+                    bottom: "-50%",
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                    animation: buttonHover.teacher ? "shimmer 1.5s infinite" : "none",
+                    transform: "rotate(30deg)",
+                    zIndex: 1,
+                  }}
+                />
+              </Button>
+            )}
+          </div>
+          <div
+            style={{
               flex: "1",
               minWidth: "300px",
               position: "relative",
-              height: "400px",
+              height: isMobile ? "400px" : "550px",
             }}
           >
             <div
@@ -438,8 +744,8 @@ export default function Homepage() {
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: "80%",
-                height: "80%",
+                width: isMobile ? "90%" : "80%",
+                height: isMobile ? "40vh" : "80vh",
                 background: "rgba(255, 255, 255, 0.2)",
                 borderRadius: "16px",
                 backdropFilter: "blur(5px)",
@@ -450,7 +756,57 @@ export default function Homepage() {
                 border: "1px solid rgba(255, 255, 255, 0.3)",
               }}
             >
-              <img src={Logo} alt="Happy Class Logo" style={{ width: "80%", height: "100%" }} />
+              {/* <img src={Logo} alt="Happy Class Logo" style={{ width: "80%", height: "100%" }} /> */}
+              {contentData?.linkYoutube && (
+                // <div
+                //   style={{
+                //     marginTop: "2rem",
+                //     textAlign: "center",
+                //     opacity: visible.hero ? 1 : 0,
+                //     transform: `translateY(${visible.hero ? "0" : "30px"})`,
+                //     transition: "all 0.8s ease-out",
+                //   }}
+                // >
+                //   <h3
+                //     style={{
+                //       fontSize: "1.5rem",
+                //       color: colors.darkGray,
+                //       marginBottom: "1rem",
+                //     }}
+                //   >
+                //     Watch Our Introduction Video
+                //   </h3>
+                //   <div
+                //     style={{
+                //       position: "relative",
+                //       paddingBottom: "56.25%", // Tỷ lệ 16:9
+                //       height: 0,
+                //       overflow: "hidden",
+                //       maxWidth: "800px",
+                //       margin: "0 auto",
+                //       borderRadius: "8px",
+                //       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                //     }}
+                //   >
+                <div style={{ width: "90%", height: "90%" }}>
+                  <iframe
+                    style={{
+                      // position: "absolute",
+                      // top: 0,
+                      // left: 0,
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "10px",
+                    }}
+                    src={contentData.linkYoutube.replace("watch?v=", "embed/")}
+                    title="Happy Class Intro Video"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                // </div>
+              )}
             </div>
           </div>
         </div>
@@ -504,7 +860,7 @@ export default function Homepage() {
           </div>
 
           {/* YouTube Video */}
-          {contentData?.linkYoutube && (
+          {/* {contentData?.linkYoutube && (
             <div
               style={{
                 marginTop: "2rem",
@@ -551,7 +907,7 @@ export default function Homepage() {
                 />
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </section>
 
@@ -1121,10 +1477,28 @@ export default function Homepage() {
             alignItems: "center",
             justifyContent: "center",
             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-            opacity: window.scrollY + window.innerHeight > 1000 ? 1 : 0,
-            visibility: window.scrollY + window.innerHeight > 1000 ? "visible" : "hidden",
+            opacity: (
+              isMobile
+                ? window.scrollY + window.innerHeight > 1700
+                : window.scrollY + window.innerHeight > 1600
+            )
+              ? 1
+              : 0,
+            visibility: (
+              isMobile
+                ? window.scrollY + window.innerHeight > 1700
+                : window.scrollY + window.innerHeight > 1600
+            )
+              ? "visible"
+              : "hidden",
             transition: "all 0.3s ease",
-            animation: window.scrollY + window.innerHeight > 1000 ? "bounce 1s infinite" : "none",
+            animation: (
+              isMobile
+                ? window.scrollY + window.innerHeight > 1700
+                : window.scrollY + window.innerHeight > 1600
+            )
+              ? "bounce 1s infinite"
+              : "none",
           }}
         />
         <div

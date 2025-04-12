@@ -228,6 +228,7 @@ const TeacherPage = () => {
     "align",
     "audio",
     "size",
+    "code-block",
   ];
   useEffect(() => {
     const fetchNotification = async () => {
