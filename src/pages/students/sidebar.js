@@ -50,8 +50,8 @@ const Sidebar = ({
   const upcomingLessons = lessonsBySchedule
     .filter((lesson) => {
       const lessonDate = dayjs(lesson.date).startOf("day");
-      console.log("lesson.isHomeWorkSent", lesson.isHomeWorkSent);
-      console.log("lesson.isLessonSent", lesson.isLessonSent);
+      // console.log("lesson.isHomeWorkSent", lesson.isHomeWorkSent);
+      // console.log("lesson.isLessonSent", lesson.isLessonSent);
       return (
         lessonDate.isAfter(today) &&
         (lesson.isHomeWorkSent === true || lesson.isLessonSent === true)
