@@ -447,6 +447,7 @@ export default function CreateHomeWork({
       setMp3file(null);
       setMp3Url("");
       setCurrentLink("");
+      setHtmlContent("");
       if (quillRef.current) {
         const editor = quillRef.current.getEditor();
         editor.setContents([]);

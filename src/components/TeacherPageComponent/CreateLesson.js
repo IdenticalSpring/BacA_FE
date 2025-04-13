@@ -480,6 +480,8 @@ export default function CreateLesson({
       setYoutubeLinks([]);
       setCurrentYoutubeLink("");
       setEditYoutubeIndex(null);
+      setHtmlContent("");
+      setHtmlLessonPlanContent("");
       if (quillRefDescription.current) {
         const editor = quillRefDescription.current.getEditor();
         editor.setContents([]);

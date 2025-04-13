@@ -285,6 +285,7 @@ export default function HomeWorkMangement({
       setMp3file(null);
       setMp3Url("");
       setCurrentLink("");
+      setHtmlContent("");
     } catch (err) {
       message.error("Please check your input and try again" + err);
     } finally {
