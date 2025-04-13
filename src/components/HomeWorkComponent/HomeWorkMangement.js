@@ -115,6 +115,9 @@ export default function HomeWorkMangement({
   const [gameLinks, setGameLinks] = useState([]);
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
+  const [youtubeLinks, setYoutubeLinks] = useState([]);
+  const [currentYoutubeLink, setCurrentYoutubeLink] = useState("");
+  const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -144,9 +147,13 @@ export default function HomeWorkMangement({
     const filterLinks = links?.filter((link) => link !== "");
     // console.log(links, filterLinks);
     setGameLinks(filterLinks);
+    const youtubeLinks = homeWork?.linkYoutube
+      ? homeWork.linkYoutube.split(", ").filter((link) => link !== "")
+      : [];
+    setYoutubeLinks(youtubeLinks);
     form.setFieldsValue({
       title: homeWork.title,
-      linkYoutube: homeWork.linkYoutube,
+      // linkYoutube: homeWork.linkYoutube,
       // linkGame: homeWork.linkGame,
       linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
@@ -240,11 +247,16 @@ export default function HomeWorkMangement({
       const formData = new FormData();
       let linkGame = "";
       if (gameLinks?.length > 0) {
-        gameLinks.map((link) => (linkGame += link + ", "));
+        linkGame = gameLinks.join(", ");
+        // gameLinks.map((link) => (linkGame += link + ", "));
+      }
+      let linkYoutube = "";
+      if (youtubeLinks?.length > 0) {
+        linkYoutube = youtubeLinks.join(", ");
       }
       formData.append("title", values.title);
       formData.append("level", level);
-      formData.append("linkYoutube", values.linkYoutube);
+      formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
       formData.append("linkZalo", values.linkZalo);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
@@ -808,7 +820,7 @@ export default function HomeWorkMangement({
           initialValues={{
             title: "",
             level: "",
-            linkYoutube: "",
+            // linkYoutube: "",
             linkGame: "",
             linkZalo: "",
             description: "",
@@ -945,7 +957,7 @@ export default function HomeWorkMangement({
               Your browser does not support the audio element.
             </audio>
           </div> */}
-          <Form.Item
+          {/* <Form.Item
             name="linkYoutube"
             label="Link Youtube Bài tập"
             // rules={[{ required: true, message: "Please enter the homework link" }]}
@@ -957,7 +969,85 @@ export default function HomeWorkMangement({
                 borderColor: colors.inputBorder,
               }}
             />
+          </Form.Item> */}
+          <Form.Item label="Link Youtube bài tập">
+            <Input.Group compact>
+              <Input
+                value={currentYoutubeLink}
+                placeholder="Nhập link youtube bài tập"
+                style={{
+                  width: "calc(100% - 120px)",
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+                onChange={(e) => setCurrentYoutubeLink(e.target.value)}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (!currentYoutubeLink) return;
+                  if (editYoutubeIndex !== null) {
+                    const updated = [...youtubeLinks];
+                    updated[editYoutubeIndex] = currentYoutubeLink;
+                    setYoutubeLinks(updated);
+                    setEditYoutubeIndex(null);
+                  } else {
+                    setYoutubeLinks([...youtubeLinks, currentYoutubeLink]);
+                  }
+                  setCurrentYoutubeLink("");
+                }}
+              >
+                {editYoutubeIndex !== null ? "Cập nhật" : "Thêm"}
+              </Button>
+            </Input.Group>
           </Form.Item>
+          {youtubeLinks?.length > 0 && (
+            <Table
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "index",
+                  render: (_, __, i) => i + 1,
+                },
+                {
+                  title: "Link YouTube",
+                  dataIndex: "link",
+                },
+                {
+                  title: "Hành động",
+                  render: (_, record, index) => (
+                    <>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setCurrentYoutubeLink(record.link);
+                          setEditYoutubeIndex(index);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          const updated = youtubeLinks.filter((_, i) => i !== index);
+                          setYoutubeLinks(updated);
+                          if (editYoutubeIndex === index) {
+                            setCurrentYoutubeLink("");
+                            setEditYoutubeIndex(null);
+                          }
+                        }}
+                      >
+                        Xoá
+                      </Button>
+                    </>
+                  ),
+                },
+              ]}
+              dataSource={youtubeLinks.map((link, index) => ({ key: `${link}-${index}`, link }))}
+              pagination={false}
+            />
+          )}
           {/* <Form.Item name="linkGame" label="Link Game bài tập">
             <Input
               placeholder="Nhập link game bài tập"

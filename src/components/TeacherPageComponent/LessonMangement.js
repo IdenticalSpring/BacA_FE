@@ -104,6 +104,11 @@ export default function LessonMangement({
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
+
+  const [youtubeLinks, setYoutubeLinks] = useState([]);
+  const [currentYoutubeLink, setCurrentYoutubeLink] = useState("");
+  const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
+
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -122,11 +127,12 @@ export default function LessonMangement({
     setEditingLesson(lesson);
     form.setFieldsValue({
       name: lesson.name,
-      linkYoutube: lesson.linkYoutube,
       linkGame: lesson.linkGame,
       linkSpeech: lesson.linkSpeech,
-      // description: lesson.description,
     });
+    // Khởi tạo youtubeLinks từ linkYoutube
+    const links = lesson.linkYoutube ? lesson.linkYoutube.split(", ").filter(Boolean) : [];
+    setYoutubeLinks(links);
     setMp3Url(lesson.linkSpeech);
     setModalUpdateLessonVisible(true);
   };
@@ -189,9 +195,13 @@ export default function LessonMangement({
       setLoadingUpdate(true);
       const values = await form.validateFields();
       const formData = new FormData();
+      let linkYoutube = "";
+      if (youtubeLinks?.length > 0) {
+        linkYoutube = youtubeLinks.join(", ");
+      }
       formData.append("name", values.name);
       formData.append("level", level);
-      formData.append("linkYoutube", values.linkYoutube);
+      formData.append("linkYoutube", linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
@@ -208,12 +218,21 @@ export default function LessonMangement({
         );
         message.success("Lesson updated successfully");
       }
+      // setModalUpdateLessonVisible(false);
+      // form.resetFields();
+      // setEditingLesson(null);
+      // setTextToSpeech("");
+      // setMp3file(null);
+      // setMp3Url("");
       setModalUpdateLessonVisible(false);
       form.resetFields();
       setEditingLesson(null);
       setTextToSpeech("");
       setMp3file(null);
       setMp3Url("");
+      setYoutubeLinks([]);
+      setCurrentYoutubeLink("");
+      setEditYoutubeIndex(null);
     } catch (err) {
       message.error("Please check your input and try again");
     } finally {
@@ -688,6 +707,9 @@ export default function LessonMangement({
               setModalUpdateLessonVisible(false);
               form.resetFields();
               setEditingLesson(null);
+              setYoutubeLinks([]);
+              setCurrentYoutubeLink("");
+              setEditYoutubeIndex(null);
             }}
           >
             Hủy
@@ -732,7 +754,7 @@ export default function LessonMangement({
           initialValues={{
             name: "",
             level: "",
-            linkYoutube: "",
+            // linkYoutube: "",
             linkGame: "",
             description: "",
           }}
@@ -831,19 +853,88 @@ export default function LessonMangement({
               </div>
             </Form.Item>
           )}
-          <Form.Item
-            name="linkYoutube"
-            label="Link Youtube bài học"
-            // rules={[{ required: true, message: "Please enter the lesson link" }]}
-          >
-            <Input
-              placeholder="Nhập link youtube bài học"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
+          <Form.Item label="Link Youtube bài học">
+            <Input.Group compact>
+              <Input
+                value={currentYoutubeLink}
+                placeholder="Nhập link youtube bài học"
+                style={{
+                  width: "calc(100% - 120px)",
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+                onChange={(e) => setCurrentYoutubeLink(e.target.value)}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (!currentYoutubeLink) return;
+                  if (editYoutubeIndex !== null) {
+                    const updated = [...youtubeLinks];
+                    updated[editYoutubeIndex] = currentYoutubeLink;
+                    setYoutubeLinks(updated);
+                    setEditYoutubeIndex(null);
+                  } else {
+                    setYoutubeLinks([...youtubeLinks, currentYoutubeLink]);
+                  }
+                  setCurrentYoutubeLink("");
+                }}
+                style={{
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                }}
+              >
+                {editYoutubeIndex !== null ? "Cập nhật" : "Thêm"}
+              </Button>
+            </Input.Group>
           </Form.Item>
+          {youtubeLinks?.length > 0 && (
+            <Table
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "index",
+                  render: (_, __, i) => i + 1,
+                },
+                {
+                  title: "Link YouTube",
+                  dataIndex: "link",
+                },
+                {
+                  title: "Hành động",
+                  render: (_, record, index) => (
+                    <>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setCurrentYoutubeLink(record.link);
+                          setEditYoutubeIndex(index);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          const updated = youtubeLinks.filter((_, i) => i !== index);
+                          setYoutubeLinks(updated);
+                          if (editYoutubeIndex === index) {
+                            setCurrentYoutubeLink("");
+                            setEditYoutubeIndex(null);
+                          }
+                        }}
+                      >
+                        Xoá
+                      </Button>
+                    </>
+                  ),
+                },
+              ]}
+              dataSource={youtubeLinks.map((link, index) => ({ key: `${link}-${index}`, link }))}
+              pagination={false}
+            />
+          )}
           {/* <Form.Item name="linkGame" label="Link game bài học">
             <Input
               placeholder="Nhập link game bài học"

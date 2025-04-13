@@ -273,7 +273,7 @@ const StudentPage = () => {
           if (findSelectedLessonBySchedule?.lessonID) {
             const data = await lessonService.getLessonById(findSelectedLessonBySchedule?.lessonID);
             setLessons([data]);
-            console.log(data, findSelectedLessonBySchedule?.lessonID);
+            // console.log(data, findSelectedLessonBySchedule?.lessonID);
           }
 
           if (findSelectedLessonBySchedule?.homeWorkId) {
@@ -352,7 +352,7 @@ const StudentPage = () => {
 
   const handleSubmitHomework = async (homeworkId) => {
     try {
-      console.log();
+      // console.log();
 
       setHomeworkZaloLink(homework[0]?.linkZalo);
       setLoadingSubmitHomework(true);
@@ -484,7 +484,7 @@ const StudentPage = () => {
                       marginBottom: 16,
                     }}
                   >
-                    {lesson.linkYoutube && (
+                    {/* {lesson.linkYoutube && (
                       <iframe
                         width="100%"
                         height="315"
@@ -494,6 +494,33 @@ const StudentPage = () => {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
+                    )} */}
+                    {lesson.linkYoutube && lesson.linkYoutube.trim() && (
+                      <div>
+                        <Text
+                          strong
+                          style={{ color: colors.deepGreen, display: "block", marginBottom: 8 }}
+                        >
+                          Video bài học:
+                        </Text>
+                        {lesson.linkYoutube.split(",").map((link, index) => {
+                          const trimmed = link.trim();
+                          if (!trimmed) return null;
+                          return (
+                            <iframe
+                              key={`youtube-${lesson.id}-${index}`}
+                              width="100%"
+                              height="315"
+                              src={trimmed.replace("watch?v=", "embed/")}
+                              title={`Lesson Video ${index + 1}`}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              style={{ marginBottom: 16 }}
+                            />
+                          );
+                        })}
+                      </div>
                     )}
                     {lesson.linkSpeech && (
                       <audio controls style={{ width: "100%", marginTop: 16 }}>
@@ -600,7 +627,7 @@ const StudentPage = () => {
                     __html: hw.description || "Chưa có mô tả cho bài tập này.",
                   }}
                 />
-                {hw.linkSpeech && (
+                {/* {hw.linkSpeech || hw.linkYoutube && (
                   <div
                     style={{
                       marginBottom: 16,
@@ -630,6 +657,61 @@ const StudentPage = () => {
                         Tải xuống audio
                       </Button>
                     </div>
+                  </div>
+                )} */}
+                {(hw.linkYoutube || hw.linkSpeech) && (
+                  <div
+                    style={{
+                      backgroundColor: colors.paleGreen,
+                      padding: 12,
+                      borderRadius: 8,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {hw.linkYoutube && hw.linkYoutube.trim() && (
+                      <div>
+                        <Text
+                          strong
+                          style={{ color: colors.deepGreen, display: "block", marginBottom: 8 }}
+                        >
+                          Video bài tập:
+                        </Text>
+                        {hw.linkYoutube.split(",").map((link, index) => {
+                          const trimmed = link.trim();
+                          if (!trimmed) return null; // Bỏ qua link rỗng
+                          return (
+                            <iframe
+                              key={`youtube-${hw.id}-${index}`}
+                              width="100%"
+                              height="315"
+                              src={trimmed.replace("watch?v=", "embed/")}
+                              title={`Homework Video ${index + 1}`}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              style={{ marginBottom: 16 }}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+                    {hw.linkSpeech && (
+                      <div style={{ marginTop: hw.linkYoutube ? 16 : 0 }}>
+                        <Text
+                          strong
+                          style={{ color: colors.deepGreen, display: "block", marginBottom: 8 }}
+                        >
+                          Audio bài tập:
+                        </Text>
+                        <audio controls style={{ width: "100%" }}>
+                          <source
+                            src={hw.linkSpeech.replace("/video/upload/", "/raw/upload/")}
+                            type="audio/mpeg"
+                          />
+                          Trình duyệt của bạn không hỗ trợ phát audio.
+                        </audio>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div
