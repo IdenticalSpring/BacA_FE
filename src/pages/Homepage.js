@@ -160,7 +160,7 @@ export default function Homepage() {
     navigate("/login/teacher");
   };
   // Determine if we should show mobile or desktop layout
-  const isMobile = window.innerWidth < 900;
+  const isMobile = window.innerWidth < 1150;
   useEffect(() => {
     const fetchContentData = async () => {
       try {
