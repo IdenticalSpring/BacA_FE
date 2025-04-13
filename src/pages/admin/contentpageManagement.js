@@ -1143,6 +1143,25 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              <TextField
+                margin="dense"
+                label="Adsense ID"
+                type="text"
+                fullWidth
+                value={currentEditItem?.adsenseId || ""}
+                onChange={(e) =>
+                  setCurrentEditItem({ ...currentEditItem, adsenseId: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
             </>
           )}
         </DialogContent>

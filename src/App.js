@@ -126,6 +126,21 @@ export default function App() {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
+  useEffect(() => {
+    fetch("https://api.happyclass.com.vn/contentpage/adsenseId")
+      // fetch("http://localhost:8000/contentpage/adsenseId")
+      .then((res) => res.text()) // 👈 Dùng .text() vì response là string
+      .then((data) => {
+        const pubId = data || "ca-pub-XXXXXXX";
+        const script = document.createElement("script");
+        // console.log(data);
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${pubId}`;
+        script.async = true;
+        script.crossOrigin = "anonymous";
+
+        document.head.appendChild(script);
+      });
+  }, []);
 
   const getRoutes = (allRoutes) =>
     allRoutes.map((route) => {
