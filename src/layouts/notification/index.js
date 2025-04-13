@@ -17,7 +17,7 @@ import MDBox from "components/MDBox";
 import { colors } from "assets/theme/color";
 import MDTypography from "components/MDTypography";
 import { Form, Input, message, Modal, notification, Radio, Spin, Select } from "antd";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 import axios from "axios";
 import notificationService from "services/notificationService";
 import PropTypes from "prop-types";
@@ -37,7 +37,19 @@ const filterOptions = [
   { label: "Teacher", value: true },
   { label: "Student", value: false },
 ];
-
+const icons = Quill.import("ui/icons");
+icons["undo"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 14H4V9"/>
+    <path d="M20 20a9 9 0 0 0-15.5-6.36L4 14"/>
+  </svg>
+`;
+icons["redo"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 14h5v-5"/>
+    <path d="M4 20a9 9 0 0 1 15.5-6.36L20 14"/>
+  </svg>
+`;
 export default function CreateNotificationByAdmin() {
   const [notificationData, setNotificationData] = useState({
     title: "",
@@ -141,16 +153,19 @@ export default function CreateNotificationByAdmin() {
   }, [quillRef]);
 
   const toolbar = [
+    [{ font: [] }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline", "code-block"],
-    ["link", "image"],
+    [{ size: ["small", false, "large", "huge"] }],
     [{ list: "ordered" }, { list: "bullet" }],
+    ["bold", "italic", "underline", "strike", "blockquote"],
+    ["link", "image", "video"],
+    [{ script: "sub" }, { script: "super" }],
     [{ indent: "-1" }, { indent: "+1" }],
     [{ direction: "rtl" }],
     [{ color: [] }, { background: [] }],
-    [{ font: [] }],
     [{ align: [] }],
     ["clean"],
+    ["undo", "redo"],
   ];
 
   const quillFormats = [
@@ -168,6 +183,14 @@ export default function CreateNotificationByAdmin() {
     "color",
     "background",
     "align",
+    "audio",
+    "size",
+    // "code-block",
+    "font",
+    // "code",
+    "script",
+    "direction",
+    "video",
   ];
 
   useEffect(() => {
@@ -228,7 +251,29 @@ export default function CreateNotificationByAdmin() {
       editor?.removeEventListener("paste", handlePaste);
     };
   }, [quillRef]);
+  const undoHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
 
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -276,6 +321,8 @@ export default function CreateNotificationByAdmin() {
       container: toolbar,
       handlers: {
         image: imageHandler,
+        undo: undoHandler,
+        redo: redoHandler,
       },
     },
   };

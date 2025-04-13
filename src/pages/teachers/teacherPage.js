@@ -198,17 +198,19 @@ const TeacherPage = () => {
   const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
   const [contentData, setContentData] = useState(null);
   const toolbar = [
+    [{ font: [] }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     [{ size: ["small", false, "large", "huge"] }],
-    ["bold", "italic", "underline", "code-block"],
-    ["link", "image"],
     [{ list: "ordered" }, { list: "bullet" }],
+    ["bold", "italic", "underline", "strike", "blockquote"],
+    ["link", "image", "video"],
+    [{ script: "sub" }, { script: "super" }],
     [{ indent: "-1" }, { indent: "+1" }],
     [{ direction: "rtl" }],
     [{ color: [] }, { background: [] }],
-    [{ font: [] }],
     [{ align: [] }],
     ["clean"],
+    ["undo", "redo"],
   ];
 
   const quillFormats = [
@@ -228,7 +230,12 @@ const TeacherPage = () => {
     "align",
     "audio",
     "size",
-    "code-block",
+    // "code-block",
+    "font",
+    // "code",
+    "script",
+    "direction",
+    "video",
   ];
   useEffect(() => {
     const fetchNotification = async () => {

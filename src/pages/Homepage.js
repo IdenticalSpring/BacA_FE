@@ -565,29 +565,29 @@ export default function Homepage() {
               <Button
                 type="primary"
                 size="large"
-                icon={<UserOutlined />}
-                onClick={navigateToStudentLogin}
-                onMouseEnter={() => setButtonHover({ ...buttonHover, student: true })}
-                onMouseLeave={() => setButtonHover({ ...buttonHover, student: false })}
+                icon={<BookOutlined />}
+                onClick={navigateToTeacherLogin}
+                onMouseEnter={() => setButtonHover({ ...buttonHover, teacher: true })}
+                onMouseLeave={() => setButtonHover({ ...buttonHover, teacher: false })}
                 style={{
                   height: "54px",
                   borderRadius: "30px",
-                  background: buttonHover.student
-                    ? "linear-gradient(90deg, #66BB6A, #81C784)"
-                    : "linear-gradient(90deg, #81C784, #66BB6A)",
-                  borderColor: "#66BB6A",
+                  background: buttonHover.teacher
+                    ? "linear-gradient(90deg, #43A047, #4CAF50)"
+                    : "linear-gradient(90deg, #4CAF50, #43A047)",
+                  borderColor: "#43A047",
                   fontSize: "16px",
-                  boxShadow: buttonHover.student
-                    ? "0 6px 15px rgba(102, 187, 106, 0.4)"
-                    : "0 4px 10px rgba(102, 187, 106, 0.3)",
+                  boxShadow: buttonHover.teacher
+                    ? "0 6px 15px rgba(67, 160, 71, 0.4)"
+                    : "0 4px 10px rgba(67, 160, 71, 0.3)",
                   width: "20%",
                   transition: "all 0.3s ease",
-                  transform: buttonHover.student ? "translateY(-3px)" : "translateY(0)",
+                  transform: buttonHover.teacher ? "translateY(-3px)" : "translateY(0)",
                   position: "relative",
                   overflow: "hidden",
                 }}
               >
-                <span style={{ position: "relative", zIndex: 2 }}>Login for Students</span>
+                <span style={{ position: "relative", zIndex: 2 }}>Login for Teachers</span>
                 <div
                   style={{
                     position: "absolute",
@@ -597,7 +597,7 @@ export default function Homepage() {
                     bottom: "-50%",
                     background:
                       "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                    animation: buttonHover.student ? "shimmer 1.5s infinite" : "none",
+                    animation: buttonHover.teacher ? "shimmer 1.5s infinite" : "none",
                     transform: "rotate(30deg)",
                     zIndex: 1,
                   }}
@@ -696,29 +696,29 @@ export default function Homepage() {
               <Button
                 type="primary"
                 size="large"
-                icon={<BookOutlined />}
-                onClick={navigateToTeacherLogin}
-                onMouseEnter={() => setButtonHover({ ...buttonHover, teacher: true })}
-                onMouseLeave={() => setButtonHover({ ...buttonHover, teacher: false })}
+                icon={<UserOutlined />}
+                onClick={navigateToStudentLogin}
+                onMouseEnter={() => setButtonHover({ ...buttonHover, student: true })}
+                onMouseLeave={() => setButtonHover({ ...buttonHover, student: false })}
                 style={{
                   height: "54px",
                   borderRadius: "30px",
-                  background: buttonHover.teacher
-                    ? "linear-gradient(90deg, #43A047, #4CAF50)"
-                    : "linear-gradient(90deg, #4CAF50, #43A047)",
-                  borderColor: "#43A047",
+                  background: buttonHover.student
+                    ? "linear-gradient(90deg, #66BB6A, #81C784)"
+                    : "linear-gradient(90deg, #81C784, #66BB6A)",
+                  borderColor: "#66BB6A",
                   fontSize: "16px",
-                  boxShadow: buttonHover.teacher
-                    ? "0 6px 15px rgba(67, 160, 71, 0.4)"
-                    : "0 4px 10px rgba(67, 160, 71, 0.3)",
+                  boxShadow: buttonHover.student
+                    ? "0 6px 15px rgba(102, 187, 106, 0.4)"
+                    : "0 4px 10px rgba(102, 187, 106, 0.3)",
                   width: "20%",
                   transition: "all 0.3s ease",
-                  transform: buttonHover.teacher ? "translateY(-3px)" : "translateY(0)",
+                  transform: buttonHover.student ? "translateY(-3px)" : "translateY(0)",
                   position: "relative",
                   overflow: "hidden",
                 }}
               >
-                <span style={{ position: "relative", zIndex: 2 }}>Login for Teachers</span>
+                <span style={{ position: "relative", zIndex: 2 }}>Login for Students</span>
                 <div
                   style={{
                     position: "absolute",
@@ -728,7 +728,7 @@ export default function Homepage() {
                     bottom: "-50%",
                     background:
                       "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                    animation: buttonHover.teacher ? "shimmer 1.5s infinite" : "none",
+                    animation: buttonHover.student ? "shimmer 1.5s infinite" : "none",
                     transform: "rotate(30deg)",
                     zIndex: 1,
                   }}
@@ -816,6 +816,54 @@ export default function Homepage() {
             </div>
           </div>
         </div>
+        {!isMobile && (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                left: "5%",
+                bottom: "10%",
+                fontSize: "80px",
+                opacity: "0.4",
+                zIndex: 0,
+                animation: "floating 5s ease-in-out infinite",
+                transition: "all 0.3s ease",
+              }}
+            >
+              🚀
+            </div>
+
+            <div
+              style={{
+                position: "absolute",
+                right: "5%",
+                top: "30%",
+                fontSize: "80px",
+                opacity: "0.4",
+                zIndex: 0,
+                animation: "floating 4s ease-in-out infinite 1s",
+                transition: "all 0.3s ease",
+              }}
+            >
+              📚
+            </div>
+
+            <div
+              style={{
+                position: "absolute",
+                left: "15%",
+                top: "20%",
+                fontSize: "80px",
+                opacity: "0.4",
+                zIndex: 0,
+                animation: "floating 6s ease-in-out infinite 0.5s",
+                transition: "all 0.3s ease",
+              }}
+            >
+              🎓
+            </div>
+          </>
+        )}
       </section>
 
       {/* Stats Section */}

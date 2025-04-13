@@ -45,7 +45,19 @@ const genderOptions = [
   { label: "Giọng nữ", value: 0 },
 ];
 const BlockEmbed = Quill.import("blots/block/embed");
-
+const icons = Quill.import("ui/icons");
+icons["undo"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 14H4V9"/>
+    <path d="M20 20a9 9 0 0 0-15.5-6.36L4 14"/>
+  </svg>
+`;
+icons["redo"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 14h5v-5"/>
+    <path d="M4 20a9 9 0 0 1 15.5-6.36L20 14"/>
+  </svg>
+`;
 class AudioBlot extends BlockEmbed {
   static create(url) {
     const node = super.create();
@@ -187,6 +199,29 @@ export default function CreateHomeWork({
       editor?.removeEventListener("paste", handlePaste);
     };
   }, [quillRef]);
+  const undoHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -294,6 +329,8 @@ export default function CreateHomeWork({
       container: toolbar,
       handlers: {
         image: imageHandler,
+        undo: undoHandler,
+        redo: redoHandler,
       },
     },
   };

@@ -141,7 +141,7 @@ function CreateStudent() {
       await studentService.createStudentWithFile(formData);
       navigate("/students");
     } catch (err) {
-      alert("Create student failed");
+      alert("Create student failed " + err);
       console.error(err);
     }
   };
