@@ -703,19 +703,19 @@ export default function CreateLesson({
               }}
               icon={<SwapOutlined />}
               onClick={() => {
-                console.log(
-                  "swapHtmlLessonPlanMode",
-                  swapHtmlLessonPlanMode,
-                  htmlLessonPlanContent,
-                  quillRefLessonPlan.current?.getEditor()?.root?.innerHTML
-                );
+                // console.log(
+                //   "swapHtmlLessonPlanMode",
+                //   swapHtmlLessonPlanMode,
+                //   htmlLessonPlanContent,
+                //   quillRefLessonPlan.current?.getEditor()?.root?.innerHTML
+                // );
 
                 if (!swapHtmlLessonPlanMode) {
                   const html = quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
                   setHtmlLessonPlanContent(html);
                   setSwapHtmlLessonPlanMode(true);
                 } else {
-                  console.log("htmlLessonPlanContent", htmlLessonPlanContent);
+                  // console.log("htmlLessonPlanContent", htmlLessonPlanContent);
                   quillRefLessonPlan.current
                     ?.getEditor()
                     .clipboard.dangerouslyPasteHTML(htmlLessonPlanContent);
@@ -742,20 +742,20 @@ export default function CreateLesson({
                   }}
                 />
               }
-              {swapHtmlLessonPlanMode && (
-                <TextArea
-                  value={htmlLessonPlanContent}
-                  onChange={(e) => {
-                    setHtmlLessonPlanContent(e.target.value);
-                  }}
-                  style={{
-                    height: "250px",
-                    marginBottom: "60px", // Consider reducing this
-                    borderRadius: "6px",
-                    border: `1px solid ${colors.inputBorder}`,
-                  }}
-                />
-              )}
+              {/* {swapHtmlLessonPlanMode && ( */}
+              <TextArea
+                value={htmlLessonPlanContent}
+                onChange={(e) => {
+                  setHtmlLessonPlanContent(e.target.value);
+                }}
+                style={{
+                  height: "250px",
+                  marginBottom: "60px", // Consider reducing this
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.inputBorder}`,
+                  display: !swapHtmlLessonPlanMode ? "none" : "block",
+                }}
+              />
             </Form.Item>
             <Form.Item>
               <Button
