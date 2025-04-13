@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Layout,
   Card,
@@ -7,7 +7,6 @@ import {
   Input,
   Button,
   Select,
-  Table,
   notification,
   Spin,
   Divider,
@@ -20,16 +19,36 @@ import {
 import { ArrowLeftOutlined, SaveOutlined, CalculatorOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import PropTypes from "prop-types";
 import studentService from "services/studentService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import studentScoreService from "services/studentScoreService";
 import testSkillService from "services/testSkillService";
 import assessmentService from "services/assessmentService";
 import { colors } from "./teacherPage";
+import DataTable from "examples/Tables/DataTable";
+import TextField from "@mui/material/TextField";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+// Component for rendering Cell
+const ScoreCell = ({ value }) => {
+  return value || "-";
+};
+
+ScoreCell.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+const AvgScoreCell = ({ value }) => {
+  return <strong>{value}</strong>;
+};
+
+AvgScoreCell.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
 
 const EnterTestScore = () => {
   const [classTestSchedules, setClassTestSchedules] = useState([]);
@@ -39,12 +58,14 @@ const EnterTestScore = () => {
   const [testSkills, setTestSkills] = useState([]);
   const [selectedTestSkills, setSelectedTestSkills] = useState([]);
   const [assessments, setAssessments] = useState([]);
-  const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
   const [previousScores, setPreviousScores] = useState([]);
+  const [filterTestSchedule, setFilterTestSchedule] = useState("");
+  const [filterName, setFilterName] = useState("");
 
   const token = sessionStorage.getItem("token");
   const decoded = token ? jwtDecode(token) : null;
@@ -53,10 +74,7 @@ const EnterTestScore = () => {
 
   useEffect(() => {
     if (classId) {
-      fetchClassTestSchedules(classId);
-      fetchStudents(classId);
-      fetchTestSkills();
-      fetchAssessments();
+      fetchInitialData();
     } else {
       notification.error({
         message: "Error",
@@ -66,104 +84,65 @@ const EnterTestScore = () => {
     }
   }, [classId]);
 
-  const fetchClassTestSchedules = async (classId) => {
+  const fetchInitialData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const data = await classTestScheduleSerivce.getAllClassTestSchedule();
-      const filteredData = data.filter((schedule) => schedule.classID === classId);
-      setClassTestSchedules(filteredData);
-    } catch (error) {
-      console.error("Error fetching test schedules:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to load test schedules. Please try again.",
+      const [scheduleData, studentData, skillData, assessmentData, scoreData, detailsData] =
+        await Promise.all([
+          classTestScheduleSerivce.getAllClassTestSchedule(),
+          studentService.getAllStudentsbyClass(classId),
+          testSkillService.getAllTestSkill(),
+          assessmentService.getAllAssessments(),
+          studentScoreService.getCombinedStudentScores(),
+          studentScoreService.getAllStudentScoreDetailsProcessed(),
+        ]);
+
+      console.log("Raw API data:", {
+        scheduleData,
+        studentData,
+        skillData,
+        assessmentData,
+        scoreData,
+        detailsData,
       });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchStudents = async (classId) => {
-    try {
-      setLoading(true);
-      const data = await studentService.getAllStudentsbyClass(classId);
-      setStudents(data);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to load students. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      setClassTestSchedules(scheduleData.filter((schedule) => schedule.classID === classId));
+      setStudents(studentData);
+      setTestSkills(skillData);
+      setAssessments(assessmentData);
 
-  const fetchTestSkills = async () => {
-    try {
-      setLoading(true);
-      const data = await testSkillService.getAllTestSkill();
-      setTestSkills(data);
-    } catch (error) {
-      console.error("Error fetching test skills:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to load test skills. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Ghép dữ liệu studentScore và student-score-details
+      const studentScores = scoreData
+        .filter((score) => studentData.some((student) => student.id === score.studentID))
+        .map((score) => {
+          const student = studentData.find((s) => s.id === score.studentID);
+          const schedule = scheduleData.find((s) => s.id === score.classTestScheduleID);
+          const assessment = assessmentData.find((a) => a.id === score.assessmentID);
+          const detail = detailsData.find((d) => d.studentScoreID === score.studentScoreID);
 
-  const fetchAssessments = async () => {
-    try {
-      setLoading(true);
-      const data = await assessmentService.getAllAssessments();
-      setAssessments(data);
-    } catch (error) {
-      console.error("Error fetching assessments:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to load assessments. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+          return {
+            key: score.studentScoreID,
+            studentScoreID: score.studentScoreID,
+            studentID: score.studentID,
+            studentName: student ? student.name : "Unknown",
+            testScheduleID: score.classTestScheduleID,
+            testScheduleName: schedule ? `${schedule.date}` : "Unknown",
+            assessmentName: assessment ? assessment.name : "Unknown",
+            scores: detail ? detail.scores : {},
+            avgScore: detail ? detail.avgScore : "-",
+            teacherComment: score.teacherComment || "-",
+          };
+        });
 
-  useEffect(() => {
-    if (selectedStudents.length > 0) {
-      fetchPreviousScores(selectedStudents);
-    } else {
-      setPreviousScores([]);
-    }
-  }, [selectedStudents]);
-
-  const fetchPreviousScores = async (studentIds) => {
-    try {
-      setLoading(true);
-      const data = await studentScoreService.getAllStudentScoreDetails();
-      const studentScores = data
-        .filter((score) => studentIds.includes(score.studentID))
-        .reduce((acc, score) => {
-          const existing = acc.find((item) => item.studentScoreID === score.studentScoreID);
-          if (existing) {
-            existing.scores[score.testSkill.name] = score.score;
-          } else {
-            acc.push({
-              key: score.studentScoreID,
-              studentScoreID: score.studentScoreID,
-              studentID: score.studentID,
-              scores: { [score.testSkill.name]: score.score },
-              avgScore: score.avgScore,
-              teacherComment: score.teacherComment,
-            });
-          }
-          return acc;
-        }, []);
+      console.log("Processed previous scores:", studentScores);
       setPreviousScores(studentScores);
     } catch (error) {
-      console.error("Error fetching previous scores:", error);
+      console.error("Error fetching initial data:", error);
+      setError("Failed to load initial data. Please try again.");
+      notification.error({
+        message: "Error",
+        description: "Failed to load initial data. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -174,7 +153,9 @@ const EnterTestScore = () => {
       (score) => score !== undefined && score !== null
     );
     if (validScores.length > 0) {
-      return (validScores.reduce((sum, score) => sum + score, 0) / validScores.length).toFixed(2);
+      return (
+        validScores.reduce((sum, score) => sum + parseFloat(score), 0) / validScores.length
+      ).toFixed(2);
     }
     return "";
   };
@@ -193,6 +174,7 @@ const EnterTestScore = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+      setError("");
       const promises = selectedStudents.map(async (studentId) => {
         const scoreData = {
           studentID: studentId,
@@ -223,10 +205,18 @@ const EnterTestScore = () => {
 
         await Promise.all(scoreDetailsPromises);
 
+        const student = students.find((s) => s.id === studentId);
+        const schedule = classTestSchedules.find((s) => s.id === selectedClassTest);
+        const assessment = assessments.find((a) => a.id === values[`${studentId}_assessmentId`]);
+
         return {
           key: studentScoreId,
           studentScoreID: studentScoreId,
           studentID: studentId,
+          studentName: student ? student.name : "Unknown",
+          testScheduleID: selectedClassTest,
+          testScheduleName: schedule ? `${schedule.date}` : "Unknown",
+          assessmentName: assessment ? assessment.name : "Unknown",
           scores: { ...scores },
           avgScore: avgScore,
           teacherComment: values[`${studentId}_teacherComment`],
@@ -242,9 +232,9 @@ const EnterTestScore = () => {
       });
       form.resetFields();
       setSelectedTestSkills([]);
-      setSelectedAssessment(null);
     } catch (error) {
       console.error("Error saving test scores:", error);
+      setError("Failed to save test scores. Please try again.");
       notification.error({
         message: "Error",
         description: "Failed to save test scores. Please try again.",
@@ -258,39 +248,60 @@ const EnterTestScore = () => {
     navigate(-1);
   };
 
-  // Hàm chọn tất cả học sinh
   const handleSelectAllStudents = () => {
     const allStudentIds = students.map((student) => student.id);
     setSelectedStudents(allStudentIds);
-    setSelectedTestSkills([]); // Reset các kỹ năng đã chọn khi thay đổi danh sách học sinh
-    form.resetFields(); // Reset form để tránh xung đột dữ liệu
+    setSelectedTestSkills([]);
+    form.resetFields();
   };
 
   const scoreColumns = [
     {
-      title: "Student",
-      key: "student",
-      render: (_, record) => students.find((s) => s.id === record.studentID)?.name || "Unknown",
+      Header: "Student Name",
+      accessor: "studentName",
+      width: "15%",
+    },
+    {
+      Header: "Test Schedule",
+      accessor: "testScheduleName",
+      width: "15%",
+    },
+    {
+      Header: "Assessment",
+      accessor: "assessmentName",
+      width: "15%",
     },
     ...testSkills.map((skill) => ({
-      title: skill.name,
-      dataIndex: ["scores", skill.name],
-      key: skill.name,
-      render: (score) => score || "-",
+      Header: skill.name,
+      accessor: `scores.${skill.name}`,
+      width: "8%",
+      align: "center",
+      Cell: ScoreCell,
     })),
     {
-      title: "Average",
-      dataIndex: "avgScore",
-      key: "avgScore",
-      render: (text) => <strong>{text}</strong>,
+      Header: "Average Score",
+      accessor: "avgScore",
+      width: "10%",
+      align: "center",
+      Cell: AvgScoreCell,
     },
     {
-      title: "Teacher Comment",
-      dataIndex: "teacherComment",
-      key: "teacherComment",
-      render: (text) => text || "-",
+      Header: "Teacher Comment",
+      accessor: "teacherComment",
+      width: "19%",
+      Cell: ScoreCell,
     },
   ];
+
+  const filteredScores = useMemo(() => {
+    const result = previousScores.filter((score) => {
+      const nameMatch = score.studentName.toLowerCase().includes(filterName.toLowerCase());
+      const scheduleMatch = filterTestSchedule ? score.testScheduleID === filterTestSchedule : true;
+      return nameMatch && scheduleMatch;
+    });
+    console.log("Filtered scores:", result);
+    return result;
+  }, [previousScores, filterName, filterTestSchedule]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -329,6 +340,12 @@ const EnterTestScore = () => {
           <Breadcrumb.Item>Enter Test Scores</Breadcrumb.Item>
         </Breadcrumb>
 
+        {error && (
+          <div style={{ textAlign: "center", padding: "20px", color: colors.error }}>
+            <Text type="danger">{error}</Text>
+          </div>
+        )}
+
         <Card
           style={{
             borderRadius: "12px",
@@ -353,7 +370,7 @@ const EnterTestScore = () => {
                   >
                     {classTestSchedules.map((schedule) => (
                       <Option key={schedule.id} value={schedule.id}>
-                        {schedule.name} {schedule.date}
+                        {schedule.date}
                       </Option>
                     ))}
                   </Select>
@@ -544,26 +561,53 @@ const EnterTestScore = () => {
           </Spin>
         </Card>
 
-        {selectedStudents.length > 0 && (
-          <Card
-            title="Previous Test Scores"
-            style={{
-              borderRadius: "12px",
-              boxShadow: `0 4px 12px ${colors.softShadow}`,
-            }}
-          >
-            <Table
-              columns={scoreColumns}
-              dataSource={
-                previousScores.length > 0
-                  ? previousScores
-                  : [{ key: "no-data", scores: {}, avgScore: "No Data" }]
-              }
-              pagination={false}
-              loading={loading}
+        <Card
+          title="Previous Test Scores"
+          style={{
+            borderRadius: "12px",
+            boxShadow: `0 4px 12px ${colors.softShadow}`,
+          }}
+        >
+          <Space style={{ marginBottom: 16, width: "100%", justifyContent: "flex-end" }}>
+            <Select
+              placeholder="Filter by Test Schedule"
+              value={filterTestSchedule}
+              onChange={(value) => setFilterTestSchedule(value)}
+              style={{ width: 200 }}
+              allowClear
+            >
+              {classTestSchedules.map((schedule) => (
+                <Option key={schedule.id} value={schedule.id}>
+                  {schedule.date}
+                </Option>
+              ))}
+            </Select>
+            <TextField
+              label="Filter by Student Name"
+              variant="outlined"
+              size="small"
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              sx={{ backgroundColor: "white", borderRadius: "4px", width: 200 }}
             />
-          </Card>
-        )}
+          </Space>
+          <DataTable
+            table={{
+              columns: scoreColumns,
+              rows: filteredScores,
+            }}
+            isSorted={false}
+            entriesPerPage={10}
+            showTotalEntries={false}
+            noEndBorder
+            loading={loading}
+          />
+          {filteredScores.length === 0 && !loading && (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <Text type="secondary">No previous scores available.</Text>
+            </div>
+          )}
+        </Card>
       </Content>
     </Layout>
   );
