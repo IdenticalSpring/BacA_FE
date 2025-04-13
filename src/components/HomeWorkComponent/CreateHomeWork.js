@@ -19,6 +19,7 @@ import {
   ReadOutlined,
   SaveOutlined,
   SendOutlined,
+  SwapOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
@@ -123,7 +124,8 @@ export default function CreateHomeWork({
   const [youtubeLinks, setYoutubeLinks] = useState([]);
   const [currentYoutubeLink, setCurrentYoutubeLink] = useState("");
   const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
-
+  const [htmlContent, setHtmlContent] = useState("");
+  const [swapHtmlMode, setSwapHtmlMode] = useState(false);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -743,24 +745,63 @@ export default function CreateHomeWork({
             >
               Tải audio lên
             </Button>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px",
+              }}
+              icon={<SwapOutlined />}
+              onClick={() => {
+                if (!swapHtmlMode) {
+                  const html = quillRef.current?.getEditor()?.root?.innerHTML || "";
+                  setHtmlContent(html);
+                  setSwapHtmlMode(true);
+                } else {
+                  quillRef.current?.getEditor().clipboard.dangerouslyPasteHTML(htmlContent);
+                  setSwapHtmlMode(false);
+                }
+              }}
+            >
+              Swap to {swapHtmlMode ? "Quill" : "HTML"}
+            </Button>
             <Form.Item
               // name="description"
               label="Mô tả"
               // rules={[{ required: true, message: "Please enter a description" }]}
             >
-              <ReactQuill
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRef}
-                style={{
-                  height: "250px",
-                  marginBottom: "60px", // Consider reducing this
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
-                }}
-              />
+              {
+                <ReactQuill
+                  theme="snow"
+                  modules={modules}
+                  formats={quillFormats}
+                  ref={quillRef}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    // border: `1px solid ${colors.inputBorder}`,
+                    display: swapHtmlMode ? "none" : "block",
+                  }}
+                />
+              }
+              {swapHtmlMode && (
+                <TextArea
+                  value={htmlContent}
+                  onChange={(e) => {
+                    setHtmlContent(e.target.value);
+                  }}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    border: `1px solid ${colors.inputBorder}`,
+                  }}
+                />
+              )}
             </Form.Item>
+
             {/* <Form.Item
             name="level"
             label="Level"

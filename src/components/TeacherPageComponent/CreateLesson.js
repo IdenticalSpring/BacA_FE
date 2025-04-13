@@ -13,7 +13,13 @@ import {
   Table,
   Typography,
 } from "antd";
-import { SaveOutlined, RobotOutlined, SendOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  SaveOutlined,
+  RobotOutlined,
+  SendOutlined,
+  UploadOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
@@ -104,6 +110,10 @@ export default function CreateLesson({
   const [youtubeLinks, setYoutubeLinks] = useState([]);
   const [currentYoutubeLink, setCurrentYoutubeLink] = useState("");
   const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
+  const [htmlContent, setHtmlContent] = useState("");
+  const [swapHtmlMode, setSwapHtmlMode] = useState(false);
+  const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
+  const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -609,23 +619,62 @@ export default function CreateLesson({
             >
               Tải audio lên
             </Button>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px",
+              }}
+              icon={<SwapOutlined />}
+              onClick={() => {
+                if (!swapHtmlMode) {
+                  const html = quillRefDescription.current?.getEditor()?.root?.innerHTML || "";
+                  setHtmlContent(html);
+                  setSwapHtmlMode(true);
+                } else {
+                  quillRefDescription.current
+                    ?.getEditor()
+                    .clipboard.dangerouslyPasteHTML(htmlContent);
+                  setSwapHtmlMode(false);
+                }
+              }}
+            >
+              Swap to {swapHtmlMode ? "Quill" : "HTML"}
+            </Button>
             <Form.Item
               // name="description"
               label="Mô tả"
             >
-              <ReactQuill
-                // placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRefDescription}
-                style={{
-                  height: "250px",
-                  marginBottom: "10px",
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
-                }}
-              />
+              {
+                <ReactQuill
+                  theme="snow"
+                  modules={modules}
+                  formats={quillFormats}
+                  ref={quillRefDescription}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    // border: `1px solid ${colors.inputBorder}`,
+                    display: swapHtmlMode ? "none" : "block",
+                  }}
+                />
+              }
+              {swapHtmlMode && (
+                <TextArea
+                  value={htmlContent}
+                  onChange={(e) => {
+                    setHtmlContent(e.target.value);
+                  }}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    border: `1px solid ${colors.inputBorder}`,
+                  }}
+                />
+              )}
             </Form.Item>
             <Form.Item>
               <Button
@@ -645,21 +694,68 @@ export default function CreateLesson({
                 Cải thiện mô tả
               </Button>
             </Form.Item>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px 0",
+              }}
+              icon={<SwapOutlined />}
+              onClick={() => {
+                console.log(
+                  "swapHtmlLessonPlanMode",
+                  swapHtmlLessonPlanMode,
+                  htmlLessonPlanContent,
+                  quillRefLessonPlan.current?.getEditor()?.root?.innerHTML
+                );
 
+                if (!swapHtmlLessonPlanMode) {
+                  const html = quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
+                  setHtmlLessonPlanContent(html);
+                  setSwapHtmlLessonPlanMode(true);
+                } else {
+                  console.log("htmlLessonPlanContent", htmlLessonPlanContent);
+                  quillRefLessonPlan.current
+                    ?.getEditor()
+                    .clipboard.dangerouslyPasteHTML(htmlLessonPlanContent);
+                  setSwapHtmlLessonPlanMode(false);
+                }
+              }}
+            >
+              Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
+            </Button>
             <Form.Item name="lessonPlan" label="Kế hoạch bài học">
-              <ReactQuill
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRefLessonPlan}
-                placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
-                style={{
-                  height: "250px",
-                  marginBottom: "10px",
-                  borderRadius: "6px",
-                  border: `1px solid ${colors.inputBorder}`,
-                }}
-              />
+              {
+                <ReactQuill
+                  theme="snow"
+                  modules={modules}
+                  formats={quillFormats}
+                  ref={quillRefLessonPlan}
+                  placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    // border: `1px solid ${colors.inputBorder}`,
+                    display: swapHtmlLessonPlanMode ? "none" : "block",
+                  }}
+                />
+              }
+              {swapHtmlLessonPlanMode && (
+                <TextArea
+                  value={htmlLessonPlanContent}
+                  onChange={(e) => {
+                    setHtmlLessonPlanContent(e.target.value);
+                  }}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    border: `1px solid ${colors.inputBorder}`,
+                  }}
+                />
+              )}
             </Form.Item>
             <Form.Item>
               <Button

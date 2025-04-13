@@ -14,7 +14,7 @@ Coded by www.creative-tim.com
 */
 
 import { useState, useEffect, useMemo } from "react";
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
@@ -127,7 +127,7 @@ export default function App() {
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
   useEffect(() => {
-    fetch("https://api.happyclass.com.vn/contentpage/adsenseId")
+    fetch(`${API_BASE_URL}/contentpage/adsenseId`)
       // fetch("http://localhost:8000/contentpage/adsenseId")
       .then((res) => res.text()) // 👈 Dùng .text() vì response là string
       .then((data) => {
