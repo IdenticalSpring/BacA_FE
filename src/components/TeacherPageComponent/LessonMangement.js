@@ -236,6 +236,7 @@ export default function LessonMangement({
       setCurrentYoutubeLink("");
       setEditYoutubeIndex(null);
       setHtmlContent("");
+      setSwapHtmlMode(false);
     } catch (err) {
       message.error("Please check your input and try again");
     } finally {

@@ -482,6 +482,8 @@ export default function CreateLesson({
       setEditYoutubeIndex(null);
       setHtmlContent("");
       setHtmlLessonPlanContent("");
+      setSwapHtmlLessonPlanMode(false);
+      setSwapHtmlMode(false);
       if (quillRefDescription.current) {
         const editor = quillRefDescription.current.getEditor();
         editor.setContents([]);
