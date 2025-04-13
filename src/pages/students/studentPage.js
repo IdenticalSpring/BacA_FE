@@ -510,7 +510,7 @@ const StudentPage = () => {
                             <iframe
                               key={`youtube-${lesson.id}-${index}`}
                               width="100%"
-                              height="315"
+                              height={isMobile ? "315" : "500"}
                               src={trimmed.replace("watch?v=", "embed/")}
                               title={`Lesson Video ${index + 1}`}
                               frameBorder="0"
@@ -683,7 +683,7 @@ const StudentPage = () => {
                             <iframe
                               key={`youtube-${hw.id}-${index}`}
                               width="100%"
-                              height="315"
+                              height={isMobile ? "315" : "500"}
                               src={trimmed.replace("watch?v=", "embed/")}
                               title={`Homework Video ${index + 1}`}
                               frameBorder="0"
