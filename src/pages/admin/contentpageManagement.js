@@ -24,6 +24,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
+import Tooltip from "@mui/material/Tooltip"; // Thêm Tooltip
 
 // Services
 import { colors } from "assets/theme/color";
@@ -47,6 +48,11 @@ function ContentPageManagement() {
   useEffect(() => {
     fetchContentPages();
   }, []);
+  // Hàm cắt ngắn văn bản
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return "No Prompt";
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
 
   const fetchContentPages = async () => {
     setLoading(true);
@@ -76,6 +82,13 @@ function ContentPageManagement() {
   const informationColumns = [
     { Header: "Center Name", accessor: "name", width: "40%" },
     { Header: "Footer Email", accessor: "footerEmail", width: "20%" },
+    { Header: "Actions", accessor: "actions", width: "20%" },
+  ];
+
+  // Cột cho tab Prompt Management
+  const promptColumns = [
+    { Header: "Prompt Description", accessor: "promptDescription", width: "40%" },
+    { Header: "Prompt Lesson Plan", accessor: "promptLessonPlan", width: "40%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ];
 
@@ -139,9 +152,66 @@ function ContentPageManagement() {
           },
         ];
 
+  const promptRows =
+    contentPages.length > 0
+      ? contentPages.map((page) => ({
+          promptDescription: (
+            <Tooltip title={page.promptDescription || "No Prompt"} placement="top">
+              <MDTypography
+                variant="body2"
+                sx={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  maxWidth: "100%",
+                }}
+              >
+                {truncateText(page.promptDescription, 50)}
+              </MDTypography>
+            </Tooltip>
+          ),
+          promptLessonPlan: (
+            <Tooltip title={page.promptLessonPlan || "No Prompt"} placement="top">
+              <MDTypography
+                variant="body2"
+                sx={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  maxWidth: "100%",
+                }}
+              >
+                {truncateText(page.promptLessonPlan, 50)}
+              </MDTypography>
+            </Tooltip>
+          ),
+          actions: (
+            <MDBox display="flex" gap={2}>
+              <MDButton
+                variant="text"
+                sx={{
+                  color: colors.white,
+                  backgroundColor: colors.deepGreen,
+                  " &:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
+                }}
+                onClick={() => handleEditClick(page)}
+              >
+                Edit
+              </MDButton>
+            </MDBox>
+          ),
+        }))
+      : [
+          {
+            promptDescription: "No Data",
+            promptLessonPlan: "",
+            actions: "",
+          },
+        ];
   const validateEditForm = () => {
     const newErrors = {
-      editHomepageMainTitle: !currentEditItem || !currentEditItem.homepageMainTitle.trim(),
+      editHomepageMainTitle:
+        tabValue === 0 && (!currentEditItem || !currentEditItem.homepageMainTitle.trim()),
     };
     setErrors({ ...errors, ...newErrors });
     return !Object.values(newErrors).some(Boolean);
@@ -215,6 +285,7 @@ function ContentPageManagement() {
                 >
                   <Tab label="Content Pages" />
                   <Tab label="Information" />
+                  <Tab label="Prompt Management" /> {/* Tab mới */}
                 </Tabs>
               </MDBox>
               <MDBox pt={3} px={3} pb={3} display="flex" justifyContent="center">
@@ -230,9 +301,15 @@ function ContentPageManagement() {
                     sx={{
                       "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
                       "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
+                      "& .MuiTableCell-root": {
+                        maxWidth: "300px", // Giới hạn chiều rộng ô
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      },
                     }}
                   />
-                ) : (
+                ) : tabValue === 1 ? (
                   <DataTable
                     table={{ columns: informationColumns, rows: informationRows }}
                     isSorted={false}
@@ -242,6 +319,30 @@ function ContentPageManagement() {
                     sx={{
                       "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
                       "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
+                      "& .MuiTableCell-root": {
+                        maxWidth: "300px", // Giới hạn chiều rộng ô
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      },
+                    }}
+                  />
+                ) : (
+                  <DataTable
+                    table={{ columns: promptColumns, rows: promptRows }}
+                    isSorted={false}
+                    entriesPerPage={false}
+                    showTotalEntries={false}
+                    noEndBorder
+                    sx={{
+                      "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
+                      "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
+                      "& .MuiTableCell-root": {
+                        maxWidth: "300px", // Giới hạn chiều rộng ô
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      },
                     }}
                   />
                 )}
@@ -258,7 +359,7 @@ function ContentPageManagement() {
         fullWidth
       >
         <DialogTitle sx={{ backgroundColor: colors.headerBg, color: colors.white }}>
-          Edit {tabValue === 0 ? "Content Page" : "Information"}
+          Edit {tabValue === 0 ? "Content Page" : tabValue === 1 ? "Information" : "Prompts"}
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: colors.paleGreen }}>
           {tabValue === 0 ? (
@@ -305,6 +406,7 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              {/* Các TextField khác cho Content Pages giữ nguyên */}
               <TextField
                 margin="dense"
                 label="Feature Main Title"
@@ -979,7 +1081,7 @@ function ContentPageManagement() {
                 }}
               />
             </>
-          ) : (
+          ) : tabValue === 1 ? (
             <>
               <TextField
                 autoFocus
@@ -1000,9 +1102,7 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-
               <TextField
-                autoFocus
                 margin="dense"
                 label="Footer Description"
                 type="text"
@@ -1151,6 +1251,52 @@ function ContentPageManagement() {
                 value={currentEditItem?.adsenseId || ""}
                 onChange={(e) =>
                   setCurrentEditItem({ ...currentEditItem, adsenseId: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Prompt Description"
+                type="text"
+                fullWidth
+                multiline
+                rows={4}
+                value={currentEditItem?.promptDescription || ""}
+                onChange={(e) =>
+                  setCurrentEditItem({ ...currentEditItem, promptDescription: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
+              <TextField
+                margin="dense"
+                label="Prompt Lesson Plan"
+                type="text"
+                fullWidth
+                multiline
+                rows={4}
+                value={currentEditItem?.promptLessonPlan || ""}
+                onChange={(e) =>
+                  setCurrentEditItem({ ...currentEditItem, promptLessonPlan: e.target.value })
                 }
                 sx={{
                   "& .MuiOutlinedInput-root": {
