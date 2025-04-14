@@ -26,6 +26,14 @@ const EvaluationStudent = ({ studentId, colors }) => {
         ]);
         setEvaluations(Array.isArray(evalData) ? evalData : [evalData]);
         setSkillEvaluations(skillData);
+
+        // Tìm ngày mới nhất từ skillEvaluations
+        const uniqueDates = [...new Set(skillData.map((s) => s.date))].sort(
+          (a, b) => new Date(b) - new Date(a) // Sắp xếp giảm dần để lấy ngày mới nhất
+        );
+        if (uniqueDates.length > 0) {
+          setSelectedDate(uniqueDates[0]); // Đặt ngày mới nhất làm mặc định
+        }
       } catch (error) {
         console.error("Error fetching evaluations:", error);
       } finally {
