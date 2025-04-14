@@ -547,20 +547,20 @@ export default function LessonMangement({
     //   width: "15%",
     //   render: (text) => levels?.find((level) => level.id === text)?.name,
     // },
-    {
-      title: "Link Youtube",
-      dataIndex: "linkYoutube",
-      key: "linkYoutube",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Youtube",
+    //   dataIndex: "linkYoutube",
+    //   key: "linkYoutube",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     // {
     //   title: "Link Game",
     //   dataIndex: "linkGame",
@@ -680,7 +680,7 @@ export default function LessonMangement({
               borderColor: colors.deepGreen,
             }}
           />
-          <Popconfirm
+          {/* <Popconfirm
             title="Bạn có chắc muốn xóa bài học này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
@@ -690,7 +690,7 @@ export default function LessonMangement({
             }}
           >
             <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          </Popconfirm> */}
         </Space>
       ),
     },

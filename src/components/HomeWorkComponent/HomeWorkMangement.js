@@ -602,20 +602,20 @@ export default function HomeWorkMangement({
     //   width: "15%",
     //   render: (text) => levels?.find((level) => level.id === text)?.name,
     // },
-    {
-      title: "Link Youtube bài tập",
-      dataIndex: "linkYoutube",
-      key: "linkYoutube",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Youtube bài tập",
+    //   dataIndex: "linkYoutube",
+    //   key: "linkYoutube",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     {
       title: "Link Game bài tập",
       dataIndex: "linkGame",
@@ -749,7 +749,7 @@ export default function HomeWorkMangement({
               borderColor: colors.deepGreen,
             }}
           />
-          <Popconfirm
+          {/* <Popconfirm
             title="Bạn có chắc muốn xóa bài tập này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
@@ -759,7 +759,7 @@ export default function HomeWorkMangement({
             }}
           >
             <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          </Popconfirm> */}
         </Space>
       ),
     },
