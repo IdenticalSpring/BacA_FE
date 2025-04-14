@@ -14,7 +14,7 @@ import {
   Progress,
   Statistic,
   Table,
-  Modal, // Thêm Modal vào import
+  Modal,
 } from "antd";
 import {
   TrophyOutlined,
@@ -27,6 +27,7 @@ import {
 import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
 import studentScoreService from "services/studentScoreService";
 import studentService from "services/studentService";
+import testSkillService from "services/testSkillService"; // Thêm import testSkillService
 import PropTypes from "prop-types";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 
@@ -38,7 +39,8 @@ const StudentScoreTab = ({ studentId, colors }) => {
   const [assessmentData, setAssessmentData] = useState([]);
   const [studentInfo, setStudentInfo] = useState(null);
   const [error, setError] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false); // State cho Modal
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [testSkills, setTestSkills] = useState([]); // State mới để lưu danh sách kỹ năng
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +50,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
       setError(null);
 
       try {
+        // Lấy danh sách kỹ năng kiểm tra
+        const skills = await testSkillService.getAllTestSkill();
+        setTestSkills(skills);
+
         const scoreDetails = await studentScoreService.getScoreDetailsByStudentId(studentId);
         const sortedScoreDetails = Array.isArray(scoreDetails) ? [...scoreDetails] : [scoreDetails];
 
@@ -121,12 +127,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
     fetchData();
   }, [studentId]);
 
-  // Hàm xử lý khi nhấp vào avatar
   const showModal = () => {
     setIsModalVisible(true);
   };
 
-  // Hàm đóng Modal
   const handleCloseModal = () => {
     setIsModalVisible(false);
   };
@@ -140,16 +144,14 @@ const StudentScoreTab = ({ studentId, colors }) => {
           studentScoreID: score.studentScoreID,
           testName: score.studentScore.classTestSchedule?.testName || "Bài kiểm tra",
           date: score.studentScore.classTestSchedule?.date || "N/A",
-          writingScore: null,
-          readingScore: null,
-          speakingScore: null,
-          listeningScore: null,
           teacher: null,
           assessment: null,
           comment: null,
         };
       }
-      const skillName = score.testSkill.name.toLowerCase();
+      // Sử dụng testSkill.name từ dữ liệu thay vì hard-code
+      const skill = testSkills.find((s) => s.id === score.testSkill.id);
+      const skillName = skill?.name.toLowerCase() || score.testSkill.name.toLowerCase();
       grouped[key][`${skillName}Score`] = score.score;
 
       const assessment = assessmentData.find(
@@ -178,12 +180,16 @@ const StudentScoreTab = ({ studentId, colors }) => {
     const mostRecentScore = getMostRecentScores();
     if (!mostRecentScore) return 0;
 
-    const writingScore = parseFloat(mostRecentScore.writingScore) || 0;
-    const readingScore = parseFloat(mostRecentScore.readingScore) || 0;
-    const speakingScore = parseFloat(mostRecentScore.speakingScore) || 0;
-    const listeningScore = parseFloat(mostRecentScore.listeningScore) || 0;
+    // Tính trung bình dựa trên các kỹ năng động
+    const skillScores = testSkills
+      .map((skill) => {
+        const skillName = skill.name.toLowerCase();
+        return parseFloat(mostRecentScore[`${skillName}Score`]) || 0;
+      })
+      .filter((score) => score > 0);
 
-    const average = (writingScore + readingScore + speakingScore + listeningScore) / 4;
+    const average =
+      skillScores.length > 0 ? skillScores.reduce((sum, s) => sum + s, 0) / skillScores.length : 0;
     return average.toFixed(1);
   };
 
@@ -205,13 +211,12 @@ const StudentScoreTab = ({ studentId, colors }) => {
     const groupedScores = groupScoresByTest();
     return groupedScores
       .map((score) => {
-        const writingScore = parseFloat(score.writingScore) || 0;
-        const readingScore = parseFloat(score.readingScore) || 0;
-        const speakingScore = parseFloat(score.speakingScore) || 0;
-        const listeningScore = parseFloat(score.listeningScore) || 0;
-        const validScores = [writingScore, readingScore, speakingScore, listeningScore].filter(
-          (s) => s > 0
-        );
+        const scores = {};
+        testSkills.forEach((skill) => {
+          const skillName = skill.name.toLowerCase();
+          scores[skillName] = parseFloat(score[`${skillName}Score`]) || 0;
+        });
+        const validScores = Object.values(scores).filter((s) => s > 0);
         const average =
           validScores.length > 0
             ? validScores.reduce((sum, s) => sum + s, 0) / validScores.length
@@ -219,10 +224,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
 
         return {
           date: score.date,
-          writing: Number(writingScore.toFixed(1)),
-          reading: Number(readingScore.toFixed(1)),
-          speaking: Number(speakingScore.toFixed(1)),
-          listening: Number(listeningScore.toFixed(1)),
+          ...scores,
           average: Number(average.toFixed(1)),
         };
       })
@@ -241,29 +243,15 @@ const StudentScoreTab = ({ studentId, colors }) => {
         color: "info",
         data: chartData.map((item) => item.average),
       },
-      {
-        label: "Viết",
-        color: "warning",
-        data: chartData.map((item) => item.writing),
-      },
-      {
-        label: "Đọc",
-        color: "success",
-        data: chartData.map((item) => item.reading),
-      },
-      {
-        label: "Nói",
-        color: "error",
-        data: chartData.map((item) => item.speaking),
-      },
-      {
-        label: "Nghe",
-        color: "secondary",
-        data: chartData.map((item) => item.listening),
-      },
+      ...testSkills.map((skill, index) => ({
+        label: skill.name,
+        color: ["warning", "success", "error", "secondary", "primary"][index % 5], // Gán màu động
+        data: chartData.map((item) => item[skill.name.toLowerCase()] || 0),
+      })),
     ],
   };
 
+  // Cập nhật cột bảng lịch sử điểm số động dựa trên testSkills
   const scoreHistoryColumns = [
     {
       title: "Ngày thi",
@@ -293,10 +281,11 @@ const StudentScoreTab = ({ studentId, colors }) => {
         style: { backgroundColor: colors.paleGreen || "#f6ffed" },
       }),
     },
-    {
-      title: "Nghe",
-      dataIndex: "listeningScore",
-      key: "listeningScore",
+    // Tạo cột động cho từng kỹ năng
+    ...testSkills.map((skill) => ({
+      title: skill.name,
+      dataIndex: `${skill.name.toLowerCase()}Score`,
+      key: `${skill.name.toLowerCase()}Score`,
       align: "center",
       render: (score) => (
         <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
@@ -306,49 +295,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
       onHeaderCell: () => ({
         style: { backgroundColor: colors.paleGreen || "#f6ffed" },
       }),
-    },
-    {
-      title: "Nói",
-      dataIndex: "speakingScore",
-      key: "speakingScore",
-      align: "center",
-      render: (score) => (
-        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
-          {score || "N/A"}
-        </Tag>
-      ),
-      onHeaderCell: () => ({
-        style: { backgroundColor: colors.paleGreen || "#f6ffed" },
-      }),
-    },
-    {
-      title: "Đọc",
-      dataIndex: "readingScore",
-      key: "readingScore",
-      align: "center",
-      render: (score) => (
-        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
-          {score || "N/A"}
-        </Tag>
-      ),
-      onHeaderCell: () => ({
-        style: { backgroundColor: colors.paleGreen || "#f6ffed" },
-      }),
-    },
-    {
-      title: "Viết",
-      dataIndex: "writingScore",
-      key: "writingScore",
-      align: "center",
-      render: (score) => (
-        <Tag color={getScoreColor(score)} style={{ fontSize: "14px", padding: "1px 8px" }}>
-          {score || "N/A"}
-        </Tag>
-      ),
-      onHeaderCell: () => ({
-        style: { backgroundColor: colors.paleGreen || "#f6ffed" },
-      }),
-    },
+    })),
     {
       title: "Đánh giá",
       dataIndex: "assessment",
@@ -409,10 +356,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
               style={{
                 backgroundColor: colors.deepGreen || "#1890ff",
                 boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
-                cursor: "pointer", // Thêm con trỏ tay để biểu thị có thể nhấp
+                cursor: "pointer",
               }}
               src={studentInfo?.imgUrl}
-              onClick={showModal} // Gắn sự kiện nhấp chuột
+              onClick={showModal}
             />
           </Col>
           <Col xs={24} sm={10} md={11}>
@@ -450,7 +397,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
         </Row>
       </Card>
 
-      {/* Modal hiển thị avatar phóng to */}
       <Modal
         visible={isModalVisible}
         onCancel={handleCloseModal}
@@ -463,7 +409,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
           src={
             studentInfo?.imgUrl ||
             "https://th.bing.com/th/id/R.f12f27774ae0581703453af531f3e839?rik=WQri2jZdiFUpEQ&pid=ImgRaw&r=0"
-          } // Hình mặc định nếu không có URL
+          }
           alt={studentInfo?.name || "Student Avatar"}
           style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 8 }}
         />
@@ -484,102 +430,43 @@ const StudentScoreTab = ({ studentId, colors }) => {
           }}
         >
           <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} md={6}>
-              <Card
-                size="small"
-                style={{
-                  textAlign: "center",
-                  backgroundColor: colors.paleGreen || "#f6ffed",
-                }}
-              >
-                <Statistic
-                  title={
-                    <Space>
-                      <EditOutlined />
-                      <Text strong>Viết</Text>
-                    </Space>
-                  }
-                  value={recentScores.writingScore || "N/A"}
-                  valueStyle={{
-                    color: getScoreColor(recentScores.writingScore),
-                    fontWeight: "bold",
+            {testSkills.map((skill) => (
+              <Col xs={24} sm={12} md={6} key={skill.id}>
+                <Card
+                  size="small"
+                  style={{
+                    textAlign: "center",
+                    backgroundColor: colors.paleGreen || "#f6ffed",
                   }}
-                  suffix="/9"
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card
-                size="small"
-                style={{
-                  textAlign: "center",
-                  backgroundColor: colors.paleGreen || "#f6ffed",
-                }}
-              >
-                <Statistic
-                  title={
-                    <Space>
-                      <ReadOutlined />
-                      <Text strong>Đọc</Text>
-                    </Space>
-                  }
-                  value={recentScores.readingScore || "N/A"}
-                  valueStyle={{
-                    color: getScoreColor(recentScores.readingScore),
-                    fontWeight: "bold",
-                  }}
-                  suffix="/9"
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card
-                size="small"
-                style={{
-                  textAlign: "center",
-                  backgroundColor: colors.paleGreen || "#f6ffed",
-                }}
-              >
-                <Statistic
-                  title={
-                    <Space>
-                      <SoundOutlined />
-                      <Text strong>Nói</Text>
-                    </Space>
-                  }
-                  value={recentScores.speakingScore || "N/A"}
-                  valueStyle={{
-                    color: getScoreColor(recentScores.speakingScore),
-                    fontWeight: "bold",
-                  }}
-                  suffix="/9"
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card
-                size="small"
-                style={{
-                  textAlign: "center",
-                  backgroundColor: colors.paleGreen || "#f6ffed",
-                }}
-              >
-                <Statistic
-                  title={
-                    <Space>
-                      <AudioOutlined />
-                      <Text strong>Nghe</Text>
-                    </Space>
-                  }
-                  value={recentScores.listeningScore || "N/A"}
-                  valueStyle={{
-                    color: getScoreColor(recentScores.listeningScore),
-                    fontWeight: "bold",
-                  }}
-                  suffix="/9"
-                />
-              </Card>
-            </Col>
+                >
+                  <Statistic
+                    title={
+                      <Space>
+                        {/* Icon động dựa trên tên kỹ năng */}
+                        {skill.name.toLowerCase().includes("writ") ? (
+                          <EditOutlined />
+                        ) : skill.name.toLowerCase().includes("read") ? (
+                          <ReadOutlined />
+                        ) : skill.name.toLowerCase().includes("speak") ? (
+                          <SoundOutlined />
+                        ) : skill.name.toLowerCase().includes("listen") ? (
+                          <AudioOutlined />
+                        ) : (
+                          <TrophyOutlined />
+                        )}
+                        <Text strong>{skill.name}</Text>
+                      </Space>
+                    }
+                    value={recentScores[`${skill.name.toLowerCase()}Score`] || "N/A"}
+                    valueStyle={{
+                      color: getScoreColor(recentScores[`${skill.name.toLowerCase()}Score`]),
+                      fontWeight: "bold",
+                    }}
+                    suffix="/9"
+                  />
+                </Card>
+              </Col>
+            ))}
           </Row>
           {recentScores.date && (
             <div style={{ marginTop: 12, textAlign: "center" }}>
