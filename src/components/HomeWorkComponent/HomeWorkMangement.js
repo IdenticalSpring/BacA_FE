@@ -80,6 +80,40 @@ class AudioBlot extends BlockEmbed {
 AudioBlot.blotName = "audio";
 AudioBlot.tagName = "audio";
 Quill.register(AudioBlot);
+class CustomVideo extends BlockEmbed {
+  static blotName = "video"; // override mặc định
+  static tagName = "iframe";
+
+  static create(value) {
+    const node = super.create();
+
+    const src = typeof value === "string" ? value : value.src;
+    node.setAttribute("src", src);
+    node.setAttribute("frameborder", "0");
+    node.setAttribute("allowfullscreen", "true");
+
+    // Thêm width/height mặc định hoặc theo người dùng truyền vào
+    node.setAttribute("width", "100%");
+    node.setAttribute("height", "315");
+
+    if (typeof value !== "string") {
+      if (value.width) node.setAttribute("width", value.width);
+      if (value.height) node.setAttribute("height", value.height);
+    }
+
+    return node;
+  }
+
+  static value(node) {
+    return {
+      src: node.getAttribute("src"),
+      width: node.getAttribute("width"),
+      height: node.getAttribute("height"),
+    };
+  }
+}
+
+Quill.register(CustomVideo);
 export default function HomeWorkMangement({
   toolbar,
   quillFormats,
