@@ -170,16 +170,19 @@ function Dashboard() {
           return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
         };
 
-        // Nhóm dữ liệu theo tuần hoặc tháng
+        // Nhóm dữ liệu theo ngày, tuần hoặc tháng
         const groupedData = stats.reduce((acc, entry) => {
           const date = new Date(entry.date);
           let key;
 
-          if (period === "weekly") {
+          if (period === "daily") {
+            // Nhóm theo ngày: định dạng YYYY-MM-DD
+            key = date.toISOString().split("T")[0]; // Ví dụ: "2025-04-13"
+          } else if (period === "weekly") {
             const year = date.getFullYear();
             const week = getWeekNumber(date);
             key = `${year}-W${week}`; // Ví dụ: "2025-W15"
-          } else {
+          } else if (period === "monthly") {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, "0");
             key = `${year}-${month}`; // Ví dụ: "2025-04"
@@ -309,6 +312,7 @@ function Dashboard() {
                     label="Period"
                     onChange={(e) => setPeriod(e.target.value)}
                   >
+                    <MenuItem value="daily">Daily</MenuItem>
                     <MenuItem value="weekly">Weekly</MenuItem>
                     <MenuItem value="monthly">Monthly</MenuItem>
                   </Select>

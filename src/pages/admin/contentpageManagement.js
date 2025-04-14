@@ -74,7 +74,7 @@ function ContentPageManagement() {
 
   // Cột cho tab Information Management
   const informationColumns = [
-    { Header: "Name", accessor: "name", width: "40%" },
+    { Header: "Center Name", accessor: "name", width: "40%" },
     { Header: "Footer Email", accessor: "footerEmail", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ];
@@ -266,7 +266,7 @@ function ContentPageManagement() {
               <TextField
                 autoFocus
                 margin="dense"
-                label="Homepage Main Title"
+                label="Name Website"
                 type="text"
                 fullWidth
                 value={currentEditItem?.homepageMainTitle || ""}
@@ -984,7 +984,7 @@ function ContentPageManagement() {
               <TextField
                 autoFocus
                 margin="dense"
-                label="Name"
+                label="Center Name"
                 type="text"
                 fullWidth
                 value={currentEditItem?.name || ""}

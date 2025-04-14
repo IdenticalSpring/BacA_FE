@@ -278,6 +278,66 @@ export default function CreateLesson({
       });
     };
   }, []);
+  const imageHandlerLessonPlan = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      // const formData = new FormData();
+      // formData.append("file", file);
+
+      // try {
+      //   const response = await axios.post(
+      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     formData
+      //   );
+      //   if (response.status === 201 && quillRefDescription.current) {
+      //     const editor = quillRefDescription.current.getEditor();
+      //     const range = editor.getSelection(true);
+      //     editor.insertEmbed(range.index, "image", response.data.url);
+      //   } else {
+      //     message.error("Upload failed. Try again!");
+      //   }
+      // } catch (error) {
+      //   console.error("Error uploading image:", error);
+      //   message.error("Upload error. Please try again!");
+      // }
+      new Compressor(file, {
+        quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+        maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+        maxHeight: 350, // Optional, resize chiều cao nếu cần
+        success(compressedFile) {
+          const formData = new FormData();
+          formData.append("file", compressedFile);
+
+          axios
+            .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+            .then((response) => {
+              if (response.status === 201 && quillRefLessonPlan.current) {
+                const editor = quillRefLessonPlan.current?.getEditor();
+                const range = editor.getSelection(true);
+                editor.insertEmbed(range.index, "image", response.data.url);
+              } else {
+                message.error("Upload failed. Try again!");
+              }
+            })
+            .catch((err) => {
+              console.error("Upload error:", err);
+              message.error("Upload error. Please try again!");
+            });
+        },
+        error(err) {
+          console.error("Compression error:", err);
+          message.error("Image compression failed!");
+        },
+      });
+    };
+  }, []);
   const audioHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -325,6 +385,16 @@ export default function CreateLesson({
       },
     },
   };
+  const modulesLessonPlan = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandlerLessonPlan,
+        undo: undoHandler,
+        redo: redoHandler,
+      },
+    },
+  };
 
   const enhanceDescription = async () => {
     if (!quillDescription) return;
@@ -348,6 +418,7 @@ export default function CreateLesson({
     }
   };
 
+  // CreateLesson.js
   const enhanceLessonPlan = async () => {
     if (!quillLessonPlan) return;
 
@@ -357,9 +428,19 @@ export default function CreateLesson({
       return;
     }
 
+    // Lấy danh sách URL ảnh từ nội dung Quill
+    const quillEditor = quillLessonPlan.getContents();
+    const imageUrls = [];
+    quillEditor.ops.forEach((op) => {
+      if (op.insert && op.insert.image) {
+        imageUrls.push(op.insert.image); // Thu thập URL ảnh
+      }
+    });
+
     setLoadingEnhanceLessonPlan(true);
     try {
-      const enhancedText = await lessonService.enhanceLessonPlan(currentContent);
+      // Gọi lessonService.enhanceLessonPlan với lessonPlan và imageUrls
+      const enhancedText = await lessonService.enhanceLessonPlan(currentContent, imageUrls);
       quillLessonPlan.setText(enhancedText);
       message.success("Lesson plan enhanced successfully!");
     } catch (error) {
@@ -724,7 +805,7 @@ export default function CreateLesson({
               {
                 <ReactQuill
                   theme="snow"
-                  modules={modules}
+                  modules={modulesLessonPlan}
                   formats={quillFormats}
                   ref={quillRefLessonPlan}
                   placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}

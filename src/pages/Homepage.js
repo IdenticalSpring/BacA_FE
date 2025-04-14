@@ -529,7 +529,7 @@ export default function Homepage() {
               color: colors.deepGreen,
             }}
           >
-            <h1
+            {/* <h1
               style={{
                 fontSize: "3.5rem",
                 marginBottom: "1.5rem",
@@ -538,12 +538,14 @@ export default function Homepage() {
               }}
             >
               {contentData?.name || "Learn Happy, Study Smarter"}
-            </h1>
+            </h1> */}
             <p
               style={{
-                fontSize: "1.25rem",
+                fontSize: isMobile ? "calc( 2.5vw + 2.5vw)" : "calc( 1vw + 1vw)",
                 marginBottom: "2.5rem",
-                maxWidth: "600px",
+                maxWidth: isMobile ? "600px" : "60vw",
+                alignContent: "center",
+                textAlign: "center",
               }}
             >
               {contentData?.homepageDescription ||

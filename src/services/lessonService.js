@@ -51,11 +51,11 @@ const lessonService = {
       throw new Error("Failed to enhance description. Please try again!");
     }
   },
-  enhanceLessonPlan: async (description) => {
+  enhanceLessonPlan: async (lessonPlan, imageUrls = []) => {
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/chatbot/enhance-lesson-plan`, // Đường dẫn tới endpoint NestJS
-        { description },
+        `${process.env.REACT_APP_API_BASE_URL}/chatbot/enhance-lesson-plan`,
+        { lessonPlan, imageUrls }, // Gửi cả lessonPlan và imageUrls
         { headers: { "Content-Type": "application/json" } }
       );
       return response.data.response; // Trả về nội dung đã cải thiện
