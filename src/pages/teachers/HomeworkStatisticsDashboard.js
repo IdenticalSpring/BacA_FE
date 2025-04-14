@@ -30,6 +30,7 @@ import PropTypes from "prop-types";
 import student_homework_countService from "services/student_homework_countService";
 import student_lesson_countService from "services/student_lesson_countService";
 import checkinService from "services/checkinService";
+import TestScoresTab from "./testScoreTab";
 
 // Sample data - you would replace this with your actual data
 const mockData = [
@@ -592,6 +593,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
                   </div>
                 ),
               },
+
               // {
               //   key: "students",
               //   label: (
@@ -654,6 +656,21 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
               //     </Card>
               //   ),
               // },
+              {
+                key: "testScores",
+                label: (
+                  <span>
+                    <BookOutlined /> Điểm thi
+                  </span>
+                ),
+                children: (
+                  <TestScoresTab
+                    students={students}
+                    cardStyle={cardStyle}
+                    headerStyle={headerStyle}
+                  />
+                ),
+              },
             ]}
           />
 
