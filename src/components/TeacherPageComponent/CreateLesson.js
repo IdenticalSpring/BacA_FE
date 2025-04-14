@@ -191,8 +191,8 @@ export default function CreateLesson({
           // 👇 Resize trước khi upload như trong imageHandler
           new Compressor(file, {
             quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-            maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
-            maxHeight: 350,
+            maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+            maxHeight: 800,
             success(compressedFile) {
               const formData = new FormData();
               formData.append("file", compressedFile);
@@ -284,8 +284,8 @@ export default function CreateLesson({
       // }
       new Compressor(file, {
         quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-        maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
-        maxHeight: 350, // Optional, resize chiều cao nếu cần
+        maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+        maxHeight: 800, // Optional, resize chiều cao nếu cần
         success(compressedFile) {
           const formData = new FormData();
           formData.append("file", compressedFile);
