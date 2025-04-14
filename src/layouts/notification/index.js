@@ -50,6 +50,11 @@ icons["redo"] = `
     <path d="M4 20a9 9 0 0 1 15.5-6.36L20 14"/>
   </svg>
 `;
+icons["video"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M21.8 8.001c-.2-1.5-.9-2.2-2.3-2.4C17.1 5.2 12 5.2 12 5.2s-5.1 0-7.5.4c-1.4.2-2.1.9-2.3 2.4C2 9.5 2 12 2 12s0 2.5.2 4c.2 1.5.9 2.2 2.3 2.4 2.4.4 7.5.4 7.5.4s5.1 0 7.5-.4c1.4-.2 2.1-.9 2.3-2.4.2-1.5.2-4 .2-4s0-2.5-.2-4zM10 15V9l5 3-5 3z"/>
+  </svg>
+`;
 export default function CreateNotificationByAdmin() {
   const [notificationData, setNotificationData] = useState({
     title: "",
