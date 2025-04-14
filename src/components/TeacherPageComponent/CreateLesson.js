@@ -617,6 +617,7 @@ export default function CreateLesson({
                 borderColor: colors.emerald,
                 color: colors.white,
                 margin: "10px 0",
+                marginRight: " 10px",
               }}
               icon={<UploadOutlined />}
               onClick={audioHandler}
@@ -628,7 +629,7 @@ export default function CreateLesson({
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
                 color: colors.white,
-                margin: "10px",
+                margin: "10px 0",
               }}
               icon={<SwapOutlined />}
               onClick={() => {
@@ -680,30 +681,14 @@ export default function CreateLesson({
                 />
               )}
             </Form.Item>
-            <Form.Item>
-              <Button
-                icon={<RobotOutlined />}
-                onClick={enhanceDescription}
-                loading={loadingEnhanceDescription}
-                style={{
-                  alignSelf: "flex-start",
-                  marginTop: isMobile ? "100px" : "40px",
-                  marginBottom: "20px",
-                  borderRadius: "6px",
-                  backgroundColor: colors.emerald,
-                  borderColor: colors.emerald,
-                  color: colors.white,
-                }}
-              >
-                Cải thiện mô tả
-              </Button>
-            </Form.Item>
+
             <Button
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
                 color: colors.white,
                 margin: "10px 0",
+                marginTop: isMobile ? "100px" : "40px",
               }}
               icon={<SwapOutlined />}
               onClick={() => {
@@ -764,12 +749,31 @@ export default function CreateLesson({
             <Form.Item>
               <Button
                 icon={<RobotOutlined />}
-                // onClick={enhanceLessonPlan}
-                onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
+                onClick={enhanceLessonPlan}
                 loading={loadingEnhanceLessonPlan}
                 style={{
                   alignSelf: "flex-start",
                   marginTop: isMobile ? "100px" : "40px",
+                  // marginBottom: "20px",
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  color: colors.white,
+                }}
+              >
+                Cải thiện mô tả
+              </Button>
+            </Form.Item>
+            <Form.Item>
+              <Button
+                icon={<RobotOutlined />}
+                // onClick={enhanceLessonPlan}
+                onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
+                // loading={loadingEnhanceLessonPlan}
+                style={{
+                  alignSelf: "flex-start",
+                  // marginTop: isMobile ? "100px" : "40px",
+                  marginTop: "5px",
                   marginBottom: "20px",
                   borderRadius: "6px",
                   backgroundColor: colors.emerald,
