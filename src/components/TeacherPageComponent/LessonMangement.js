@@ -88,7 +88,7 @@ class CustomVideo extends BlockEmbed {
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");
-
+    node.classList.add("responsive-iframe");
     // Thêm width/height mặc định hoặc theo người dùng truyền vào
     node.setAttribute("width", "100%");
     node.setAttribute("height", "315");

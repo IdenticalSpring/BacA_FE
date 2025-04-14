@@ -215,35 +215,35 @@ const Sidebar = ({
         <LaptopOutlined />
         <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giảng dạy</Text>
       </div>
-
-      {sidebarLinks
-        .filter((link) => link.type === 0)
-        .map((link) => (
-          <div
-            key={link.id}
-            style={{
-              margin: "0 auto",
-              padding: "5px 0",
-              width: "80%",
-              textAlign: "start",
-              marginBottom: "10px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "5px 3px",
-              cursor: "pointer",
-            }}
-            onClick={() => openLink(link.link)}
-          >
-            {link.imgUrl ? (
-              <img src={link.imgUrl} alt={link.name} style={{ width: 20, height: 20 }} />
-            ) : (
-              <LaptopOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
-            )}
-            <Text style={{ color: colors.darkGreen }}>{link.name}</Text>
-          </div>
-        ))}
-
+      <div style={{ padding: 0, width: "100%", maxHeight: "20%", overflow: "auto" }}>
+        {sidebarLinks
+          .filter((link) => link.type === 0)
+          .map((link) => (
+            <div
+              key={link.id}
+              style={{
+                margin: "0 auto",
+                padding: "5px 0",
+                width: "80%",
+                textAlign: "start",
+                marginBottom: "10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "5px 3px",
+                cursor: "pointer",
+              }}
+              onClick={() => openLink(link.link)}
+            >
+              {link.imgUrl ? (
+                <img src={link.imgUrl} alt={link.name} style={{ width: 20, height: 20 }} />
+              ) : (
+                <LaptopOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
+              )}
+              <Text style={{ color: colors.darkGreen }}>{link.name}</Text>
+            </div>
+          ))}
+      </div>
       <div
         style={{
           margin: "0 auto",
@@ -261,34 +261,35 @@ const Sidebar = ({
         <EditOutlined />
         <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Công cụ giao bài tập</Text>
       </div>
-
-      {sidebarLinks
-        .filter((link) => link.type === 1)
-        .map((link) => (
-          <div
-            key={link.id}
-            style={{
-              margin: "0 auto",
-              padding: "5px 0",
-              width: "80%",
-              textAlign: "start",
-              marginBottom: "10px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "5px 3px",
-              cursor: "pointer",
-            }}
-            onClick={() => openLink(link.link)}
-          >
-            {link.imgUrl ? (
-              <img src={link.imgUrl} alt={link.name} style={{ width: 20, height: 20 }} />
-            ) : (
-              <EditOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
-            )}
-            <Text style={{ color: colors.darkGreen }}>{link.name}</Text>
-          </div>
-        ))}
+      <div style={{ padding: 0, width: "100%", maxHeight: "20%", overflow: "auto" }}>
+        {sidebarLinks
+          .filter((link) => link.type === 1)
+          .map((link) => (
+            <div
+              key={link.id}
+              style={{
+                margin: "0 auto",
+                padding: "5px 0",
+                width: "80%",
+                textAlign: "start",
+                marginBottom: "10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "5px 3px",
+                cursor: "pointer",
+              }}
+              onClick={() => openLink(link.link)}
+            >
+              {link.imgUrl ? (
+                <img src={link.imgUrl} alt={link.name} style={{ width: 20, height: 20 }} />
+              ) : (
+                <EditOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
+              )}
+              <Text style={{ color: colors.darkGreen }}>{link.name}</Text>
+            </div>
+          ))}
+      </div>
     </>
   );
 

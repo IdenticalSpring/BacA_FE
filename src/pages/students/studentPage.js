@@ -434,6 +434,19 @@ const StudentPage = () => {
 
   const renderLessonContent = () => (
     <>
+      <style>
+        {`
+      .responsive-iframe {
+  width: 100%;
+  height: 315px;
+}
+
+@media screen and (min-width: 990px) {
+  .responsive-iframe {
+    height: 500px;
+  }
+}`}
+      </style>
       <div ref={lessonRef}>
         <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
           <BookOutlined /> Bài Học
