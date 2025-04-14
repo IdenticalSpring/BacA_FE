@@ -503,7 +503,7 @@ const StudentPage = () => {
                         allowFullScreen
                       />
                     )} */}
-                    {lesson.linkYoutube && lesson.linkYoutube.trim() && (
+                    {/* {lesson.linkYoutube && lesson.linkYoutube.trim() && (
                       <div>
                         <Text
                           strong
@@ -529,7 +529,7 @@ const StudentPage = () => {
                           );
                         })}
                       </div>
-                    )}
+                    )} */}
                     {lesson.linkSpeech && (
                       <audio controls style={{ width: "100%", marginTop: 16 }}>
                         <source
@@ -676,7 +676,7 @@ const StudentPage = () => {
                       marginBottom: 16,
                     }}
                   >
-                    {hw.linkYoutube && hw.linkYoutube.trim() && (
+                    {/* {hw.linkYoutube && hw.linkYoutube.trim() && (
                       <div>
                         <Text
                           strong
@@ -702,7 +702,7 @@ const StudentPage = () => {
                           );
                         })}
                       </div>
-                    )}
+                    )} */}
                     {hw.linkSpeech && (
                       <div style={{ marginTop: hw.linkYoutube ? 16 : 0 }}>
                         <Text
