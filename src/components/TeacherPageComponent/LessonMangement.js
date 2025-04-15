@@ -24,6 +24,7 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
   EditOutlined,
+  RobotOutlined,
   SwapOutlined,
   SyncOutlined,
   UploadOutlined,
@@ -151,6 +152,10 @@ export default function LessonMangement({
   const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
   const [htmlContent, setHtmlContent] = useState("");
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
+  const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
+  const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
+  const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false);
+  const quillRefLessonPlan = useRef(null);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -189,6 +194,54 @@ export default function LessonMangement({
       }, 100); // thử 100ms nếu 0ms chưa đủ
     }
   }, [modalUpdateLessonVisible, editingLesson, quillRef.current?.getEditor()]);
+  useEffect(() => {
+    if (
+      modalUpdateLessonVisible &&
+      quillRefLessonPlan.current?.getEditor() &&
+      editingLesson?.lessonPlan
+    ) {
+      // Thêm delay nhẹ để chắc chắn editor đã render xong
+      console.log(editingLesson.lessonPlan);
+
+      setTimeout(() => {
+        quillRefLessonPlan.current?.getEditor().setContents([]); // reset
+        quillRefLessonPlan.current
+          ?.getEditor()
+          .clipboard.dangerouslyPasteHTML(0, editingLesson.lessonPlan);
+      }, 100); // thử 100ms nếu 0ms chưa đủ
+    }
+  }, [modalUpdateLessonVisible, editingLesson, quillRefLessonPlan.current?.getEditor()]);
+  const enhanceLessonPlan = async () => {
+    if (!quillRefLessonPlan.current?.getEditor()) return;
+
+    const currentContent = quillRefLessonPlan.current?.getEditor().getText();
+    if (!currentContent.trim()) {
+      message.warning("Please enter a lesson plan first!");
+      return;
+    }
+
+    // Lấy danh sách URL ảnh từ nội dung Quill
+    const quillEditor = quillRefLessonPlan.current?.getEditor().getContents();
+    const imageUrls = [];
+    quillEditor.ops.forEach((op) => {
+      if (op.insert && op.insert.image) {
+        imageUrls.push(op.insert.image); // Thu thập URL ảnh
+      }
+    });
+
+    setLoadingEnhanceLessonPlan(true);
+    try {
+      // Gọi lessonService.enhanceLessonPlan với lessonPlan và imageUrls
+      const enhancedText = await lessonService.enhanceLessonPlan(currentContent, imageUrls);
+      quillRefLessonPlan.current?.getEditor().setText(enhancedText);
+      message.success("Lesson plan enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing lesson plan:", error);
+      message.error("Failed to enhance lesson plan. Please try again!");
+    } finally {
+      setLoadingEnhanceLessonPlan(false);
+    }
+  };
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) {
       return;
@@ -247,6 +300,7 @@ export default function LessonMangement({
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
+      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
       formData.append("teacherId", teacherId);
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -494,6 +548,72 @@ export default function LessonMangement({
       // });
     };
   }, []);
+  const imageHandlerLessonPlan = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      // const formData = new FormData();
+      // formData.append("file", file);
+
+      // try {
+      //   const response = await axios.post(
+      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     formData
+      //   );
+      //   if (response.status === 201 && quillRefDescription.current) {
+      //     const editor = quillRefDescription.current.getEditor();
+      //     const range = editor.getSelection(true);
+      //     editor.insertEmbed(range.index, "image", response.data.url);
+      //   } else {
+      //     message.error("Upload failed. Try again!");
+      //   }
+      // } catch (error) {
+      //   console.error("Error uploading image:", error);
+      //   message.error("Upload error. Please try again!");
+      // }
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 350, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      axios
+        .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+        .then((response) => {
+          if (response.status === 201 && quillRefLessonPlan.current) {
+            const editor = quillRefLessonPlan.current?.getEditor();
+            const range = editor.getSelection(true);
+            editor.insertEmbed(range.index, "image", response.data.url);
+            setTimeout(() => {
+              const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+              imgs.forEach((img) => {
+                img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+              });
+            }, 0);
+          } else {
+            message.error("Upload failed. Try again!");
+          }
+        })
+        .catch((err) => {
+          console.error("Upload error:", err);
+          message.error("Upload error. Please try again!");
+        });
+      // },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
+    };
+  }, []);
   const audioHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -540,7 +660,16 @@ export default function LessonMangement({
       },
     },
   };
-
+  const modulesLessonPlan = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandlerLessonPlan,
+        undo: undoHandler,
+        redo: redoHandler,
+      },
+    },
+  };
   const columns = [
     {
       title: "Tên bài học",
@@ -884,6 +1013,108 @@ export default function LessonMangement({
                 }}
               />
             )}
+          </Form.Item>
+          <Button
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+              margin: "10px 0",
+              marginTop: isMobile ? "100px" : "40px",
+            }}
+            icon={<SwapOutlined />}
+            onClick={() => {
+              // console.log(
+              //   "swapHtmlLessonPlanMode",
+              //   swapHtmlLessonPlanMode,
+              //   htmlLessonPlanContent,
+              //   quillRefLessonPlan.current?.getEditor()?.root?.innerHTML
+              // );
+
+              if (!swapHtmlLessonPlanMode) {
+                const html = quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
+                setHtmlLessonPlanContent(html);
+                setSwapHtmlLessonPlanMode(true);
+              } else {
+                // console.log("htmlLessonPlanContent", htmlLessonPlanContent);
+                quillRefLessonPlan.current
+                  ?.getEditor()
+                  .clipboard.dangerouslyPasteHTML(htmlLessonPlanContent);
+                setSwapHtmlLessonPlanMode(false);
+              }
+            }}
+          >
+            Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
+          </Button>
+          <Form.Item name="lessonPlan" label="Kế hoạch bài học">
+            {
+              <ReactQuill
+                theme="snow"
+                modules={modulesLessonPlan}
+                formats={quillFormats}
+                ref={quillRefLessonPlan}
+                placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+                style={{
+                  height: "250px",
+                  marginBottom: "60px", // Consider reducing this
+                  borderRadius: "6px",
+                  // border: `1px solid ${colors.inputBorder}`,
+                  display: swapHtmlLessonPlanMode ? "none" : "block",
+                }}
+              />
+            }
+            {/* {swapHtmlLessonPlanMode && ( */}
+            <TextArea
+              value={htmlLessonPlanContent}
+              onChange={(e) => {
+                setHtmlLessonPlanContent(e.target.value);
+              }}
+              style={{
+                height: "250px",
+                marginBottom: "60px", // Consider reducing this
+                borderRadius: "6px",
+                border: `1px solid ${colors.inputBorder}`,
+                display: !swapHtmlLessonPlanMode ? "none" : "block",
+              }}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={enhanceLessonPlan}
+              loading={loadingEnhanceLessonPlan}
+              style={{
+                alignSelf: "flex-start",
+                marginTop: isMobile ? "100px" : "40px",
+                // marginBottom: "20px",
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+              }}
+            >
+              Cải thiện mô tả
+            </Button>
+          </Form.Item>
+          <Form.Item>
+            <Button
+              icon={<RobotOutlined />}
+              // onClick={enhanceLessonPlan}
+              onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
+              // loading={loadingEnhanceLessonPlan}
+              style={{
+                alignSelf: "flex-start",
+                // marginTop: isMobile ? "100px" : "40px",
+                marginTop: "5px",
+                marginBottom: "20px",
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+              }}
+            >
+              Cải thiện kế hoạch bài học
+            </Button>
           </Form.Item>
           {/* <Form.Item
             name="level"

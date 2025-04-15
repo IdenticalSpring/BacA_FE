@@ -349,35 +349,41 @@ export default function CreateLesson({
       //   console.error("Error uploading image:", error);
       //   message.error("Upload error. Please try again!");
       // }
-      new Compressor(file, {
-        quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-        maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
-        maxHeight: 350, // Optional, resize chiều cao nếu cần
-        success(compressedFile) {
-          const formData = new FormData();
-          formData.append("file", compressedFile);
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 350, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      const formData = new FormData();
+      formData.append("file", file);
 
-          axios
-            .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-            .then((response) => {
-              if (response.status === 201 && quillRefLessonPlan.current) {
-                const editor = quillRefLessonPlan.current?.getEditor();
-                const range = editor.getSelection(true);
-                editor.insertEmbed(range.index, "image", response.data.url);
-              } else {
-                message.error("Upload failed. Try again!");
-              }
-            })
-            .catch((err) => {
-              console.error("Upload error:", err);
-              message.error("Upload error. Please try again!");
-            });
-        },
-        error(err) {
-          console.error("Compression error:", err);
-          message.error("Image compression failed!");
-        },
-      });
+      axios
+        .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+        .then((response) => {
+          if (response.status === 201 && quillRefLessonPlan.current) {
+            const editor = quillRefLessonPlan.current?.getEditor();
+            const range = editor.getSelection(true);
+            editor.insertEmbed(range.index, "image", response.data.url);
+            setTimeout(() => {
+              const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+              imgs.forEach((img) => {
+                img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+              });
+            }, 0);
+          } else {
+            message.error("Upload failed. Try again!");
+          }
+        })
+        .catch((err) => {
+          console.error("Upload error:", err);
+          message.error("Upload error. Please try again!");
+        });
+      // },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
     };
   }, []);
   const audioHandler = useCallback(() => {
@@ -520,7 +526,7 @@ export default function CreateLesson({
         "description",
         quillRefDescription.current?.getEditor()?.root.innerHTML || ""
       ); // Lấy nội dung từ description
-      formData.append("lessonPlan", quillLessonPlan.getText()); // Lấy nội dung từ lessonPlan
+      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || ""); // Lấy nội dung từ lessonPlan
       formData.append("teacherId", teacherId);
 
       if (mp3file) {
