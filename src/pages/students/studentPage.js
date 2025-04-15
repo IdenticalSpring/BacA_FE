@@ -434,19 +434,6 @@ const StudentPage = () => {
 
   const renderLessonContent = () => (
     <>
-      <style>
-        {`
-      .responsive-iframe {
-  width: 100%;
-  height: 315px;
-}
-
-@media screen and (min-width: 990px) {
-  .responsive-iframe {
-    height: 500px;
-  }
-}`}
-      </style>
       <div ref={lessonRef}>
         <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
           <BookOutlined /> Bài Học
@@ -462,6 +449,7 @@ const StudentPage = () => {
                   marginBottom: 16,
                   borderRadius: 12,
                   boxShadow: `0 2px 8px ${colors.softShadow}`,
+                  // padding: "10px!important",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
@@ -828,6 +816,23 @@ const StudentPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      <style>
+        {`
+      .responsive-iframe {
+  width: 100%;
+  height: 315px;
+}
+.ql-image{
+  max-width: 100%;
+  height: auto;
+  text-align: center;
+}
+@media screen and (min-width: 990px) {
+  .responsive-iframe {
+    height: 500px;
+  }
+}`}
+      </style>
       {!isMobile && (
         <div style={{ width: "260px", height: "100%", position: "fixed", zIndex: 1001 }}>
           <SidebarComponent />

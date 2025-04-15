@@ -278,60 +278,66 @@ export default function CreateHomeWork({
       const file = input.files[0];
       if (!file) return;
 
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // // console.log([...formData]);
+      const formData = new FormData();
+      formData.append("file", file);
+      // console.log([...formData]);
 
-      // try {
-      //   const response = await axios.post(
-      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-      //     formData
-      //   );
-      //   // console.log(response.data.url);
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+        // console.log(response.data.url);
 
-      //   // const result = await response.json();
+        // const result = await response.json();
 
-      //   if (response.status === 201 && quillRef.current) {
-      //     const editor = quillRef.current?.getEditor();
-      //     const range = editor.getSelection(true);
-      //     editor.insertEmbed(range.index, "image", response.data.url);
-      //   } else {
-      //     message.error("Upload failed. Try again!");
-      //   }
-      // } catch (error) {
-      //   console.error("Error uploading image:", error);
-      //   message.error("Upload error. Please try again!");
-      // }
-      // ✅ Resize ảnh trước khi upload
-      new Compressor(file, {
-        quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-        maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-        maxHeight: 800, // Optional, resize chiều cao nếu cần
-        success(compressedFile) {
-          const formData = new FormData();
-          formData.append("file", compressedFile);
-
-          axios
-            .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-            .then((response) => {
-              if (response.status === 201 && quillRef.current) {
-                const editor = quillRef.current?.getEditor();
-                const range = editor.getSelection(true);
-                editor.insertEmbed(range.index, "image", response.data.url);
-              } else {
-                message.error("Upload failed. Try again!");
-              }
-            })
-            .catch((err) => {
-              console.error("Upload error:", err);
-              message.error("Upload error. Please try again!");
+        if (response.status === 201 && quillRef.current) {
+          const editor = quillRef.current?.getEditor();
+          const range = editor.getSelection(true);
+          editor.insertEmbed(range.index, "image", response.data.url);
+          setTimeout(() => {
+            const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+            imgs.forEach((img) => {
+              img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
             });
-        },
-        error(err) {
-          console.error("Compression error:", err);
-          message.error("Image compression failed!");
-        },
-      });
+          }, 0);
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        message.error("Upload error. Please try again!");
+      }
+      // ✅ Resize ảnh trước khi upload
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 800, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      //     const formData = new FormData();
+      //     formData.append("file", compressedFile);
+
+      //     axios
+      //       .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+      //       .then((response) => {
+      //         if (response.status === 201 && quillRef.current) {
+      //           const editor = quillRef.current?.getEditor();
+      //           const range = editor.getSelection(true);
+      //           editor.insertEmbed(range.index, "image", response.data.url);
+      //         } else {
+      //           message.error("Upload failed. Try again!");
+      //         }
+      //       })
+      //       .catch((err) => {
+      //         console.error("Upload error:", err);
+      //         message.error("Upload error. Please try again!");
+      //       });
+      //   },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
     };
   }, []);
   const audioHandler = useCallback(() => {

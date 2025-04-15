@@ -282,34 +282,40 @@ const TeacherPage = () => {
               if (!file) return;
 
               // 👇 Resize trước khi upload như trong imageHandler
-              new Compressor(file, {
-                quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                maxHeight: 800,
-                success(compressedFile) {
-                  const formData = new FormData();
-                  formData.append("file", compressedFile);
+              // new Compressor(file, {
+              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+              //   maxHeight: 800,
+              //   success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", file);
 
-                  axios
-                    .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                    .then((response) => {
-                      if (response.status === 201) {
-                        const range = quill.getSelection(true);
-                        quill.insertEmbed(range.index, "image", response.data.url);
-                      } else {
-                        message.error("Upload failed. Try again!");
-                      }
-                    })
-                    .catch((err) => {
-                      console.error("Upload error:", err);
-                      message.error("Upload error. Please try again!");
-                    });
-                },
-                error(err) {
-                  console.error("Compression error:", err);
-                  message.error("Image compression failed!");
-                },
-              });
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                    setTimeout(() => {
+                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                      imgs.forEach((img) => {
+                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                      });
+                    }, 0);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+              //   },
+              //   error(err) {
+              //     console.error("Compression error:", err);
+              //     message.error("Image compression failed!");
+              //   },
+              // });
 
               break; // chỉ xử lý ảnh đầu tiên
             }
@@ -335,34 +341,40 @@ const TeacherPage = () => {
               if (!file) return;
 
               // 👇 Resize trước khi upload như trong imageHandler
-              new Compressor(file, {
-                quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                maxHeight: 800,
-                success(compressedFile) {
-                  const formData = new FormData();
-                  formData.append("file", compressedFile);
+              // new Compressor(file, {
+              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+              //   maxHeight: 800,
+              //   success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", file);
 
-                  axios
-                    .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                    .then((response) => {
-                      if (response.status === 201) {
-                        const range = quill.getSelection(true);
-                        quill.insertEmbed(range.index, "image", response.data.url);
-                      } else {
-                        message.error("Upload failed. Try again!");
-                      }
-                    })
-                    .catch((err) => {
-                      console.error("Upload error:", err);
-                      message.error("Upload error. Please try again!");
-                    });
-                },
-                error(err) {
-                  console.error("Compression error:", err);
-                  message.error("Image compression failed!");
-                },
-              });
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                    setTimeout(() => {
+                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                      imgs.forEach((img) => {
+                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                      });
+                    }, 0);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+              //   },
+              //   error(err) {
+              //     console.error("Compression error:", err);
+              //     message.error("Image compression failed!");
+              //   },
+              // });
 
               break; // chỉ xử lý ảnh đầu tiên
             }
@@ -409,34 +421,42 @@ const TeacherPage = () => {
               if (!file) return;
 
               // 👇 Resize trước khi upload như trong imageHandler
-              new Compressor(file, {
-                quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                maxHeight: 800,
-                success(compressedFile) {
-                  const formData = new FormData();
-                  formData.append("file", compressedFile);
+              // new Compressor(file, {
+              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+              //   maxHeight: 800,
+              //   success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", file);
 
-                  axios
-                    .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                    .then((response) => {
-                      if (response.status === 201) {
-                        const range = quill.getSelection(true);
-                        quill.insertEmbed(range.index, "image", response.data.url);
-                      } else {
-                        message.error("Upload failed. Try again!");
-                      }
-                    })
-                    .catch((err) => {
-                      console.error("Upload error:", err);
-                      message.error("Upload error. Please try again!");
-                    });
-                },
-                error(err) {
-                  console.error("Compression error:", err);
-                  message.error("Image compression failed!");
-                },
-              });
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                    setTimeout(() => {
+                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                      console.log("IMG:", imgs);
+
+                      imgs.forEach((img) => {
+                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                      });
+                    }, 0);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+              //   },
+              //   error(err) {
+              //     console.error("Compression error:", err);
+              //     message.error("Image compression failed!");
+              //   },
+              // });
 
               break; // chỉ xử lý ảnh đầu tiên
             }
@@ -462,34 +482,42 @@ const TeacherPage = () => {
               if (!file) return;
 
               // 👇 Resize trước khi upload như trong imageHandler
-              new Compressor(file, {
-                quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                maxHeight: 800,
-                success(compressedFile) {
-                  const formData = new FormData();
-                  formData.append("file", compressedFile);
+              // new Compressor(file, {
+              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+              //   maxHeight: 800,
+              //   success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", file);
 
-                  axios
-                    .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                    .then((response) => {
-                      if (response.status === 201) {
-                        const range = quill.getSelection(true);
-                        quill.insertEmbed(range.index, "image", response.data.url);
-                      } else {
-                        message.error("Upload failed. Try again!");
-                      }
-                    })
-                    .catch((err) => {
-                      console.error("Upload error:", err);
-                      message.error("Upload error. Please try again!");
-                    });
-                },
-                error(err) {
-                  console.error("Compression error:", err);
-                  message.error("Image compression failed!");
-                },
-              });
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                    setTimeout(() => {
+                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                      console.log(imgs);
+
+                      imgs.forEach((img) => {
+                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                      });
+                    }, 0);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+              //   },
+              //   error(err) {
+              //     console.error("Compression error:", err);
+              //     message.error("Image compression failed!");
+              //   },
+              // });
 
               break; // chỉ xử lý ảnh đầu tiên
             }
