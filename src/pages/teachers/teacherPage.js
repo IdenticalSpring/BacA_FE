@@ -274,7 +274,7 @@ const TeacherPage = () => {
           if (!items) return;
 
           for (const item of items) {
-            if (item.type.indexOf("image") !== -1) {
+            if (item?.type?.indexOf("image") !== -1) {
               e.preventDefault(); // chặn mặc định Quill xử lý
 
               const file = item.getAsFile();
@@ -333,7 +333,7 @@ const TeacherPage = () => {
           if (!items) return;
 
           for (const item of items) {
-            if (item.type.indexOf("image") !== -1) {
+            if (item?.type?.indexOf("image") !== -1) {
               e.preventDefault(); // chặn mặc định Quill xử lý
 
               const file = item.getAsFile();
@@ -413,7 +413,7 @@ const TeacherPage = () => {
           if (!items) return;
 
           for (const item of items) {
-            if (item.type.indexOf("image") !== -1) {
+            if (item?.type?.indexOf("image") !== -1) {
               e.preventDefault(); // chặn mặc định Quill xử lý
 
               const file = item.getAsFile();
@@ -474,7 +474,7 @@ const TeacherPage = () => {
           if (!items) return;
 
           for (const item of items) {
-            if (item.type.indexOf("image") !== -1) {
+            if (item?.type?.indexOf("image") !== -1) {
               e.preventDefault(); // chặn mặc định Quill xử lý
 
               const file = item.getAsFile();
