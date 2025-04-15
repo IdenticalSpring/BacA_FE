@@ -134,6 +134,7 @@ export default function LessonMangement({
   classID,
   students,
   quillRef,
+  quillRefLessonPlan,
 }) {
   const [form] = Form.useForm();
   // const quillRef = useRef(null);
@@ -155,7 +156,7 @@ export default function LessonMangement({
   const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
   const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
   const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false);
-  const quillRefLessonPlan = useRef(null);
+  // const quillRefLessonPlan = useRef(null);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -1049,6 +1050,7 @@ export default function LessonMangement({
           <Form.Item name="lessonPlan" label="Kế hoạch bài học">
             {
               <ReactQuill
+                id="lessonPlanUpdate"
                 theme="snow"
                 modules={modulesLessonPlan}
                 formats={quillFormats}
@@ -1360,4 +1362,5 @@ LessonMangement.propTypes = {
   classID: PropTypes.number.isRequired,
   students: PropTypes.array.isRequired,
   quillRef: PropTypes.object.isRequired,
+  quillRefLessonPlan: PropTypes.object.isRequired,
 };

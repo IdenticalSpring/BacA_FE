@@ -132,10 +132,11 @@ export default function CreateLesson({
   lessons,
   setLessons,
   quillRefDescription,
+  quillRefLessonPlan,
 }) {
   const [form] = Form.useForm();
   // const quillRefDescription = useRef(null); // Ref cho description
-  const quillRefLessonPlan = useRef(null); // Ref cho lessonPlan
+  // const quillRefLessonPlan = useRef(null); // Ref cho lessonPlan
   const [quillDescription, setQuillDescription] = useState(null); // Quill instance cho description
   const [quillLessonPlan, setQuillLessonPlan] = useState(null); // Quill instance cho lessonPlan
   const [selected, setSelected] = useState(new Set());
@@ -852,6 +853,7 @@ export default function CreateLesson({
             <Form.Item name="lessonPlan" label="Kế hoạch bài học">
               {
                 <ReactQuill
+                  id="lessonPlanCreate"
                   theme="snow"
                   modules={modulesLessonPlan}
                   formats={quillFormats}
@@ -1247,4 +1249,5 @@ CreateLesson.propTypes = {
   lessons: PropTypes.array.isRequired,
   setLessons: PropTypes.func.isRequired,
   quillRefDescription: PropTypes.object.isRequired,
+  quillRefLessonPlan: PropTypes.object.isRequired,
 };
