@@ -1185,7 +1185,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                         imgs.forEach((img) => {
                           img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                         });
-                      }, 0);
+                      }, 100);
                     } else {
                       message.error("Upload failed. Try again!");
                     }
@@ -1244,7 +1244,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                         imgs.forEach((img) => {
                           img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                         });
-                      }, 0);
+                      }, 100);
                     } else {
                       message.error("Upload failed. Try again!");
                     }

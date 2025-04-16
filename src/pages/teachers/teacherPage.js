@@ -312,7 +312,7 @@ const TeacherPage = () => {
                         imgs.forEach((img) => {
                           img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                         });
-                      }, 0);
+                      }, 100);
                     } else {
                       message.error("Upload failed. Try again!");
                     }
@@ -371,7 +371,7 @@ const TeacherPage = () => {
                         imgs.forEach((img) => {
                           img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                         });
-                      }, 0);
+                      }, 100);
                     } else {
                       message.error("Upload failed. Try again!");
                     }
@@ -432,7 +432,7 @@ const TeacherPage = () => {
                         imgs.forEach((img) => {
                           img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                         });
-                      }, 0);
+                      }, 100);
                     } else {
                       message.error("Upload failed. Try again!");
                     }
@@ -491,7 +491,7 @@ const TeacherPage = () => {
                         imgs.forEach((img) => {
                           img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                         });
-                      }, 0);
+                      }, 100);
                     } else {
                       message.error("Upload failed. Try again!");
                     }
@@ -574,7 +574,7 @@ const TeacherPage = () => {
                       imgs.forEach((img) => {
                         img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                       });
-                    }, 0);
+                    }, 100);
                   } else {
                     message.error("Upload failed. Try again!");
                   }
@@ -635,7 +635,7 @@ const TeacherPage = () => {
                       imgs.forEach((img) => {
                         img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
                       });
-                    }, 0);
+                    }, 100);
                   } else {
                     message.error("Upload failed. Try again!");
                   }
