@@ -153,18 +153,18 @@ const routes = [
     ),
   },
 
-  {
-    type: "collapse",
-    name: "Checkin Management",
-    key: "checkinManagement",
-    icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/checkinManagement",
-    component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <CheckinManagement />
-      </PrivateRoute>
-    ),
-  },
+  // {
+  //   type: "collapse",
+  //   name: "Checkin Management",
+  //   key: "checkinManagement",
+  //   icon: <Icon fontSize="small">table_view</Icon>,
+  //   route: "/checkinManagement",
+  //   component: (
+  //     <PrivateRoute allowedRoles={["admin"]}>
+  //       <CheckinManagement />
+  //     </PrivateRoute>
+  //   ),
+  // },
   // {
   //   type: "collapse",
   //   name: "Schedules",

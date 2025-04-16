@@ -267,6 +267,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     }
   }, [teacher]);
   useEffect(() => {
+    fetchTeacherData();
     fetchLevels();
   }, []);
 

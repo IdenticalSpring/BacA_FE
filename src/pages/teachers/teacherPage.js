@@ -1024,6 +1024,9 @@ const TeacherPage = () => {
         duration: 4,
       });
 
+      // Reload dữ liệu để làm mới HomeworkStatisticsDashboard
+      await fetchLessonByScheduleAndLessonByLevel();
+
       setIsAttendanceMode(false);
       setIsAttendanceGuideVisible(false);
     } catch (error) {
