@@ -232,8 +232,8 @@ export default function CreateLesson({
   //     editor?.removeEventListener("paste", handlePaste);
   //   };
   // }, [quillRefDescription]);
-  const undoHandler = useCallback(() => {
-    const quill = quillRefDescription.current?.getEditor();
+  const undoHandlerLessonDescription = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
     if (quill) {
       const history = quill.history;
       if (history.stack.undo.length > 0) {
@@ -243,8 +243,31 @@ export default function CreateLesson({
       }
     }
   }, []);
-  const redoHandler = useCallback(() => {
-    const quill = quillRefDescription.current?.getEditor();
+  const redoHandlerLessonDescription = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
+  const undoHandlerLessonPlan = useCallback(() => {
+    const quill = quillRefLessonPlan.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandlerLessonPlan = useCallback(() => {
+    const quill = quillRefLessonPlan.current?.getEditor();
     if (quill) {
       const history = quill.history;
 
@@ -429,8 +452,8 @@ export default function CreateLesson({
       container: toolbar,
       handlers: {
         image: imageHandler,
-        undo: undoHandler,
-        redo: redoHandler,
+        undo: undoHandlerLessonDescription,
+        redo: redoHandlerLessonDescription,
       },
     },
   };
@@ -439,8 +462,8 @@ export default function CreateLesson({
       container: toolbar,
       handlers: {
         image: imageHandlerLessonPlan,
-        undo: undoHandler,
-        redo: redoHandler,
+        undo: undoHandlerLessonPlan,
+        redo: redoHandlerLessonPlan,
       },
     },
   };

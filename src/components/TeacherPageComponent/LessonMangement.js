@@ -455,7 +455,7 @@ export default function LessonMangement({
   //     editor?.removeEventListener("paste", handlePaste);
   //   };
   // }, [quillRef]);
-  const undoHandler = useCallback(() => {
+  const undoHandlerLessonDescription = useCallback(() => {
     const quill = quillRef.current?.getEditor();
     if (quill) {
       const history = quill.history;
@@ -466,8 +466,31 @@ export default function LessonMangement({
       }
     }
   }, []);
-  const redoHandler = useCallback(() => {
+  const redoHandlerLessonDescription = useCallback(() => {
     const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
+  const undoHandlerLessonPlan = useCallback(() => {
+    const quill = quillRefLessonPlan.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandlerLessonPlan = useCallback(() => {
+    const quill = quillRefLessonPlan.current?.getEditor();
     if (quill) {
       const history = quill.history;
 
@@ -656,8 +679,8 @@ export default function LessonMangement({
       container: toolbar,
       handlers: {
         image: imageHandler,
-        undo: undoHandler,
-        redo: redoHandler,
+        undo: undoHandlerLessonDescription,
+        redo: redoHandlerLessonDescription,
       },
     },
   };
@@ -666,8 +689,8 @@ export default function LessonMangement({
       container: toolbar,
       handlers: {
         image: imageHandlerLessonPlan,
-        undo: undoHandler,
-        redo: redoHandler,
+        undo: undoHandlerLessonPlan,
+        redo: redoHandlerLessonPlan,
       },
     },
   };

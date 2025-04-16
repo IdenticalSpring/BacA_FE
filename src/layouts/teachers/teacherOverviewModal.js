@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
@@ -22,12 +21,23 @@ import teacherFeedbackService from "services/teacherFeedbackService";
 import { colors } from "assets/theme/color";
 import TextField from "@mui/material/TextField";
 import TextArea from "antd/es/input/TextArea";
-import { Button as AntButton, message, Radio } from "antd";
-import ReactQuill from "react-quill";
+import { Button as AntButton, Button, Form, Input, message, Radio, Table, Tag } from "antd";
+import ReactQuill, { Quill } from "react-quill";
 import axios from "axios";
 import levelService from "services/levelService";
 import LessonDetailModal from "layouts/lessons/LessonDetailModal";
 import HomeworkDetailModal from "layouts/homeWorks/HomeworkDetailModal";
+import lessonByScheduleService from "services/lessonByScheduleService";
+import link from "assets/theme/components/link";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  RobotOutlined,
+  SwapOutlined,
+  SyncOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
+import { DeleteIcon, TrashIcon } from "lucide-react";
 
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -54,9 +64,78 @@ const cellPropTypes = {
     }).isRequired,
   }).isRequired,
 };
+const BlockEmbed = Quill.import("blots/block/embed");
+const icons = Quill.import("ui/icons");
+icons["undo"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 14H4V9"/>
+    <path d="M20 20a9 9 0 0 0-15.5-6.36L4 14"/>
+  </svg>
+`;
+icons["redo"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 14h5v-5"/>
+    <path d="M4 20a9 9 0 0 1 15.5-6.36L20 14"/>
+  </svg>
+`;
+icons["video"] = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M21.8 8.001c-.2-1.5-.9-2.2-2.3-2.4C17.1 5.2 12 5.2 12 5.2s-5.1 0-7.5.4c-1.4.2-2.1.9-2.3 2.4C2 9.5 2 12 2 12s0 2.5.2 4c.2 1.5.9 2.2 2.3 2.4 2.4.4 7.5.4 7.5.4s5.1 0 7.5-.4c1.4-.2 2.1-.9 2.3-2.4.2-1.5.2-4 .2-4s0-2.5-.2-4zM10 15V9l5 3-5 3z"/>
+  </svg>
+`;
+class AudioBlot extends BlockEmbed {
+  static create(url) {
+    const node = super.create();
+    node.setAttribute("src", url);
+    node.setAttribute("controls", true);
+    return node;
+  }
 
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+
+AudioBlot.blotName = "audio";
+AudioBlot.tagName = "audio";
+Quill.register(AudioBlot);
+class CustomVideo extends BlockEmbed {
+  static blotName = "video"; // override mặc định
+  static tagName = "iframe";
+
+  static create(value) {
+    const node = super.create();
+
+    const src = typeof value === "string" ? value : value.src;
+    node.setAttribute("src", src);
+    node.setAttribute("frameborder", "0");
+    node.setAttribute("allowfullscreen", "true");
+    node.classList.add("responsive-iframe");
+    // Thêm width/height mặc định hoặc theo người dùng truyền vào
+    node.setAttribute("width", "100%");
+    node.setAttribute("height", "315");
+
+    if (typeof value !== "string") {
+      if (value.width) node.setAttribute("width", value.width);
+      if (value.height) node.setAttribute("height", value.height);
+    }
+
+    return node;
+  }
+
+  static value(node) {
+    return {
+      src: node.getAttribute("src"),
+      width: node.getAttribute("width"),
+      height: node.getAttribute("height"),
+    };
+  }
+}
+
+Quill.register(CustomVideo);
 function TeacherOverViewModal({ open, onClose, teacher }) {
   const [classes, setClasses] = useState([]);
+  const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [homeworks, setHomeworks] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -71,12 +150,27 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   const [levels, setLevels] = useState([]);
   const [currentPage, setCurrentPage] = useState(1); // Thêm state cho trang hiện tại
   const feedbacksPerPage = 3; // Số feedback mỗi trang
-  const quillRef = useRef(null);
+  const quillRefLessonDescription = useRef(null);
+  const quillRefLessonPlan = useRef(null);
+  const quillRefHomeworkDescription = useRef(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
   const [loadingTTS, setLoadingTTS] = useState(false);
-  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingUpdateLesson, setLoadingUpdateLesson] = useState(false);
+  const [loadingUpdateHomework, setLoadingUpdateHomework] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
+  );
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const isMobile = windowWidth < 768;
   const [lessonData, setLessonData] = useState({
     name: "",
     level: "",
@@ -99,13 +193,79 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     date: "",
   });
   const [gender, setGender] = useState(1);
+  const [formLesson] = Form.useForm();
+  const [formHomework] = Form.useForm();
+  // const quillRefLessonDescription = useRef(null);
+  const [quill, setQuill] = useState(null);
+  const [modalUpdateHomeWorkVisible, setModalUpdateHomeWorkVisible] = useState(false);
+  const [modalUpdateLessonVisible, setModalUpdateLessonVisible] = useState(false);
+  const [openSend, setOpenSend] = useState(false);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState(null);
+  const [selectedHomeWorkId, setSelectedHomeWorkId] = useState(null);
+  const [editingLesson, setEditingLesson] = useState(null);
+  const [editingHomeWork, setEditingHomeWork] = useState(null);
+  const [youtubeLinks, setYoutubeLinks] = useState([]);
+  const [currentYoutubeLink, setCurrentYoutubeLink] = useState("");
+  const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
+  const [htmlContent, setHtmlContent] = useState("");
+  const [swapHtmlMode, setSwapHtmlMode] = useState(false);
+  const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
+  const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
+  const [htmlContentHomework, setHtmlContentHomework] = useState("");
+  const [swapHtmlHomeworkMode, setSwapHtmlHomeworkMode] = useState(false);
+  const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false);
+  const [loadingTTSForUpdateHomeWork, setLoadingTTSForUpdateHomeWork] = useState(false);
+  const [loadingTTSForUpdateLesson, setLoadingTTSForUpdateLesson] = useState(false);
+  const [gameLinks, setGameLinks] = useState([]);
+  const [currentLink, setCurrentLink] = useState("");
+  const [editIndex, setEditIndex] = useState(null);
+  const toolbar = [
+    [{ font: [] }],
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    [{ size: ["small", false, "large", "huge"] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["bold", "italic", "underline", "strike", "blockquote"],
+    ["link", "image", "video"],
+    [{ script: "sub" }, { script: "super" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ direction: "rtl" }],
+    [{ color: [] }, { background: [] }],
+    [{ align: [] }],
+    ["clean"],
+    ["undo", "redo"],
+  ];
+
+  const quillFormats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
+    "indent",
+    "link",
+    "image",
+    "color",
+    "background",
+    "align",
+    "audio",
+    "size",
+    // "code-block",
+    "font",
+    // "code",
+    "script",
+    "direction",
+    "video",
+  ];
 
   useEffect(() => {
     if (teacher) {
       fetchTeacherData();
     }
   }, [teacher]);
-
   useEffect(() => {
     fetchLevels();
   }, []);
@@ -118,7 +278,27 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       console.error("Lỗi khi lấy danh sách level:", error);
     }
   };
+  // console.log(classes, lessonByScheduleData, lessons, teacher);
 
+  const fetchLessonBySchedule = async () => {
+    try {
+      const lessonBySchedules = await Promise.all(
+        classes.map(async (cls) => {
+          const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(cls?.id);
+          return data;
+        })
+      );
+
+      // Gộp tất cả các mảng con lại thành một mảng lớn
+      const mergedLessons = lessonBySchedules.flat();
+      setLessonByScheduleData(mergedLessons);
+    } catch (err) {
+      // setError("Lỗi khi tải dữ liệu lesson_by_schedule!");
+      message.error("Error loading lesson_by_schedule data! " + err);
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchTeacherData = async () => {
     setLoading(true);
     try {
@@ -133,6 +313,16 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
 
       const feedbackData = await teacherFeedbackService.getFeedbackByStudentId(teacher.id);
       setFeedbacks(feedbackData);
+      const lessonBySchedules = await Promise.all(
+        classData.map(async (cls) => {
+          const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(cls?.id);
+          return data;
+        })
+      );
+
+      // Gộp tất cả các mảng con lại thành một mảng lớn
+      const mergedLessons = lessonBySchedules.flat();
+      setLessonByScheduleData(mergedLessons);
     } catch (err) {
       console.error("Error fetching teacher data:", err);
     } finally {
@@ -164,76 +354,76 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       ),
       propTypes: cellPropTypes,
     },
-    {
-      Header: "Level",
-      accessor: "level",
-      width: "10%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.level}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
-    {
-      Header: "Link Youtube",
-      accessor: "linkYoutube",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.linkYoutube}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
-    {
-      Header: "Link Game",
-      accessor: "linkGame",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.linkGame}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
-    {
-      Header: "Link Speech",
-      accessor: "linkSpeech",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.linkSpeech}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
-    {
-      Header: "Teacher",
-      accessor: "TeacherId",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.TeacherId}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
+    // {
+    //   Header: "Level",
+    //   accessor: "level",
+    //   width: "10%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.level}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
+    // {
+    //   Header: "Link Youtube",
+    //   accessor: "linkYoutube",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.linkYoutube}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
+    // {
+    //   Header: "Link Game",
+    //   accessor: "linkGame",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.linkGame}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
+    // {
+    //   Header: "Link Speech",
+    //   accessor: "linkSpeech",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.linkSpeech}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
+    // {
+    //   Header: "Teacher",
+    //   accessor: "TeacherId",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.TeacherId}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
     {
       Header: "Description",
       accessor: "description",
@@ -243,7 +433,24 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
           style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
         >
-          {row.values.description}
+          {row.values.description?.replace(/<[^>]*>?/gm, "") || ""}
+        </span>
+      ),
+      propTypes: cellPropTypes,
+    },
+    {
+      Header: "Class",
+      accessor: "id",
+      width: "20%",
+      Cell: ({ row }) => (
+        <span
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+          className="truncate-text"
+        >
+          {lessonByScheduleData.find((item) => {
+            // console.log(item.lessonID, row.values);
+            return item.lessonID === row.values.id;
+          })?.class?.name || ""}
         </span>
       ),
       propTypes: cellPropTypes,
@@ -252,14 +459,67 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       Header: "Date",
       accessor: "date",
       width: "20%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {new Date(row.values.date).toLocaleDateString()}
-        </span>
-      ),
+      Cell: ({ row }) => {
+        const date = lessonByScheduleData?.filter((item) => item.lessonID === row.values.id)[0]
+          ?.date;
+        return (
+          <span
+            style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+            className="truncate-text"
+          >
+            {(date &&
+              new Date(date).toLocaleDateString("vi-VN", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })) ||
+              "Không có ngày"}
+          </span>
+        );
+      },
+      propTypes: cellPropTypes,
+    },
+    {
+      Header: "Status",
+      accessor: "status",
+      width: "20%",
+      Cell: ({ row }) => {
+        const length = lessonByScheduleData?.filter(
+          (item) => item.lessonID === row.values.id
+        ).length;
+        const isSentLength = lessonByScheduleData.filter(
+          (item) => item.lessonID === row.values.id && item.isLessonSent === true
+        ).length;
+        return (
+          <span
+            style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+            className="truncate-text"
+          >
+            <Tag
+              color={isSentLength === 0 ? "red" : isSentLength === length ? "green" : "yellow"}
+              style={{ fontSize: 14, fontWeight: 600, padding: "5px 10px" }}
+            >
+              {isSentLength === 0 ? (
+                <>
+                  <CloseCircleOutlined style={{ marginRight: 5 }} />
+                  Unsent
+                </>
+              ) : isSentLength === length ? (
+                <>
+                  <CheckCircleOutlined style={{ marginRight: 5 }} />
+                  Sent
+                </>
+              ) : (
+                <>
+                  <SyncOutlined style={{ marginRight: 5 }} />
+                  Pending
+                </>
+              )}
+            </Tag>
+          </span>
+        );
+      },
       propTypes: cellPropTypes,
     },
     {
@@ -267,15 +527,20 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       accessor: "actions",
       width: "20%",
       Cell: ({ row }) => (
-        <IconButton
-          sx={{
-            color: colors.midGreen,
-            "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-          }}
-          onClick={() => handleEditLesson(row.original)}
-        >
-          <EditIcon />
-        </IconButton>
+        <>
+          <IconButton
+            sx={{
+              color: colors.midGreen,
+              "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+            onClick={() => handleEditLesson(row.original)}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton color="secondary" onClick={() => handleDeleteLesson(row.values.id)}>
+            <TrashIcon color="red" />
+          </IconButton>
+        </>
       ),
       propTypes: cellPropTypes,
     },
@@ -300,34 +565,34 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       ),
       propTypes: cellPropTypes,
     },
-    {
-      Header: "Level",
-      accessor: "level",
-      width: "10%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.level}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
-    {
-      Header: "Link Youtube",
-      accessor: "linkYoutube",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.linkYoutube}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
+    // {
+    //   Header: "Level",
+    //   accessor: "level",
+    //   width: "10%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.level}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
+    // {
+    //   Header: "Link Youtube",
+    //   accessor: "linkYoutube",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.linkYoutube}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
     {
       Header: "Link Game",
       accessor: "linkGame",
@@ -342,20 +607,20 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       ),
       propTypes: cellPropTypes,
     },
-    {
-      Header: "Link Speech",
-      accessor: "linkSpeech",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.linkSpeech}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
+    // {
+    //   Header: "Link Speech",
+    //   accessor: "linkSpeech",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.linkSpeech}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
     {
       Header: "Link Zalo",
       accessor: "linkZalo",
@@ -370,20 +635,20 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       ),
       propTypes: cellPropTypes,
     },
-    {
-      Header: "Teacher",
-      accessor: "TeacherId",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.TeacherId}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
+    // {
+    //   Header: "Teacher",
+    //   accessor: "TeacherId",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.TeacherId}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
     {
       Header: "Description",
       accessor: "description",
@@ -393,7 +658,24 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
           style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
           className="truncate-text"
         >
-          {row.values.description}
+          {row.values.description?.replace(/<[^>]*>?/gm, "") || ""}
+        </span>
+      ),
+      propTypes: cellPropTypes,
+    },
+    {
+      Header: "Class",
+      accessor: "id",
+      width: "20%",
+      Cell: ({ row }) => (
+        <span
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+          className="truncate-text"
+        >
+          {lessonByScheduleData.find((item) => {
+            // console.log(item.lessonID, row.values);
+            return item.homeWorkId === row.values.id;
+          })?.class?.name || ""}
         </span>
       ),
       propTypes: cellPropTypes,
@@ -402,14 +684,67 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       Header: "Date",
       accessor: "date",
       width: "20%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {new Date(row.values.date).toLocaleDateString()}
-        </span>
-      ),
+      Cell: ({ row }) => {
+        const date = lessonByScheduleData?.filter((item) => item.homeWorkId === row.values.id)[0]
+          ?.date;
+        return (
+          <span
+            style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+            className="truncate-text"
+          >
+            {(date &&
+              new Date(date).toLocaleDateString("vi-VN", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })) ||
+              "Không có ngày"}
+          </span>
+        );
+      },
+      propTypes: cellPropTypes,
+    },
+    {
+      Header: "Status",
+      accessor: "status",
+      width: "20%",
+      Cell: ({ row }) => {
+        const length = lessonByScheduleData?.filter(
+          (item) => item.homeWorkId === row.values.id
+        ).length;
+        const isSentLength = lessonByScheduleData.filter(
+          (item) => item.homeWorkId === row.values.id && item.isHomeWorkSent === true
+        ).length;
+        return (
+          <span
+            style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+            className="truncate-text"
+          >
+            <Tag
+              color={isSentLength === 0 ? "red" : isSentLength === length ? "green" : "yellow"}
+              style={{ fontSize: 14, fontWeight: 600, padding: "5px 10px" }}
+            >
+              {isSentLength === 0 ? (
+                <>
+                  <CloseCircleOutlined style={{ marginRight: 5 }} />
+                  Unsent
+                </>
+              ) : isSentLength === length ? (
+                <>
+                  <CheckCircleOutlined style={{ marginRight: 5 }} />
+                  Sent
+                </>
+              ) : (
+                <>
+                  <SyncOutlined style={{ marginRight: 5 }} />
+                  Pending
+                </>
+              )}
+            </Tag>
+          </span>
+        );
+      },
       propTypes: cellPropTypes,
     },
     {
@@ -417,15 +752,20 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       accessor: "actions",
       width: "20%",
       Cell: ({ row }) => (
-        <IconButton
-          sx={{
-            color: colors.midGreen,
-            "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-          }}
-          onClick={() => handleEditHomework(row.original)}
-        >
-          <EditIcon />
-        </IconButton>
+        <>
+          <IconButton
+            sx={{
+              color: colors.midGreen,
+              "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+            onClick={() => handleEditHomework(row.original)}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton color="secondary" onClick={() => handleDeleteHomework(row.values.id)}>
+            <TrashIcon color="red" />
+          </IconButton>
+        </>
       ),
       propTypes: cellPropTypes,
     },
@@ -439,12 +779,13 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   const lessonRows = lessons.map((lesson) => ({
     id: lesson.id,
     name: lesson.name,
-    level: levels?.find((lv) => lv.id === lesson.level)?.name || lesson.level,
+    level: lesson.level,
     linkYoutube: lesson.linkYoutube,
     linkGame: lesson.linkGame,
     linkSpeech: lesson.linkSpeech,
     TeacherId: lesson?.teacher?.username || "N/A",
     description: lesson.description,
+    lessonPlan: lesson.lessonPlan,
     date: lesson.date,
     original: lesson,
   }));
@@ -452,7 +793,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   const homeworkRows = homeworks.map((homework) => ({
     id: homework.id,
     title: homework.title,
-    level: levels?.find((lv) => lv.id === homework.level)?.name || homework.level,
+    level: homework.level,
     linkYoutube: homework.linkYoutube,
     linkGame: homework.linkGame,
     linkSpeech: homework.linkSpeech,
@@ -482,129 +823,1011 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
 
   const fileUrls = teacher?.fileUrl ? teacher.fileUrl.split(",") : [];
 
+  const onChangeGender = ({ target: { value } }) => {
+    console.log("radio3 checked", value);
+    setGender(value);
+  };
+  const handleDeleteLesson = async (id) => {
+    if (window.confirm("Are you sure you want to delete this lesson?")) {
+      try {
+        await lessonService.deleteLesson(id);
+        setLessons(lessons.filter((lesson) => lesson.id !== id));
+        message.success("Lesson deleted successfully");
+      } catch (err) {
+        message.error("Error deleting lesson!");
+      }
+    }
+  };
   const handleEditLesson = (lesson) => {
-    setEditMode(true);
-    setSelectedLesson(lesson);
-    setLessonData({
+    setSelectedLessonId(lesson.id);
+    setEditingLesson(lesson);
+    formLesson.setFieldsValue({
       name: lesson.name,
-      level: lesson.level,
-      linkYoutube: lesson.linkYoutube,
       linkGame: lesson.linkGame,
       linkSpeech: lesson.linkSpeech,
-      TeacherId: lesson?.teacher?.id || teacher.id,
-      description: lesson.description,
-      date: lesson.date ? new Date(lesson.date).toISOString().split("T")[0] : "",
     });
+    // Khởi tạo youtubeLinks từ linkYoutube
+    const links = lesson.linkYoutube ? lesson.linkYoutube.split(", ").filter(Boolean) : [];
+    setYoutubeLinks(links);
     setMp3Url(lesson.linkSpeech);
-    setLessonDialogOpen(true);
+    setModalUpdateLessonVisible(true);
   };
+  // console.log(
+  //   editingLesson,
+  //   modalUpdateLessonVisible,
+  //   quillRefLessonDescription.current?.getEditor()
+  // );
 
-  const handleSaveLesson = async () => {
-    try {
-      setLoadingUpdate(true);
-      const formData = new FormData();
-      formData.append("name", lessonData.name);
-      formData.append("level", lessonData.level);
-      formData.append("linkYoutube", lessonData.linkYoutube);
-      formData.append("linkGame", lessonData.linkGame);
-      formData.append("description", lessonData.description);
-      formData.append("teacherId", lessonData.TeacherId);
-      formData.append("date", lessonData.date);
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+  useEffect(() => {
+    setTimeout(() => {
+      if (
+        modalUpdateLessonVisible &&
+        quillRefLessonDescription.current?.getEditor() &&
+        editingLesson?.description
+      ) {
+        // Thêm delay nhẹ để chắc chắn editor đã render xong
+        // console.log(editingLesson.description);
+
+        setTimeout(() => {
+          quillRefLessonDescription.current?.getEditor().setContents([]); // reset
+          quillRefLessonDescription.current
+            ?.getEditor()
+            .clipboard.dangerouslyPasteHTML(0, editingLesson.description);
+        }, 100); // thử 100ms nếu 0ms chưa đủ
       }
-      const lessonEntity = await lessonService.editLesson(selectedLesson.id, formData);
-      setLessons(lessons.map((ls) => (ls.id === lessonEntity.id ? lessonEntity : ls)));
-      message.success("Lesson updated successfully");
-      resetForm();
-      setLessonDialogOpen(false);
-    } catch (err) {
-      message.error("Lỗi khi chỉnh sửa bài học: " + err);
-    } finally {
-      setLoadingUpdate(false);
-    }
-  };
+    }, 100); // thử 100ms nếu 0ms chưa đủ
+  }, [modalUpdateLessonVisible, editingLesson, quillRefLessonDescription.current?.getEditor()]);
+  useEffect(() => {
+    setTimeout(() => {
+      if (
+        modalUpdateLessonVisible &&
+        quillRefLessonPlan.current?.getEditor() &&
+        editingLesson?.lessonPlan
+      ) {
+        // Thêm delay nhẹ để chắc chắn editor đã render xong
+        // console.log(editingLesson.lessonPlan);
 
-  const handleEditHomework = (homework) => {
-    setEditMode(true);
-    setSelectedHomework(homework);
-    setHomeworkData({
-      title: homework.title,
-      level: homework.level,
-      linkYoutube: homework.linkYoutube,
-      linkGame: homework.linkGame,
-      linkSpeech: homework.linkSpeech,
-      linkZalo: homework.linkZalo,
-      TeacherId: homework?.teacher?.id || teacher.id,
-      description: homework.description,
-      date: homework.date ? new Date(homework.date).toISOString().split("T")[0] : "",
+        setTimeout(() => {
+          quillRefLessonPlan.current?.getEditor().setContents([]); // reset
+          quillRefLessonPlan.current
+            ?.getEditor()
+            .clipboard.dangerouslyPasteHTML(0, editingLesson.lessonPlan);
+        }, 100); // thử 100ms nếu 0ms chưa đủ
+      }
+    }, 100); // thử 100ms nếu 0ms chưa đủ
+  }, [modalUpdateLessonVisible, editingLesson, quillRefLessonPlan.current?.getEditor()]);
+  const enhanceLessonPlan = async () => {
+    if (!quillRefLessonPlan.current?.getEditor()) return;
+
+    const currentContent = quillRefLessonPlan.current?.getEditor().getText();
+    if (!currentContent.trim()) {
+      message.warning("Please enter a lesson plan first!");
+      return;
+    }
+
+    // Lấy danh sách URL ảnh từ nội dung Quill
+    const quillEditor = quillRefLessonPlan.current?.getEditor().getContents();
+    const imageUrls = [];
+    quillEditor.ops.forEach((op) => {
+      if (op.insert && op.insert.image) {
+        imageUrls.push(op.insert.image); // Thu thập URL ảnh
+      }
     });
-    setMp3Url(homework.linkSpeech);
-    setHomeworkDialogOpen(true);
-  };
 
-  const handleSaveHomework = async () => {
+    setLoadingEnhanceLessonPlan(true);
     try {
-      setLoadingUpdate(true);
-      const formData = new FormData();
-      formData.append("title", homeworkData.title);
-      formData.append("level", homeworkData.level);
-      formData.append("linkYoutube", homeworkData.linkYoutube);
-      formData.append("linkGame", homeworkData.linkGame);
-      formData.append("linkZalo", homeworkData.linkZalo);
-      formData.append("description", homeworkData.description);
-      formData.append("teacherId", homeworkData.TeacherId);
-      formData.append("date", homeworkData.date);
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
-      const homeworkEntity = await homeWorkService.editHomeWork(selectedHomework.id, formData);
-      setHomeworks(homeworks.map((hw) => (hw.id === homeworkEntity.id ? homeworkEntity : hw)));
-      message.success("Homework updated successfully");
-      resetForm();
-      setHomeworkDialogOpen(false);
-    } catch (err) {
-      message.error("Lỗi khi chỉnh sửa bài tập: " + err);
+      // Gọi lessonService.enhanceLessonPlan với lessonPlan và imageUrls
+      const enhancedText = await lessonService.enhanceLessonPlan(currentContent, imageUrls);
+      quillRefLessonPlan.current?.getEditor().setText(enhancedText);
+      message.success("Lesson plan enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing lesson plan:", error);
+      message.error("Failed to enhance lesson plan. Please try again!");
     } finally {
-      setLoadingUpdate(false);
+      setLoadingEnhanceLessonPlan(false);
     }
   };
-
   const handleConvertToSpeech = async () => {
-    if (!textToSpeech) return;
-    setLoadingTTS(true);
+    if (!textToSpeech) {
+      return;
+    }
+    setLoadingTTSForUpdateLesson(true);
+
     try {
       const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+
       let base64String = response;
-      const audioBlob = base64ToBlob(base64String, "audio/mp3");
+
+      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
+      function base64ToBlob(base64, mimeType) {
+        let byteCharacters = atob(base64); // Giải mã base64
+        let byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        let byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+      }
+
+      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
+      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
       setMp3file(audioBlob);
-      setMp3Url(URL.createObjectURL(audioBlob));
+      let audioUrl = URL.createObjectURL(audioBlob);
+      setMp3Url(audioUrl);
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
-    setLoadingTTS(false);
+    setLoadingTTSForUpdateLesson(false);
   };
-
-  const base64ToBlob = (base64, mimeType) => {
-    let byteCharacters = atob(base64);
-    let byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    let byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType });
-  };
-
   useEffect(() => {
     if (mp3Url) {
+      // console.log("🔄 Cập nhật audio URL:", mp3Url);
       const audioElement = document.getElementById("audio-player");
       if (audioElement) {
+        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
+        audioElement.load(); // Tải lại audio
         audioElement.src = mp3Url;
-        audioElement.load();
       }
     }
   }, [mp3Url]);
+  const handleSaveLesson = async () => {
+    try {
+      setLoadingUpdateLesson(true);
+      const values = await formLesson.validateFields();
+      const formData = new FormData();
+      let linkYoutube = "";
+      if (youtubeLinks?.length > 0) {
+        linkYoutube = youtubeLinks.join(", ");
+      }
+      formData.append("name", values.name);
+      formData.append("level", editingLesson.level);
+      formData.append("linkYoutube", linkYoutube);
+      // formData.append("linkGame", values.linkGame);
+      formData.append("linkGame", "meomeo");
+      formData.append(
+        "description",
+        quillRefLessonDescription.current?.getEditor()?.root?.innerHTML || ""
+      );
+      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
+      formData.append("teacherId", teacher.id);
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
+      if (editingLesson) {
+        const lessonEntity = await lessonService.editLesson(editingLesson.id, formData);
+        setLessons(
+          lessons?.map((lesson) =>
+            lesson.id === editingLesson.id ? { ...lesson, ...lessonEntity } : lesson
+          )
+        );
+        message.success("Lesson updated successfully");
+      }
+      // setModalUpdateLessonVisible(false);
+      // form.resetFields();
+      // setEditingLesson(null);
+      // setTextToSpeech("");
+      // setMp3file(null);
+      // setMp3Url("");
+      setModalUpdateLessonVisible(false);
+      formLesson.resetFields();
+      setEditingLesson(null);
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
+      setYoutubeLinks([]);
+      setCurrentYoutubeLink("");
+      setEditYoutubeIndex(null);
+      setHtmlContent("");
+      setSwapHtmlMode(false);
+    } catch (err) {
+      message.error("Please check your input and try again" + err);
+    } finally {
+      setLoadingUpdateLesson(false);
+    }
+  };
+  useEffect(() => {
+    if (quillRefLessonDescription.current) {
+      const editor = quillRefLessonDescription.current.getEditor();
+      setQuill(editor);
+    }
+  }, [quillRefLessonDescription]);
+  // useEffect(() => {
+  //   const quill = quillRef.current?.getEditor();
+  //   if (!quill) return;
 
+  //   const handlePaste = (e) => {
+  //     // console.log("handlePaste called");
+  //     const clipboardData = e.clipboardData;
+  //     const items = clipboardData?.items;
+
+  //     if (!items) return;
+
+  //     for (const item of items) {
+  //       if (item.type.indexOf("image") !== -1) {
+  //         e.preventDefault(); // chặn mặc định Quill xử lý
+
+  //         const file = item.getAsFile();
+
+  //         if (!file) return;
+
+  //         // 👇 Resize trước khi upload như trong imageHandler
+  //         new Compressor(file, {
+  //           quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+  //           maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+  //           maxHeight: 800,
+  //           success(compressedFile) {
+  //             const formData = new FormData();
+  //             formData.append("file", compressedFile);
+
+  //             axios
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .then((response) => {
+  //                 if (response.status === 201) {
+  //                   const range = quill.getSelection(true);
+  //                   quill.insertEmbed(range.index, "image", response.data.url);
+  //                 } else {
+  //                   message.error("Upload failed. Try again!");
+  //                 }
+  //               })
+  //               .catch((err) => {
+  //                 console.error("Upload error:", err);
+  //                 message.error("Upload error. Please try again!");
+  //               });
+  //           },
+  //           error(err) {
+  //             console.error("Compression error:", err);
+  //             message.error("Image compression failed!");
+  //           },
+  //         });
+
+  //         break; // chỉ xử lý ảnh đầu tiên
+  //       }
+  //     }
+  //   };
+
+  //   const editor = quill?.root;
+  //   editor?.addEventListener("paste", handlePaste);
+
+  //   return () => {
+  //     editor?.removeEventListener("paste", handlePaste);
+  //   };
+  // }, [quillRef]);
+  const undoHandlerLessonDescription = useCallback(() => {
+    const quill = quillRefLessonDescription.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandlerLessonDescription = useCallback(() => {
+    const quill = quillRefLessonDescription.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
+  const undoHandlerLessonPlan = useCallback(() => {
+    const quill = quillRefLessonPlan.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandlerLessonPlan = useCallback(() => {
+    const quill = quillRefLessonPlan.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
+  useEffect(() => {
+    // console.log(quillRefLessonCreate);
+    const handlePaste = (e) => {
+      const isLessonPlanUpdate =
+        document.activeElement.parentElement.parentElement.id === "lessonPlanUpdate";
+      // console.log(document.activeElement.parentElement.parentElement);
+
+      if (editingLesson) {
+        if (isLessonPlanUpdate) {
+          const quill = quillRefLessonPlan.current?.getEditor();
+          if (!quill) return;
+
+          const handlePaste = (e) => {
+            const clipboardData = e.clipboardData;
+            const items = clipboardData?.items;
+
+            if (!items) return;
+
+            for (const item of items) {
+              if (item?.type?.indexOf("image") !== -1) {
+                e.preventDefault(); // chặn mặc định Quill xử lý
+
+                const file = item.getAsFile();
+
+                if (!file) return;
+
+                // 👇 Resize trước khi upload như trong imageHandler
+                // new Compressor(file, {
+                //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+                //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+                //   maxHeight: 800,
+                //   success(compressedFile) {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                axios
+                  .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                  .then((response) => {
+                    if (response.status === 201) {
+                      const range = quill.getSelection(true);
+                      quill.insertEmbed(range.index, "image", response.data.url);
+                      setTimeout(() => {
+                        const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                        imgs.forEach((img) => {
+                          img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                        });
+                      }, 0);
+                    } else {
+                      message.error("Upload failed. Try again!");
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Upload error:", err);
+                    message.error("Upload error. Please try again!");
+                  });
+                //   },
+                //   error(err) {
+                //     console.error("Compression error:", err);
+                //     message.error("Image compression failed!");
+                //   },
+                // });
+
+                break; // chỉ xử lý ảnh đầu tiên
+              }
+            }
+          };
+          handlePaste(e);
+        } else {
+          const quill = quillRefLessonDescription.current?.getEditor();
+          if (!quill) return;
+
+          const handlePaste = (e) => {
+            const clipboardData = e.clipboardData;
+            const items = clipboardData?.items;
+
+            if (!items) return;
+
+            for (const item of items) {
+              if (item?.type?.indexOf("image") !== -1) {
+                e.preventDefault(); // chặn mặc định Quill xử lý
+
+                const file = item.getAsFile();
+
+                if (!file) return;
+
+                // 👇 Resize trước khi upload như trong imageHandler
+                // new Compressor(file, {
+                //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+                //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+                //   maxHeight: 800,
+                //   success(compressedFile) {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                axios
+                  .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                  .then((response) => {
+                    if (response.status === 201) {
+                      const range = quill.getSelection(true);
+                      quill.insertEmbed(range.index, "image", response.data.url);
+                      setTimeout(() => {
+                        const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                        imgs.forEach((img) => {
+                          img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                        });
+                      }, 0);
+                    } else {
+                      message.error("Upload failed. Try again!");
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Upload error:", err);
+                    message.error("Upload error. Please try again!");
+                  });
+                //   },
+                //   error(err) {
+                //     console.error("Compression error:", err);
+                //     message.error("Image compression failed!");
+                //   },
+                // });
+
+                break; // chỉ xử lý ảnh đầu tiên
+              }
+            }
+          };
+          handlePaste(e);
+        }
+      } else {
+        const quill = quillRefHomeworkDescription.current?.getEditor();
+        if (!quill) return;
+
+        const handlePaste = (e) => {
+          const clipboardData = e.clipboardData;
+          const items = clipboardData?.items;
+
+          if (!items) return;
+
+          for (const item of items) {
+            if (item?.type?.indexOf("image") !== -1) {
+              e.preventDefault(); // chặn mặc định Quill xử lý
+
+              const file = item.getAsFile();
+
+              if (!file) return;
+
+              // 👇 Resize trước khi upload như trong imageHandler
+              // new Compressor(file, {
+              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+              //   maxHeight: 800,
+              //   success(compressedFile) {
+              const formData = new FormData();
+              formData.append("file", file);
+
+              axios
+                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+                .then((response) => {
+                  if (response.status === 201) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, "image", response.data.url);
+                    setTimeout(() => {
+                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                      imgs.forEach((img) => {
+                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+                      });
+                    }, 0);
+                  } else {
+                    message.error("Upload failed. Try again!");
+                  }
+                })
+                .catch((err) => {
+                  console.error("Upload error:", err);
+                  message.error("Upload error. Please try again!");
+                });
+              //   },
+              //   error(err) {
+              //     console.error("Compression error:", err);
+              //     message.error("Image compression failed!");
+              //   },
+              // });
+
+              break; // chỉ xử lý ảnh đầu tiên
+            }
+          }
+        };
+        handlePaste(e);
+      }
+    };
+    document.addEventListener("paste", handlePaste);
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [quillRefLessonDescription, quillRefLessonPlan, editingLesson]);
+  const imageHandlerLessonDescription = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      // console.log([...formData]);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+        // console.log(response.data.url);
+
+        // const result = await response.json();
+
+        if (response.status === 201 && quillRefLessonDescription.current) {
+          const editor = quillRefLessonDescription.current.getEditor();
+          const range = editor.getSelection(true);
+          editor.insertEmbed(range.index, "image", response.data.url);
+          setTimeout(() => {
+            const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+            imgs.forEach((img) => {
+              img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+            });
+          }, 0);
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        message.error("Upload error. Please try again!");
+      }
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 800, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      //     const formData = new FormData();
+      //     formData.append("file", compressedFile);
+
+      //     axios
+      //       .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+      //       .then((response) => {
+      //         if (response.status === 201 && quillRef.current) {
+      //           const editor = quillRef.current?.getEditor();
+      //           const range = editor.getSelection(true);
+      //           editor.insertEmbed(range.index, "image", response.data.url);
+      //         } else {
+      //           message.error("Upload failed. Try again!");
+      //         }
+      //       })
+      //       .catch((err) => {
+      //         console.error("Upload error:", err);
+      //         message.error("Upload error. Please try again!");
+      //       });
+      //   },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
+    };
+  }, []);
+  const imageHandlerLessonPlan = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      // const formData = new FormData();
+      // formData.append("file", file);
+
+      // try {
+      //   const response = await axios.post(
+      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     formData
+      //   );
+      //   if (response.status === 201 && quillRefDescription.current) {
+      //     const editor = quillRefDescription.current.getEditor();
+      //     const range = editor.getSelection(true);
+      //     editor.insertEmbed(range.index, "image", response.data.url);
+      //   } else {
+      //     message.error("Upload failed. Try again!");
+      //   }
+      // } catch (error) {
+      //   console.error("Error uploading image:", error);
+      //   message.error("Upload error. Please try again!");
+      // }
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 350, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      axios
+        .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+        .then((response) => {
+          if (response.status === 201 && quillRefLessonPlan.current) {
+            const editor = quillRefLessonPlan.current?.getEditor();
+            const range = editor.getSelection(true);
+            editor.insertEmbed(range.index, "image", response.data.url);
+            setTimeout(() => {
+              const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+              imgs.forEach((img) => {
+                img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+              });
+            }, 0);
+          } else {
+            message.error("Upload failed. Try again!");
+          }
+        })
+        .catch((err) => {
+          console.error("Upload error:", err);
+          message.error("Upload error. Please try again!");
+        });
+      // },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
+    };
+  }, []);
+  const audioHandlerLessonDescription = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRefLessonDescription.current) {
+          const editor = quillRefLessonDescription.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
+  const modulesLessonDescription = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandlerLessonDescription,
+        undo: undoHandlerLessonDescription,
+        redo: redoHandlerLessonDescription,
+      },
+    },
+  };
+  const modulesLessonPlan = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandlerLessonPlan,
+        undo: undoHandlerLessonPlan,
+        redo: redoHandlerLessonPlan,
+      },
+    },
+  };
+
+  const handleDeleteHomework = async (id) => {
+    if (window.confirm("Are you sure you want to delete this homework?")) {
+      try {
+        await homeWorkService.deleteHomeWork(id);
+        setHomeworks(homeworks.filter((homeWork) => homeWork.id !== id));
+        message.success("Homework deleted successfully");
+      } catch (err) {
+        message.error("Error deleting homework!");
+      }
+    }
+  };
+  const handleEditHomework = (homeWork) => {
+    setEditingHomeWork(homeWork);
+    setSelectedHomeWorkId(homeWork?.id);
+    const links = homeWork?.linkGame.split(", ");
+    const filterLinks = links?.filter((link) => link !== "");
+    // console.log(links, filterLinks);
+    setGameLinks(filterLinks);
+    const youtubeLinks = homeWork?.linkYoutube
+      ? homeWork.linkYoutube.split(", ").filter((link) => link !== "")
+      : [];
+    setYoutubeLinks(youtubeLinks);
+    formHomework.setFieldsValue({
+      title: homeWork.title,
+      // linkYoutube: homeWork.linkYoutube,
+      // linkGame: homeWork.linkGame,
+      linkZalo: homeWork.linkZalo,
+      linkSpeech: homeWork.linkSpeech,
+      // description: homeWork.description,
+    });
+    // if (quill && homeWork?.description) {
+    //   setTimeout(() => {
+    //     quill.clipboard.dangerouslyPasteHTML(0, homeWork.description);
+    //   }, 1000);
+    // }
+    setMp3Url(homeWork.linkSpeech);
+    setModalUpdateHomeWorkVisible(true);
+  };
+  // console.log(textToSpeech);
+  useEffect(() => {
+    setTimeout(() => {
+      if (
+        modalUpdateHomeWorkVisible &&
+        quillRefHomeworkDescription.current?.getEditor() &&
+        editingHomeWork?.description
+      ) {
+        // Thêm delay nhẹ để chắc chắn editor đã render xong
+        setTimeout(() => {
+          quillRefHomeworkDescription.current?.getEditor().setContents([]); // reset
+          quillRefHomeworkDescription.current
+            ?.getEditor()
+            .clipboard.dangerouslyPasteHTML(0, editingHomeWork.description);
+        }, 100); // thử 100ms nếu 0ms chưa đủ
+      }
+    }, 100);
+  }, [
+    modalUpdateHomeWorkVisible,
+    editingHomeWork,
+    quillRefHomeworkDescription.current?.getEditor(),
+  ]);
+
+  const handleSaveHomework = async () => {
+    try {
+      setLoadingUpdateHomework(true);
+      const values = await formHomework.validateFields();
+      const formData = new FormData();
+      let linkGame = "";
+      if (gameLinks?.length > 0) {
+        linkGame = gameLinks.join(", ");
+        // gameLinks.map((link) => (linkGame += link + ", "));
+      }
+      let linkYoutube = "";
+      if (youtubeLinks?.length > 0) {
+        linkYoutube = youtubeLinks.join(", ");
+      }
+      formData.append("title", values.title);
+      formData.append("level", editingHomeWork.level);
+      formData.append("linkYoutube", linkYoutube);
+      formData.append("linkGame", linkGame);
+      formData.append("linkZalo", values.linkZalo);
+      formData.append(
+        "description",
+        quillRefHomeworkDescription.current?.getEditor()?.root?.innerHTML || ""
+      );
+      formData.append("teacherId", teacher.id);
+
+      // Nếu có mp3Url thì fetch dữ liệu và append vào formData
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
+      if (editingHomeWork) {
+        const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        setHomeworks(
+          homeworks?.map((homeWork) =>
+            homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
+          )
+        );
+        message.success("HomeWork updated successfully");
+      }
+      setModalUpdateHomeWorkVisible(false);
+      formHomework.resetFields();
+      setEditingHomeWork(null);
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
+      setCurrentLink("");
+      setHtmlContentHomework("");
+      setSwapHtmlHomeworkMode(false);
+    } catch (err) {
+      message.error("Please check your input and try again" + err);
+    } finally {
+      setLoadingUpdateHomework(false);
+    }
+  };
+  // useEffect(() => {
+  //   if (quillRefHomeworkDescription.current) {
+  //     const editor = quillRefHomeworkDescription.current.getEditor();
+  //     setQuill(editor);
+  //   }
+  // }, [quillRefHomeworkDescription]);
+  const undoHandlerHomework = useCallback(() => {
+    const quill = quillRefHomeworkDescription.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandlerHomework = useCallback(() => {
+    const quill = quillRefHomeworkDescription.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
+  const imageHandlerHomework = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      // console.log([...formData]);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+        console.log(response.data.url);
+
+        // const result = await response.json();
+
+        if (response.status === 201 && quillRefHomeworkDescription.current) {
+          const editor = quillRefHomeworkDescription.current.getEditor();
+          const range = editor.getSelection(true);
+          editor.insertEmbed(range.index, "image", response.data.url);
+          setTimeout(() => {
+            const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+            imgs.forEach((img) => {
+              img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+            });
+          }, 0);
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        message.error("Upload error. Please try again!");
+      }
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 800, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      //     const formData = new FormData();
+      //     formData.append("file", compressedFile);
+
+      //     axios
+      //       .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+      //       .then((response) => {
+      //         if (response.status === 201 && quillRef.current) {
+      //           const editor = quillRef.current?.getEditor();
+      //           const range = editor.getSelection(true);
+      //           editor.insertEmbed(range.index, "image", response.data.url);
+      //         } else {
+      //           message.error("Upload failed. Try again!");
+      //         }
+      //       })
+      //       .catch((err) => {
+      //         console.error("Upload error:", err);
+      //         message.error("Upload error. Please try again!");
+      //       });
+      //   },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
+    };
+  }, []);
+  const audioHandlerHomework = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRefHomeworkDescription.current) {
+          const editor = quillRefHomeworkDescription.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
+  const modulesHomework = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandlerHomework,
+        undo: undoHandlerHomework,
+        redo: redoHandlerHomework,
+      },
+    },
+  };
+  const handleConvertToSpeechHomework = async () => {
+    if (!textToSpeech) {
+      return;
+    }
+    setLoadingTTSForUpdateHomeWork(true);
+
+    try {
+      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+
+      let base64String = response;
+
+      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
+      function base64ToBlob(base64, mimeType) {
+        let byteCharacters = atob(base64); // Giải mã base64
+        let byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        let byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+      }
+
+      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
+      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      setMp3file(audioBlob);
+      let audioUrl = URL.createObjectURL(audioBlob);
+      setMp3Url(audioUrl);
+    } catch (error) {
+      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+    }
+    setLoadingTTSForUpdateHomeWork(false);
+  };
+  useEffect(() => {
+    if (mp3Url) {
+      // console.log("🔄 Cập nhật audio URL:", mp3Url);
+      const audioElement = document.getElementById("audio-player-homework");
+      if (audioElement) {
+        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
+        audioElement.load(); // Tải lại audio
+        audioElement.src = mp3Url;
+      }
+    }
+  }, [mp3Url]);
   const resetForm = () => {
     setTextToSpeech("");
     setMp3file(null);
@@ -633,77 +1856,6 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     setEditMode(false);
   };
 
-  const toolbar = [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline", "code-block"],
-    ["link", "image"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ direction: "rtl" }],
-    [{ color: [] }, { background: [] }],
-    [{ font: [] }],
-    [{ align: [] }],
-    ["clean"],
-  ];
-
-  const quillFormats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "list",
-    "bullet",
-    "indent",
-    "link",
-    "image",
-    "color",
-    "background",
-    "align",
-  ];
-
-  const imageHandler = useCallback(() => {
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
-
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
-        } else {
-          message.error("Upload failed. Try again!");
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        message.error("Upload error. Please try again!");
-      }
-    };
-  }, []);
-
-  const modules = {
-    toolbar: {
-      container: toolbar,
-      handlers: {
-        image: imageHandler,
-      },
-    },
-  };
   const formatDate = (isoString) => {
     return format(new Date(isoString), "dd/MM/yyyy HH:mm");
   };
@@ -984,241 +2136,827 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         </Grid>
       </DialogContent>
       <DialogActions sx={{ padding: 2 }}>
-        <Button
-          onClick={onClose}
-          sx={{
-            color: colors.midGreen,
-            "&:hover": { color: colors.darkGreen, backgroundColor: "rgba(0, 0, 0, 0.04)" },
-          }}
-        >
+        <Button style={{ marginTop: isMobile ? "20px" : "" }} key="close" onClick={onClose}>
           Close
         </Button>
       </DialogActions>
 
       {/* Lesson Edit Dialog */}
       <Dialog
-        open={lessonDialogOpen}
-        onClose={() => setLessonDialogOpen(false)}
+        open={modalUpdateLessonVisible}
+        onClose={() => {
+          setTextToSpeech("");
+          setModalUpdateLessonVisible(false);
+          setEditingLesson(null);
+        }}
         fullWidth
         maxWidth="xl"
         PaperProps={{ sx: { width: "90vw", height: "90vh", maxWidth: "none" } }}
       >
         <DialogTitle>Edit Lesson</DialogTitle>
         <DialogContent sx={{ height: "100%", overflowY: "auto" }}>
-          <TextField
-            label="Lesson Name"
-            fullWidth
-            margin="normal"
-            value={lessonData.name}
-            onChange={(e) => setLessonData({ ...lessonData, name: e.target.value })}
-          />
-          <TextField
-            disabled
-            label="Level"
-            fullWidth
-            margin="normal"
-            value={lessonData.level}
-            onChange={(e) => setLessonData({ ...lessonData, level: e.target.value })}
-          />
-          <TextField
-            label="Lesson Youtube Link"
-            fullWidth
-            margin="normal"
-            value={lessonData.linkYoutube}
-            onChange={(e) => setLessonData({ ...lessonData, linkYoutube: e.target.value })}
-          />
-          <TextField
-            label="Lesson Game Link"
-            fullWidth
-            margin="normal"
-            value={lessonData.linkGame}
-            onChange={(e) => setLessonData({ ...lessonData, linkGame: e.target.value })}
-          />
-          <TextField
-            label="Lesson Date"
-            type="date"
-            fullWidth
-            margin="normal"
-            value={lessonData.date}
-            onChange={(e) => setLessonData({ ...lessonData, date: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextArea
-            value={textToSpeech}
-            onChange={(e) => setTextToSpeech(e.target.value)}
-            rows={3}
-            placeholder="Enter text to convert to speech"
-            style={{ borderRadius: "6px", borderColor: colors.inputBorder }}
-          />
-          <Radio.Group
-            options={genderOptions}
-            onChange={({ target: { value } }) => setGender(value)}
-            value={gender}
-            optionType="button"
-          />
-          <AntButton
-            type="primary"
-            onClick={handleConvertToSpeech}
-            loading={loadingTTS}
-            style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-          >
-            Convert to Speech
-          </AntButton>
-          {mp3Url && (
-            <div style={{ marginBottom: "16px" }}>
-              <audio id="audio-player" controls style={{ width: "100%" }}>
-                <source src={mp3Url} type="audio/mp3" />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          )}
-          <MDTypography variant="h6" sx={{ color: "#7b809a", margin: "10px" }}>
-            Description
-          </MDTypography>
-          <ReactQuill
-            theme="snow"
-            modules={modules}
-            formats={quillFormats}
-            ref={quillRef}
-            style={{
-              height: "250px",
-              marginBottom: "60px",
-              borderRadius: "6px",
-              border: `1px solid ${colors.inputBorder}`,
+          <Form
+            form={formLesson}
+            layout="vertical"
+            name="lessonForm"
+            initialValues={{
+              name: "",
+              level: "",
+              // linkYoutube: "",
+              linkGame: "",
+              description: "",
             }}
-            value={lessonData.description}
-            onChange={(e) => setLessonData({ ...lessonData, description: e })}
-          />
+          >
+            <Form.Item
+              name="name"
+              label="Tên bài học"
+              rules={[{ required: true, message: "Please enter the lesson name" }]}
+            >
+              <Input placeholder="Nhập tên bài học" />
+            </Form.Item>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px 0",
+              }}
+              icon={<UploadOutlined />}
+              onClick={audioHandlerLessonDescription}
+            >
+              Tải audio lên
+            </Button>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px",
+              }}
+              icon={<SwapOutlined />}
+              onClick={() => {
+                if (!swapHtmlMode) {
+                  const html =
+                    quillRefLessonDescription.current?.getEditor()?.root?.innerHTML || "";
+                  setHtmlContent(html);
+                  setSwapHtmlMode(true);
+                } else {
+                  quillRefLessonDescription.current
+                    ?.getEditor()
+                    .clipboard.dangerouslyPasteHTML(htmlContent);
+                  setSwapHtmlMode(false);
+                }
+              }}
+            >
+              Swap to {swapHtmlMode ? "Quill" : "HTML"}
+            </Button>
+            <Form.Item
+              // name="description"
+              label="Mô tả"
+              // rules={[{ required: true, message: "Please enter a description" }]}
+            >
+              {
+                <ReactQuill
+                  theme="snow"
+                  modules={modulesLessonDescription}
+                  formats={quillFormats}
+                  ref={quillRefLessonDescription}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    // border: `1px solid ${colors.inputBorder}`,
+                    display: swapHtmlMode ? "none" : "block",
+                  }}
+                />
+              }
+              {swapHtmlMode && (
+                <TextArea
+                  value={htmlContent}
+                  onChange={(e) => {
+                    setHtmlContent(e.target.value);
+                  }}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    border: `1px solid ${colors.inputBorder}`,
+                  }}
+                />
+              )}
+            </Form.Item>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px 0",
+                marginTop: isMobile ? "100px" : "40px",
+              }}
+              icon={<SwapOutlined />}
+              onClick={() => {
+                // console.log(
+                //   "swapHtmlLessonPlanMode",
+                //   swapHtmlLessonPlanMode,
+                //   htmlLessonPlanContent,
+                //   quillRefLessonPlan.current?.getEditor()?.root?.innerHTML
+                // );
+
+                if (!swapHtmlLessonPlanMode) {
+                  const html = quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
+                  setHtmlLessonPlanContent(html);
+                  setSwapHtmlLessonPlanMode(true);
+                } else {
+                  // console.log("htmlLessonPlanContent", htmlLessonPlanContent);
+                  quillRefLessonPlan.current
+                    ?.getEditor()
+                    .clipboard.dangerouslyPasteHTML(htmlLessonPlanContent);
+                  setSwapHtmlLessonPlanMode(false);
+                }
+              }}
+            >
+              Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
+            </Button>
+            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
+              {
+                <ReactQuill
+                  id="lessonPlanUpdate"
+                  theme="snow"
+                  modules={modulesLessonPlan}
+                  formats={quillFormats}
+                  ref={quillRefLessonPlan}
+                  placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    // border: `1px solid ${colors.inputBorder}`,
+                    display: swapHtmlLessonPlanMode ? "none" : "block",
+                  }}
+                />
+              }
+              {/* {swapHtmlLessonPlanMode && ( */}
+              <TextArea
+                value={htmlLessonPlanContent}
+                onChange={(e) => {
+                  setHtmlLessonPlanContent(e.target.value);
+                }}
+                style={{
+                  height: "250px",
+                  marginBottom: "60px", // Consider reducing this
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.inputBorder}`,
+                  display: !swapHtmlLessonPlanMode ? "none" : "block",
+                }}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                icon={<RobotOutlined />}
+                onClick={enhanceLessonPlan}
+                loading={loadingEnhanceLessonPlan}
+                style={{
+                  alignSelf: "flex-start",
+                  marginTop: isMobile ? "100px" : "40px",
+                  // marginBottom: "20px",
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  color: colors.white,
+                }}
+              >
+                Cải thiện mô tả
+              </Button>
+            </Form.Item>
+            <Form.Item>
+              <Button
+                icon={<RobotOutlined />}
+                // onClick={enhanceLessonPlan}
+                onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
+                // loading={loadingEnhanceLessonPlan}
+                style={{
+                  alignSelf: "flex-start",
+                  // marginTop: isMobile ? "100px" : "40px",
+                  marginTop: "5px",
+                  marginBottom: "20px",
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  color: colors.white,
+                }}
+              >
+                Cải thiện kế hoạch bài học
+              </Button>
+            </Form.Item>
+            {/* <Form.Item
+            name="level"
+            label="Level"
+            rules={[{ required: true, message: "Please select a level" }]}
+          >
+            <Select placeholder="Select level">
+              {levels?.map((level, index) => (
+                <Option key={index} value={level}>
+                  {level}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item> */}
+
+            <Form.Item label="Văn bản thành giọng nói">
+              <TextArea
+                value={textToSpeech}
+                onChange={(e) => setTextToSpeech(e.target.value)}
+                rows={3}
+                placeholder="Nhập văn bản để chuyển thành giọng nói"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Radio.Group
+                options={genderOptions}
+                onChange={onChangeGender}
+                value={gender}
+                optionType="button"
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                onClick={handleConvertToSpeech}
+                loading={loadingTTSForUpdateLesson}
+                style={{
+                  backgroundColor: colors.deepGreen,
+                  borderColor: colors.deepGreen,
+                }}
+              >
+                Chuyển thành giọng nói
+              </Button>
+            </Form.Item>
+            {mp3Url && (
+              <Form.Item>
+                <div style={{ marginBottom: "16px" }}>
+                  <audio id="audio-player" controls style={{ width: "100%" }}>
+                    <source src={mp3Url} type="audio/mp3" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </Form.Item>
+            )}
+            {/* <Form.Item label="Link Youtube bài học">
+            <Input.Group compact>
+              <Input
+                value={currentYoutubeLink}
+                placeholder="Nhập link youtube bài học"
+                style={{
+                  width: "calc(100% - 120px)",
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+                onChange={(e) => setCurrentYoutubeLink(e.target.value)}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (!currentYoutubeLink) return;
+                  if (editYoutubeIndex !== null) {
+                    const updated = [...youtubeLinks];
+                    updated[editYoutubeIndex] = currentYoutubeLink;
+                    setYoutubeLinks(updated);
+                    setEditYoutubeIndex(null);
+                  } else {
+                    setYoutubeLinks([...youtubeLinks, currentYoutubeLink]);
+                  }
+                  setCurrentYoutubeLink("");
+                }}
+                style={{
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                }}
+              >
+                {editYoutubeIndex !== null ? "Cập nhật" : "Thêm"}
+              </Button>
+            </Input.Group>
+          </Form.Item>
+          {youtubeLinks?.length > 0 && (
+            <Table
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "index",
+                  render: (_, __, i) => i + 1,
+                },
+                {
+                  title: "Link YouTube",
+                  dataIndex: "link",
+                },
+                {
+                  title: "Hành động",
+                  render: (_, record, index) => (
+                    <>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setCurrentYoutubeLink(record.link);
+                          setEditYoutubeIndex(index);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          const updated = youtubeLinks.filter((_, i) => i !== index);
+                          setYoutubeLinks(updated);
+                          if (editYoutubeIndex === index) {
+                            setCurrentYoutubeLink("");
+                            setEditYoutubeIndex(null);
+                          }
+                        }}
+                      >
+                        Xoá
+                      </Button>
+                    </>
+                  ),
+                },
+              ]}
+              dataSource={youtubeLinks.map((link, index) => ({ key: `${link}-${index}`, link }))}
+              pagination={false}
+            />
+          )} */}
+            {/* <Form.Item name="linkGame" label="Link game bài học">
+            <Input
+              placeholder="Nhập link game bài học"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item> */}
+          </Form>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setLessonDialogOpen(false)} sx={{ color: colors.midGreen }}>
+          {/* <Button onClick={() => setLessonDialogOpen(false)} sx={{ color: colors.midGreen }}>
             Cancel
           </Button>
           <AntButton
-            loading={loadingUpdate}
+            loading={loadingUpdateLesson}
             type="primary"
             onClick={handleSaveLesson}
             style={{ backgroundColor: colors.emerald, borderColor: colors.emerald }}
           >
             Save
-          </AntButton>
+          </AntButton> */}
+          <Button
+            style={{ marginTop: isMobile ? "20px" : "" }}
+            key="cancel"
+            onClick={() => {
+              setModalUpdateLessonVisible(false);
+              formLesson.resetFields();
+              setEditingLesson(null);
+              setYoutubeLinks([]);
+              setCurrentYoutubeLink("");
+              setEditYoutubeIndex(null);
+              setTextToSpeech("");
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            loading={loadingUpdateLesson}
+            key="submit"
+            type="primary"
+            onClick={handleSaveLesson}
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+            }}
+          >
+            {editingLesson ? "Lưu" : "Create"}
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Homework Edit Dialog */}
       <Dialog
-        open={homeworkDialogOpen}
-        onClose={() => setHomeworkDialogOpen(false)}
+        open={modalUpdateHomeWorkVisible}
+        onClose={() => {
+          setTextToSpeech("");
+          setModalUpdateHomeWorkVisible(false);
+          setEditingHomeWork(null);
+        }}
         fullWidth
         maxWidth="xl"
         PaperProps={{ sx: { width: "90vw", height: "90vh", maxWidth: "none" } }}
       >
         <DialogTitle>Edit Homework</DialogTitle>
         <DialogContent sx={{ height: "100%", overflowY: "auto" }}>
-          <TextField
-            label="Homework Title"
-            fullWidth
-            margin="normal"
-            value={homeworkData.title}
-            onChange={(e) => setHomeworkData({ ...homeworkData, title: e.target.value })}
-          />
-          <TextField
-            disabled
-            label="Level"
-            fullWidth
-            margin="normal"
-            value={homeworkData.level}
-            onChange={(e) => setHomeworkData({ ...homeworkData, level: e.target.value })}
-          />
-          <TextField
-            label="Homework Youtube Link"
-            fullWidth
-            margin="normal"
-            value={homeworkData.linkYoutube}
-            onChange={(e) => setHomeworkData({ ...homeworkData, linkYoutube: e.target.value })}
-          />
-          <TextField
-            label="Homework Game Link"
-            fullWidth
-            margin="normal"
-            value={homeworkData.linkGame}
-            onChange={(e) => setHomeworkData({ ...homeworkData, linkGame: e.target.value })}
-          />
-          <TextField
-            label="Homework Zalo Link"
-            fullWidth
-            margin="normal"
-            value={homeworkData.linkZalo}
-            onChange={(e) => setHomeworkData({ ...homeworkData, linkZalo: e.target.value })}
-          />
-          <TextField
-            label="Homework Date"
-            type="date"
-            fullWidth
-            margin="normal"
-            value={homeworkData.date}
-            onChange={(e) => setHomeworkData({ ...homeworkData, date: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextArea
-            value={textToSpeech}
-            onChange={(e) => setTextToSpeech(e.target.value)}
-            rows={3}
-            placeholder="Enter text to convert to speech"
-            style={{ borderRadius: "6px", borderColor: colors.inputBorder }}
-          />
-          <Radio.Group
-            options={genderOptions}
-            onChange={({ target: { value } }) => setGender(value)}
-            value={gender}
-            optionType="button"
-          />
-          <AntButton
-            type="primary"
-            onClick={handleConvertToSpeech}
-            loading={loadingTTS}
-            style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-          >
-            Convert to Speech
-          </AntButton>
-          {mp3Url && (
-            <div style={{ marginBottom: "16px" }}>
-              <audio id="audio-player" controls style={{ width: "100%" }}>
-                <source src={mp3Url} type="audio/mp3" />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          )}
-          <MDTypography variant="h6" sx={{ color: "#7b809a", margin: "10px" }}>
-            Description
-          </MDTypography>
-          <ReactQuill
-            theme="snow"
-            modules={modules}
-            formats={quillFormats}
-            ref={quillRef}
-            style={{
-              height: "250px",
-              marginBottom: "60px",
-              borderRadius: "6px",
-              border: `1px solid ${colors.inputBorder}`,
+          <Form
+            form={formHomework}
+            layout="vertical"
+            name="HomeWorkForm"
+            initialValues={{
+              title: "",
+              level: "",
+              // linkYoutube: "",
+              linkGame: "",
+              linkZalo: "",
+              description: "",
             }}
-            value={homeworkData.description}
-            onChange={(e) => setHomeworkData({ ...homeworkData, description: e })}
-          />
+          >
+            <Form.Item
+              name="title"
+              label="Tiêu đề bài tập"
+              rules={[
+                { required: true, message: "Please enter the homework name" },
+                { max: 100, message: "Title cannot be longer than 100 characters" },
+              ]}
+            >
+              <Input
+                placeholder="Nhập tiêu đề bài tập"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px 0",
+              }}
+              icon={<UploadOutlined />}
+              onClick={audioHandlerHomework}
+            >
+              Tải audio lên
+            </Button>
+            <Button
+              style={{
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                color: colors.white,
+                margin: "10px",
+              }}
+              icon={<SwapOutlined />}
+              onClick={() => {
+                if (!swapHtmlHomeworkMode) {
+                  const html =
+                    quillRefHomeworkDescription.current?.getEditor()?.root?.innerHTML || "";
+                  setHtmlContentHomework(html);
+                  setSwapHtmlHomeworkMode(true);
+                } else {
+                  quillRefHomeworkDescription.current
+                    ?.getEditor()
+                    .clipboard.dangerouslyPasteHTML(htmlContentHomework);
+                  setSwapHtmlHomeworkMode(false);
+                }
+              }}
+            >
+              Swap to {swapHtmlHomeworkMode ? "Quill" : "HTML"}
+            </Button>
+            <Form.Item
+              // name="description"
+              label="Mô tả"
+              // rules={[{ required: true, message: "Please enter a description" }]}
+            >
+              {
+                <ReactQuill
+                  theme="snow"
+                  modules={modulesHomework}
+                  formats={quillFormats}
+                  ref={quillRefHomeworkDescription}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    // border: `1px solid ${colors.inputBorder}`,
+                    display: swapHtmlHomeworkMode ? "none" : "block",
+                  }}
+                />
+              }
+              {swapHtmlHomeworkMode && (
+                <TextArea
+                  value={htmlContentHomework}
+                  onChange={(e) => {
+                    setHtmlContentHomework(e.target.value);
+                  }}
+                  style={{
+                    height: "250px",
+                    marginBottom: "60px", // Consider reducing this
+                    borderRadius: "6px",
+                    border: `1px solid ${colors.inputBorder}`,
+                  }}
+                />
+              )}
+            </Form.Item>
+            {/* <Form.Item
+            name="level"
+            label="Level"
+            rules={[{ required: true, message: "Please select a level" }]}
+          >
+            <Select
+              placeholder="Select level"
+              style={{
+                borderRadius: "6px",
+              }}
+            >
+              {levels?.map((level, index) => (
+                <Option key={index} value={level.id}>
+                  {level.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item> */}
+
+            <Form.Item label="Văn bản thành giọng nói">
+              <TextArea
+                value={textToSpeech}
+                onChange={(e) => setTextToSpeech(e.target.value)}
+                rows={3}
+                placeholder="Nhập văn bản để chuyển thành giọng nói"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Radio.Group
+                options={genderOptions}
+                onChange={onChangeGender}
+                value={gender}
+                optionType="button"
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                onClick={handleConvertToSpeechHomework}
+                loading={loadingTTSForUpdateHomeWork}
+                style={{
+                  backgroundColor: colors.deepGreen,
+                  borderColor: colors.deepGreen,
+                }}
+              >
+                Chuyển thành giọng nói
+              </Button>
+            </Form.Item>
+            {mp3Url && (
+              <Form.Item>
+                <div style={{ marginBottom: "16px" }}>
+                  <audio id="audio-player-homework" controls style={{ width: "100%" }}>
+                    <source src={mp3Url} type="audio/mp3" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </Form.Item>
+            )}
+            {/* {
+          ||
+            (form.getFieldValue("linkSpeech") && (
+              <Form.Item>
+                <div style={{ marginBottom: "16px" }}>
+                  <audio id="audio-player" controls style={{ width: "100%" }}>
+                    <source src={form.getFieldValue("linkSpeech")} type="audio/mp3" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </Form.Item>
+            ))} */}
+            {/* <div style={{ marginBottom: "16px" }}>
+            <audio controls style={{ width: "100%" }}>
+              <source
+                src={
+                  "https://res.cloudinary.com/ddd1hxsx0/video/upload/v1742718873/o7o1ouv3el4w72s4rxnc.mp3"
+                }
+                type="audio/mp3"
+              />
+              Your browser does not support the audio element.
+            </audio>
+          </div> */}
+            {/* <Form.Item
+            name="linkYoutube"
+            label="Link Youtube Bài tập"
+            // rules={[{ required: true, message: "Please enter the homework link" }]}
+          >
+            <Input
+              placeholder="Nhập link youtube bài tập"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item> */}
+            {/* <Form.Item label="Link Youtube bài tập">
+            <Input.Group compact>
+              <Input
+                value={currentYoutubeLink}
+                placeholder="Nhập link youtube bài tập"
+                style={{
+                  width: "calc(100% - 120px)",
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+                onChange={(e) => setCurrentYoutubeLink(e.target.value)}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (!currentYoutubeLink) return;
+                  if (editYoutubeIndex !== null) {
+                    const updated = [...youtubeLinks];
+                    updated[editYoutubeIndex] = currentYoutubeLink;
+                    setYoutubeLinks(updated);
+                    setEditYoutubeIndex(null);
+                  } else {
+                    setYoutubeLinks([...youtubeLinks, currentYoutubeLink]);
+                  }
+                  setCurrentYoutubeLink("");
+                }}
+              >
+                {editYoutubeIndex !== null ? "Cập nhật" : "Thêm"}
+              </Button>
+            </Input.Group>
+          </Form.Item>
+          {youtubeLinks?.length > 0 && (
+            <Table
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "index",
+                  render: (_, __, i) => i + 1,
+                },
+                {
+                  title: "Link YouTube",
+                  dataIndex: "link",
+                },
+                {
+                  title: "Hành động",
+                  render: (_, record, index) => (
+                    <>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setCurrentYoutubeLink(record.link);
+                          setEditYoutubeIndex(index);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => {
+                          const updated = youtubeLinks.filter((_, i) => i !== index);
+                          setYoutubeLinks(updated);
+                          if (editYoutubeIndex === index) {
+                            setCurrentYoutubeLink("");
+                            setEditYoutubeIndex(null);
+                          }
+                        }}
+                      >
+                        Xoá
+                      </Button>
+                    </>
+                  ),
+                },
+              ]}
+              dataSource={youtubeLinks.map((link, index) => ({ key: `${link}-${index}`, link }))}
+              pagination={false}
+            />
+          )} */}
+            {/* <Form.Item name="linkGame" label="Link Game bài tập">
+            <Input
+              placeholder="Nhập link game bài tập"
+              style={{
+                borderRadius: "6px",
+                borderColor: colors.inputBorder,
+              }}
+            />
+          </Form.Item> */}
+            <Form.Item label="Link game bài tập">
+              <Input.Group compact>
+                <Input
+                  value={currentLink}
+                  placeholder="Nhập link game bài tập"
+                  style={{
+                    width: "calc(100% - 120px)",
+                    borderRadius: "6px",
+                    borderColor: colors.inputBorder,
+                  }}
+                  onChange={(e) => setCurrentLink(e.target.value)}
+                />
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    if (!currentLink) return;
+                    if (editIndex !== null) {
+                      const updated = [...gameLinks];
+                      updated[editIndex] = currentLink;
+                      setGameLinks(updated);
+                      setEditIndex(null);
+                    } else {
+                      setGameLinks([...gameLinks, currentLink]);
+                    }
+                    setCurrentLink("");
+                  }}
+                >
+                  {editIndex !== null ? "Cập nhật" : "Thêm"}
+                </Button>
+              </Input.Group>
+            </Form.Item>
+            {gameLinks?.length > 0 && (
+              <Table
+                columns={[
+                  {
+                    title: "STT",
+                    dataIndex: "index",
+                    render: (_, __, i) => i + 1,
+                  },
+                  {
+                    title: "Link Game",
+                    dataIndex: "link",
+                  },
+                  {
+                    title: "Hành động",
+                    render: (_, record, index) => (
+                      <>
+                        <Button
+                          type="link"
+                          onClick={() => {
+                            setCurrentLink(record.link);
+                            setEditIndex(index);
+                          }}
+                        >
+                          Sửa
+                        </Button>
+                        <Button
+                          type="link"
+                          danger
+                          onClick={() => {
+                            const updated = gameLinks.filter((_, i) => i !== index);
+                            setGameLinks(updated);
+                            if (editIndex === index) {
+                              setCurrentLink("");
+                              setEditIndex(null);
+                            }
+                          }}
+                        >
+                          Xoá
+                        </Button>
+                      </>
+                    ),
+                  },
+                ]}
+                dataSource={gameLinks.map((link, index) => {
+                  return { key: `${link}-${index}`, link };
+                })}
+                pagination={false}
+              />
+            )}
+
+            <Form.Item name="linkZalo" label="Link Zalo bài tập">
+              <Input
+                placeholder="Nhập link zalo bài tập"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item>
+          </Form>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setHomeworkDialogOpen(false)} sx={{ color: colors.midGreen }}>
-            Cancel
+          <Button
+            style={{ marginTop: isMobile ? "20px" : "" }}
+            key="cancelHomework"
+            onClick={() => {
+              setTextToSpeech("");
+              setModalUpdateHomeWorkVisible(false);
+              formHomework.resetFields();
+              setEditingHomeWork(null);
+              setCurrentLink("");
+            }}
+          >
+            cancel
           </Button>
-          <AntButton
-            loading={loadingUpdate}
+          <Button
+            loading={loadingUpdateHomework}
+            key="submitHomework"
             type="primary"
             onClick={handleSaveHomework}
-            style={{ backgroundColor: colors.emerald, borderColor: colors.emerald }}
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+            }}
           >
-            Save
-          </AntButton>
+            {editingHomeWork ? "Save" : "Create"}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -1250,6 +2988,7 @@ TeacherOverViewModal.propTypes = {
     endDate: PropTypes.string,
     fileUrl: PropTypes.string,
   }),
+  row: PropTypes.object.isRequired,
 };
 
 export default TeacherOverViewModal;

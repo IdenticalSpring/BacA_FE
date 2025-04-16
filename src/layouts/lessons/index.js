@@ -26,6 +26,7 @@ import ReactQuill from "react-quill";
 import axios from "axios";
 import homeWorkService from "services/homeWorkService";
 import LessonDetailModal from "./LessonDetailModal";
+import { RobotOutlined, SwapOutlined, UploadOutlined } from "@ant-design/icons";
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
@@ -182,7 +183,9 @@ function Lessons() {
   const [editMode, setEditMode] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const quillRef = useRef(null);
+  const quillRefLessonPlan = useRef(null);
   const [quill, setQuill] = useState(null);
+  const [quillLessonPlan, setQuillLessonPlan] = useState(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [textToSpeech, setTextToSpeech] = useState("");
@@ -204,9 +207,404 @@ function Lessons() {
   const [searchTeacher, setSearchTeacher] = useState("");
   const [searchDate, setSearchDate] = useState(""); // State để lưu ngày tìm kiếm
   const [gender, setGender] = useState(1);
+  const [htmlContent, setHtmlContent] = useState("");
+  const [swapHtmlMode, setSwapHtmlMode] = useState(false);
+  const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
+  const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
+  const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
+  );
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const isMobile = windowWidth < 768;
+  const toolbar = [
+    [{ font: [] }],
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    [{ size: ["small", false, "large", "huge"] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["bold", "italic", "underline", "strike", "blockquote"],
+    ["link", "image", "video"],
+    [{ script: "sub" }, { script: "super" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ direction: "rtl" }],
+    [{ color: [] }, { background: [] }],
+    [{ align: [] }],
+    ["clean"],
+    ["undo", "redo"],
+  ];
+
+  const quillFormats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
+    "indent",
+    "link",
+    "image",
+    "color",
+    "background",
+    "align",
+    "audio",
+    "size",
+    // "code-block",
+    "font",
+    // "code",
+    "script",
+    "direction",
+    "video",
+  ];
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
+  };
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      setQuillDescription(editor);
+    }
+    if (quillRefLessonPlan.current) {
+      const editor = quillRefLessonPlan.current.getEditor();
+      setQuillLessonPlan(editor);
+    }
+  }, [quillRef, quillRefLessonPlan]);
+  // useEffect(() => {
+  //   const quill = quillRef.current?.getEditor();
+  //   if (!quill) return;
+
+  //   const handlePaste = (e) => {
+  //     const clipboardData = e.clipboardData;
+  //     const items = clipboardData?.items;
+
+  //     if (!items) return;
+
+  //     for (const item of items) {
+  //       if (item.type.indexOf("image") !== -1) {
+  //         e.preventDefault(); // chặn mặc định Quill xử lý
+
+  //         const file = item.getAsFile();
+
+  //         if (!file) return;
+
+  //         // 👇 Resize trước khi upload như trong imageHandler
+  //         new Compressor(file, {
+  //           quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+  //           maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+  //           maxHeight: 800,
+  //           success(compressedFile) {
+  //             const formData = new FormData();
+  //             formData.append("file", compressedFile);
+
+  //             axios
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .then((response) => {
+  //                 if (response.status === 201) {
+  //                   const range = quill.getSelection(true);
+  //                   quill.insertEmbed(range.index, "image", response.data.url);
+  //                 } else {
+  //                   message.error("Upload failed. Try again!");
+  //                 }
+  //               })
+  //               .catch((err) => {
+  //                 console.error("Upload error:", err);
+  //                 message.error("Upload error. Please try again!");
+  //               });
+  //           },
+  //           error(err) {
+  //             console.error("Compression error:", err);
+  //             message.error("Image compression failed!");
+  //           },
+  //         });
+
+  //         break; // chỉ xử lý ảnh đầu tiên
+  //       }
+  //     }
+  //   };
+
+  //   const editor = quill?.root;
+  //   editor?.addEventListener("paste", handlePaste);
+
+  //   return () => {
+  //     editor?.removeEventListener("paste", handlePaste);
+  //   };
+  // }, [quillRef]);
+  const undoHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+      if (history.stack.undo.length > 0) {
+        history.undo();
+      } else {
+        message.warning("No more undo available.");
+      }
+    }
+  }, []);
+  const redoHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const history = quill.history;
+
+      if (history.stack.redo.length > 0) {
+        history.redo();
+      } else {
+        message.warning("No more redo available.");
+      }
+    }
+  }, []);
+  const imageHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+        if (response.status === 201 && quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection(true);
+          editor.insertEmbed(range.index, "image", response.data.url);
+          setTimeout(() => {
+            const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+            imgs.forEach((img) => {
+              img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+            });
+          }, 0);
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        message.error("Upload error. Please try again!");
+      }
+      //   new Compressor(file, {
+      //     quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //     maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
+      //     maxHeight: 800, // Optional, resize chiều cao nếu cần
+      //     success(compressedFile) {
+      //       const formData = new FormData();
+      //       formData.append("file", compressedFile);
+
+      //       axios
+      //         .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+      //         .then((response) => {
+      //           if (response.status === 201 && quillRef.current) {
+      //             const editor = quillRef.current?.getEditor();
+      //             const range = editor.getSelection(true);
+      //             editor.insertEmbed(range.index, "image", response.data.url);
+      //           } else {
+      //             message.error("Upload failed. Try again!");
+      //           }
+      //         })
+      //         .catch((err) => {
+      //           console.error("Upload error:", err);
+      //           message.error("Upload error. Please try again!");
+      //         });
+      //     },
+      //     error(err) {
+      //       console.error("Compression error:", err);
+      //       message.error("Image compression failed!");
+      //     },
+      //   });
+    };
+  }, []);
+  const imageHandlerLessonPlan = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      // const formData = new FormData();
+      // formData.append("file", file);
+
+      // try {
+      //   const response = await axios.post(
+      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     formData
+      //   );
+      //   if (response.status === 201 && quillRef.current) {
+      //     const editor = quillRef.current.getEditor();
+      //     const range = editor.getSelection(true);
+      //     editor.insertEmbed(range.index, "image", response.data.url);
+      //   } else {
+      //     message.error("Upload failed. Try again!");
+      //   }
+      // } catch (error) {
+      //   console.error("Error uploading image:", error);
+      //   message.error("Upload error. Please try again!");
+      // }
+      // new Compressor(file, {
+      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
+      //   maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
+      //   maxHeight: 350, // Optional, resize chiều cao nếu cần
+      //   success(compressedFile) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      axios
+        .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+        .then((response) => {
+          if (response.status === 201 && quillRefLessonPlan.current) {
+            const editor = quillRefLessonPlan.current?.getEditor();
+            const range = editor.getSelection(true);
+            editor.insertEmbed(range.index, "image", response.data.url);
+            setTimeout(() => {
+              const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
+              imgs.forEach((img) => {
+                img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+              });
+            }, 0);
+          } else {
+            message.error("Upload failed. Try again!");
+          }
+        })
+        .catch((err) => {
+          console.error("Upload error:", err);
+          message.error("Upload error. Please try again!");
+        });
+      // },
+      //   error(err) {
+      //     console.error("Compression error:", err);
+      //     message.error("Image compression failed!");
+      //   },
+      // });
+    };
+  }, []);
+  const audioHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "audio/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          formData
+        );
+
+        if (response.status === 201 && quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection(true);
+          const audioUrl = response?.data?.url;
+
+          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
+          editor.insertEmbed(range.index, "audio", audioUrl, "user");
+          editor.setSelection(range.index + 1); // move cursor
+        } else {
+          message.error("Upload failed. Try again!");
+        }
+      } catch (error) {
+        console.error("Error uploading audio:", error);
+        message.error("Upload error. Please try again!");
+      }
+    };
+  }, []);
+
+  const modules = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandler,
+        undo: undoHandler,
+        redo: redoHandler,
+      },
+    },
+  };
+  const modulesLessonPlan = {
+    toolbar: {
+      container: toolbar,
+      handlers: {
+        image: imageHandlerLessonPlan,
+        undo: undoHandler,
+        redo: redoHandler,
+      },
+    },
+  };
+
+  const enhanceDescription = async () => {
+    if (!quillDescription) return;
+
+    const currentContent = quillDescription.getText();
+    if (!currentContent.trim()) {
+      message.warning("Please enter a description first!");
+      return;
+    }
+
+    setLoadingEnhanceDescription(true);
+    try {
+      const enhancedText = await lessonService.enhanceDescription(currentContent);
+      quillDescription.setText(enhancedText);
+      message.success("Description enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing description:", error);
+      message.error("Failed to enhance description. Please try again!");
+    } finally {
+      setLoadingEnhanceDescription(false);
+    }
+  };
+
+  // CreateLesson.js
+  const enhanceLessonPlan = async () => {
+    if (!quillLessonPlan) return;
+
+    const currentContent = quillLessonPlan.getText();
+    if (!currentContent.trim()) {
+      message.warning("Please enter a lesson plan first!");
+      return;
+    }
+
+    // Lấy danh sách URL ảnh từ nội dung Quill
+    const quillEditor = quillLessonPlan.getContents();
+    const imageUrls = [];
+    quillEditor.ops.forEach((op) => {
+      if (op.insert && op.insert.image) {
+        imageUrls.push(op.insert.image); // Thu thập URL ảnh
+      }
+    });
+
+    setLoadingEnhanceLessonPlan(true);
+    try {
+      // Gọi lessonService.enhanceLessonPlan với lessonPlan và imageUrls
+      const enhancedText = await lessonService.enhanceLessonPlan(currentContent, imageUrls);
+      quillLessonPlan.setText(enhancedText);
+      message.success("Lesson plan enhanced successfully!");
+    } catch (error) {
+      console.error("Error enhancing lesson plan:", error);
+      message.error("Failed to enhance lesson plan. Please try again!");
+    } finally {
+      setLoadingEnhanceLessonPlan(false);
+    }
   };
   useEffect(() => {
     fetchLessons();
@@ -231,78 +629,6 @@ function Lessons() {
       setQuill(editor);
     }
   }, [quillRef]);
-
-  const toolbar = [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline", "code-block"],
-    ["link", "image"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ direction: "rtl" }],
-    [{ color: [] }, { background: [] }],
-    [{ font: [] }],
-    [{ align: [] }],
-    ["clean"],
-  ];
-
-  const quillFormats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "list",
-    "bullet",
-    "indent",
-    "link",
-    "image",
-    "color",
-    "background",
-    "align",
-  ];
-
-  const imageHandler = useCallback(() => {
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
-
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
-        } else {
-          message.error("Upload failed. Try again!");
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        message.error("Upload error. Please try again!");
-      }
-    };
-  }, []);
-
-  const modules = {
-    toolbar: {
-      container: toolbar,
-      handlers: {
-        image: imageHandler,
-      },
-    },
-  };
 
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
@@ -382,18 +708,46 @@ function Lessons() {
     setEditMode(true);
     setSelectedLesson(lesson);
     setLessonData({
+      // name: lesson.name,
+      // level: lesson.level,
+      // linkYoutube: lesson.linkYoutube,
+      // linkGame: lesson.linkGame,
+      // description: lesson.description,
+      // TeacherId: lesson?.teacher?.id || "",
+      // date: lesson.date ? new Date(lesson.date).toISOString().split("T")[0] : "", // Chuyển thành YYYY-MM-DD
       name: lesson.name,
-      level: lesson.level,
-      linkYoutube: lesson.linkYoutube,
       linkGame: lesson.linkGame,
-      description: lesson.description,
-      TeacherId: lesson?.teacher?.id || "",
-      date: lesson.date ? new Date(lesson.date).toISOString().split("T")[0] : "", // Chuyển thành YYYY-MM-DD
+      linkSpeech: lesson.linkSpeech,
     });
     setMp3Url(lesson.linkSpeech);
     setOpen(true);
   };
+  console.log(selectedLesson);
 
+  useEffect(() => {
+    if (open && quillRef.current?.getEditor() && selectedLesson?.description) {
+      // Thêm delay nhẹ để chắc chắn editor đã render xong
+      console.log(selectedLesson.description);
+
+      setTimeout(() => {
+        quillRef.current?.getEditor().setContents([]); // reset
+        quillRef.current?.getEditor().clipboard.dangerouslyPasteHTML(0, selectedLesson.description);
+      }, 100); // thử 100ms nếu 0ms chưa đủ
+    }
+  }, [open, selectedLesson, quillRef.current?.getEditor()]);
+  useEffect(() => {
+    if (open && quillRefLessonPlan.current?.getEditor() && selectedLesson?.lessonPlan) {
+      // Thêm delay nhẹ để chắc chắn editor đã render xong
+      console.log(selectedLesson.lessonPlan);
+
+      setTimeout(() => {
+        quillRefLessonPlan.current?.getEditor().setContents([]); // reset
+        quillRefLessonPlan.current
+          ?.getEditor()
+          .clipboard.dangerouslyPasteHTML(0, selectedLesson.lessonPlan);
+      }, 100); // thử 100ms nếu 0ms chưa đủ
+    }
+  }, [open, selectedLesson, quillRefLessonPlan.current?.getEditor()]);
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa bài học này?")) {
       try {
@@ -675,26 +1029,171 @@ function Lessons() {
               </audio>
             </div>
           )}
+          <Button
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+              margin: "10px 0",
+            }}
+            icon={<UploadOutlined />}
+            onClick={audioHandler}
+          >
+            Tải audio lên
+          </Button>
+          <Button
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+              margin: "10px",
+            }}
+            icon={<SwapOutlined />}
+            onClick={() => {
+              if (!swapHtmlMode) {
+                const html = quillRef.current?.getEditor()?.root?.innerHTML || "";
+                setHtmlContent(html);
+                setSwapHtmlMode(true);
+              } else {
+                quillRef.current?.getEditor().clipboard.dangerouslyPasteHTML(htmlContent);
+                setSwapHtmlMode(false);
+              }
+            }}
+          >
+            Swap to {swapHtmlMode ? "Quill" : "HTML"}
+          </Button>
           <MDTypography variant="h6" sx={{ color: "#7b809a", margin: "10px" }}>
             Description
           </MDTypography>
-          <ReactQuill
-            id="detail"
-            theme="snow"
-            modules={modules}
-            formats={quillFormats}
-            ref={quillRef}
+          {
+            <ReactQuill
+              theme="snow"
+              modules={modules}
+              formats={quillFormats}
+              ref={quillRef}
+              style={{
+                height: "250px",
+                marginBottom: "60px", // Consider reducing this
+                borderRadius: "6px",
+                // border: `1px solid ${colors.inputBorder}`,
+                display: swapHtmlMode ? "none" : "block",
+              }}
+            />
+          }
+          {swapHtmlMode && (
+            <TextArea
+              value={htmlContent}
+              onChange={(e) => {
+                setHtmlContent(e.target.value);
+              }}
+              style={{
+                height: "250px",
+                marginBottom: "60px", // Consider reducing this
+                borderRadius: "6px",
+                border: `1px solid ${colors.inputBorder}`,
+              }}
+            />
+          )}
+          <Button
+            style={{
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+              margin: "10px 0",
+              marginTop: isMobile ? "100px" : "40px",
+            }}
+            icon={<SwapOutlined />}
+            onClick={() => {
+              // console.log(
+              //   "swapHtmlLessonPlanMode",
+              //   swapHtmlLessonPlanMode,
+              //   htmlLessonPlanContent,
+              //   quillRefLessonPlan.current?.getEditor()?.root?.innerHTML
+              // );
+
+              if (!swapHtmlLessonPlanMode) {
+                const html = quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
+                setHtmlLessonPlanContent(html);
+                setSwapHtmlLessonPlanMode(true);
+              } else {
+                // console.log("htmlLessonPlanContent", htmlLessonPlanContent);
+                quillRefLessonPlan.current
+                  ?.getEditor()
+                  .clipboard.dangerouslyPasteHTML(htmlLessonPlanContent);
+                setSwapHtmlLessonPlanMode(false);
+              }
+            }}
+          >
+            Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
+          </Button>
+          <MDTypography variant="h6" sx={{ color: "#7b809a", margin: "10px" }}>
+            LessonPlan
+          </MDTypography>
+          {
+            <ReactQuill
+              id="lessonPlanUpdate"
+              theme="snow"
+              modules={modulesLessonPlan}
+              formats={quillFormats}
+              ref={quillRefLessonPlan}
+              placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+              style={{
+                height: "250px",
+                marginBottom: "60px", // Consider reducing this
+                borderRadius: "6px",
+                // border: `1px solid ${colors.inputBorder}`,
+                display: swapHtmlLessonPlanMode ? "none" : "block",
+              }}
+            />
+          }
+          {/* {swapHtmlLessonPlanMode && ( */}
+          <TextArea
+            value={htmlLessonPlanContent}
+            onChange={(e) => {
+              setHtmlLessonPlanContent(e.target.value);
+            }}
             style={{
               height: "250px",
-              marginBottom: "60px",
+              marginBottom: "60px", // Consider reducing this
               borderRadius: "6px",
               border: `1px solid ${colors.inputBorder}`,
-            }}
-            value={lessonData.description}
-            onChange={(e) => {
-              setLessonData({ ...lessonData, description: e });
+              display: !swapHtmlLessonPlanMode ? "none" : "block",
             }}
           />
+          <Button
+            icon={<RobotOutlined />}
+            onClick={enhanceLessonPlan}
+            loading={loadingEnhanceLessonPlan}
+            style={{
+              alignSelf: "flex-start",
+              marginTop: isMobile ? "100px" : "40px",
+              // marginBottom: "20px",
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+            }}
+          >
+            Cải thiện mô tả
+          </Button>
+          <Button
+            icon={<RobotOutlined />}
+            // onClick={enhanceLessonPlan}
+            onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
+            // loading={loadingEnhanceLessonPlan}
+            style={{
+              alignSelf: "flex-start",
+              // marginTop: isMobile ? "100px" : "40px",
+              marginTop: "5px",
+              marginBottom: "20px",
+              borderRadius: "6px",
+              backgroundColor: colors.emerald,
+              borderColor: colors.emerald,
+              color: colors.white,
+            }}
+          >
+            Cải thiện kế hoạch bài học
+          </Button>
         </DialogContent>
         <DialogActions>
           <Button
