@@ -18,6 +18,7 @@ import {
   Table,
   DatePicker,
   Select,
+  List,
 } from "antd";
 import {
   TrophyOutlined,
@@ -26,15 +27,21 @@ import {
   EditOutlined,
   SoundOutlined,
   AudioOutlined,
+  PieChartOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs"; // Thêm dayjs
-import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
+import dayjs from "dayjs";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import studentScoreService from "services/studentScoreService";
 import studentService from "services/studentService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import testSkillService from "services/testSkillService";
 import PropTypes from "prop-types";
 import { colors } from "assets/theme/color";
+import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -48,8 +55,8 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
   const [skillEvaluations, setSkillEvaluations] = useState([]);
   const [testSkills, setTestSkills] = useState([]);
   const [error, setError] = useState(null);
-  const [dateRange, setDateRange] = useState(null); // Thêm state cho bộ lọc ngày
-  const [skillFilterMode, setSkillFilterMode] = useState("month"); // Thêm state cho bộ lọc kỹ năng
+  const [dateRange, setDateRange] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null); // State cho ngày được chọn
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +134,12 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
         setStudentInfo(studentData);
         setSkillEvaluations(skillData);
         setTestSkills(testSkillsData);
+
+        // Tự động chọn ngày mới nhất
+        const uniqueDates = getUniqueDates(skillData);
+        if (uniqueDates.length > 0) {
+          setSelectedDate(uniqueDates[0]);
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err.message || "Không thể tải thông tin học sinh, điểm số hoặc kỹ năng");
@@ -138,7 +151,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     fetchData();
   }, [student?.id]);
 
-  // Hàm format ngày thành DD/MM/YYYY
+  // Hàm format ngày
   const formatDate = (date) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, "0");
@@ -147,89 +160,161 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     return `${day}/${month}/${year}`;
   };
 
-  // Hàm lấy danh sách các ngày duy nhất từ skillEvaluations
-  const getUniqueDates = () => {
-    let uniqueDates = [];
-
-    if (skillFilterMode === "day") {
-      uniqueDates = [...new Set(skillEvaluations.map((s) => s.date))].sort(
-        (a, b) => new Date(a) - new Date(b)
-      );
-    } else if (skillFilterMode === "week") {
-      uniqueDates = [
-        ...new Set(skillEvaluations.map((s) => dayjs(s.date).startOf("week").format("YYYY-MM-DD"))),
-      ].sort((a, b) => new Date(a) - new Date(b));
-    } else if (skillFilterMode === "month") {
-      uniqueDates = [
-        ...new Set(
-          skillEvaluations.map((s) => dayjs(s.date).startOf("month").format("YYYY-MM-DD"))
-        ),
-      ].sort((a, b) => new Date(a) - new Date(b));
-    }
-
-    return uniqueDates;
+  // Hàm lấy mô tả điểm số
+  const getScoreDescription = (score) => {
+    const descriptions = {
+      1: "Cần cải thiện",
+      2: "Cố gắng hơn",
+      3: "Khá",
+      4: "Giỏi",
+      5: "Xuất sắc",
+    };
+    return descriptions[score] || "Không xác định";
   };
 
-  // Hàm tạo dữ liệu cho biểu đồ kỹ năng
-  const getSkillsChartData = (type) => {
-    const skills = skillEvaluations.filter((skill) => skill.skillType === type);
-    const uniqueDates = getUniqueDates();
-    const uniqueSkills = [...new Set(skills.map((s) => s.skill.name))];
+  // Hàm lấy danh sách các ngày duy nhất
+  const getUniqueDates = (evaluations = skillEvaluations) => {
+    return [...new Set(evaluations.map((s) => s.date))].sort((a, b) => new Date(b) - new Date(a));
+  };
 
-    const datasets = uniqueSkills.map((skillName, index) => {
-      const data = uniqueDates.map((date) => {
-        let filteredSkills;
+  // Hàm tạo dữ liệu cho Donut Chart
+  const getSkillsChartData = (type, date) => {
+    if (!date) return { labels: [], datasets: [] };
 
-        if (skillFilterMode === "day") {
-          filteredSkills = skills.filter((s) => s.date === date && s.skill.name === skillName);
-        } else if (skillFilterMode === "week") {
-          filteredSkills = skills.filter(
-            (s) =>
-              dayjs(s.date).startOf("week").format("YYYY-MM-DD") === date &&
-              s.skill.name === skillName
-          );
-        } else if (skillFilterMode === "month") {
-          filteredSkills = skills.filter(
-            (s) =>
-              dayjs(s.date).startOf("month").format("YYYY-MM-DD") === date &&
-              s.skill.name === skillName
-          );
-        }
+    const filteredSkills = skillEvaluations.filter(
+      (skill) => skill.skillType === type && skill.date === date
+    );
 
-        const totalScore = filteredSkills.reduce((sum, s) => sum + s.score, 0);
-        const averageScore = filteredSkills.length > 0 ? totalScore / filteredSkills.length : 0;
-        return (averageScore / 5) * 100;
-      });
+    if (filteredSkills.length === 0) return { labels: [], datasets: [] };
 
-      return {
-        label: skillName,
-        color: ["info", "warning", "success", "error", "secondary", "dark"][index % 6],
-        data,
-      };
-    });
+    const labels = filteredSkills.map((skill) => skill.skill.name);
+    const data = filteredSkills.map((skill) => skill.score);
+    const backgroundColors = [
+      "#FF6B6B", // Coral
+      "#4ECDC4", // Turquoise
+      "#45B7D1", // Sky Blue
+      "#96CEB4", // Mint
+      "#FFEEAD", // Light Yellow
+      "#D4A5A5", // Soft Pink
+    ].slice(0, filteredSkills.length);
 
     return {
-      labels: uniqueDates.map((date) =>
-        skillFilterMode === "day"
-          ? formatDate(date)
-          : skillFilterMode === "week"
-          ? `Tuần ${dayjs(date).week()}`
-          : dayjs(date).format("MM/YYYY")
-      ),
-      datasets,
+      labels,
+      datasets: [
+        {
+          label: "Phân bố điểm",
+          data,
+          backgroundColor: backgroundColors,
+          borderColor: "#ffffff",
+          borderWidth: 2,
+          hoverOffset: 20,
+        },
+      ],
     };
   };
 
-  // Hàm render biểu đồ kỹ năng
+  // Cấu hình cho Donut Chart
+  const chartOptions = {
+    plugins: {
+      legend: {
+        position: "top",
+        labels: {
+          font: { size: 14 },
+          color: colors.darkGreen,
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || "";
+            const value = context.raw;
+            return `${label}: ${getScoreDescription(value)} (${value}/5)`;
+          },
+        },
+      },
+    },
+    maintainAspectRatio: false,
+    responsive: true,
+    cutout: "50%", // Tạo phần trống ở giữa
+  };
+
+  // Hàm render Donut Chart
   const renderSkillsChart = (type, title) => {
-    const chartData = getSkillsChartData(type);
-    return chartData.datasets.length ? (
-      <DefaultLineChart chart={chartData} height="300px" />
+    const chartData = getSkillsChartData(type, selectedDate);
+    return chartData.labels.length ? (
+      <div style={{ height: "300px", position: "relative" }}>
+        <Pie data={chartData} options={chartOptions} />
+      </div>
     ) : (
-      <Text>{`Chưa có dữ liệu ${title.toLowerCase()}.`}</Text>
+      <Text>{`Chưa có dữ liệu ${title.toLowerCase()} cho ngày đã chọn.`}</Text>
     );
   };
 
+  // Hàm render chi tiết kỹ năng
+  const renderSkillDetails = () => {
+    const uniqueDates = getUniqueDates();
+    return (
+      <>
+        <Divider orientation="left" style={{ color: colors.darkGreen }}>
+          Chi tiết đánh giá theo ngày
+        </Divider>
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Text>Chọn ngày để xem chi tiết:</Text>
+          <Select
+            style={{ width: 200 }}
+            placeholder="Chọn ngày"
+            value={selectedDate}
+            onChange={setSelectedDate}
+            allowClear
+          >
+            {uniqueDates.map((date) => (
+              <Option key={date} value={date}>
+                {formatDate(date)}
+              </Option>
+            ))}
+          </Select>
+          {selectedDate && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Text strong>Kỹ năng:</Text>
+                <List
+                  dataSource={skillEvaluations.filter(
+                    (s) => s.date === selectedDate && s.skillType === "1"
+                  )}
+                  renderItem={(skill) => (
+                    <List.Item>
+                      <Text>
+                        {skill.skill.name}: {getScoreDescription(skill.score)}
+                      </Text>
+                    </List.Item>
+                  )}
+                  locale={{ emptyText: "Chưa có kỹ năng." }}
+                />
+              </Col>
+              <Col span={12}>
+                <Text strong>Tình hình trong lớp:</Text>
+                <List
+                  dataSource={skillEvaluations.filter(
+                    (s) => s.date === selectedDate && s.skillType === "0"
+                  )}
+                  renderItem={(skill) => (
+                    <List.Item>
+                      <Text>
+                        {skill.skill.name}: {getScoreDescription(skill.score)}
+                      </Text>
+                    </List.Item>
+                  )}
+                  locale={{ emptyText: "Chưa có kỹ năng hành vi." }}
+                />
+              </Col>
+            </Row>
+          )}
+        </Space>
+      </>
+    );
+  };
+
+  // Các hàm khác (groupScoresByTest, getMostRecentScores, calculateAverage, v.v.) giữ nguyên
   const groupScoresByTest = () => {
     const grouped = {};
     scoreDetailsData.forEach((score) => {
@@ -451,6 +536,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
         />
       ) : (
         <>
+          {/* Thông tin học sinh và điểm số giữ nguyên */}
           <Card
             style={{
               marginBottom: 16,
@@ -627,69 +713,43 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
             />
           )}
 
-          <Divider style={{ margin: "16px 0" }} orientation="left">
-            <Space>
-              <TrophyOutlined />
-              <span>Kỹ năng</span>
-            </Space>
+          {renderSkillDetails()}
+
+          <Divider orientation="left" style={{ color: colors.darkGreen }}>
+            Biểu đồ đánh giá
           </Divider>
-
-          <div style={{ marginBottom: 16 }}>
-            <Text strong style={{ marginRight: 8 }}>
-              Chọn chế độ lọc:
-            </Text>
-            <Select
-              value={skillFilterMode}
-              onChange={(value) => setSkillFilterMode(value)}
-              style={{ width: 120 }}
-            >
-              <Option value="day">Ngày</Option>
-              <Option value="week">Tuần</Option>
-              <Option value="month">Tháng</Option>
-            </Select>
-          </div>
-
-          <Card
-            style={{
-              marginBottom: 16,
-              borderRadius: 8,
-              boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
-            }}
-          >
-            {renderSkillsChart("1", "Kỹ năng")}
-          </Card>
-
-          <Divider style={{ margin: "16px 0" }} orientation="left">
-            <Space>
-              <TrophyOutlined />
-              <span>Tình hình học tập</span>
-            </Space>
-          </Divider>
-
-          <div style={{ marginBottom: 16 }}>
-            <Text strong style={{ marginRight: 8 }}>
-              Chọn chế độ lọc:
-            </Text>
-            <Select
-              value={skillFilterMode}
-              onChange={(value) => setSkillFilterMode(value)}
-              style={{ width: 120 }}
-            >
-              <Option value="day">Ngày</Option>
-              <Option value="week">Tuần</Option>
-              <Option value="month">Tháng</Option>
-            </Select>
-          </div>
-
-          <Card
-            style={{
-              marginBottom: 16,
-              borderRadius: 8,
-              boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
-            }}
-          >
-            {renderSkillsChart("0", "Tình hình học tập")}
-          </Card>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Card
+                title={
+                  <Text strong style={{ color: colors.darkGreen }}>
+                    Kỹ năng
+                  </Text>
+                }
+                style={{
+                  borderRadius: 8,
+                  boxShadow: `0 2px 4px ${colors.softShadow}`,
+                }}
+              >
+                {renderSkillsChart("1", "Kỹ năng")}
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card
+                title={
+                  <Text strong style={{ color: colors.darkGreen }}>
+                    Tình hình học tập
+                  </Text>
+                }
+                style={{
+                  borderRadius: 8,
+                  boxShadow: `0 2px 4px ${colors.softShadow}`,
+                }}
+              >
+                {renderSkillsChart("0", "Tình hình học tập")}
+              </Card>
+            </Col>
+          </Row>
         </>
       )}
     </Modal>

@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Card, List, Typography, Space, Divider, Pagination, Select, Row, Col } from "antd";
-import { BarChartOutlined } from "@ant-design/icons";
+import { Card, List, Typography, Space, Divider, Select, Row, Col, Pagination } from "antd";
+import { PieChartOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import studentService from "services/studentService";
-import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -27,12 +31,11 @@ const EvaluationStudent = ({ studentId, colors }) => {
         setEvaluations(Array.isArray(evalData) ? evalData : [evalData]);
         setSkillEvaluations(skillData);
 
-        // Tìm ngày mới nhất từ skillEvaluations
         const uniqueDates = [...new Set(skillData.map((s) => s.date))].sort(
-          (a, b) => new Date(b) - new Date(a) // Sắp xếp giảm dần để lấy ngày mới nhất
+          (a, b) => new Date(b) - new Date(a)
         );
         if (uniqueDates.length > 0) {
-          setSelectedDate(uniqueDates[0]); // Đặt ngày mới nhất làm mặc định
+          setSelectedDate(uniqueDates[0]);
         }
       } catch (error) {
         console.error("Error fetching evaluations:", error);
@@ -54,7 +57,6 @@ const EvaluationStudent = ({ studentId, colors }) => {
     return descriptions[score] || "Không xác định";
   };
 
-  // Hàm format ngày thành DD/MM/YYYY
   const formatDate = (date) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, "0");
@@ -67,23 +69,62 @@ const EvaluationStudent = ({ studentId, colors }) => {
     [...new Set(skillEvaluations.map((s) => s.date))].sort((a, b) => new Date(a) - new Date(b));
 
   const getSkillsChartData = (type) => {
-    const skills = skillEvaluations.filter((skill) => skill.skillType === type);
-    const uniqueDates = getUniqueDates();
-    const uniqueSkills = [...new Set(skills.map((s) => s.skill.name))];
+    if (!selectedDate) return { labels: [], datasets: [] };
 
-    const datasets = uniqueSkills.map((skillName, index) => ({
-      label: skillName,
-      color: ["info", "warning", "success", "error", "secondary", "dark"][index % 6],
-      data: uniqueDates.map((date) => {
-        const skillOnDate = skills.find((s) => s.date === date && s.skill.name === skillName);
-        return skillOnDate ? (skillOnDate.score / 5) * 100 : 0;
-      }),
-    }));
+    const skills = skillEvaluations.filter(
+      (skill) => skill.skillType === type && skill.date === selectedDate
+    );
+
+    if (skills.length === 0) return { labels: [], datasets: [] };
+
+    const labels = skills.map((skill) => skill.skill.name);
+    const data = skills.map((skill) => skill.score); // Use raw score for pie chart
+    const backgroundColors = [
+      "#FF6B6B", // Coral
+      "#4ECDC4", // Turquoise
+      "#45B7D1", // Sky Blue
+      "#96CEB4", // Mint
+      "#FFEEAD", // Light Yellow
+      "#D4A5A5", // Soft Pink
+    ].slice(0, skills.length);
 
     return {
-      labels: uniqueDates.map((date) => formatDate(date)), // Format ngày cho biểu đồ
-      datasets,
+      labels,
+      datasets: [
+        {
+          label: "Phân bố điểm",
+          data,
+          backgroundColor: backgroundColors,
+          borderColor: "#ffffff",
+          borderWidth: 2,
+          hoverOffset: 20, // Makes segments pop out on hover
+        },
+      ],
     };
+  };
+
+  const chartOptions = {
+    plugins: {
+      legend: {
+        position: "top",
+        labels: {
+          font: { size: 14 },
+          color: colors.darkGreen,
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || "";
+            const value = context.raw;
+            return `${label}: ${getScoreDescription(value)} (${value}/5)`;
+          },
+        },
+      },
+    },
+    maintainAspectRatio: false,
+    responsive: true,
+    cutout: "50%", // Thêm dòng này để tạo phần trống ở giữa (Donut Chart)
   };
 
   const renderComments = () => {
@@ -100,7 +141,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
             <List.Item>
               <Space direction="vertical" style={{ width: "100%" }}>
                 <Text strong style={{ color: colors.darkGreen }}>
-                  Giáo viên: {item.teacher.name} | Ngày: {formatDate(item.date)} {/* Format ngày */}
+                  Giáo viên: {item.teacher.name} | Ngày: {formatDate(item.date)}
                 </Text>
                 <Text>{item.comment}</Text>
               </Space>
@@ -122,10 +163,12 @@ const EvaluationStudent = ({ studentId, colors }) => {
 
   const renderSkillsChart = (type, title) => {
     const chartData = getSkillsChartData(type);
-    return chartData.datasets.length ? (
-      <DefaultLineChart chart={chartData} height="300px" />
+    return chartData.labels.length ? (
+      <div style={{ height: "300px", position: "relative" }}>
+        <Pie data={chartData} options={chartOptions} />
+      </div>
     ) : (
-      <Text>{`Chưa có dữ liệu ${title.toLowerCase()}.`}</Text>
+      <Text>{`Chưa có dữ liệu ${title.toLowerCase()} cho ngày đã chọn.`}</Text>
     );
   };
 
@@ -147,7 +190,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
           >
             {uniqueDates.map((date) => (
               <Option key={date} value={date}>
-                {formatDate(date)} {/* Format ngày trong Select */}
+                {formatDate(date)}
               </Option>
             ))}
           </Select>
@@ -198,7 +241,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
       loading={loading}
     >
       <Title level={3} style={{ color: colors.darkGreen, marginBottom: 20 }}>
-        <BarChartOutlined /> Tình Hình Học Tập
+        <PieChartOutlined /> Tình Hình Học Tập
       </Title>
 
       {evaluations.length || skillEvaluations.length ? (
@@ -211,14 +254,40 @@ const EvaluationStudent = ({ studentId, colors }) => {
           {renderSkillDetails()}
 
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
-            Kỹ năng
+            Biểu đồ đánh giá
           </Divider>
-          {renderSkillsChart("1", " Kỹ năng")}
-
-          <Divider orientation="left" style={{ color: colors.darkGreen }}>
-            Tình hình học tập
-          </Divider>
-          {renderSkillsChart("0", "Tình hình học tập")}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Card
+                title={
+                  <Text strong style={{ color: colors.darkGreen }}>
+                    Kỹ năng
+                  </Text>
+                }
+                style={{
+                  borderRadius: 8,
+                  boxShadow: `0 2px 4px ${colors.softShadow}`,
+                }}
+              >
+                {renderSkillsChart("1", "Kỹ năng")}
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card
+                title={
+                  <Text strong style={{ color: colors.darkGreen }}>
+                    Tình hình học tập
+                  </Text>
+                }
+                style={{
+                  borderRadius: 8,
+                  boxShadow: `0 2px 4px ${colors.softShadow}`,
+                }}
+              >
+                {renderSkillsChart("0", "Tình hình học tập")}
+              </Card>
+            </Col>
+          </Row>
         </>
       ) : (
         <Text>Chưa có đánh giá nào.</Text>
