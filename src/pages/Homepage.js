@@ -633,7 +633,7 @@ export default function Homepage() {
                     overflow: "hidden",
                   }}
                 >
-                  <span style={{ position: "relative", zIndex: 2 }}>Login Students</span>
+                  <span style={{ position: "relative", zIndex: 2 }}>Student Login</span>
                   <div
                     style={{
                       position: "absolute",
@@ -674,7 +674,7 @@ export default function Homepage() {
                     overflow: "hidden",
                   }}
                 >
-                  <span style={{ position: "relative", zIndex: 2 }}>Login Teachers</span>
+                  <span style={{ position: "relative", zIndex: 2 }}>Teacher Login</span>
                   <div
                     style={{
                       position: "absolute",

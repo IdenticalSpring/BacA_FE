@@ -737,7 +737,7 @@ function CreateClass() {
             lessonID: null,
             startTime: schedule.startTime,
             endTime: schedule.endTime,
-            date: currentDate.toISOString().split("T")[0],
+            date: currentDate.toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }),
           });
         }
       });
