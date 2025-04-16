@@ -58,6 +58,19 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
   const [dateRange, setDateRange] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null); // State cho ngày được chọn
 
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
+  );
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const isMobile = windowWidth < 768;
+
   useEffect(() => {
     const fetchData = async () => {
       if (!student?.id) return;
@@ -231,6 +244,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
             return `${label}: ${getScoreDescription(value)} (${value}/5)`;
           },
         },
+        bodyFont: { size: isMobile ? 10 : 12 },
       },
     },
     maintainAspectRatio: false,
@@ -718,8 +732,8 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Biểu đồ đánh giá
           </Divider>
-          <Row gutter={16}>
-            <Col span={12}>
+          <Row gutter={isMobile ? 8 : 16}>
+            <Col span={isMobile ? 24 : 12}>
               <Card
                 title={
                   <Text strong style={{ color: colors.darkGreen }}>
@@ -729,12 +743,13 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
                 style={{
                   borderRadius: 8,
                   boxShadow: `0 2px 4px ${colors.softShadow}`,
+                  marginBottom: isMobile ? 16 : 0,
                 }}
               >
                 {renderSkillsChart("1", "Kỹ năng")}
               </Card>
             </Col>
-            <Col span={12}>
+            <Col span={isMobile ? 24 : 12}>
               <Card
                 title={
                   <Text strong style={{ color: colors.darkGreen }}>

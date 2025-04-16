@@ -20,6 +20,19 @@ const EvaluationStudent = ({ studentId, colors }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const pageSize = 3;
 
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
+  );
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const isMobile = windowWidth < 768;
+
   useEffect(() => {
     const fetchEvaluations = async () => {
       try {
@@ -78,14 +91,14 @@ const EvaluationStudent = ({ studentId, colors }) => {
     if (skills.length === 0) return { labels: [], datasets: [] };
 
     const labels = skills.map((skill) => skill.skill.name);
-    const data = skills.map((skill) => skill.score); // Use raw score for pie chart
+    const data = skills.map((skill) => skill.score);
     const backgroundColors = [
-      "#FF6B6B", // Coral
-      "#4ECDC4", // Turquoise
-      "#45B7D1", // Sky Blue
-      "#96CEB4", // Mint
-      "#FFEEAD", // Light Yellow
-      "#D4A5A5", // Soft Pink
+      "#FF6B6B",
+      "#4ECDC4",
+      "#45B7D1",
+      "#96CEB4",
+      "#FFEEAD",
+      "#D4A5A5",
     ].slice(0, skills.length);
 
     return {
@@ -97,7 +110,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
           backgroundColor: backgroundColors,
           borderColor: "#ffffff",
           borderWidth: 2,
-          hoverOffset: 20, // Makes segments pop out on hover
+          hoverOffset: 20,
         },
       ],
     };
@@ -108,7 +121,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
       legend: {
         position: "top",
         labels: {
-          font: { size: 14 },
+          font: { size: isMobile ? 12 : 14 }, // Giảm kích thước font trên mobile
           color: colors.darkGreen,
         },
       },
@@ -120,11 +133,12 @@ const EvaluationStudent = ({ studentId, colors }) => {
             return `${label}: ${getScoreDescription(value)} (${value}/5)`;
           },
         },
+        bodyFont: { size: isMobile ? 10 : 12 }, // Giảm kích thước font tooltip trên mobile
       },
     },
     maintainAspectRatio: false,
     responsive: true,
-    cutout: "50%", // Thêm dòng này để tạo phần trống ở giữa (Donut Chart)
+    cutout: "50%",
   };
 
   const renderComments = () => {
@@ -164,7 +178,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
   const renderSkillsChart = (type, title) => {
     const chartData = getSkillsChartData(type);
     return chartData.labels.length ? (
-      <div style={{ height: "300px", position: "relative" }}>
+      <div style={{ height: isMobile ? "200px" : "300px", position: "relative" }}>
         <Pie data={chartData} options={chartOptions} />
       </div>
     ) : (
@@ -195,7 +209,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
             ))}
           </Select>
           {selectedDate && (
-            <Row gutter={16}>
+            <Row gutter={isMobile ? 8 : 16}>
               <Col span={12}>
                 <Text strong>Kỹ năng:</Text>
                 <List
@@ -256,8 +270,8 @@ const EvaluationStudent = ({ studentId, colors }) => {
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Biểu đồ đánh giá
           </Divider>
-          <Row gutter={16}>
-            <Col span={12}>
+          <Row gutter={isMobile ? 8 : 16}>
+            <Col span={isMobile ? 24 : 12}>
               <Card
                 title={
                   <Text strong style={{ color: colors.darkGreen }}>
@@ -267,12 +281,13 @@ const EvaluationStudent = ({ studentId, colors }) => {
                 style={{
                   borderRadius: 8,
                   boxShadow: `0 2px 4px ${colors.softShadow}`,
+                  marginBottom: isMobile ? 16 : 0,
                 }}
               >
                 {renderSkillsChart("1", "Kỹ năng")}
               </Card>
             </Col>
-            <Col span={12}>
+            <Col span={isMobile ? 24 : 12}>
               <Card
                 title={
                   <Text strong style={{ color: colors.darkGreen }}>
