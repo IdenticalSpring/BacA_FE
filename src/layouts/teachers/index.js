@@ -76,7 +76,7 @@ function Teachers() {
             <IconButton
               sx={{
                 color: colors.midGreen,
-                " &:hover": { backgroundColor: colors.highlightGreen },
+                // " &:hover": { backgroundColor: colors.highlightGreen },
               }}
               onClick={() => handleView(teacher)} // Thêm sự kiện View
             >
@@ -84,8 +84,8 @@ function Teachers() {
             </IconButton>
             <IconButton
               sx={{
-                color: colors.midGreen,
-                " &:hover": { backgroundColor: colors.highlightGreen },
+                color: colors.deepGray,
+                // " &:hover": { backgroundColor: colors.highlightGreen },
               }}
               onClick={() => handleEdit(teacher)}
             >

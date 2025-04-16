@@ -22,7 +22,8 @@ import teacherFeedbackService from "services/teacherFeedbackService";
 import { colors } from "assets/theme/color";
 import TextField from "@mui/material/TextField";
 import TextArea from "antd/es/input/TextArea";
-import { Button as AntButton, message, Radio } from "antd";
+import { Button as AntButton, message, Popconfirm, Radio } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import axios from "axios";
 import levelService from "services/levelService";
@@ -107,6 +108,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   }, [teacher]);
 
   useEffect(() => {
+    fetchTeacherData();
     fetchLevels();
   }, []);
 
@@ -116,6 +118,25 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       setLevels(data);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách level:", error);
+    }
+  };
+
+  const handleDeleteLesson = async (lesson) => {
+    try {
+      await lessonService.deleteLesson(lesson.id);
+      message.success("Lesson deleted successfully");
+      fetchTeacherData(); // Reload data after deletion
+    } catch (err) {
+      message.error("Error deleting lesson!");
+    }
+  };
+  const handleDeleteHomework = async (homework) => {
+    try {
+      await homeWorkService.deleteHomeWork(homework.id);
+      message.success("Homework deleted successfully");
+      fetchTeacherData(); // Reload data after deletion
+    } catch (err) {
+      message.error("Error deleting Homework!");
     }
   };
 
@@ -267,15 +288,26 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       accessor: "actions",
       width: "20%",
       Cell: ({ row }) => (
-        <IconButton
-          sx={{
-            color: colors.midGreen,
-            "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-          }}
-          onClick={() => handleEditLesson(row.original)}
-        >
-          <EditIcon />
-        </IconButton>
+        <>
+          <IconButton
+            sx={{
+              color: colors.midGreen,
+              "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+            onClick={() => handleEditLesson(row.original)}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            sx={{
+              color: colors.errorRed,
+              "&:hover": { backgroundColor: colors.errorRed, color: colors.white },
+            }}
+            onClick={() => handleDeleteLesson(row.original)}
+          >
+            <DeleteOutlined />
+          </IconButton>
+        </>
       ),
       propTypes: cellPropTypes,
     },
@@ -417,15 +449,26 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       accessor: "actions",
       width: "20%",
       Cell: ({ row }) => (
-        <IconButton
-          sx={{
-            color: colors.midGreen,
-            "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
-          }}
-          onClick={() => handleEditHomework(row.original)}
-        >
-          <EditIcon />
-        </IconButton>
+        <>
+          <IconButton
+            sx={{
+              color: colors.midGreen,
+              "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+            }}
+            onClick={() => handleEditHomework(row.original)}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            sx={{
+              color: colors.errorRed,
+              "&:hover": { backgroundColor: colors.errorRed, color: colors.white },
+            }}
+            onClick={() => handleDeleteHomework(row.original)}
+          >
+            <DeleteOutlined />
+          </IconButton>
+        </>
       ),
       propTypes: cellPropTypes,
     },

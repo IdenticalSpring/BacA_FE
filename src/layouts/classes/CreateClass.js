@@ -23,6 +23,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MDBox from "components/MDBox";
@@ -42,17 +43,17 @@ import { colors } from "assets/theme/color";
 import { message, Modal, Spin, TimePicker } from "antd";
 import dayjs from "dayjs";
 import classScheduleService from "services/classScheduleService";
+import CheckinManagement from "pages/admin/checkinManagement";
+
 function generateAccessId() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const digits = "0123456789";
   let accessId = "";
 
-  // Random 2 chữ cái
   for (let i = 0; i < 2; i++) {
     accessId += letters.charAt(Math.floor(Math.random() * letters.length));
   }
 
-  // Random 3 số
   for (let i = 0; i < 3; i++) {
     accessId += digits.charAt(Math.floor(Math.random() * digits.length));
   }
@@ -63,7 +64,7 @@ function generateAccessId() {
 function CreateClass() {
   const navigate = useNavigate();
 
-  // State cho CreateClass
+  // State for CreateClass
   const [classDataForCreate, setClassDataForCreate] = useState({
     name: "",
     level: "",
@@ -79,7 +80,7 @@ function CreateClass() {
   });
   const [dayOfWeekForCreate, setDayOfWeekForCreate] = useState(0);
   const [dayOfWeekForUpdate, setDayOfWeekForUpdate] = useState(0);
-  const [filterSchedule, setFilterSchedule] = useState(""); // State cho filter Schedule
+  const [filterSchedule, setFilterSchedule] = useState("");
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedulesForCreate, setSelectedSchedulesForCreate] = useState([]);
@@ -114,6 +115,8 @@ function CreateClass() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [classAccessId, setClassAccessId] = useState("");
   const [rawClasses, setRawClasses] = useState([]);
+  const [openCheckinDialog, setOpenCheckinDialog] = useState(false); // State for check-in dialog
+  const [selectedClassId, setSelectedClassId] = useState(""); // State for selected class ID
   const daysOfWeek = [
     "Choose day of week",
     "Sunday",
@@ -126,30 +129,27 @@ function CreateClass() {
   ];
   const [filterLevel, setFilterLevel] = useState("");
   const [filterClass, setFilterClass] = useState("");
+
   useEffect(() => {
     if (rawClasses.length > 0 && levels.length > 0) {
       let filteredClasses = rawClasses;
 
-      // Áp dụng bộ lọc theo Schedule
       if (filterSchedule) {
         filteredClasses = filteredClasses.filter((cls) =>
           cls.schedules?.some((sch) => sch.dayOfWeek === parseInt(filterSchedule))
         );
       }
 
-      // Áp dụng bộ lọc theo Class Name
       if (filterClass) {
         filteredClasses = filteredClasses.filter((cls) =>
           cls.name.toLowerCase().includes(filterClass.toLowerCase())
         );
       }
 
-      // Áp dụng bộ lọc theo Level
       if (filterLevel) {
         filteredClasses = filteredClasses.filter((cls) => cls.level === filterLevel);
       }
 
-      // Định dạng dữ liệu để hiển thị trong bảng
       const formattedRows = filteredClasses.map((cls) => ({
         id: cls.id,
         name: cls.name,
@@ -165,6 +165,17 @@ function CreateClass() {
             : "No Schedule",
         actions: (
           <>
+            <IconButton
+              onClick={() => {
+                setSelectedClassId(cls.id);
+                setOpenCheckinDialog(true);
+              }}
+              sx={{
+                color: colors.midGreen,
+              }}
+            >
+              <VisibilityIcon />
+            </IconButton>
             <IconButton color="primary" onClick={() => handleEdit(cls)}>
               <EditIcon />
             </IconButton>
@@ -176,8 +187,9 @@ function CreateClass() {
       }));
       setClassRows(formattedRows);
     }
-  }, [rawClasses, levels, filterSchedule, filterClass, filterLevel]); // Thêm filterClass và filterLevel vào dependencies
-  // State cho LevelManagement
+  }, [rawClasses, levels, filterSchedule, filterClass, filterLevel]);
+
+  // State for LevelManagement
   const [levelName, setLevelName] = useState("");
   const [levelDescription, setLevelDescription] = useState("");
   const [loadingLevels, setLoadingLevels] = useState(false);
@@ -215,7 +227,11 @@ function CreateClass() {
             <MDBox display="flex" gap={2}>
               <MDButton
                 variant="text"
-                sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+                sx={{
+                  backgroundColor: colors.midGreen,
+                  color: colors.white,
+                  " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                }}
                 onClick={() => handleEditLevelClick(level)}
               >
                 Edit
@@ -240,93 +256,6 @@ function CreateClass() {
     fetchClasses();
     fetchSchedules();
   }, []);
-
-  useEffect(() => {
-    fetchSchedulesByDayOfWeek(dayOfWeekForCreate);
-  }, [dayOfWeekForCreate]);
-
-  const fetchTeachers = async () => {
-    try {
-      const data = await teacherService.getAllTeachers();
-      setTeachers(data);
-    } catch (err) {
-      console.error("Lỗi khi tải danh sách giáo viên");
-    }
-  };
-
-  const fetchLevels = async () => {
-    setLoadingLevels(true);
-    try {
-      const data = await levelService.getAllLevels();
-      setLevels(data);
-    } catch (error) {
-      setNotification({
-        open: true,
-        message: error.toString(),
-        severity: "error",
-      });
-    } finally {
-      setLoadingLevels(false);
-    }
-  };
-
-  const fetchClasses = async () => {
-    try {
-      setLoadingClass(true);
-      const data = await classService.getAllClasses(); // Lấy danh sách lớp học
-
-      // Fetch schedules cho tất cả lớp học đồng thời
-      const classesWithSchedules = await Promise.all(
-        data.map(async (cls) => {
-          const schedules = await lessonByScheduleService.getSchedulesByClass(cls.id);
-          return { ...cls, schedules };
-        })
-      );
-
-      setRawClasses(classesWithSchedules); // Lưu dữ liệu đầy đủ vào rawClasses
-    } catch (err) {
-      setErrorClass("Lỗi khi tải dữ liệu lớp học!");
-    } finally {
-      setLoadingClass(false);
-    }
-  };
-  const handleDeleteClass = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
-      try {
-        setLoadingClass(true);
-        await classService.deleteClass(id);
-        setClassRows((pre) => pre?.filter((cls) => cls.id !== id));
-        message.success("delete class success");
-      } catch (err) {
-        message.error("delete class failed! " + err);
-      } finally {
-        setLoadingClass(false);
-      }
-    }
-  };
-  useEffect(() => {
-    if (rawClasses.length > 0 && levels.length > 0) {
-      const formattedRows = rawClasses.map((cls) => ({
-        id: cls.id,
-        name: cls.name,
-        level: levels.find((lv) => lv.id === cls.level)?.name || "N/A",
-        teacher: cls.teacher?.name || "N/A",
-        accessId: cls.accessId || "N/A",
-        actions: (
-          <>
-            <IconButton color="primary" onClick={() => handleEdit(cls)}>
-              <EditIcon />
-            </IconButton>
-            <IconButton color="secondary" onClick={() => handleDeleteClass(cls.id)}>
-              <DeleteIcon />
-            </IconButton>
-          </>
-        ),
-      }));
-      setClassRows(formattedRows);
-    }
-  }, [rawClasses, levels]);
-  // console.log(levels);
 
   const fetchSchedules = async () => {
     try {
@@ -356,6 +285,10 @@ function CreateClass() {
     }
   };
 
+  useEffect(() => {
+    fetchSchedulesByDayOfWeek(dayOfWeekForCreate);
+  }, [dayOfWeekForCreate]);
+
   const fetchSchedulesByDayOfWeek = async (dayOfWeek) => {
     try {
       const data = await scheduleService.getScheduleByDayOfWeek({ dayOfWeek: dayOfWeek });
@@ -365,11 +298,70 @@ function CreateClass() {
     }
   };
 
-  // Handlers cho LevelManagement
+  const fetchTeachers = async () => {
+    try {
+      const data = await teacherService.getAllTeachers();
+      setTeachers(data);
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách giáo viên");
+    }
+  };
+
+  const fetchLevels = async () => {
+    setLoadingLevels(true);
+    try {
+      const data = await levelService.getAllLevels();
+      setLevels(data);
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: error.toString(),
+        severity: "error",
+      });
+    } finally {
+      setLoadingLevels(false);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      setLoadingClass(true);
+      const data = await classService.getAllClasses();
+
+      const classesWithSchedules = await Promise.all(
+        data.map(async (cls) => {
+          const schedules = await lessonByScheduleService.getSchedulesByClass(cls.id);
+          return { ...cls, schedules };
+        })
+      );
+
+      setRawClasses(classesWithSchedules);
+    } catch (err) {
+      setErrorClass("Lỗi khi tải dữ liệu lớp học!");
+    } finally {
+      setLoadingClass(false);
+    }
+  };
+
+  const handleDeleteClass = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
+      try {
+        setLoadingClass(true);
+        await classService.deleteClass(id);
+        setClassRows((pre) => pre?.filter((cls) => cls.id !== id));
+        message.success("delete class success");
+      } catch (err) {
+        message.error("delete class failed! " + err);
+      } finally {
+        setLoadingClass(false);
+      }
+    }
+  };
+
+  // Handlers for LevelManagement
   const validateLevelForm = () => {
     const newErrors = {
       levelName: !levelName.trim(),
-      // levelDescription: !levelDescription.trim(),
     };
     setErrors({ ...errors, ...newErrors });
     return !Object.values(newErrors).some(Boolean);
@@ -495,7 +487,7 @@ function CreateClass() {
     setNotification({ ...notification, open: false });
   };
 
-  // Handlers cho CreateClass
+  // Handlers for CreateClass
   const handleEdit = async (cls) => {
     setEditMode(true);
     setSelectedClass(cls);
@@ -510,6 +502,7 @@ function CreateClass() {
     });
     setOpenEditClass(true);
   };
+
   const handleEditSchedule = async (sch) => {
     setEditScheduleMode(true);
     setSelectedScheduleForUpdate(sch);
@@ -520,19 +513,17 @@ function CreateClass() {
     });
     setOpenUpdateSchedule(true);
   };
+
   const handleDeleteSchedule = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa lịch học này?")) {
       try {
         await scheduleService.deleteSchedule(id);
         setScheduleRows(scheduleRows.filter((row) => row.id !== id));
-        // console.log(scheduleRows.map((row) => row.id !== id));
       } catch (err) {
         alert("Lỗi khi xóa lịch học! " + err);
       }
     }
   };
-  // console.log(scheduleRows.filter((row) => row.id !== 1));
-  // console.log(selectedSchedulesForCreate);
 
   const handleSaveClass = async () => {
     setLoadingCreateClass(true);
@@ -576,6 +567,15 @@ function CreateClass() {
               </IconButton>
               <IconButton color="secondary" onClick={() => handleDeleteClass(classEntity?.id)}>
                 <DeleteIcon />
+              </IconButton>
+              <IconButton
+                color="info"
+                onClick={() => {
+                  setSelectedClassId(classEntity.id);
+                  setOpenCheckinDialog(true);
+                }}
+              >
+                <VisibilityIcon />
               </IconButton>
             </>
           ),
@@ -625,16 +625,25 @@ function CreateClass() {
 
       setClassRows(
         classRows.map((row) => {
-          row.id === selectedClass.id && console.log(row, selectedClass, classEntity);
-
           return row.id === classEntity.id
             ? {
                 ...row,
-
                 actions: (
                   <>
                     <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
                       <EditIcon />
+                    </IconButton>
+                    <IconButton color="secondary" onClick={() => handleDeleteClass(classEntity.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                    <IconButton
+                      color="info"
+                      onClick={() => {
+                        setSelectedClassId(classEntity.id);
+                        setOpenCheckinDialog(true);
+                      }}
+                    >
+                      <VisibilityIcon />
                     </IconButton>
                   </>
                 ),
@@ -783,9 +792,7 @@ function CreateClass() {
       setLoadingCreateSchedule(false);
     }
   };
-  // console.log(`${dayjs(new Date().getTime()).format("HH:mm").toString()}`);
-  // console.log(`${dayjs(new Date().getTime(), "HH:mm").format("HH:mm")}`);
-  // console.log(dayjs("10:18:00", "HH:mm"));
+
   const handleSaveScheduleUpdate = async () => {
     setLoadingUpdateSchedule(true);
     try {
@@ -827,12 +834,12 @@ function CreateClass() {
       setLoadingUpdateSchedule(false);
     }
   };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
         <Grid container spacing={6}>
-          {/* Row 1: LevelManagement và CreateClass */}
           <Grid item xs={12} md={6}>
             <Card
               sx={{ backgroundColor: colors.cardBg, boxShadow: `0 4px 12px ${colors.softShadow}` }}
@@ -873,34 +880,13 @@ function CreateClass() {
                       }}
                     />
                   </Grid>
-                  {/* <Grid item xs={12} md={5}>
-                    <MDInput
-                      fullWidth
-                      label="Description"
-                      value={levelDescription}
-                      onChange={(e) => {
-                        setLevelDescription(e.target.value);
-                        setErrors({ ...errors, levelDescription: false });
-                      }}
-                      error={errors.levelDescription}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          "& fieldset": { borderColor: colors.inputBorder },
-                          "&:hover fieldset": { borderColor: colors.midGreen },
-                          "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
-                        },
-                        "& .MuiInputLabel-root": { color: colors.darkGray },
-                        "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
-                      }}
-                    />
-                  </Grid> */}
                   <Grid item xs={12} md={2}>
                     <MDButton
                       variant="gradient"
                       sx={{
-                        backgroundColor: colors.safeGreen,
+                        backgroundColor: colors.midGreen,
                         color: colors.white,
-                        "&:hover": { backgroundColor: colors.highlightGreen },
+                        " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
                       }}
                       onClick={handleAddLevel}
                       fullWidth
@@ -917,7 +903,7 @@ function CreateClass() {
                     <DataTable
                       table={{ columns: levelColumns, rows: levelRows }}
                       isSorted={false}
-                      entriesPerPage={false} // Thêm phân trang
+                      entriesPerPage={false}
                       showTotalEntries={false}
                       noEndBorder
                     />
@@ -1105,7 +1091,6 @@ function CreateClass() {
             </Card>
           </Grid>
 
-          {/* Row 2: CreateSchedule và ScheduleTable */}
           <Grid item xs={12} md={6}>
             <Card
               sx={{
@@ -1138,15 +1123,6 @@ function CreateClass() {
                   </MenuItem>
                 ))}
               </TextField>
-              {/* <TextField
-                fullWidth
-                margin="normal"
-                label="Start Time"
-                type="time"
-                InputLabelProps={{ shrink: true }}
-                value={scheduleData.startTime}
-                onChange={(e) => setScheduleData({ ...scheduleData, startTime: e.target.value })}
-              /> */}
               <label style={{ fontSize: "14px" }}>Time Start</label>
               <TimePicker
                 format="HH:mm"
@@ -1165,23 +1141,6 @@ function CreateClass() {
                 }}
                 style={{ height: "40px", width: "100%", marginBottom: "8px" }}
               />
-              {/* <TimePicker defaultValue={dayjs("10:18:00", "HH:mm")} format={"HH:mm"} /> */}
-              {/* <TimePicker
-                format="HH:mm"
-                value={dayjs(scheduleData.endTime, "HH:mm")}
-                onChange={(time, timeString) =>
-                  setScheduleData({ ...scheduleData, endTime: timeString })
-                }
-              /> */}
-              {/* <TextField
-                fullWidth
-                margin="normal"
-                label="End Time"
-                type="time"
-                InputLabelProps={{ shrink: true }}
-                value={scheduleData.endTime}
-                onChange={(e) => setScheduleData({ ...scheduleData, endTime: e.target.value })}
-              /> */}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="contained"
@@ -1236,7 +1195,6 @@ function CreateClass() {
             </Card>
           </Grid>
 
-          {/* Row 3: ClassTable */}
           <Grid item xs={12}>
             <Card>
               <MDBox
@@ -1252,7 +1210,6 @@ function CreateClass() {
                   Class Tables
                 </MDTypography>
               </MDBox>
-              {/* Filter Dropdown */}
               <MDBox
                 display="flex"
                 justifyContent="flex-end"
@@ -1261,7 +1218,6 @@ function CreateClass() {
                 px={2}
                 py={1}
               >
-                {/* Filter by Class */}
                 <TextField
                   label="Filter by Class"
                   variant="outlined"
@@ -1284,17 +1240,17 @@ function CreateClass() {
                   select
                   label="Filter by Level"
                   variant="outlined"
-                  value={filterLevel} // Controlled value
-                  defaultValue="" // Default value – "All Levels"
+                  value={filterLevel}
+                  defaultValue=""
                   onChange={(e) => setFilterLevel(e.target.value)}
                   sx={{
                     width: "10vw",
                     minWidth: "80px",
                     "& .MuiInputBase-root": {
-                      height: "48px", // Tăng chiều cao của TextField (mặc định thường là 40px hoặc 56px tùy theme)
+                      height: "48px",
                     },
                     "& .MuiOutlinedInput-input": {
-                      padding: "14px 14px", // Điều chỉnh padding để nội dung bên trong không bị cắt
+                      padding: "14px 14px",
                     },
                   }}
                 >
@@ -1307,7 +1263,6 @@ function CreateClass() {
                     </MenuItem>
                   ))}
                 </TextField>
-                {/* Filter Schedule */}
                 <TextField
                   select
                   label="Filter by Schedule"
@@ -1329,19 +1284,13 @@ function CreateClass() {
                   <MenuItem value="">
                     <em>All Schedules</em>
                   </MenuItem>
-                  {daysOfWeek.slice(1).map(
-                    (
-                      day,
-                      index // Bỏ "Choose day of week" bằng slice(1)
-                    ) => (
-                      <MenuItem key={index} value={index + 1}>
-                        {day}
-                      </MenuItem>
-                    )
-                  )}
+                  {daysOfWeek.slice(1).map((day, index) => (
+                    <MenuItem key={index} value={index + 1}>
+                      {day}
+                    </MenuItem>
+                  ))}
                 </TextField>
               </MDBox>
-
               <MDBox pt={3}>
                 {loadingClass ? (
                   <MDTypography variant="h6" color="info" align="center">
@@ -1367,7 +1316,6 @@ function CreateClass() {
         </Grid>
       </MDBox>
 
-      {/* Dialogs và Notifications cho LevelManagement */}
       <Dialog open={editLevelDialogOpen} onClose={() => setEditLevelDialogOpen(false)}>
         <DialogTitle sx={{ backgroundColor: colors.headerBg, color: colors.white }}>
           Edit Level
@@ -1459,7 +1407,6 @@ function CreateClass() {
         </Alert>
       </Snackbar>
 
-      {/* Dialog cho Edit Class */}
       <Dialog
         open={openEditClass}
         onClose={() => {
@@ -1674,7 +1621,6 @@ function CreateClass() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal cho Class Access ID */}
       <Modal
         open={classAccessId.length > 0}
         onCancel={() => setClassAccessId("")}
@@ -1698,11 +1644,7 @@ function CreateClass() {
           });
         }}
         footer={[
-          <Button
-            // style={{ marginTop: "20px" }}
-            key="cancel"
-            onClick={() => setOpenUpdateSchedule(false)}
-          >
+          <Button key="cancel" onClick={() => setOpenUpdateSchedule(false)}>
             Cancel
           </Button>,
           <Button
@@ -1728,7 +1670,7 @@ function CreateClass() {
           sx={{
             "& .css-1cohrqd-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.MuiSelect-select":
               {
-                minHeight: "48px", // Đặt lại chiều cao tối thiểu
+                minHeight: "48px",
                 display: "flex",
                 alignItems: "center",
               },
@@ -1737,7 +1679,6 @@ function CreateClass() {
           value={scheduleDataForUpdate.dayOfWeek}
           onChange={(e) => {
             setScheduleDataForUpdate({ ...scheduleDataForUpdate, dayOfWeek: e.target.value });
-            console.log(e.target.value, +e.target.value);
           }}
         >
           {daysOfWeek.map((d, index) => (
@@ -1767,6 +1708,32 @@ function CreateClass() {
           style={{ height: "40px", width: "100%", marginBottom: "8px" }}
         />
       </Modal>
+
+      {/* Dialog for CheckinManagement */}
+      <Dialog
+        open={openCheckinDialog}
+        onClose={() => setOpenCheckinDialog(false)}
+        fullWidth
+        maxWidth="xl"
+        PaperProps={{
+          sx: {
+            width: "90vw",
+            height: "90vh",
+            maxWidth: "none",
+          },
+        }}
+      >
+        <DialogTitle>Check-in Management for Class</DialogTitle>
+        <DialogContent sx={{ height: "100%", overflowY: "auto" }}>
+          <CheckinManagement classId={selectedClassId} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCheckinDialog(false)} sx={{ color: colors.darkGray }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Footer />
     </DashboardLayout>
   );
