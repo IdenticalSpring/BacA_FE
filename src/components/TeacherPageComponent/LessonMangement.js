@@ -221,7 +221,7 @@ export default function LessonMangement({
   useEffect(() => {
     if (modalUpdateLessonVisible && quillRef.current?.getEditor() && editingLesson?.description) {
       // Thêm delay nhẹ để chắc chắn editor đã render xong
-      console.log(editingLesson.description);
+      // console.log(editingLesson.description);
 
       setTimeout(() => {
         quillRef.current?.getEditor().setContents([]); // reset
