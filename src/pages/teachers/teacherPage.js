@@ -282,6 +282,7 @@ const TeacherPage = () => {
           const handlePaste = (e) => {
             const clipboardData = e.clipboardData;
             const items = clipboardData?.items;
+            // console.log(quill.getLength());
 
             if (!items) return;
 
@@ -307,7 +308,11 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range?.index, "image", response.data.url);
+                      quill.insertEmbed(
+                        range?.index ?? quill.getLength(),
+                        "image",
+                        response.data.url
+                      );
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -366,7 +371,11 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range?.index, "image", response.data.url);
+                      quill.insertEmbed(
+                        range?.index ?? quill.getLength(),
+                        "image",
+                        response.data.url
+                      );
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -427,7 +436,11 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range?.index, "image", response.data.url);
+                      quill.insertEmbed(
+                        range?.index ?? quill.getLength(),
+                        "image",
+                        response.data.url
+                      );
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -486,7 +499,11 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range?.index, "image", response.data.url);
+                      quill.insertEmbed(
+                        range?.index ?? quill.getLength(),
+                        "image",
+                        response.data.url
+                      );
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -589,10 +606,14 @@ const TeacherPage = () => {
                 .then((response) => {
                   if (response.status === 201) {
                     const range = quill.getSelection(true);
-                    quill.insertEmbed(range?.index, "image", response.data.url);
+                    quill.insertEmbed(
+                      range?.index ?? quill.getLength(),
+                      "image",
+                      response.data.url
+                    );
                     setTimeout(() => {
                       const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                      console.log("IMG:", imgs);
+                      // console.log("IMG:", imgs);
 
                       imgs.forEach((img) => {
                         img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
@@ -650,10 +671,14 @@ const TeacherPage = () => {
                 .then((response) => {
                   if (response.status === 201) {
                     const range = quill.getSelection(true);
-                    quill.insertEmbed(range?.index, "image", response.data.url);
+                    quill.insertEmbed(
+                      range?.index ?? quill.getLength(),
+                      "image",
+                      response.data.url
+                    );
                     setTimeout(() => {
                       const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                      console.log(imgs);
+                      // console.log(imgs);
 
                       imgs.forEach((img) => {
                         img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
