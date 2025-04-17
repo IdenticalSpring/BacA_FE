@@ -1381,7 +1381,6 @@ const StudentPage = () => {
         style={{ zIndex: 100000000 }}
         centered
         width="90%"
-        bodyStyle={{ padding: 0 }}
       >
         <img
           src={previewSrc}
