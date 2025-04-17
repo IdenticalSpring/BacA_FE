@@ -194,7 +194,7 @@ export default function HomeWorkMangement({
       });
       setDataSearch(filteredData);
     }
-  }, [searchText]);
+  }, [searchText, homeWorks]);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);

@@ -189,7 +189,7 @@ export default function LessonMangement({
       });
       setDataSearch(filteredData);
     }
-  }, [searchText]);
+  }, [searchText, lessons]);
   // const quillRefLessonPlan = useRef(null);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
