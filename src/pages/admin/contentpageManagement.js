@@ -1,4 +1,3 @@
-// @mui material components
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
@@ -13,20 +12,14 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { useState, useEffect } from "react";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
-
-// Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
-import Tooltip from "@mui/material/Tooltip"; // Thêm Tooltip
-
-// Services
+import Tooltip from "@mui/material/Tooltip";
 import { colors } from "assets/theme/color";
 import contentPageService from "services/contentpageService";
 
@@ -43,12 +36,16 @@ function ContentPageManagement() {
   const [errors, setErrors] = useState({
     editHomepageMainTitle: false,
   });
-  const [tabValue, setTabValue] = useState(0); // State để quản lý tab hiện tại
+  const [tabValue, setTabValue] = useState(0);
+  const [img1File, setImg1File] = useState(null);
+  const [img2File, setImg2File] = useState(null);
+  const [img1Preview, setImg1Preview] = useState(null); // State cho preview ảnh 1
+  const [img2Preview, setImg2Preview] = useState(null); // State cho preview ảnh 2
 
   useEffect(() => {
     fetchContentPages();
   }, []);
-  // Hàm cắt ngắn văn bản
+
   const truncateText = (text, maxLength = 50) => {
     if (!text) return "No Prompt";
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
@@ -70,7 +67,6 @@ function ContentPageManagement() {
     }
   };
 
-  // Cột cho tab Content Page Management
   const contentPageColumns = [
     { Header: "Name Web", accessor: "homepageMainTitle", width: "30%" },
     { Header: "Feature Main Title", accessor: "featureMainTitle", width: "30%" },
@@ -78,14 +74,12 @@ function ContentPageManagement() {
     { Header: "Actions", accessor: "actions", width: "20%" },
   ];
 
-  // Cột cho tab Information Management
   const informationColumns = [
     { Header: "Center Name", accessor: "name", width: "40%" },
     { Header: "Footer Email", accessor: "footerEmail", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "20%" },
   ];
 
-  // Cột cho tab Prompt Management
   const promptColumns = [
     { Header: "Prompt Description", accessor: "promptDescription", width: "40%" },
     { Header: "Prompt Lesson Plan", accessor: "promptLessonPlan", width: "40%" },
@@ -208,6 +202,7 @@ function ContentPageManagement() {
             actions: "",
           },
         ];
+
   const validateEditForm = () => {
     const newErrors = {
       editHomepageMainTitle:
@@ -219,18 +214,34 @@ function ContentPageManagement() {
 
   const handleEditClick = (page) => {
     setCurrentEditItem({ ...page });
+    setImg1File(null);
+    setImg2File(null);
+    setImg1Preview(page.img1 || null); // Load ảnh hiện tại
+    setImg2Preview(page.img2 || null);
     setEditDialogOpen(true);
   };
 
   const handleEditSave = async () => {
-    if (tabValue === 0 && !validateEditForm()) return; // Chỉ validate Homepage Main Title cho tab Content
+    if (tabValue === 0 && !validateEditForm()) return;
 
     try {
-      const updatedContentPageData = { ...currentEditItem };
-      await contentPageService.editContentPage(currentEditItem.id, updatedContentPageData);
+      const formData = new FormData();
+      Object.keys(currentEditItem).forEach((key) => {
+        if (key !== "id" && key !== "img1" && key !== "img2") {
+          formData.append(key, currentEditItem[key]);
+        }
+      });
+      if (img1File) formData.append("files", img1File);
+      if (img2File) formData.append("files", img2File);
+
+      await contentPageService.editContentPage(currentEditItem.id, formData);
       fetchContentPages();
       setEditDialogOpen(false);
       setCurrentEditItem(null);
+      setImg1File(null);
+      setImg2File(null);
+      setImg1Preview(null);
+      setImg2Preview(null);
       setNotification({
         open: true,
         message: "Content updated successfully",
@@ -252,6 +263,23 @@ function ContentPageManagement() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  // Xử lý khi chọn file ảnh
+  const handleImg1Change = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImg1File(file);
+      setImg1Preview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleImg2Change = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImg2File(file);
+      setImg2Preview(URL.createObjectURL(file));
+    }
   };
 
   return (
@@ -285,7 +313,7 @@ function ContentPageManagement() {
                 >
                   <Tab label="Content Pages" />
                   <Tab label="Information" />
-                  <Tab label="Prompt Management" /> {/* Tab mới */}
+                  <Tab label="Prompt Management" />
                 </Tabs>
               </MDBox>
               <MDBox pt={3} px={3} pb={3} display="flex" justifyContent="center">
@@ -302,7 +330,7 @@ function ContentPageManagement() {
                       "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
                       "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
                       "& .MuiTableCell-root": {
-                        maxWidth: "300px", // Giới hạn chiều rộng ô
+                        maxWidth: "300px",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -320,7 +348,7 @@ function ContentPageManagement() {
                       "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
                       "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
                       "& .MuiTableCell-root": {
-                        maxWidth: "300px", // Giới hạn chiều rộng ô
+                        maxWidth: "300px",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -338,7 +366,7 @@ function ContentPageManagement() {
                       "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
                       "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
                       "& .MuiTableCell-root": {
-                        maxWidth: "300px", // Giới hạn chiều rộng ô
+                        maxWidth: "300px",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -406,7 +434,6 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-              {/* Các TextField khác cho Content Pages giữ nguyên */}
               <TextField
                 margin="dense"
                 label="Feature Main Title"
@@ -1188,7 +1215,7 @@ function ContentPageManagement() {
               />
               <TextField
                 margin="dense"
-                label="Facebook Link"
+                label="Link 1"
                 type="text"
                 fullWidth
                 value={currentEditItem?.linkFacebook || ""}
@@ -1226,7 +1253,7 @@ function ContentPageManagement() {
               />
               <TextField
                 margin="dense"
-                label="Zalo Link"
+                label="Link 2"
                 type="text"
                 fullWidth
                 value={currentEditItem?.linkZalo || ""}
@@ -1262,6 +1289,60 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
+                Image 1 Preview
+              </MDTypography>
+              {img1Preview ? (
+                <img
+                  src={img1Preview}
+                  alt="Image 1 Preview"
+                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
+                />
+              ) : (
+                <MDTypography variant="caption" color="textSecondary">
+                  No image selected
+                </MDTypography>
+              )}
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  margin: "8px 0",
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.midGreen },
+                }}
+              >
+                Upload Image 1
+                <input type="file" accept="image/*" hidden onChange={handleImg1Change} />
+              </Button>
+              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
+                Image 2 Preview
+              </MDTypography>
+              {img2Preview ? (
+                <img
+                  src={img2Preview}
+                  alt="Image 2 Preview"
+                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
+                />
+              ) : (
+                <MDTypography variant="caption" color="textSecondary">
+                  No image selected
+                </MDTypography>
+              )}
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  margin: "8px 0",
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.midGreen },
+                }}
+              >
+                Upload Image 2
+                <input type="file" accept="image/*" hidden onChange={handleImg2Change} />
+              </Button>
             </>
           ) : (
             <>

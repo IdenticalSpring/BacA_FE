@@ -40,11 +40,12 @@ const contentPageService = {
   //     }
   //   },
 
-  editContentPage: async (id, contentpage) => {
+  editContentPage: async (id, formData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/contentpage/${id}`, contentpage, {
+      const response = await axios.put(`${API_BASE_URL}/contentpage/${id}`, formData, {
         headers: {
           "ngrok-skip-browser-warning": "true",
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;

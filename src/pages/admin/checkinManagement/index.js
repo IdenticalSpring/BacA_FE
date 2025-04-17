@@ -15,6 +15,8 @@ import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import { colors } from "assets/theme/color";
 import { message } from "antd";
+import Modal from "@mui/material/Modal"; // Thêm Modal
+import Box from "@mui/material/Box"; // Thêm Box để định dạng modal
 
 function CheckinManagement({ classId }) {
   const [columns, setColumns] = useState([]);
@@ -29,6 +31,8 @@ function CheckinManagement({ classId }) {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [lessonDaysByMonth, setLessonDaysByMonth] = useState({});
   const [lessonDays, setLessonDays] = useState([]);
+  const [openModal, setOpenModal] = useState(false); // Trạng thái mở/đóng modal
+  const [selectedNote, setSelectedNote] = useState(""); // Ghi chú được chọn
 
   // Fetch initial data
   useEffect(() => {
@@ -77,6 +81,18 @@ function CheckinManagement({ classId }) {
 
     fetchInitialData();
   }, [classId]);
+
+  // Hàm mở modal và hiển thị ghi chú
+  const handleOpenModal = (note) => {
+    setSelectedNote(note || "Không có ghi chú");
+    setOpenModal(true);
+  };
+
+  // Hàm đóng modal
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedNote("");
+  };
 
   // Update columns based on selected month
   useEffect(() => {
@@ -156,11 +172,32 @@ function CheckinManagement({ classId }) {
                 );
                 if (checkin) {
                   if (checkin.present === 1) {
-                    row[`day${day}`] = "✔";
+                    row[`day${day}`] = (
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleOpenModal(checkin.note)}
+                      >
+                        ✔
+                      </span>
+                    );
                   } else if (checkin.present === 0) {
-                    row[`day${day}`] = "✖";
+                    row[`day${day}`] = (
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleOpenModal(checkin.note)}
+                      >
+                        ✖
+                      </span>
+                    );
                   } else if (checkin.present === 2) {
-                    row[`day${day}`] = "🕒";
+                    row[`day${day}`] = (
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleOpenModal(checkin.note)}
+                      >
+                        🕒
+                      </span>
+                    );
                   }
                 } else {
                   row[`day${day}`] = "✖";
@@ -217,6 +254,19 @@ function CheckinManagement({ classId }) {
     { symbol: "🕒", description: "Đi trễ" },
     { symbol: "-", description: "Không có lịch học" },
   ];
+
+  // Modal style
+  const modalStyle = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 400,
+    bgcolor: "background.paper",
+    border: "2px solid #000",
+    boxShadow: 24,
+    p: 4,
+  };
 
   return (
     <MDBox pt={3} pb={3}>
@@ -343,6 +393,27 @@ function CheckinManagement({ classId }) {
           </Card>
         </Grid>
       </Grid>
+      {/* Modal hiển thị ghi chú */}
+      <Modal
+        open={openModal}
+        onClose={handleCloseModal}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={modalStyle}>
+          <MDTypography id="modal-modal-title" variant="h6" component="h2">
+            Note
+          </MDTypography>
+          <MDTypography id="modal-modal-description" sx={{ mt: 2 }}>
+            {selectedNote}
+          </MDTypography>
+          <MDBox mt={3} display="flex" justifyContent="flex-end">
+            <Button onClick={handleCloseModal} color="primary">
+              Close
+            </Button>
+          </MDBox>
+        </Box>
+      </Modal>
     </MDBox>
   );
 }
