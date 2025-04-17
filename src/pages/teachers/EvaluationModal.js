@@ -125,8 +125,30 @@ const EvaluationModal = ({ visible, onClose, students }) => {
 
     setLoading(true);
     try {
+      // Lấy tất cả điểm số hiện tại trong ngày để tái sử dụng
+      const existingScores = await TeacherService.getStudentScoreSkillandBehaviorByDate(
+        todayFormatted
+      );
+
       const evaluationPromises = students.map(async (student) => {
-        // Kiểm tra comment hiện tại cho ngày và studentID
+        // Kiểm tra StudentID hợp lệ
+        if (!student.id) {
+          console.error(`Invalid StudentID for student: ${JSON.stringify(student)}`);
+          return;
+        }
+
+        // Lọc điểm số hiện tại của StudentID
+        const studentScores = existingScores.filter((score) => score.studentID === student.id);
+
+        // Tạo map để tra cứu điểm theo SkillID
+        const scoreBySkillID = studentScores.reduce((acc, score) => {
+          if (score.skill?.id) {
+            acc[score.skill?.id] = score;
+          }
+          return acc;
+        }, {});
+
+        // Kiểm tra comment hiện tại cho StudentID trong ngày
         const existingComments = await TeacherService.getCommentByDate(todayFormatted);
         const studentComment = existingComments.find(
           (comment) => comment.student?.id === student.id
@@ -135,7 +157,7 @@ const EvaluationModal = ({ visible, onClose, students }) => {
         const commentPayload = {
           teacherID,
           studentID: student.id,
-          scheduleID: student.schedule?.id,
+          scheduleID: student.schedule?.id || null,
           date: todayFormatted,
           comment: evaluation,
         };
@@ -143,7 +165,7 @@ const EvaluationModal = ({ visible, onClose, students }) => {
         let teacherCommentID;
 
         if (studentComment) {
-          // Nếu có comment hiện tại, cập nhật comment
+          // Cập nhật comment nếu đã tồn tại
           const updateCommentResponse = await TeacherService.updateTeacherComment(
             student.id,
             todayFormatted,
@@ -151,23 +173,22 @@ const EvaluationModal = ({ visible, onClose, students }) => {
           );
           teacherCommentID = studentComment.id;
         } else {
-          // Nếu không có comment hiện tại, tạo mới comment
+          // Tạo mới comment nếu chưa có
           const commentResponse = await TeacherService.evaluationStudent(commentPayload);
           teacherCommentID = commentResponse.id;
         }
 
-        // Kiểm tra điểm skill và behavior hiện tại
-        const existingScores = await TeacherService.getStudentScoreSkillandBehaviorByDate(
-          todayFormatted
-        );
-        const studentScores = existingScores.filter((score) => score.studentID === student.id);
-
+        // Chuẩn bị payload cho skill và behavior
         const skillBehaviorPayload = [];
 
         // Xử lý Skills
         skills.forEach((skill) => {
           const skillData = allSkills.find((s) => s.name === skill.name && s.type === 1);
           if (skillData && skill.rating > 0) {
+            if (!skillData.id) {
+              console.error(`Invalid SkillID for skill: ${skill.name}`);
+              return;
+            }
             skillBehaviorPayload.push({
               studentID: student.id,
               skillType: "1",
@@ -183,6 +204,10 @@ const EvaluationModal = ({ visible, onClose, students }) => {
         behaviors.forEach((behavior) => {
           const behaviorData = allSkills.find((s) => s.name === behavior.name && s.type === 0);
           if (behaviorData && behavior.rating > 0) {
+            if (!behaviorData.id) {
+              console.error(`Invalid BehaviorID for behavior: ${behavior.name}`);
+              return;
+            }
             skillBehaviorPayload.push({
               studentID: student.id,
               skillType: "0",
@@ -194,16 +219,52 @@ const EvaluationModal = ({ visible, onClose, students }) => {
           }
         });
 
-        if (studentScores.length > 0) {
-          // Nếu đã có điểm, cập nhật điểm skill và behavior
+        // Kiểm tra skillBehaviorPayload
+        if (skillBehaviorPayload.length === 0) {
+          console.warn(`No valid skills or behaviors to evaluate for StudentID: ${student.id}`);
+          return;
+        }
+
+        // Phân loại payload thành update và create
+        const updatePayload = [];
+        const createPayload = [];
+
+        skillBehaviorPayload.forEach((payload) => {
+          const existingScore = scoreBySkillID[payload.skill];
+
+          if (existingScore) {
+            // Nếu đã có điểm số cho SkillID, thêm vào updatePayload
+            updatePayload.push({
+              id: existingScore.id, // ID của bản ghi điểm số
+              studentID: payload.studentID,
+              skillType: payload.skillType,
+              score: payload.score,
+              teacherComment: payload.teacherComment,
+              skill: payload.skill,
+              date: payload.date,
+            });
+          } else {
+            // Nếu chưa có, thêm vào createPayload
+            createPayload.push(payload);
+          }
+        });
+
+        // Debug payload
+        console.log(`StudentID: ${student.id}, Update Payload:`, updatePayload);
+        console.log(`StudentID: ${student.id}, Create Payload:`, createPayload);
+
+        // Cập nhật các bản ghi hiện có
+        if (updatePayload.length > 0) {
           await TeacherService.updateStudentScoreSkillandBehaviorByDate(
             student.id,
             todayFormatted,
-            skillBehaviorPayload
+            updatePayload
           );
-        } else {
-          // Nếu chưa có điểm, tạo mới điểm skill và behavior
-          const skillScorePromises = skillBehaviorPayload.map((payload) =>
+        }
+
+        // Tạo mới các bản ghi chưa có
+        if (createPayload.length > 0) {
+          const skillScorePromises = createPayload.map((payload) =>
             TeacherService.skillScoreStudent(payload)
           );
           await Promise.all(skillScorePromises);
@@ -214,7 +275,7 @@ const EvaluationModal = ({ visible, onClose, students }) => {
       message.success(`Evaluations saved successfully for ${students.length} students!`);
       onClose();
     } catch (error) {
-      console.error("Error saving evaluations:", error);
+      console.error("Error saving evaluations:", error.response?.data || error.message);
       message.error("Failed to save evaluations. Please try again.");
     } finally {
       setLoading(false);
