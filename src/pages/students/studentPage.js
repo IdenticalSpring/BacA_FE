@@ -1064,18 +1064,19 @@ const StudentPage = () => {
                 style={{
                   width: "50px",
                   height: "50px",
-                  background: socialHover.facebook
-                    ? "linear-gradient(145deg, #166FE5, #1877F2)"
-                    : "linear-gradient(145deg, #1877F2, #166FE5)",
-                  borderRadius: "50%",
+                  // background: socialHover.facebook
+                  //   ? "linear-gradient(145deg, #166FE5, #1877F2)"
+                  //   : "linear-gradient(145deg, #1877F2, #166FE5)",
+                  background: "transparent",
+                  // borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "white",
                   fontSize: "24px",
-                  boxShadow: socialHover.facebook
-                    ? "0 6px 15px rgba(24, 119, 242, 0.4)"
-                    : "0 4px 10px rgba(24, 119, 242, 0.3)",
+                  // boxShadow: socialHover.facebook
+                  //   ? "0 6px 15px rgba(24, 119, 242, 0.4)"
+                  //   : "0 4px 10px rgba(24, 119, 242, 0.3)",
                   cursor: "pointer",
                   transition: "all 0.3s ease",
                   transform: socialHover.facebook
@@ -1095,7 +1096,7 @@ const StudentPage = () => {
                       width: "100%",
                       height: "100%",
                       objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                      borderRadius: "50%", // Giữ hình tròn
+                      // borderRadius: "50%", // Giữ hình tròn
                     }}
                   />
                 ) : (
@@ -1106,18 +1107,19 @@ const StudentPage = () => {
                 style={{
                   width: "50px",
                   height: "50px",
-                  background: socialHover.zalo
-                    ? "linear-gradient(145deg, #0077EE, #0088FF)"
-                    : "linear-gradient(145deg, #0088FF, #0077EE)",
-                  borderRadius: "50%",
+                  // background: socialHover.zalo
+                  //   ? "linear-gradient(145deg, #0077EE, #0088FF)"
+                  //   : "linear-gradient(145deg, #0088FF, #0077EE)",
+                  background: "transparent",
+                  // borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "white",
                   fontSize: "24px",
-                  boxShadow: socialHover.zalo
-                    ? "0 6px 15px rgba(0, 136, 255, 0.4)"
-                    : "0 4px 10px rgba(0, 136, 255, 0.3)",
+                  // boxShadow: socialHover.zalo
+                  //   ? "0 6px 15px rgba(0, 136, 255, 0.4)"
+                  //   : "0 4px 10px rgba(0, 136, 255, 0.3)",
                   cursor: "pointer",
                   transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
                   transition: "all 0.3s ease",
@@ -1135,7 +1137,7 @@ const StudentPage = () => {
                       width: "100%",
                       height: "100%",
                       objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                      borderRadius: "50%", // Giữ hình tròn
+                      // borderRadius: "50%", // Giữ hình tròn
                     }}
                   />
                 ) : (

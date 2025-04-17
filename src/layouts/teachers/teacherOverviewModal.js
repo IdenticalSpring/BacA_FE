@@ -1862,7 +1862,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="xxl" fullWidth>
       <style>
         {`
         .truncate-text {
@@ -2008,9 +2008,10 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                 <DataTable
                   table={{ columns: classColumns, rows: classRows }}
                   isSorted={false}
-                  entriesPerPage={false}
+                  entriesPerPage={true}
                   showTotalEntries={false}
                   noEndBorder
+                  canSearch={true}
                 />
               )}
             </Card>
@@ -2033,9 +2034,10 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                 <DataTable
                   table={{ columns: lessonColumns, rows: lessonRows }}
                   isSorted={false}
-                  entriesPerPage={false}
+                  entriesPerPage={true}
                   showTotalEntries={false}
                   noEndBorder
+                  canSearch={true}
                 />
               )}
             </Card>
@@ -2058,9 +2060,10 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                 <DataTable
                   table={{ columns: homeworkColumns, rows: homeworkRows }}
                   isSorted={false}
-                  entriesPerPage={false}
+                  entriesPerPage={true}
                   showTotalEntries={false}
                   noEndBorder
+                  canSearch={true}
                 />
               )}
             </Card>
