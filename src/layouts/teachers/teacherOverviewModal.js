@@ -131,7 +131,25 @@ class CustomVideo extends BlockEmbed {
     };
   }
 }
+class CustomImageBlot extends BlockEmbed {
+  static blotName = "image";
+  static tagName = "img";
 
+  static create(value) {
+    const node = super.create();
+
+    node.setAttribute("src", value);
+    node.setAttribute("class", "ql-image");
+    node.style.cursor = "zoom-in";
+
+    return node;
+  }
+
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+Quill.register(CustomImageBlot);
 Quill.register(CustomVideo);
 function TeacherOverViewModal({ open, onClose, teacher }) {
   const [classes, setClasses] = useState([]);

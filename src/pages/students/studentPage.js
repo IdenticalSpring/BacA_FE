@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Layout,
   Typography,
@@ -36,6 +36,7 @@ import {
   UpOutlined,
   CopyOutlined,
   MessageOutlined,
+  CloseCircleFilled,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -59,6 +60,7 @@ import ConvertTTS from "./ConvertTTS";
 import ProfileModal from "./profileModal";
 import StudentFeedbackModal from "./feedbackModal";
 import contentPageService from "services/contentpageService";
+import { Close } from "@mui/icons-material";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -134,6 +136,8 @@ const StudentPage = () => {
   const progressRef = useRef(null);
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [selectLanguageClick, setSelectLanguageClick] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState("");
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
 
@@ -142,7 +146,6 @@ const StudentPage = () => {
       setSidebarVisible(true);
     }
   }, [isMobile]);
-
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkZaloLink).then(() => {
       setCopySuccess(true);
@@ -291,11 +294,17 @@ const StudentPage = () => {
           }
 
           if (findSelectedLessonBySchedule?.homeWorkId) {
-            fetchHomeworkByLesson(
-              findSelectedLessonBySchedule?.homeWorkId,
-              findSelectedLessonBySchedule?.homeWorkId
-            );
+            fetchHomeworkByLesson(findSelectedLessonBySchedule?.homeWorkId);
           }
+          setTimeout(() => {
+            const images = document.querySelectorAll(".ql-image");
+            images.forEach((image) => {
+              const src = image.getAttribute("src");
+              if (src) {
+                image.addEventListener("click", () => handleClickQLImage(src));
+              }
+            });
+          }, 100);
           setIsLessonSent(findSelectedLessonBySchedule.isLessonSent); // Chuyển đổi sang boolean nếu cần
           setIsHomeWorkSent(findSelectedLessonBySchedule.isHomeWorkSent); // Chuyển đổi sang boolean nếu cần
           // console.log("lessonBySchedule", findSelectedLessonBySchedule);
@@ -327,6 +336,21 @@ const StudentPage = () => {
       setIsLessonSent(0);
       setIsHomeWorkSent(0);
     }
+    return () => {
+      setLessons([]);
+      setHomework([]);
+      setIsLessonSent(0);
+      setIsHomeWorkSent(0);
+      setTimeout(() => {
+        const images = document.querySelectorAll(".ql-image");
+        images.forEach((image) => {
+          const src = image.getAttribute("src");
+          if (src) {
+            image.removeEventListener("click", () => handleClickQLImage(src));
+          }
+        });
+      }, 100);
+    };
   }, [selectedLessonBySchedule, studentId, lessonsBySchedule]);
   // console.log(isHomeWorkSent);
 
@@ -440,7 +464,7 @@ const StudentPage = () => {
   useEffect(() => {
     const menu = document.getElementById(":0.container");
     const menu2 = document.getElementById(":2.container");
-    console.log("Menu:", menu);
+    // console.log("Menu:", menu);
 
     if (menu) {
       menu.style.display = "none";
@@ -460,6 +484,12 @@ const StudentPage = () => {
     //     console.log("Không phải iframe");
     //   }
   });
+  const handleClickQLImage = useCallback((imageUrl) => {
+    setPreviewSrc(imageUrl);
+    setPreviewVisible(true);
+    // console.log(imageUrl);
+  }, []);
+
   const renderLessonContent = () => (
     <>
       <div ref={lessonRef}>
@@ -862,7 +892,7 @@ const StudentPage = () => {
 }`}
       </style>
       {!isMobile && (
-        <div style={{ width: "260px", height: "100%", position: "fixed", zIndex: 1001 }}>
+        <div style={{ width: "260px", height: "100%", position: "fixed" }}>
           <SidebarComponent />
         </div>
       )}
@@ -1319,6 +1349,59 @@ const StudentPage = () => {
         ) : (
           <p>Đang tải nội dung...</p>
         )}
+      </Modal>
+      {/* <div
+        style={{
+          position: "fixed",
+          bottom: "5%",
+          right: "5%",
+          width: "90%",
+          height: "90%",
+          zIndex: 100000000000,
+          borderRadius: "12px",
+        }}
+      >
+        <div
+          style={{
+            position: "fixed",
+            bottom: "90.5%",
+            left: "93%",
+            zIndex: 100000000000,
+            cursor: "pointer",
+          }}
+        >
+          <CloseCircleFilled style={{ fontSize: "20px", color: "white" }} />
+        </div>
+        <img src={previewSrc} style={{ width: "100%", height: "100%", borderRadius: "12px" }}></img>
+      </div> */}
+      <Modal
+        open={previewVisible}
+        onCancel={() => setPreviewVisible(false)}
+        footer={null}
+        style={{ zIndex: 100000000 }}
+        centered
+        width="90%"
+        bodyStyle={{ padding: 0 }}
+      >
+        <img
+          src={previewSrc}
+          style={{
+            // position: "absolute",
+            // top: "50%",
+            // left: "50%",
+            // transform: "translate(-50%, -50%)",
+            transform: "translateX(-1%)",
+            width: "102%",
+            // height: isMobile ? "auto" : "102%",
+            // height: "100%",
+            borderRadius: "12px",
+            maxWidth: "102%",
+            // maxHeight: "102%",
+            objectFit: "contain",
+            borderRadius: "12px",
+            margin: "0 auto",
+          }}
+        ></img>
       </Modal>
     </Layout>
   );

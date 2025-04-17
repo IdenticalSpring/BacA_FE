@@ -307,7 +307,7 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range.index, "image", response.data.url);
+                      quill.insertEmbed(range?.index, "image", response.data.url);
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -366,7 +366,7 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range.index, "image", response.data.url);
+                      quill.insertEmbed(range?.index, "image", response.data.url);
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -427,7 +427,7 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range.index, "image", response.data.url);
+                      quill.insertEmbed(range?.index, "image", response.data.url);
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -486,7 +486,7 @@ const TeacherPage = () => {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range.index, "image", response.data.url);
+                      quill.insertEmbed(range?.index, "image", response.data.url);
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -589,7 +589,7 @@ const TeacherPage = () => {
                 .then((response) => {
                   if (response.status === 201) {
                     const range = quill.getSelection(true);
-                    quill.insertEmbed(range.index, "image", response.data.url);
+                    quill.insertEmbed(range?.index, "image", response.data.url);
                     setTimeout(() => {
                       const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                       console.log("IMG:", imgs);
@@ -650,7 +650,7 @@ const TeacherPage = () => {
                 .then((response) => {
                   if (response.status === 201) {
                     const range = quill.getSelection(true);
-                    quill.insertEmbed(range.index, "image", response.data.url);
+                    quill.insertEmbed(range?.index, "image", response.data.url);
                     setTimeout(() => {
                       const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                       console.log(imgs);

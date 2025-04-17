@@ -112,7 +112,28 @@ class CustomVideo extends BlockEmbed {
     };
   }
 }
+class CustomImageBlot extends BlockEmbed {
+  static blotName = "image";
+  static tagName = "img";
 
+  static create(value) {
+    const node = super.create();
+
+    node.setAttribute("src", value);
+    node.setAttribute("class", "ql-image");
+    node.style.cursor = "zoom-in";
+    // node.setAttribute("onclick", "handleClickQLImage");
+    // node.onclick = () => {
+    //   console.log("clicked image"); // thay thế bằng hàm của bạn // gọi hàm toàn cục
+    // };
+    return node;
+  }
+
+  static value(node) {
+    return node.getAttribute("src");
+  }
+}
+Quill.register(CustomImageBlot);
 Quill.register(CustomVideo);
 export default function CreateHomeWork({
   toolbar,
