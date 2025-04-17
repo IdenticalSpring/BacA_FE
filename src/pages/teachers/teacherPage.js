@@ -1152,6 +1152,7 @@ const TeacherPage = () => {
     try {
       setLoading(true);
       const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(selectedClass);
+      data.sort((a, b) => new Date(a.date) - new Date(b.date)); // Sắp xếp theo ngày tăng dần
       setLessonByScheduleData(data);
       // fetchLessons();
       const classData = classes?.find((c) => c.id === selectedClass);
