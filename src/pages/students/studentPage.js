@@ -253,7 +253,12 @@ const StudentPage = () => {
           const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(
             student.class.id
           );
-          setLessonsBySchedule(data);
+          const filterData = data?.filter(
+            (lesson) =>
+              (lesson.isLessonSent && lesson.lessonID) ||
+              (lesson.homeWorkId && lesson.isHomeWorkSent)
+          );
+          setLessonsBySchedule(filterData);
         } catch (error) {
           console.error("Error fetching lessons by schedule:", error);
         }
@@ -261,6 +266,7 @@ const StudentPage = () => {
       fetchLessonByScheduleOfClasses();
     }
   }, [student]);
+  console.log(isHomeWorkSent, isLessonSent);
 
   useEffect(() => {
     const findSelectedLessonBySchedule = lessonsBySchedule?.find(
