@@ -14,7 +14,7 @@ import {
   Typography,
 } from "antd";
 import { colors } from "assets/theme/color";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { use, useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
 const { Title } = Typography;
 const { Option } = Select;
@@ -25,6 +25,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   RobotOutlined,
+  SearchOutlined,
   SwapOutlined,
   SyncOutlined,
   UploadOutlined,
@@ -156,6 +157,18 @@ export default function LessonMangement({
   const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
   const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
   const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [dataSearch, setDataSearch] = useState([]);
+  useEffect(() => {
+    if (searchText === "") {
+      setDataSearch(lessons);
+    } else {
+      const filteredData = lessons?.filter((lesson) => {
+        return lesson.name.toLowerCase().includes(searchText.toLowerCase());
+      });
+      setDataSearch(filteredData);
+    }
+  }, [searchText]);
   // const quillRefLessonPlan = useRef(null);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
@@ -879,9 +892,15 @@ export default function LessonMangement({
             Quản lý bài học
           </Title>
         </div>
-
+        <Input
+          placeholder="Nhập tên bài học muốn tìm kiếm"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          prefix={<SearchOutlined />}
+          style={{ marginBottom: "20px", width: isMobile ? "100%" : "40%" }}
+        />
         <Table
-          dataSource={lessons}
+          dataSource={dataSearch}
           columns={columns}
           rowKey="id"
           loading={loading}

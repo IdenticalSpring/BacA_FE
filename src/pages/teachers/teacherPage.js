@@ -714,10 +714,6 @@ const TeacherPage = () => {
     };
     fetchNotification();
   }, []);
-  useEffect(() => {
-    fetchLessons();
-    fetchContentData();
-  }, [loadingCreateLesson]);
   const fetchContentData = async () => {
     try {
       const data = await contentPageService.getAllContentPages();
@@ -768,7 +764,12 @@ const TeacherPage = () => {
         return;
       }
       const data = await lessonService.getLessonByTeacherId(decoded.userId);
-      setLessons(data);
+
+      const filterData = data?.filter((lesson) =>
+        lessonByScheduleData?.some((item) => item.lessonId === lesson.id)
+      );
+      console.log(data, lessonByScheduleData, filterData);
+      setLessons(filterData);
     } catch (err) {
       console.log(err);
 
@@ -777,9 +778,9 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    fetchHomeWork();
-  }, [loadingCreateHomeWork]);
+  // useEffect(() => {
+  //   fetchHomeWork();
+  // }, [loadingCreateHomeWork]);
 
   const fetchHomeWork = async () => {
     try {
@@ -1117,6 +1118,8 @@ const TeacherPage = () => {
   useEffect(() => {
     if (selectedClass) {
       fetchLessonByScheduleAndLessonByLevel();
+
+      fetchContentData();
     }
   }, [selectedClass, loadingCreateHomeWork, loadingCreateLesson]);
 
@@ -1150,7 +1153,7 @@ const TeacherPage = () => {
       setLoading(true);
       const data = await lessonByScheduleService.getAllLessonBySchedulesOfClass(selectedClass);
       setLessonByScheduleData(data);
-
+      // fetchLessons();
       const classData = classes?.find((c) => c.id === selectedClass);
       const token = sessionStorage.getItem("token");
 
@@ -1159,6 +1162,19 @@ const TeacherPage = () => {
       if (!decoded) {
         return;
       }
+      const dataLesson = await lessonService.getLessonByTeacherId(decoded.userId);
+
+      const filterLessonData = dataLesson?.filter((lesson) =>
+        data?.some((item) => item.lessonID === lesson.id)
+      );
+      // console.log(dataLesson, data, filterData);
+      setLessons(filterLessonData);
+      const dataHomework = await homeWorkService.getHomeWorkByTeacherId(decoded.userId);
+      const filterHomeworkData = dataHomework?.filter((homework) =>
+        data?.some((item) => item.homeWorkId === homework.id)
+      );
+      setHomeWorks(filterHomeworkData);
+      // console.log(dataHomework, data, filterHomeworkData);
       if (classData) {
         const levelAndTeacherId = {
           level: classData.level,

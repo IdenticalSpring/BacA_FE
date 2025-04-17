@@ -27,6 +27,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ReadOutlined,
+  SearchOutlined,
   SwapOutlined,
   SyncOutlined,
   UploadOutlined,
@@ -161,6 +162,18 @@ export default function HomeWorkMangement({
   const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
   const [htmlContent, setHtmlContent] = useState("");
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [dataSearch, setDataSearch] = useState([]);
+  useEffect(() => {
+    if (searchText === "") {
+      setDataSearch(homeWorks);
+    } else {
+      const filteredData = homeWorks?.filter((homework) => {
+        return homework.title.toLowerCase().includes(searchText.toLowerCase());
+      });
+      setDataSearch(filteredData);
+    }
+  }, [searchText]);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -794,9 +807,15 @@ export default function HomeWorkMangement({
             Quản lý bài tập
           </Title>
         </div>
-
+        <Input
+          placeholder="Nhập tiêu đề bài tập muốn tìm kiếm"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          prefix={<SearchOutlined />}
+          style={{ marginBottom: "20px", width: isMobile ? "100%" : "40%" }}
+        />
         <Table
-          dataSource={homeWorks}
+          dataSource={dataSearch}
           columns={columns}
           rowKey="id"
           loading={loading}
