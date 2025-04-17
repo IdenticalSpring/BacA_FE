@@ -61,6 +61,7 @@ export default function Homepage() {
   const [contentData, setContentData] = useState(null);
   const navigate = useNavigate();
   const [buttonHover, setButtonHover] = useState({ student: false, teacher: false });
+  const [selectLanguageClick, setSelectLanguageClick] = useState(false);
   const containerStyle = {
     padding: "20px",
     maxWidth: "1200px",
@@ -200,7 +201,29 @@ export default function Homepage() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  useEffect(() => {
+    const menu = document.getElementById(":0.container");
+    const menu2 = document.getElementById(":2.container");
+    console.log("Menu:", menu);
 
+    if (menu) {
+      menu.style.display = "none";
+    } else {
+      console.warn("Không tìm thấy phần tử với id ':0.container'");
+    }
+    if (menu2) {
+      menu2.style.display = "none";
+    } else {
+      console.warn("Không tìm thấy phần tử với id ':2.container'");
+    }
+    //   const node = document.querySelector(".skiptranslate")?.childNodes.item(0);
+
+    //   if (node?.nodeName === "IFRAME") {
+    //     console.log("Node con là iframe");
+    //   } else {
+    //     console.log("Không phải iframe");
+    //   }
+  });
   useEffect(() => {
     setVisible({
       hero: true,
@@ -370,9 +393,20 @@ export default function Homepage() {
             >
               {/* Sign In */}
             </button>
+            <div
+              id="google_translate_element"
+              style={{ marginRight: "5px" }}
+              onClick={() => setSelectLanguageClick(!selectLanguageClick)}
+            ></div>
+            {/* <button onClick={resetGoogleTranslate}>quay lại ngôn ngữ gốc</button> */}
           </>
         ) : (
           <>
+            <div
+              id="google_translate_element"
+              style={{ marginRight: "5px" }}
+              onClick={() => setSelectLanguageClick(!selectLanguageClick)}
+            ></div>
             <button
               onClick={toggleMenu}
               style={{

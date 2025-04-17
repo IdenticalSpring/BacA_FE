@@ -14,7 +14,7 @@ Coded by www.creative-tim.com
 Software.
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
   <meta charset="utf-8" />
@@ -34,6 +34,87 @@ Software.
   <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1467907056644443"
     crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {
+          pageLanguage: 'vi', // Ngôn ngữ gốc của trang
+          includedLanguages: 'en,vi,fr,ja,ko,zh-CN', // Ngôn ngữ hỗ trợ
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        },
+        'google_translate_element'
+      );
+    }
+  </script>
+
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <style>
+    /* .goog-logo-link,
+    .goog-te-gadget span {
+      display: none !important;
+    } */
+
+    .goog-te-combo {
+      font-size: 12px !important;
+      padding: 4px 8px !important;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: white;
+      color: black;
+      width: auto !important;
+      height: auto !important;
+    }
+
+    /* .goog-te-banner-frame.skiptranslate,
+    .goog-tooltip {
+      display: none !important;
+    } */
+
+    /* .skiptranslate {
+      display: none !important;
+    } */
+
+    .goog-te-gadget {
+      display: inline-block !important;
+
+    }
+
+    #google_translate_element {
+      display: flex !important;
+    }
+
+    .goog-te-gadget-simple {
+      display: flex !important;
+      width: auto !important;
+      height: 30px !important;
+      justify-content: center !important;
+      align-items: center !important;
+      border-radius: 5px !important;
+    }
+
+    body {
+      top: 0px !important;
+    }
+
+    @media screen and (max-width: 768px) {
+
+      .goog-logo-link,
+      .goog-te-gadget span {
+        display: none !important;
+      }
+    }
+  </style>
+  <script>
+    function resetGoogleTranslate() {
+      if (typeof google !== "undefined" && google.translate) {
+        const combo = document.querySelector(".goog-te-combo");
+        if (combo) {
+          combo.value = ""; // đặt lại về giá trị rỗng (ngôn ngữ gốc)
+          combo.dispatchEvent(new Event("change"));
+        }
+      }
+    }
+  </script>
 </head>
 
 <body>

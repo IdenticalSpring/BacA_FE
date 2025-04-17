@@ -133,7 +133,7 @@ const StudentPage = () => {
   const lessonRef = useRef(null);
   const progressRef = useRef(null);
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
-
+  const [selectLanguageClick, setSelectLanguageClick] = useState(false);
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
 
@@ -266,7 +266,7 @@ const StudentPage = () => {
       fetchLessonByScheduleOfClasses();
     }
   }, [student]);
-  console.log(isHomeWorkSent, isLessonSent);
+  // console.log(isHomeWorkSent, isLessonSent);
 
   useEffect(() => {
     const findSelectedLessonBySchedule = lessonsBySchedule?.find(
@@ -437,7 +437,29 @@ const StudentPage = () => {
       return null;
     }
   };
+  useEffect(() => {
+    const menu = document.getElementById(":0.container");
+    const menu2 = document.getElementById(":2.container");
+    console.log("Menu:", menu);
 
+    if (menu) {
+      menu.style.display = "none";
+    } else {
+      console.warn("Không tìm thấy phần tử với id ':0.container'");
+    }
+    if (menu2) {
+      menu2.style.display = "none";
+    } else {
+      console.warn("Không tìm thấy phần tử với id ':2.container'");
+    }
+    //   const node = document.querySelector(".skiptranslate")?.childNodes.item(0);
+
+    //   if (node?.nodeName === "IFRAME") {
+    //     console.log("Node con là iframe");
+    //   } else {
+    //     console.log("Không phải iframe");
+    //   }
+  });
   const renderLessonContent = () => (
     <>
       <div ref={lessonRef}>
@@ -896,7 +918,7 @@ const StudentPage = () => {
             </Title>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Tag color="green" bordered={false} style={{ fontSize: "16px" }}>
+            <Tag color="green" bordered={false} style={{ fontSize: isMobile ? "12px" : "16px" }}>
               {"Mã lớp: "}
               {student?.class?.accessId}
             </Tag>
@@ -914,6 +936,11 @@ const StudentPage = () => {
                 <BellOutlined style={{ fontSize: 20 }} />
               </Badge>
             </Button>
+            <div
+              id="google_translate_element"
+              style={{ marginRight: "5px" }}
+              onClick={() => setSelectLanguageClick(!selectLanguageClick)}
+            ></div>
             <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
               <Avatar
                 src={student?.imgUrl}

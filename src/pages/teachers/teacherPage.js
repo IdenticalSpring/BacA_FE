@@ -205,6 +205,7 @@ const TeacherPage = () => {
   const [teacherData, setTeacherData] = useState(null);
   const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
   const [contentData, setContentData] = useState(null);
+  const [selectLanguageClick, setSelectLanguageClick] = useState(false);
   const quillRefLessonCreate = useRef(null);
   const quillRefLessonUpdate = useRef(null);
   const quillRefLessonPlanCreate = useRef(null);
@@ -521,7 +522,29 @@ const TeacherPage = () => {
     };
   }, [quillRefLessonCreate, quillRefLessonUpdate, editingLesson]);
   // console.log(editingHomeWork);
+  useEffect(() => {
+    const menu = document.getElementById(":0.container");
+    const menu2 = document.getElementById(":2.container");
+    console.log("Menu:", menu);
 
+    if (menu) {
+      menu.style.display = "none";
+    } else {
+      console.warn("Không tìm thấy phần tử với id ':0.container'");
+    }
+    if (menu2) {
+      menu2.style.display = "none";
+    } else {
+      console.warn("Không tìm thấy phần tử với id ':2.container'");
+    }
+    //   const node = document.querySelector(".skiptranslate")?.childNodes.item(0);
+
+    //   if (node?.nodeName === "IFRAME") {
+    //     console.log("Node con là iframe");
+    //   } else {
+    //     console.log("Không phải iframe");
+    //   }
+  });
   useEffect(() => {
     // console.log(quillRefLessonCreate);
     const handlePaste = (e) => {
@@ -1358,7 +1381,7 @@ const TeacherPage = () => {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             {selectedClass && (
-              <Tag color="green" bordered={false} style={{ fontSize: "16px" }}>
+              <Tag color="green" bordered={false} style={{ fontSize: isMobile ? "12px" : "16px" }}>
                 {"Mã lớp: "}
                 {classes.find((cls) => cls.id === selectedClass)?.accessId}
               </Tag>
@@ -1391,7 +1414,11 @@ const TeacherPage = () => {
             >
               <QuestionCircleOutlined style={{ fontSize: 20 }} />
             </Button>
-
+            <div
+              id="google_translate_element"
+              style={{ marginRight: "5px" }}
+              onClick={() => setSelectLanguageClick(!selectLanguageClick)}
+            ></div>
             <Dropdown overlay={userMenu} placement="bottomRight">
               <Avatar
                 style={{
