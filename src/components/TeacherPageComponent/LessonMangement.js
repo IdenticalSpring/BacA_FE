@@ -561,7 +561,7 @@ export default function LessonMangement({
         if (response.status === 201 && quillRef.current) {
           const editor = quillRef.current.getEditor();
           const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
+          editor.insertEmbed(range?.index, "image", response.data.url);
           setTimeout(() => {
             const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
             imgs.forEach((img) => {
@@ -649,7 +649,7 @@ export default function LessonMangement({
           if (response.status === 201 && quillRefLessonPlan.current) {
             const editor = quillRefLessonPlan.current?.getEditor();
             const range = editor.getSelection(true);
-            editor.insertEmbed(range.index, "image", response.data.url);
+            editor.insertEmbed(range?.index, "image", response.data.url);
             setTimeout(() => {
               const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
               imgs.forEach((img) => {
@@ -697,8 +697,8 @@ export default function LessonMangement({
           const audioUrl = response?.data?.url;
 
           // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
-          editor.insertEmbed(range.index, "audio", audioUrl, "user");
-          editor.setSelection(range.index + 1); // move cursor
+          editor.insertEmbed(range?.index, "audio", audioUrl, "user");
+          editor.setSelection(range?.index + 1); // move cursor
         } else {
           message.error("Upload failed. Try again!");
         }

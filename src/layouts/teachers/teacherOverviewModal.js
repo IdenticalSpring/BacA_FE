@@ -1197,7 +1197,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range.index, "image", response.data.url);
+                      quill.insertEmbed(range?.index, "image", response.data.url);
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -1256,7 +1256,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   .then((response) => {
                     if (response.status === 201) {
                       const range = quill.getSelection(true);
-                      quill.insertEmbed(range.index, "image", response.data.url);
+                      quill.insertEmbed(range?.index, "image", response.data.url);
                       setTimeout(() => {
                         const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                         imgs.forEach((img) => {
@@ -1316,7 +1316,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                 .then((response) => {
                   if (response.status === 201) {
                     const range = quill.getSelection(true);
-                    quill.insertEmbed(range.index, "image", response.data.url);
+                    quill.insertEmbed(range?.index, "image", response.data.url);
                     setTimeout(() => {
                       const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
                       imgs.forEach((img) => {
@@ -1376,7 +1376,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         if (response.status === 201 && quillRefLessonDescription.current) {
           const editor = quillRefLessonDescription.current.getEditor();
           const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
+          editor.insertEmbed(range?.index, "image", response.data.url);
           setTimeout(() => {
             const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
             imgs.forEach((img) => {
@@ -1464,7 +1464,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
           if (response.status === 201 && quillRefLessonPlan.current) {
             const editor = quillRefLessonPlan.current?.getEditor();
             const range = editor.getSelection(true);
-            editor.insertEmbed(range.index, "image", response.data.url);
+            editor.insertEmbed(range?.index, "image", response.data.url);
             setTimeout(() => {
               const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
               imgs.forEach((img) => {
@@ -1512,8 +1512,8 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
           const audioUrl = response?.data?.url;
 
           // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
-          editor.insertEmbed(range.index, "audio", audioUrl, "user");
-          editor.setSelection(range.index + 1); // move cursor
+          editor.insertEmbed(range?.index, "audio", audioUrl, "user");
+          editor.setSelection(range?.index + 1); // move cursor
         } else {
           message.error("Upload failed. Try again!");
         }
@@ -1713,7 +1713,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         if (response.status === 201 && quillRefHomeworkDescription.current) {
           const editor = quillRefHomeworkDescription.current.getEditor();
           const range = editor.getSelection(true);
-          editor.insertEmbed(range.index, "image", response.data.url);
+          editor.insertEmbed(range?.index, "image", response.data.url);
           setTimeout(() => {
             const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
             imgs.forEach((img) => {
@@ -1783,8 +1783,8 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
           const audioUrl = response?.data?.url;
 
           // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
-          editor.insertEmbed(range.index, "audio", audioUrl, "user");
-          editor.setSelection(range.index + 1); // move cursor
+          editor.insertEmbed(range?.index, "audio", audioUrl, "user");
+          editor.setSelection(range?.index + 1); // move cursor
         } else {
           message.error("Upload failed. Try again!");
         }
