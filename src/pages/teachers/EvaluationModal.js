@@ -36,8 +36,12 @@ const EvaluationModal = ({ visible, onClose, students }) => {
   const [evaluation, setEvaluation] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [allSkills, setAllSkills] = useState([]); // Lưu toàn bộ skill từ API để lấy skillID
-  const today = new Date().toISOString().split("T")[0];
+  const [allSkills, setAllSkills] = useState([]);
+  const today = new Date();
+  const padZero = (num) => String(num).padStart(2, "0");
+  const todayFormatted = `${today.getFullYear()}-${padZero(today.getMonth() + 1)}-${padZero(
+    today.getDate()
+  )}`;
 
   useEffect(() => {
     const fetchSkillsAndBehaviors = async () => {
@@ -52,7 +56,7 @@ const EvaluationModal = ({ visible, onClose, students }) => {
 
         setAvailableSkills(fetchedSkills);
         setAvailableBehaviors(fetchedBehaviors);
-        setAllSkills(skillData); // Lưu toàn bộ skill để lấy skillID sau này
+        setAllSkills(skillData);
         setSkills([]);
         setBehaviors([]);
       } catch (error) {
@@ -122,34 +126,56 @@ const EvaluationModal = ({ visible, onClose, students }) => {
     setLoading(true);
     try {
       const evaluationPromises = students.map(async (student) => {
-        // Bước 1: Gửi comment lên evaluationStudent
+        // Kiểm tra comment hiện tại cho ngày và studentID
+        const existingComments = await TeacherService.getCommentByDate(todayFormatted);
+        const studentComment = existingComments.find(
+          (comment) => comment.student?.id === student.id
+        );
+
         const commentPayload = {
           teacherID,
           studentID: student.id,
           scheduleID: student.schedule?.id,
-          date: today,
+          date: todayFormatted,
           comment: evaluation,
         };
-        const commentResponse = await TeacherService.evaluationStudent(commentPayload);
-        const teacherCommentID = commentResponse.id; // Giả sử response trả về id của teacherComment
 
-        // Bước 2: Gửi skills và behaviors lên skillScoreStudent
-        const skillScorePromises = [];
+        let teacherCommentID;
+
+        if (studentComment) {
+          // Nếu có comment hiện tại, cập nhật comment
+          const updateCommentResponse = await TeacherService.updateTeacherComment(
+            student.id,
+            todayFormatted,
+            commentPayload
+          );
+          teacherCommentID = studentComment.id;
+        } else {
+          // Nếu không có comment hiện tại, tạo mới comment
+          const commentResponse = await TeacherService.evaluationStudent(commentPayload);
+          teacherCommentID = commentResponse.id;
+        }
+
+        // Kiểm tra điểm skill và behavior hiện tại
+        const existingScores = await TeacherService.getStudentScoreSkillandBehaviorByDate(
+          todayFormatted
+        );
+        const studentScores = existingScores.filter((score) => score.studentID === student.id);
+
+        const skillBehaviorPayload = [];
 
         // Xử lý Skills
         skills.forEach((skill) => {
           const skillData = allSkills.find((s) => s.name === skill.name && s.type === 1);
           if (skillData && skill.rating > 0) {
-            skillScorePromises.push(
-              TeacherService.skillScoreStudent({
-                studentID: student.id,
-                skillType: "1",
-                score: skill.rating,
-                teacherComment: teacherCommentID,
-                skill: skillData.id,
-                date: today,
-              })
-            );
+            skillBehaviorPayload.push({
+              studentID: student.id,
+              skillType: "1",
+              score: skill.rating,
+              teacherComment: teacherCommentID,
+              skill: skillData.id,
+              date: todayFormatted,
+            });
           }
         });
 
@@ -157,21 +183,31 @@ const EvaluationModal = ({ visible, onClose, students }) => {
         behaviors.forEach((behavior) => {
           const behaviorData = allSkills.find((s) => s.name === behavior.name && s.type === 0);
           if (behaviorData && behavior.rating > 0) {
-            skillScorePromises.push(
-              TeacherService.skillScoreStudent({
-                studentID: student.id,
-                skillType: "0",
-                score: behavior.rating,
-                teacherComment: teacherCommentID,
-                skill: behaviorData.id,
-                date: today,
-              })
-            );
+            skillBehaviorPayload.push({
+              studentID: student.id,
+              skillType: "0",
+              score: behavior.rating,
+              teacherComment: teacherCommentID,
+              skill: behaviorData.id,
+              date: todayFormatted,
+            });
           }
         });
 
-        // Chờ tất cả skill/behavior scores được lưu
-        await Promise.all(skillScorePromises);
+        if (studentScores.length > 0) {
+          // Nếu đã có điểm, cập nhật điểm skill và behavior
+          await TeacherService.updateStudentScoreSkillandBehaviorByDate(
+            student.id,
+            todayFormatted,
+            skillBehaviorPayload
+          );
+        } else {
+          // Nếu chưa có điểm, tạo mới điểm skill và behavior
+          const skillScorePromises = skillBehaviorPayload.map((payload) =>
+            TeacherService.skillScoreStudent(payload)
+          );
+          await Promise.all(skillScorePromises);
+        }
       });
 
       await Promise.all(evaluationPromises);
@@ -185,7 +221,7 @@ const EvaluationModal = ({ visible, onClose, students }) => {
     }
   };
 
-  const currentSchedule = today;
+  const currentSchedule = todayFormatted;
 
   return (
     <Modal

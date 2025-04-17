@@ -154,7 +154,11 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students }) => {
     setLoading(true);
     try {
       const evaluationPromises = studentEvaluations.map(async (studentEval) => {
-        // Send comment to evaluationStudent
+        // Kiểm tra comment hiện tại
+        const existingComments = await TeacherService.getCommentByDate(today);
+        const studentComment = existingComments.find(
+          (comment) => comment.student?.id === studentEval.studentId
+        );
         const commentPayload = {
           teacherID,
           studentID: studentEval.studentId,
@@ -162,26 +166,41 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students }) => {
           date: today,
           comment: studentEval.comment,
         };
-        const commentResponse = await TeacherService.evaluationStudent(commentPayload);
-        const teacherCommentID = commentResponse.id;
 
-        // Send skills and behaviors to skillScoreStudent
-        const skillScorePromises = [];
+        let teacherCommentID;
+
+        if (studentComment) {
+          const updateCommentResponse = await TeacherService.updateTeacherComment(
+            studentEval.studentId,
+            today,
+            commentPayload
+          );
+          teacherCommentID = studentComment.id;
+        } else {
+          const commentResponse = await TeacherService.evaluationStudent(commentPayload);
+          teacherCommentID = commentResponse.id;
+        }
+
+        // Kiểm tra điểm skill và behavior
+        const existingScores = await TeacherService.getStudentScoreSkillandBehaviorByDate(today);
+        const studentScores = existingScores.filter(
+          (score) => score.studentID === studentEval.studentId
+        );
+
+        const skillBehaviorPayload = [];
 
         // Process Skills
         Object.entries(studentEval.skills).forEach(([skillName, rating]) => {
           const skillData = allSkills.find((s) => s.name === skillName && s.type === 1);
           if (skillData && rating > 0) {
-            skillScorePromises.push(
-              TeacherService.skillScoreStudent({
-                studentID: studentEval.studentId,
-                skillType: "1",
-                score: rating,
-                teacherComment: teacherCommentID,
-                skill: skillData.id,
-                date: today,
-              })
-            );
+            skillBehaviorPayload.push({
+              studentID: studentEval.studentId,
+              skillType: "1",
+              score: rating,
+              teacherComment: teacherCommentID,
+              skill: skillData.id,
+              date: today,
+            });
           }
         });
 
@@ -189,27 +208,40 @@ const MultiStudentEvaluationModal = ({ visible, onClose, students }) => {
         Object.entries(studentEval.behaviors).forEach(([behaviorName, rating]) => {
           const behaviorData = allSkills.find((s) => s.name === behaviorName && s.type === 0);
           if (behaviorData && rating > 0) {
-            skillScorePromises.push(
-              TeacherService.skillScoreStudent({
-                studentID: studentEval.studentId,
-                skillType: "0",
-                score: rating,
-                teacherComment: teacherCommentID,
-                skill: behaviorData.id,
-                date: today,
-              })
-            );
+            skillBehaviorPayload.push({
+              studentID: studentEval.studentId,
+              skillType: "0",
+              score: rating,
+              teacherComment: teacherCommentID,
+              skill: behaviorData.id,
+              date: today,
+            });
           }
         });
 
-        await Promise.all(skillScorePromises);
+        if (studentScores.length > 0) {
+          await TeacherService.updateStudentScoreSkillandBehaviorByDate(
+            studentEval.studentId,
+            today,
+            skillBehaviorPayload
+          );
+        } else {
+          const skillScorePromises = skillBehaviorPayload.map((payload) =>
+            TeacherService.skillScoreStudent(payload)
+          );
+          await Promise.all(skillScorePromises);
+        }
       });
 
       await Promise.all(evaluationPromises);
       message.success(`Evaluations saved successfully for ${students.length} students!`);
       onClose();
     } catch (error) {
-      console.error("Error saving evaluations:", error);
+      console.error("Error saving evaluations:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       message.error("Failed to save evaluations. Please try again.");
     } finally {
       setLoading(false);

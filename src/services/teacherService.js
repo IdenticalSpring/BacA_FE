@@ -175,6 +175,70 @@ const teacherService = {
       throw error.response?.data?.message || "Error fetching attendance by date";
     }
   },
+  getCommentByDate: async (date) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/teacher-comments/date/${date}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching comments by date";
+    }
+  },
+  async updateTeacherComment(studentID, date, updateData) {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/teacher-comments/student/${studentID}/date/${date}`,
+        updateData,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in Comments:", error);
+      throw error;
+    }
+  },
+  async getStudentScoreSkillandBehaviorByDate(date) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/studentskillbehaviorscores/date/${date}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in Score:", error);
+      throw error;
+    }
+  },
+  async updateStudentScoreSkillandBehaviorByDate(studentID, date, payload) {
+    try {
+      const updatePromises = payload.map(async (item) => {
+        const response = await axios.put(
+          `${API_BASE_URL}/studentskillbehaviorscores/student/${studentID}/date/${date}`,
+          item,
+          {
+            headers: {
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+        return response.data;
+      });
+      const results = await Promise.all(updatePromises);
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default teacherService;
