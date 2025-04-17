@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -44,6 +44,7 @@ import { message, Modal, Spin, TimePicker } from "antd";
 import dayjs from "dayjs";
 import classScheduleService from "services/classScheduleService";
 import CheckinManagement from "pages/admin/checkinManagement";
+import moment from "moment";
 
 function generateAccessId() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -60,7 +61,26 @@ function generateAccessId() {
 
   return accessId;
 }
+const isConflictWithExisting = (newSchedule, existingSchedules) => {
+  const { dayOfWeek, startTime, endTime } = newSchedule;
 
+  if (startTime == null || endTime == null || dayOfWeek == null) {
+    message.warning("Please fill in every field to continue");
+    return false;
+  }
+  // const formattedStart = moment(startTime).format("HH:mm");
+  // const formattedEnd = moment(endTime).format("HH:mm");
+
+  return existingSchedules.some((item) => {
+    // const existingStart = item.startTime?.substring(0, 5); // "19:08:00" => "19:08"
+    // const existingEnd = item.endTime?.substring(0, 5); // "21:08:00" => "21:08"
+    // console.log("item", item.startTime, item.endTime, item.dayOfWeek);
+    // console.log("dayOfWeek", dayOfWeek);
+    // console.log("startTime", startTime);
+    // console.log("endTime", endTime);
+    return item.dayOfWeek === dayOfWeek && item.startTime === startTime && item.endTime === endTime;
+  });
+};
 function CreateClass() {
   const navigate = useNavigate();
 
@@ -83,6 +103,7 @@ function CreateClass() {
   const [filterSchedule, setFilterSchedule] = useState("");
   const [teachers, setTeachers] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [allSchedules, setAllSchedules] = useState([]);
   const [selectedSchedulesForCreate, setSelectedSchedulesForCreate] = useState([]);
   const [selectedSchedulesForUpdate, setSelectedSchedulesForUpdate] = useState([]);
   const [levels, setLevels] = useState([]);
@@ -297,7 +318,17 @@ function CreateClass() {
       console.error("Lỗi khi tải danh sách lịch học theo ngày trong tuần");
     }
   };
-
+  useEffect(() => {
+    fetchAllSchedules();
+  }, []);
+  const fetchAllSchedules = async () => {
+    try {
+      const data = await scheduleService.getAllSchedules();
+      setAllSchedules(data);
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách lịch học");
+    }
+  };
   const fetchTeachers = async () => {
     try {
       const data = await teacherService.getAllTeachers();
@@ -757,9 +788,13 @@ function CreateClass() {
     try {
       const data = {
         dayOfWeek: scheduleData.dayOfWeek,
-        startTime: scheduleData.startTime.format("HH:mm"),
-        endTime: scheduleData.endTime.format("HH:mm"),
+        startTime: scheduleData.startTime.format("HH:mm:ss"),
+        endTime: scheduleData.endTime.format("HH:mm:ss"),
       };
+      if (isConflictWithExisting(data, allSchedules)) {
+        message.warning("Schedule conflicts with existing schedule!");
+        return;
+      }
       const scheduleEntity = await scheduleService.createSchedule(data);
       setScheduleData({
         dayOfWeek: "",
@@ -785,6 +820,7 @@ function CreateClass() {
           ),
         },
       ]);
+      setAllSchedules((prev) => [...prev, scheduleEntity]);
       message.success("Create schedule success!");
     } catch (err) {
       message.error("Create schedule failed!" + err);
