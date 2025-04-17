@@ -44,11 +44,12 @@ const EvaluationStudent = ({ studentId, colors }) => {
         setEvaluations(Array.isArray(evalData) ? evalData : [evalData]);
         setSkillEvaluations(skillData);
 
+        // Lấy danh sách các ngày duy nhất và sắp xếp từ mới nhất đến cũ nhất
         const uniqueDates = [...new Set(skillData.map((s) => s.date))].sort(
           (a, b) => new Date(b) - new Date(a)
         );
         if (uniqueDates.length > 0) {
-          setSelectedDate(uniqueDates[0]);
+          setSelectedDate(uniqueDates[0]); // Chọn ngày mới nhất
         }
       } catch (error) {
         console.error("Error fetching evaluations:", error);
@@ -79,7 +80,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
   };
 
   const getUniqueDates = () =>
-    [...new Set(skillEvaluations.map((s) => s.date))].sort((a, b) => new Date(a) - new Date(b));
+    [...new Set(skillEvaluations.map((s) => s.date))].sort((a, b) => new Date(b) - new Date(a));
 
   const getSkillsChartData = (type) => {
     if (!selectedDate) return { labels: [], datasets: [] };
@@ -121,7 +122,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
       legend: {
         position: "top",
         labels: {
-          font: { size: isMobile ? 12 : 14 }, // Giảm kích thước font trên mobile
+          font: { size: isMobile ? 12 : 14 },
           color: colors.darkGreen,
         },
       },
@@ -133,7 +134,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
             return `${label}: ${getScoreDescription(value)} (${value}/5)`;
           },
         },
-        bodyFont: { size: isMobile ? 10 : 12 }, // Giảm kích thước font tooltip trên mobile
+        bodyFont: { size: isMobile ? 10 : 12 },
       },
     },
     maintainAspectRatio: false,
@@ -142,34 +143,46 @@ const EvaluationStudent = ({ studentId, colors }) => {
   };
 
   const renderComments = () => {
-    const paginatedEvaluations = evaluations.slice(
+    if (!selectedDate) return <Text>Chưa chọn ngày để hiển thị nhận xét.</Text>;
+
+    // Lọc và sắp xếp evaluations theo ngày được chọn, từ mới nhất đến cũ nhất
+    const filteredEvaluations = evaluations
+      .filter((item) => item.date === selectedDate)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    const paginatedEvaluations = filteredEvaluations.slice(
       (currentPage - 1) * pageSize,
       currentPage * pageSize
     );
 
     return (
       <>
-        <List
-          dataSource={paginatedEvaluations}
-          renderItem={(item) => (
-            <List.Item>
-              <Space direction="vertical" style={{ width: "100%" }}>
-                <Text strong style={{ color: colors.darkGreen }}>
-                  Giáo viên: {item.teacher.name} | Ngày: {formatDate(item.date)}
-                </Text>
-                <Text>{item.comment}</Text>
-              </Space>
-            </List.Item>
-          )}
-        />
-        {evaluations.length > pageSize && (
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={evaluations.length}
-            onChange={setCurrentPage}
-            style={{ marginTop: 16, textAlign: "center" }}
-          />
+        {filteredEvaluations.length > 0 ? (
+          <>
+            <List
+              dataSource={paginatedEvaluations}
+              renderItem={(item) => (
+                <List.Item>
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Giáo viên: {item.teacher.name} | Ngày: {formatDate(item.date)}
+                    </Text>
+                    <Text>{item.comment}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+            {filteredEvaluations.length > pageSize && (
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={filteredEvaluations.length}
+                onChange={setCurrentPage}
+                style={{ marginTop: 16, textAlign: "center" }}
+              />
+            )}
+          </>
+        ) : (
+          <Text>Chưa có nhận xét cho ngày này.</Text>
         )}
       </>
     );
@@ -260,13 +273,11 @@ const EvaluationStudent = ({ studentId, colors }) => {
 
       {evaluations.length || skillEvaluations.length ? (
         <>
+          {renderSkillDetails()}
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Nhận xét của giáo viên
           </Divider>
           {renderComments()}
-
-          {renderSkillDetails()}
-
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Biểu đồ đánh giá
           </Divider>
