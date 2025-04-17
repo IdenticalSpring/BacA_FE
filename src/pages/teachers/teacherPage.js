@@ -307,6 +307,7 @@ const TeacherPage = () => {
                   .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                   .then((response) => {
                     if (response.status === 201) {
+                      if (!quill) return;
                       const range = quill.getSelection(true);
                       quill.insertEmbed(
                         range?.index ?? quill.getLength(),
@@ -370,6 +371,7 @@ const TeacherPage = () => {
                   .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                   .then((response) => {
                     if (response.status === 201) {
+                      if (!quill) return;
                       const range = quill.getSelection(true);
                       quill.insertEmbed(
                         range?.index ?? quill.getLength(),
@@ -435,6 +437,7 @@ const TeacherPage = () => {
                   .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                   .then((response) => {
                     if (response.status === 201) {
+                      if (!quill) return;
                       const range = quill.getSelection(true);
                       quill.insertEmbed(
                         range?.index ?? quill.getLength(),
@@ -498,6 +501,7 @@ const TeacherPage = () => {
                   .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                   .then((response) => {
                     if (response.status === 201) {
+                      if (!quill) return;
                       const range = quill.getSelection(true);
                       quill.insertEmbed(
                         range?.index ?? quill.getLength(),
@@ -605,6 +609,7 @@ const TeacherPage = () => {
                 .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                 .then((response) => {
                   if (response.status === 201) {
+                    if (!quill) return;
                     const range = quill.getSelection(true);
                     quill.insertEmbed(
                       range?.index ?? quill.getLength(),
@@ -670,6 +675,7 @@ const TeacherPage = () => {
                 .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                 .then((response) => {
                   if (response.status === 201) {
+                    if (!quill) return;
                     const range = quill.getSelection(true);
                     quill.insertEmbed(
                       range?.index ?? quill.getLength(),

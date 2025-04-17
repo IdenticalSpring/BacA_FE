@@ -1196,6 +1196,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                   .then((response) => {
                     if (response.status === 201) {
+                      if (!quill) return;
                       const range = quill.getSelection(true);
                       quill.insertEmbed(
                         range?.index ?? quill.getLength(),
@@ -1259,6 +1260,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                   .then((response) => {
                     if (response.status === 201) {
+                      if (!quill) return;
                       const range = quill.getSelection(true);
                       quill.insertEmbed(
                         range?.index ?? quill.getLength(),
@@ -1323,6 +1325,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                 .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
                 .then((response) => {
                   if (response.status === 201) {
+                    if (!quill) return;
                     const range = quill.getSelection(true);
                     quill.insertEmbed(
                       range?.index ?? quill.getLength(),
@@ -1386,7 +1389,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         // const result = await response.json();
 
         if (response.status === 201 && quillRefLessonDescription.current) {
-          const editor = quillRefLessonDescription.current.getEditor();
+          const editor = quillRefLessonDescription.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           editor.insertEmbed(range?.index ?? editor.getLength(), "image", response.data.url);
@@ -1521,7 +1524,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         );
 
         if (response.status === 201 && quillRefLessonDescription.current) {
-          const editor = quillRefLessonDescription.current.getEditor();
+          const editor = quillRefLessonDescription.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           const audioUrl = response?.data?.url;
@@ -1726,7 +1729,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         // const result = await response.json();
 
         if (response.status === 201 && quillRefHomeworkDescription.current) {
-          const editor = quillRefHomeworkDescription.current.getEditor();
+          const editor = quillRefHomeworkDescription.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           editor.insertEmbed(range?.index ?? editor.getLength(), "image", response.data.url);
@@ -1794,7 +1797,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
         );
 
         if (response.status === 201 && quillRefHomeworkDescription.current) {
-          const editor = quillRefHomeworkDescription.current.getEditor();
+          const editor = quillRefHomeworkDescription.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           const audioUrl = response?.data?.url;

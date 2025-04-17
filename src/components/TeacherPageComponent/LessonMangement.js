@@ -559,7 +559,7 @@ export default function LessonMangement({
         // const result = await response.json();
 
         if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
+          const editor = quillRef.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           editor.insertEmbed(range?.index ?? editor.getLength(), "image", response.data.url);
@@ -694,7 +694,7 @@ export default function LessonMangement({
         );
 
         if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
+          const editor = quillRef.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           const audioUrl = response?.data?.url;

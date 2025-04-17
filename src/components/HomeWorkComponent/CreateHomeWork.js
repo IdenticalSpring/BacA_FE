@@ -382,7 +382,7 @@ export default function CreateHomeWork({
         );
 
         if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current.getEditor();
+          const editor = quillRef.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
           const audioUrl = response?.data?.url;
