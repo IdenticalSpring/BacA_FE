@@ -370,6 +370,38 @@ export default function HomeWorkMangement({
   const handleUpdateSendingHomeworkStatus = async (id) => {
     setLoadingSchedule(true);
     try {
+      const values = await form.validateFields();
+      const formData = new FormData();
+      let linkGame = "";
+      if (gameLinks?.length > 0) {
+        linkGame = gameLinks.join(", ");
+        // gameLinks.map((link) => (linkGame += link + ", "));
+      }
+      let linkYoutube = "";
+      if (youtubeLinks?.length > 0) {
+        linkYoutube = youtubeLinks.join(", ");
+      }
+      formData.append("title", values.title);
+      formData.append("level", level);
+      formData.append("linkYoutube", linkYoutube);
+      formData.append("linkGame", linkGame);
+      formData.append("linkZalo", values.linkZalo);
+      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
+      formData.append("teacherId", teacherId);
+
+      // Nếu có mp3Url thì fetch dữ liệu và append vào formData
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
+      if (editingHomeWork) {
+        const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        setHomeWorks(
+          homeWorks?.map((homeWork) =>
+            homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
+          )
+        );
+        // message.success("HomeWork updated successfully");
+      }
       const response = await lessonByScheduleService.updateSendingHomeworkStatus(id, true);
       console.log("Update response:", response);
       const lessonByScheduleDataUpdated = lessonByScheduleData?.map((item) => {
@@ -414,6 +446,15 @@ export default function HomeWorkMangement({
 
       message.success("Gửi bài tập thành công!");
       setShowAccessId(true);
+      setModalUpdateHomeWorkVisible(false);
+      form.resetFields();
+      setEditingHomeWork(null);
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
+      setCurrentLink("");
+      setHtmlContent("");
+      setSwapHtmlMode(false);
       // setOpenSend(false);
     } catch (error) {
       console.error("Error updating sending homework status:", error);

@@ -375,6 +375,32 @@ export default function LessonMangement({
   const handleUpdateSendingLessonStatus = async (id) => {
     try {
       setLoadingSchedule(true);
+      const values = await form.validateFields();
+      const formData = new FormData();
+      let linkYoutube = "";
+      if (youtubeLinks?.length > 0) {
+        linkYoutube = youtubeLinks.join(", ");
+      }
+      formData.append("name", values.name);
+      formData.append("level", level);
+      formData.append("linkYoutube", linkYoutube);
+      // formData.append("linkGame", values.linkGame);
+      formData.append("linkGame", "meomeo");
+      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
+      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
+      formData.append("teacherId", teacherId);
+      if (mp3file) {
+        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      }
+      if (editingLesson) {
+        const lessonEntity = await lessonService.editLesson(editingLesson.id, formData);
+        setLessons(
+          lessons?.map((lesson) =>
+            lesson.id === editingLesson.id ? { ...lesson, ...lessonEntity } : lesson
+          )
+        );
+      }
+
       const data = await lessonByScheduleService.updateSendingLessonStatus(id, true);
       const lessonByScheduleDataUpdated = lessonByScheduleData.map((item) => {
         if (item.id === id) {
@@ -416,6 +442,23 @@ export default function LessonMangement({
         );
       });
       message.success("Đã gửi bài học thành công!");
+      // setModalUpdateLessonVisible(false);
+      // form.resetFields();
+      // setEditingLesson(null);
+      // setTextToSpeech("");
+      // setMp3file(null);
+      // setMp3Url("");
+      setModalUpdateLessonVisible(false);
+      form.resetFields();
+      setEditingLesson(null);
+      setTextToSpeech("");
+      setMp3file(null);
+      setMp3Url("");
+      setYoutubeLinks([]);
+      setCurrentYoutubeLink("");
+      setEditYoutubeIndex(null);
+      setHtmlContent("");
+      setSwapHtmlMode(false);
     } catch (err) {
       message.error("Lỗi khi gửi bài học! " + err);
     } finally {
