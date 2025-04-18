@@ -15,8 +15,8 @@ import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import { colors } from "assets/theme/color";
 import { message } from "antd";
-import Modal from "@mui/material/Modal"; // Thêm Modal
-import Box from "@mui/material/Box"; // Thêm Box để định dạng modal
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
 
 function CheckinManagement({ classId }) {
   const [columns, setColumns] = useState([]);
@@ -25,14 +25,14 @@ function CheckinManagement({ classId }) {
   const [error, setError] = useState("");
   const [searchName, setSearchName] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState("");
-  const [selectedClass, setSelectedClass] = useState(classId || ""); // Initialize with classId
+  const [selectedClass, setSelectedClass] = useState(classId || "");
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [lessonDaysByMonth, setLessonDaysByMonth] = useState({});
   const [lessonDays, setLessonDays] = useState([]);
-  const [openModal, setOpenModal] = useState(false); // Trạng thái mở/đóng modal
-  const [selectedNote, setSelectedNote] = useState(""); // Ghi chú được chọn
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedNote, setSelectedNote] = useState("");
 
   // Fetch initial data
   useEffect(() => {
@@ -101,6 +101,7 @@ function CheckinManagement({ classId }) {
       setLessonDays(days);
 
       const dynamicColumns = [
+        { Header: "Avatar", accessor: "avatar", width: "10%", align: "center" },
         { Header: "Student Name", accessor: "studentName", width: "20%" },
         { Header: "Teacher", accessor: "teacher", width: "20%" },
         ...days.map((day) => ({
@@ -114,6 +115,7 @@ function CheckinManagement({ classId }) {
     } else {
       setLessonDays([]);
       setColumns([
+        { Header: "Avatar", accessor: "avatar", width: "10%", align: "center" },
         { Header: "Student Name", accessor: "studentName", width: "20%" },
         { Header: "Teacher", accessor: "teacher", width: "20%" },
       ]);
@@ -141,6 +143,35 @@ function CheckinManagement({ classId }) {
               teacher: "N/A",
               teacherId: null,
               classId: student.class?.id || null,
+              avatar: student.imgUrl ? (
+                <img
+                  src={student.imgUrl}
+                  alt={student.name}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    backgroundColor: colors.midGreen,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {student.name.charAt(0).toUpperCase()}
+                </div>
+              ),
             };
 
             if (student.class?.id) {
@@ -393,7 +424,6 @@ function CheckinManagement({ classId }) {
           </Card>
         </Grid>
       </Grid>
-      {/* Modal hiển thị ghi chú */}
       <Modal
         open={openModal}
         onClose={handleCloseModal}
@@ -417,7 +447,7 @@ function CheckinManagement({ classId }) {
     </MDBox>
   );
 }
-// Define PropTypes
+
 CheckinManagement.propTypes = {
   classId: PropTypes.string,
 };
