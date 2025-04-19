@@ -33,6 +33,7 @@ import classTestScheduleService from "services/classTestScheduleService";
 import classService from "services/classService";
 import testSkillService from "services/testSkillService"; // Thêm service cho TestSkill
 import { colors } from "assets/theme/color";
+import AssessmentManagement from "./assessmentsManagement";
 
 function TestManagement() {
   // State cho Test Schedules
@@ -227,7 +228,11 @@ function TestManagement() {
       <MDBox display="flex" gap={2}>
         <MDButton
           variant="text"
-          sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+          sx={{
+            backgroundColor: colors.midGreen,
+            color: colors.white,
+            " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+          }}
           onClick={() => handleEditTestClick(test)}
         >
           Edit
@@ -245,7 +250,11 @@ function TestManagement() {
       <MDBox display="flex" gap={2}>
         <MDButton
           variant="text"
-          sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+          sx={{
+            backgroundColor: colors.midGreen,
+            color: colors.white,
+            " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+          }}
           onClick={() => handleEditTestTypeClick(type)}
         >
           Edit
@@ -265,7 +274,11 @@ function TestManagement() {
             <MDBox display="flex" gap={2}>
               <MDButton
                 variant="text"
-                sx={{ color: colors.deepGreen, " &:hover": { color: colors.highlightGreen } }}
+                sx={{
+                  backgroundColor: colors.midGreen,
+                  color: colors.white,
+                  " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+                }}
                 onClick={() => handleEditTestSkillClick(testSkill)}
               >
                 Edit
@@ -707,6 +720,7 @@ function TestManagement() {
                 )}
               </MDBox>
             </Card>
+            <AssessmentManagement />
           </Grid>
 
           {/* Right Column - Test Types và Test Skills */}
