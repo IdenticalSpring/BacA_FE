@@ -187,19 +187,25 @@ function CheckinManagement({ classId }) {
             lessonDays.forEach((day) => {
               const [year, month] = selectedMonth.split("-").map(Number);
               const checkinDate = new Date(year, month - 1, day);
-              const formattedDate = checkinDate.toISOString().split("T")[0];
+              const formattedDate = checkinDate.toLocaleDateString("en-CA", {
+                timeZone: "Asia/Ho_Chi_Minh",
+              });
 
               const hasLesson = lessons.some(
                 (lesson) =>
                   lesson.class?.id === student.class?.id &&
-                  new Date(lesson.date).toISOString().split("T")[0] === formattedDate
+                  new Date(lesson.date).toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Ho_Chi_Minh",
+                  }) === formattedDate
               );
 
               if (hasLesson) {
                 const checkin = checkins.find(
                   (checkin) =>
                     checkin.student?.id === student.id &&
-                    new Date(checkin.date).toISOString().split("T")[0] === formattedDate
+                    new Date(checkin.date).toLocaleDateString("en-CA", {
+                      timeZone: "Asia/Ho_Chi_Minh",
+                    }) === formattedDate
                 );
                 if (checkin) {
                   if (checkin.present === 1) {
