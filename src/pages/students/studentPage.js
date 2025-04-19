@@ -827,7 +827,7 @@ const StudentPage = () => {
                       );
                     })}
                   {/* Nút Nộp bài */}
-                  <Button
+                  {/* <Button
                     type="primary"
                     onClick={() => {
                       handleSubmitHomework(hw.id);
@@ -840,7 +840,7 @@ const StudentPage = () => {
                     }}
                   >
                     {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
-                  </Button>
+                  </Button> */}
                 </div>
               </Card>
             )}

@@ -232,7 +232,7 @@ export default function HomeWorkMangement({
       title: homeWork.title,
       // linkYoutube: homeWork.linkYoutube,
       // linkGame: homeWork.linkGame,
-      linkZalo: homeWork.linkZalo,
+      // linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
       // description: homeWork.description,
     });
@@ -335,7 +335,7 @@ export default function HomeWorkMangement({
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      formData.append("linkZalo", values.linkZalo);
+      // formData.append("linkZalo", values.linkZalo);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
@@ -385,7 +385,7 @@ export default function HomeWorkMangement({
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      formData.append("linkZalo", values.linkZalo);
+      // formData.append("linkZalo", values.linkZalo);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
@@ -714,20 +714,20 @@ export default function HomeWorkMangement({
         </Typography.Text>
       ),
     },
-    {
-      title: "Link Zalo bài tập",
-      dataIndex: "linkZalo",
-      key: "linkZalo",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Zalo bài tập",
+    //   dataIndex: "linkZalo",
+    //   key: "linkZalo",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     // {
     //   title: "Link Speech bài tập",
     //   dataIndex: "linkSpeech",
@@ -956,7 +956,7 @@ export default function HomeWorkMangement({
             level: "",
             // linkYoutube: "",
             linkGame: "",
-            linkZalo: "",
+            // linkZalo: "",
             description: "",
           }}
         >
@@ -1310,7 +1310,7 @@ export default function HomeWorkMangement({
             />
           )}
 
-          <Form.Item name="linkZalo" label="Link Zalo bài tập">
+          {/* <Form.Item name="linkZalo" label="Link Zalo bài tập">
             <Input
               placeholder="Nhập link zalo bài tập"
               style={{
@@ -1318,7 +1318,7 @@ export default function HomeWorkMangement({
                 borderColor: colors.inputBorder,
               }}
             />
-          </Form.Item>
+          </Form.Item> */}
         </Form>
       </Modal>
       <Modal
