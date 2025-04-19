@@ -23,6 +23,7 @@ import PropTypes from "prop-types";
 import studentService from "services/studentService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import studentScoreService from "services/studentScoreService";
+import MDTypography from "components/MDTypography";
 import testSkillService from "services/testSkillService";
 import assessmentService from "services/assessmentService";
 import { colors } from "./teacherPage";
@@ -498,6 +499,10 @@ const EnterTestScore = () => {
                               label="Select Assessment"
                               rules={[{ required: true, message: "Please select an assessment" }]}
                             >
+                              <MDTypography variant="caption" color="text" mb={12}>
+                                Chú thích trạng thái: Need Improvement-Cần cải thiện | Try harder-Cố
+                                gắng hơn, Pretty good-Khá | Good-Giỏi | Excellent-Xuất sắc
+                              </MDTypography>
                               <Select placeholder="Select an assessment" style={{ width: "100%" }}>
                                 {assessments.map((assessment) => (
                                   <Option key={assessment.id} value={assessment.id}>
