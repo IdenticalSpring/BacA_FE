@@ -107,19 +107,25 @@ export default function StudentOverviewModal({ open, onClose, student }) {
         if (groupedByMonth[defaultMonth]) {
           groupedByMonth[defaultMonth].forEach((day) => {
             const checkinDate = new Date(today.getFullYear(), today.getMonth(), day);
-            const formattedDate = checkinDate.toISOString().split("T")[0];
+            const formattedDate = checkinDate.toLocaleDateString("en-CA", {
+              timeZone: "Asia/Ho_Chi_Minh",
+            });
 
             const hasLesson = lessons.some(
               (lesson) =>
                 lesson.class?.id === classId &&
-                new Date(lesson.date).toISOString().split("T")[0] === formattedDate
+                new Date(lesson.date).toLocaleDateString("en-CA", {
+                  timeZone: "Asia/Ho_Chi_Minh",
+                }) === formattedDate
             );
 
             if (hasLesson) {
               const checkin = checkins.find(
                 (checkin) =>
                   checkin.student?.id === student.id &&
-                  new Date(checkin.date).toISOString().split("T")[0] === formattedDate
+                  new Date(checkin.date).toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Ho_Chi_Minh",
+                  }) === formattedDate
               );
               if (checkin) {
                 if (checkin.present === 1) {
