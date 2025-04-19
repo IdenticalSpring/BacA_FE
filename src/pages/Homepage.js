@@ -1463,7 +1463,7 @@ export default function Homepage() {
             <p style={{ marginBottom: "1.5rem" }}>
               {contentData?.footerDescription || "Happy Class - Empowering education for all."}
             </p>
-            <div style={{ display: "flex", gap: "1rem" }}>
+            {/* <div style={{ display: "flex", gap: "1rem" }}>
               <a
                 href={contentData?.linkFacebook || "https://facebook.com/happyclass"}
                 style={{ color: colors.white, fontSize: "1.5rem" }}
@@ -1479,7 +1479,7 @@ export default function Homepage() {
               <a href="#" style={{ color: colors.white, fontSize: "1.5rem" }}>
                 <LinkedinOutlined />
               </a>
-            </div>
+            </div> */}
           </div>
 
           <div className="footer-links">
