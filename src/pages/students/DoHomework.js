@@ -150,7 +150,7 @@ export default function DoHomework() {
         Chọn đúng tài khoản của mình để tiến hành làm bài tập
       </Paragraph>
       <List
-        dataSource={classData.students}
+        dataSource={classData.students.filter((student) => student.isDelete !== 1)}
         renderItem={(student) => (
           <List.Item
             key={student.id}
