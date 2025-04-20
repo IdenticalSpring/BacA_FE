@@ -218,6 +218,7 @@ export default function LessonMangement({
     setYoutubeLinks(links);
     setMp3Url(lesson.linkSpeech);
     setModalUpdateLessonVisible(true);
+    setTextToSpeech(lesson.textToSpeech || "");
   };
   useEffect(() => {
     if (modalUpdateLessonVisible && quillRef.current?.getEditor() && editingLesson?.description) {
@@ -335,6 +336,7 @@ export default function LessonMangement({
       formData.append("linkYoutube", linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
+      formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
       formData.append("teacherId", teacherId);
@@ -387,6 +389,7 @@ export default function LessonMangement({
       formData.append("linkYoutube", linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
+      formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
       formData.append("teacherId", teacherId);
@@ -1001,6 +1004,7 @@ export default function LessonMangement({
               setYoutubeLinks([]);
               setCurrentYoutubeLink("");
               setEditYoutubeIndex(null);
+              setTextToSpeech("");
             }}
           >
             Hủy
@@ -1047,6 +1051,7 @@ export default function LessonMangement({
             level: "",
             // linkYoutube: "",
             linkGame: "",
+            textToSpeech: "",
             description: "",
           }}
         >

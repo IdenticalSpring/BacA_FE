@@ -244,6 +244,7 @@ export default function HomeWorkMangement({
     // }
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
+    setTextToSpeech(homeWork.linkZalo || "");
   };
   // console.log(textToSpeech);
   useEffect(() => {
@@ -337,6 +338,7 @@ export default function HomeWorkMangement({
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
       formData.append("linkZalo", values.linkZalo);
+      formData.append("linkZalo", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
@@ -387,6 +389,7 @@ export default function HomeWorkMangement({
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
       formData.append("linkZalo", values.linkZalo);
+      formData.append("linkZalo", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
@@ -958,6 +961,7 @@ export default function HomeWorkMangement({
             // linkYoutube: "",
             linkGame: "",
             linkZalo: "",
+            textToSpeech: "",
             description: "",
           }}
         >
