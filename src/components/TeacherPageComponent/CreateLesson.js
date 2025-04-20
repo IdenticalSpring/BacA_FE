@@ -33,6 +33,7 @@ import homeWorkService from "services/homeWorkService";
 import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import Compressor from "compressorjs";
+import SpeechToTextComponent from "./SpeechToTextComponent";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -1112,6 +1113,9 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item> */}
+            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+              <SpeechToTextComponent />
+            </Form.Item>
           </Form>
         </Card>
       </div>

@@ -41,6 +41,7 @@
     "react-datepicker": "^8.1.0",
     "react-dom": "18.2.0",
     "react-github-btn": "1.4.0",
+    "react-hook-speech-to-text": "^0.8.0",
     "react-html-parser": "^2.0.2",
     "react-quill": "^2.0.0",
     "react-responsive": "^10.0.1",
