@@ -39,8 +39,14 @@ function ContentPageManagement() {
   const [tabValue, setTabValue] = useState(0);
   const [img1File, setImg1File] = useState(null);
   const [img2File, setImg2File] = useState(null);
-  const [img1Preview, setImg1Preview] = useState(null); // State cho preview ảnh 1
-  const [img2Preview, setImg2Preview] = useState(null); // State cho preview ảnh 2
+  const [img1Preview, setImg1Preview] = useState(null);
+  const [img2Preview, setImg2Preview] = useState(null);
+  const [testimonialsFirstImgFile, setTestimonialsFirstImgFile] = useState(null);
+  const [testimonialsSecondImgFile, setTestimonialsSecondImgFile] = useState(null);
+  const [testimonialsThirdImgFile, setTestimonialsThirdImgFile] = useState(null);
+  const [testimonialsFirstImgPreview, setTestimonialsFirstImgPreview] = useState(null);
+  const [testimonialsSecondImgPreview, setTestimonialsSecondImgPreview] = useState(null);
+  const [testimonialsThirdImgPreview, setTestimonialsThirdImgPreview] = useState(null);
 
   useEffect(() => {
     fetchContentPages();
@@ -216,8 +222,14 @@ function ContentPageManagement() {
     setCurrentEditItem({ ...page });
     setImg1File(null);
     setImg2File(null);
-    setImg1Preview(page.img1 || null); // Load ảnh hiện tại
+    setImg1Preview(page.img1 || null);
     setImg2Preview(page.img2 || null);
+    setTestimonialsFirstImgFile(null);
+    setTestimonialsSecondImgFile(null);
+    setTestimonialsThirdImgFile(null);
+    setTestimonialsFirstImgPreview(page.testimonialsFirstImgUrl || null);
+    setTestimonialsSecondImgPreview(page.testimonialsSecondImgUrl || null);
+    setTestimonialsThirdImgPreview(page.testimonialsThirdImgUrl || null);
     setEditDialogOpen(true);
   };
 
@@ -225,16 +237,60 @@ function ContentPageManagement() {
     if (tabValue === 0 && !validateEditForm()) return;
 
     try {
-      const formData = new FormData();
-      Object.keys(currentEditItem).forEach((key) => {
-        if (key !== "id" && key !== "img1" && key !== "img2") {
-          formData.append(key, currentEditItem[key]);
-        }
-      });
-      if (img1File) formData.append("files", img1File);
-      if (img2File) formData.append("files", img2File);
+      if (tabValue === 0) {
+        // Handle testimonial images and content
+        const testimonialFormData = new FormData();
+        Object.keys(currentEditItem).forEach((key) => {
+          if (
+            key !== "id" &&
+            key !== "img1" &&
+            key !== "img2" &&
+            key !== "testimonialsFirstImgUrl" &&
+            key !== "testimonialsSecondImgUrl" &&
+            key !== "testimonialsThirdImgUrl"
+          ) {
+            testimonialFormData.append(key, currentEditItem[key] || "");
+          }
+        });
+        if (testimonialsFirstImgFile) testimonialFormData.append("files", testimonialsFirstImgFile);
+        if (testimonialsSecondImgFile)
+          testimonialFormData.append("files", testimonialsSecondImgFile);
+        if (testimonialsThirdImgFile) testimonialFormData.append("files", testimonialsThirdImgFile);
 
-      await contentPageService.editContentPage(currentEditItem.id, formData);
+        await contentPageService.editTestimonialImages(currentEditItem.id, testimonialFormData);
+
+        // Handle img1 and img2 if they exist
+        if (img1File || img2File) {
+          const imageFormData = new FormData();
+          Object.keys(currentEditItem).forEach((key) => {
+            if (
+              key !== "id" &&
+              key !== "testimonialsFirstImgUrl" &&
+              key !== "testimonialsSecondImgUrl" &&
+              key !== "testimonialsThirdImgUrl"
+            ) {
+              imageFormData.append(key, currentEditItem[key] || "");
+            }
+          });
+          if (img1File) imageFormData.append("files", img1File);
+          if (img2File) imageFormData.append("files", img2File);
+
+          await contentPageService.editContentPage(currentEditItem.id, imageFormData);
+        }
+      } else {
+        // Handle other tabs (Information and Prompts)
+        const formData = new FormData();
+        Object.keys(currentEditItem).forEach((key) => {
+          if (key !== "id") {
+            formData.append(key, currentEditItem[key] || "");
+          }
+        });
+        if (img1File) formData.append("files", img1File);
+        if (img2File) formData.append("files", img2File);
+
+        await contentPageService.editContentPage(currentEditItem.id, formData);
+      }
+
       fetchContentPages();
       setEditDialogOpen(false);
       setCurrentEditItem(null);
@@ -242,6 +298,12 @@ function ContentPageManagement() {
       setImg2File(null);
       setImg1Preview(null);
       setImg2Preview(null);
+      setTestimonialsFirstImgFile(null);
+      setTestimonialsSecondImgFile(null);
+      setTestimonialsThirdImgFile(null);
+      setTestimonialsFirstImgPreview(null);
+      setTestimonialsSecondImgPreview(null);
+      setTestimonialsThirdImgPreview(null);
       setNotification({
         open: true,
         message: "Content updated successfully",
@@ -265,7 +327,6 @@ function ContentPageManagement() {
     setTabValue(newValue);
   };
 
-  // Xử lý khi chọn file ảnh
   const handleImg1Change = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -279,6 +340,30 @@ function ContentPageManagement() {
     if (file) {
       setImg2File(file);
       setImg2Preview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleTestimonialsFirstImgChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setTestimonialsFirstImgFile(file);
+      setTestimonialsFirstImgPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleTestimonialsSecondImgChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setTestimonialsSecondImgFile(file);
+      setTestimonialsSecondImgPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleTestimonialsThirdImgChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setTestimonialsThirdImgFile(file);
+      setTestimonialsThirdImgPreview(URL.createObjectURL(file));
     }
   };
 
@@ -1018,6 +1103,38 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
+                Testimonials First Image Preview
+              </MDTypography>
+              {testimonialsFirstImgPreview ? (
+                <img
+                  src={testimonialsFirstImgPreview}
+                  alt="Testimonials First Image Preview"
+                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
+                />
+              ) : (
+                <MDTypography variant="caption" color="textSecondary">
+                  No image selected
+                </MDTypography>
+              )}
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  margin: "8px 0",
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.midGreen },
+                }}
+              >
+                Upload Testimonials First Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleTestimonialsFirstImgChange}
+                />
+              </Button>
               <TextField
                 margin="dense"
                 label="Testimonials Second Title"
@@ -1064,6 +1181,38 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
+                Testimonials Second Image Preview
+              </MDTypography>
+              {testimonialsSecondImgPreview ? (
+                <img
+                  src={testimonialsSecondImgPreview}
+                  alt="Testimonials Second Image Preview"
+                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
+                />
+              ) : (
+                <MDTypography variant="caption" color="textSecondary">
+                  No image selected
+                </MDTypography>
+              )}
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  margin: "8px 0",
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.midGreen },
+                }}
+              >
+                Upload Testimonials Second Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleTestimonialsSecondImgChange}
+                />
+              </Button>
               <TextField
                 margin="dense"
                 label="Testimonials Third Title"
@@ -1107,6 +1256,38 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
+                Testimonials Third Image Preview
+              </MDTypography>
+              {testimonialsThirdImgPreview ? (
+                <img
+                  src={testimonialsThirdImgPreview}
+                  alt="Testimonials Third Image Preview"
+                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
+                />
+              ) : (
+                <MDTypography variant="caption" color="textSecondary">
+                  No image selected
+                </MDTypography>
+              )}
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  margin: "8px 0",
+                  backgroundColor: colors.deepGreen,
+                  color: colors.white,
+                  "&:hover": { backgroundColor: colors.midGreen },
+                }}
+              >
+                Upload Testimonials Third Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleTestimonialsThirdImgChange}
+                />
+              </Button>
             </>
           ) : tabValue === 1 ? (
             <>

@@ -1291,7 +1291,7 @@ export default function Homepage() {
               }
               author={contentData?.testimonialsFirstTitle || "Sarah Johnson"}
               role="Biology Student"
-              image="/api/placeholder/80/80"
+              image={contentData?.testimonialsFirstImgUrl || "/api/placeholder/80/80"}
               color={colors.lightGreen}
               delay={0.1}
             />
@@ -1302,7 +1302,7 @@ export default function Homepage() {
               }
               author={contentData?.testimonialsSecondTitle || "Michael Torres"}
               role="Computer Science Major"
-              image="/api/placeholder/80/80"
+              image={contentData?.testimonialsSecondImgUrl || "/api/placeholder/80/80"}
               color={colors.lightGreen}
               delay={0.2}
             />
@@ -1313,14 +1313,13 @@ export default function Homepage() {
               }
               author={contentData?.testimonialsThirdTitle || "Priya Kaur"}
               role="Business Student"
-              image="/api/placeholder/80/80"
+              image={contentData?.testimonialsThirdImgUrl || "/api/placeholder/80/80"}
               color={colors.lightGreen}
               delay={0.3}
             />
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section
         style={{

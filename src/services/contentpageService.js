@@ -53,6 +53,23 @@ const contentPageService = {
       throw error.response?.data?.message || "Error updating contentpage";
     }
   },
+  editTestimonialImages: async (id, formData) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/contentpage/${id}/testimonial-images`,
+        formData,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating testimonial images";
+    }
+  },
 
   deleteContentPage: async (id) => {
     try {
