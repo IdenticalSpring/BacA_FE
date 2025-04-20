@@ -436,7 +436,7 @@ export default function CreateHomeWork({
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      // formData.append("linkZalo", zaloLink);
+      formData.append("linkZalo", zaloLink);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
       // if (selected.size > 0) {
@@ -769,7 +769,7 @@ export default function CreateHomeWork({
               level: "",
               // linkYoutube: "",
               linkGame: "",
-              // linkZalo: "",
+              linkZalo: "",
               description: "",
             }}
           >
@@ -1126,7 +1126,7 @@ export default function CreateHomeWork({
               />
             )}
 
-            {/* <Form.Item label="Link Zalo bài tập">
+            <Form.Item label="Link Zalo bài tập">
               <Input
                 placeholder="Nhập link zalo bài tập"
                 style={{
@@ -1136,7 +1136,7 @@ export default function CreateHomeWork({
                 value={zaloLink}
                 onChange={(e) => setZaloLink(e.target.value)}
               />
-            </Form.Item> */}
+            </Form.Item>
           </Form>
         </Card>
       </div>
