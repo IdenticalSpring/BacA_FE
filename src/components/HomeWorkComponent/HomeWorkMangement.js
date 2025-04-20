@@ -1321,7 +1321,7 @@ export default function HomeWorkMangement({
             />
           </Form.Item>
         </Form>
-        <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+        <Form.Item name="Speech to text">
           <SpeechToTextComponent />
         </Form.Item>
       </Modal>
