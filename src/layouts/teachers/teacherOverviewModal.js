@@ -58,7 +58,7 @@ const cellPropTypes = {
       description: PropTypes.string,
       date: PropTypes.string,
       title: PropTypes.string,
-      // linkZalo: PropTypes.string,
+      linkZalo: PropTypes.string,
       feedback: PropTypes.string,
       datetime: PropTypes.string,
     }).isRequired,
@@ -205,7 +205,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkYoutube: "",
     linkGame: "",
     linkSpeech: "",
-    // linkZalo: "",
+    linkZalo: "",
     TeacherId: "",
     description: "",
     date: "",
@@ -640,20 +640,20 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     //   ),
     //   propTypes: cellPropTypes,
     // },
-    // {
-    //   Header: "Link Zalo",
-    //   accessor: "linkZalo",
-    //   width: "30%",
-    //   Cell: ({ row }) => (
-    //     <span
-    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-    //       className="truncate-text"
-    //     >
-    //       {row.values.linkZalo}
-    //     </span>
-    //   ),
-    //   propTypes: cellPropTypes,
-    // },
+    {
+      Header: "Link Zalo",
+      accessor: "linkZalo",
+      width: "30%",
+      Cell: ({ row }) => (
+        <span
+          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+          className="truncate-text"
+        >
+          {row.values.linkZalo}
+        </span>
+      ),
+      propTypes: cellPropTypes,
+    },
     // {
     //   Header: "Teacher",
     //   accessor: "TeacherId",
@@ -816,7 +816,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkYoutube: homework.linkYoutube,
     linkGame: homework.linkGame,
     linkSpeech: homework.linkSpeech,
-    // linkZalo: homework.linkZalo,
+    linkZalo: homework.linkZalo,
     TeacherId: homework?.teacher?.username || "N/A",
     description: homework.description,
     date: homework.date,
@@ -1588,7 +1588,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       title: homeWork.title,
       // linkYoutube: homeWork.linkYoutube,
       // linkGame: homeWork.linkGame,
-      // linkZalo: homeWork.linkZalo,
+      linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
       // description: homeWork.description,
     });
@@ -1641,7 +1641,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       formData.append("level", editingHomeWork.level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      // formData.append("linkZalo", values.linkZalo);
+      formData.append("linkZalo", values.linkZalo);
       formData.append(
         "description",
         quillRefHomeworkDescription.current?.getEditor()?.root?.innerHTML || ""
@@ -1887,7 +1887,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       linkYoutube: "",
       linkGame: "",
       linkSpeech: "",
-      // linkZalo: "",
+      linkZalo: "",
       TeacherId: "",
       description: "",
       date: "",
@@ -2605,7 +2605,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               level: "",
               // linkYoutube: "",
               linkGame: "",
-              // linkZalo: "",
+              linkZalo: "",
               description: "",
             }}
           >
@@ -2962,7 +2962,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               />
             )}
 
-            {/* <Form.Item name="linkZalo" label="Link Zalo bài tập">
+            <Form.Item name="linkZalo" label="Link Zalo bài tập">
               <Input
                 placeholder="Nhập link zalo bài tập"
                 style={{
@@ -2970,7 +2970,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   borderColor: colors.inputBorder,
                 }}
               />
-            </Form.Item> */}
+            </Form.Item>
           </Form>
         </DialogContent>
         <DialogActions>
