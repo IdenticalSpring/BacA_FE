@@ -41,6 +41,7 @@ import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import classService from "services/classService";
 import Compressor from "compressorjs";
+import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -1320,6 +1321,9 @@ export default function HomeWorkMangement({
             />
           </Form.Item>
         </Form>
+        <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+          <SpeechToTextComponent />
+        </Form.Item>
       </Modal>
       <Modal
         title="Danh sách các lịch học đang sử dụng bài tập này"

@@ -38,6 +38,7 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import { DeleteIcon, TrashIcon } from "lucide-react";
+import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
 
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -2538,6 +2539,9 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               }}
             />
           </Form.Item> */}
+            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+              <SpeechToTextComponent />
+            </Form.Item>
           </Form>
         </DialogContent>
         <DialogActions>
@@ -2970,6 +2974,9 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   borderColor: colors.inputBorder,
                 }}
               />
+            </Form.Item>
+            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+              <SpeechToTextComponent />
             </Form.Item>
           </Form>
         </DialogContent>

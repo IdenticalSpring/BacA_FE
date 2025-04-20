@@ -39,6 +39,7 @@ import user_notificationService from "services/user_notificationService";
 import lessonByScheduleService from "services/lessonByScheduleService";
 import axios from "axios";
 import Compressor from "compressorjs";
+import SpeechToTextComponent from "./SpeechToTextComponent";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -1375,6 +1376,9 @@ export default function LessonMangement({
               }}
             />
           </Form.Item> */}
+          <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+            <SpeechToTextComponent />
+          </Form.Item>
         </Form>
       </Modal>
       <Modal

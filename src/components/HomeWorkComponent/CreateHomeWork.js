@@ -37,6 +37,7 @@ import user_notificationService from "services/user_notificationService";
 import classService from "services/classService";
 import { BookOutlined } from "@ant-design/icons";
 import Compressor from "compressorjs";
+import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
 
 const { Title } = Typography;
 const { Text } = Typography;
@@ -1136,6 +1137,9 @@ export default function CreateHomeWork({
                 value={zaloLink}
                 onChange={(e) => setZaloLink(e.target.value)}
               />
+            </Form.Item>
+            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+              <SpeechToTextComponent />
             </Form.Item>
           </Form>
         </Card>
