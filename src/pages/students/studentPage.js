@@ -987,7 +987,7 @@ const StudentPage = () => {
           </div>
         </Header>
 
-        {/* <Content style={{ padding: isMobile ? "10px" : "20px", marginBottom: 70 }}>
+        <Content style={{ padding: isMobile ? "10px" : "20px", marginBottom: 70 }}>
           {!selectedLessonBySchedule ? (
             <div
               style={{
@@ -1030,126 +1030,193 @@ const StudentPage = () => {
               <TabPane key="homework">{renderHomeworkContent()}</TabPane>
             </Tabs>
           )}
-        </Content> */}
-        <Content style={{ padding: isMobile ? "10px" : "20px" }}>
-          {!selectedLessonBySchedule ? (
+        </Content>
+        {selectedLessonBySchedule && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 0,
+              left: isMobile ? 0 : 260,
+              right: 0,
+              backgroundColor: colors.white,
+              borderTop: `1px solid ${colors.borderGreen}`,
+              zIndex: 999,
+              padding: "10px 0",
+              display: "flex",
+              justifyContent: "center",
+              boxShadow: `0 -2px 8px ${colors.softShadow}`,
+            }}
+          >
+            <Space
+              size={screens.xs ? 4 : screens.sm ? 8 : "large"}
+              style={{
+                flexWrap: screens.xs ? "wrap" : "nowrap",
+                justifyContent: "center",
+                width: "100%",
+                maxWidth: screens.lg ? "800px" : "100%",
+                padding: screens.xs ? "0 5px" : "0 10px",
+              }}
+            >
+              <Button
+                type={activeTab === "lessons" ? "primary" : "link"}
+                icon={<BookOutlined />}
+                onClick={() => handleTabClick("lessons")}
+                style={{
+                  backgroundColor: activeTab === "lessons" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "lessons" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
+                }}
+              >
+                {screens.xs ? "" : "Bài Học"}
+              </Button>
+              <Button
+                type={activeTab === "homework" ? "primary" : "link"}
+                icon={<FileTextOutlined />}
+                onClick={() => handleTabClick("homework")}
+                style={{
+                  backgroundColor: activeTab === "homework" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "homework" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
+                }}
+              >
+                {screens.xs ? "" : "Bài Tập"}
+              </Button>
+              <Button
+                type={activeTab === "scores" ? "primary" : "link"}
+                icon={<TrophyOutlined />}
+                onClick={() => handleTabClick("scores")}
+                style={{
+                  backgroundColor: activeTab === "scores" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "scores" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
+                }}
+              >
+                {screens.xs ? "" : "Điểm Thi"}
+              </Button>
+            </Space>
+            {/* Social Buttons */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "50vh",
+                gap: "10px",
+                position: "fixed",
+                bottom: "20px",
+                right: "20px",
                 flexDirection: "column",
               }}
             >
-              <Avatar
+              <div
                 style={{
-                  backgroundColor: colors.mintGreen,
-                  color: colors.deepGreen,
-                  fontSize: isMobile ? 28 : 40,
-                  width: isMobile ? 60 : 80,
-                  height: isMobile ? 60 : 80,
+                  width: "50px",
+                  height: "50px",
+                  // background: socialHover.facebook
+                  //   ? "linear-gradient(145deg, #166FE5, #1877F2)"
+                  //   : "linear-gradient(145deg, #1877F2, #166FE5)",
+                  background: "transparent",
+                  // borderRadius: "50%",
                   display: "flex",
-                  justifyContent: "center",
                   alignItems: "center",
-                  marginBottom: 16,
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "24px",
+                  // boxShadow: socialHover.facebook
+                  //   ? "0 6px 15px rgba(24, 119, 242, 0.4)"
+                  //   : "0 4px 10px rgba(24, 119, 242, 0.3)",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  transform: socialHover.facebook
+                    ? "scale(1.1) rotate(5deg)"
+                    : "scale(1) rotate(0deg)",
+                  overflow: "hidden",
                 }}
+                onMouseEnter={() => setSocialHover({ ...socialHover, facebook: true })}
+                onMouseLeave={() => setSocialHover({ ...socialHover, facebook: false })}
+                onClick={() => window.open(contentData?.linkFacebook)}
               >
-                ?
-              </Avatar>
-              <Text
-                style={{
-                  fontSize: isMobile ? 16 : 18,
-                  color: colors.deepGreen,
-                  fontWeight: "bold",
-                  textAlign: "center",
-                }}
-              >
-                Vui lòng chọn bài học từ lịch học của bạn
-              </Text>
-            </div>
-          ) : (
-            <>
-              <Tabs activeKey={activeTab} tabBarStyle={{ display: "none" }}>
-                <TabPane key="lessons">{renderLessonContent()}</TabPane>
-                <TabPane key="homework">{renderHomeworkContent()}</TabPane>
-              </Tabs>
-              {selectedLessonBySchedule && (
-                <div
-                  style={{
-                    backgroundColor: colors.white,
-                    borderTop: `1px solid ${colors.borderGreen}`,
-                    padding: "10px 0",
-                    display: "flex",
-                    justifyContent: "center",
-                    boxShadow: `0 -2px 8px ${colors.softShadow}`,
-                    marginTop: 20,
-                  }}
-                >
-                  <Space
-                    size={screens.xs ? 4 : screens.sm ? 8 : "large"}
+                {contentData?.img1 ? (
+                  <img
+                    src={contentData.img1}
+                    alt="Image 1"
                     style={{
-                      flexWrap: screens.xs ? "wrap" : "nowrap",
-                      justifyContent: "center",
                       width: "100%",
-                      maxWidth: screens.lg ? "800px" : "100%",
-                      padding: screens.xs ? "0 5px" : "0 10px",
+                      height: "100%",
+                      objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
+                      // borderRadius: "50%", // Giữ hình tròn
                     }}
-                  >
-                    <Button
-                      type={activeTab === "lessons" ? "primary" : "link"}
-                      icon={<BookOutlined />}
-                      onClick={() => handleTabClick("lessons")}
-                      style={{
-                        backgroundColor: activeTab === "lessons" ? colors.deepGreen : "transparent",
-                        borderColor:
-                          activeTab === "lessons" ? colors.deepGreen : colors.borderGreen,
-                        fontSize: screens.xs ? "12px" : "14px",
-                        padding: screens.xs ? "0 8px" : "0 16px",
-                        height: screens.xs ? 32 : 40,
-                        minWidth: screens.xs ? 60 : 100,
-                      }}
-                    >
-                      {screens.xs ? "" : "Bài Học"}
-                    </Button>
-                    <Button
-                      type={activeTab === "homework" ? "primary" : "link"}
-                      icon={<FileTextOutlined />}
-                      onClick={() => handleTabClick("homework")}
-                      style={{
-                        backgroundColor:
-                          activeTab === "homework" ? colors.deepGreen : "transparent",
-                        borderColor:
-                          activeTab === "homework" ? colors.deepGreen : colors.borderGreen,
-                        fontSize: screens.xs ? "12px" : "14px",
-                        padding: screens.xs ? "0 8px" : "0 16px",
-                        height: screens.xs ? 32 : 40,
-                        minWidth: screens.xs ? 60 : 100,
-                      }}
-                    >
-                      {screens.xs ? "" : "Bài Tập"}
-                    </Button>
-                    <Button
-                      type={activeTab === "scores" ? "primary" : "link"}
-                      icon={<TrophyOutlined />}
-                      onClick={() => handleTabClick("scores")}
-                      style={{
-                        backgroundColor: activeTab === "scores" ? colors.deepGreen : "transparent",
-                        borderColor: activeTab === "scores" ? colors.deepGreen : colors.borderGreen,
-                        fontSize: screens.xs ? "12px" : "14px",
-                        padding: screens.xs ? "0 8px" : "0 16px",
-                        height: screens.xs ? 32 : 40,
-                        minWidth: screens.xs ? 60 : 100,
-                      }}
-                    >
-                      {screens.xs ? "" : "Điểm Thi"}
-                    </Button>
-                  </Space>
-                </div>
-              )}
-            </>
-          )}
-        </Content>
+                  />
+                ) : (
+                  <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
+                )}
+              </div>
+              <div
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  // background: socialHover.zalo
+                  //   ? "linear-gradient(145deg, #0077EE, #0088FF)"
+                  //   : "linear-gradient(145deg, #0088FF, #0077EE)",
+                  background: "transparent",
+                  // borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "24px",
+                  // boxShadow: socialHover.zalo
+                  //   ? "0 6px 15px rgba(0, 136, 255, 0.4)"
+                  //   : "0 4px 10px rgba(0, 136, 255, 0.3)",
+                  cursor: "pointer",
+                  transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
+                  transition: "all 0.3s ease",
+                  overflow: "hidden",
+                }}
+                onMouseEnter={() => setSocialHover({ ...socialHover, zalo: true })}
+                onMouseLeave={() => setSocialHover({ ...socialHover, zalo: false })}
+                onClick={() => window.open(contentData?.linkZalo || "https://zalo.me/happyclass")}
+              >
+                {contentData?.img2 ? (
+                  <img
+                    src={contentData.img2}
+                    alt="Image 2"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
+                      // borderRadius: "50%", // Giữ hình tròn
+                    }}
+                  />
+                ) : (
+                  <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
+                )}
+              </div>
+              <style>
+                {`
+                  @keyframes bounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                  }
+        
+                  @keyframes float {
+                    0% { transform: translateY(0); }
+                    50% { transform: translateY(-20px); }
+                    100% { transform: translateY(0); }
+                  }
+                `}
+              </style>
+            </div>
+          </div>
+        )}
       </Layout>
 
       <Modal

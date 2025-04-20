@@ -720,7 +720,9 @@ function TestManagement() {
                 )}
               </MDBox>
             </Card>
-            <AssessmentManagement />
+            <MDBox pt={6} px={3}>
+              <AssessmentManagement />
+            </MDBox>
           </Grid>
 
           {/* Right Column - Test Types và Test Skills */}
