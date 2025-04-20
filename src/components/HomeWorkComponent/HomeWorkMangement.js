@@ -244,7 +244,7 @@ export default function HomeWorkMangement({
     // }
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
-    setTextToSpeech(homeWork.linkZalo || "");
+    setTextToSpeech(homeWork.textToSpeech || "");
   };
   // console.log(textToSpeech);
   useEffect(() => {
