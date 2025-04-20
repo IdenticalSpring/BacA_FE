@@ -38,6 +38,7 @@ import contentPageService from "services/contentpageService";
 // Thêm import CSS nếu cần
 import "./Homepage.css"; // Tạo file này nếu chưa có
 import pagevisitService from "services/pagevisitService";
+import ShareButtons from "components/theme/ShareButton";
 let count = 0;
 export default function Homepage() {
   const [visible, setVisible] = useState({
@@ -398,6 +399,7 @@ export default function Homepage() {
               style={{ marginRight: "5px" }}
               onClick={() => setSelectLanguageClick(!selectLanguageClick)}
             ></div>
+
             {/* <button onClick={resetGoogleTranslate}>quay lại ngôn ngữ gốc</button> */}
           </>
         ) : (
@@ -1525,7 +1527,7 @@ export default function Homepage() {
             </ul>
           </div>
         </div>
-
+        <ShareButtons />
         <div
           style={{
             textAlign: "center",
