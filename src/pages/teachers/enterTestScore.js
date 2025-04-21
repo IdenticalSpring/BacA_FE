@@ -494,15 +494,16 @@ const EnterTestScore = () => {
                           </Col>
 
                           <Col xs={24} md={12}>
+                            <MDTypography variant="caption" color="text" mb={12}>
+                              Chú thích trạng thái: Điểm &le; 5 - Cần cải thiện | 5 &lt; Điểm &le; 7
+                              - Khá | Điểm = 8 - Giỏi | Điểm = 9, 10 - Xuất sắc
+                            </MDTypography>
+
                             <Form.Item
                               name={`${studentId}_assessmentId`}
                               label="Select Assessment"
                               rules={[{ required: true, message: "Please select an assessment" }]}
                             >
-                              <MDTypography variant="caption" color="text" mb={12}>
-                                Chú thích trạng thái: Need Improvement-Cần cải thiện | Try harder-Cố
-                                gắng hơn, Pretty good-Khá | Good-Giỏi | Excellent-Xuất sắc
-                              </MDTypography>
                               <Select placeholder="Select an assessment" style={{ width: "100%" }}>
                                 {assessments.map((assessment) => (
                                   <Option key={assessment.id} value={assessment.id}>
