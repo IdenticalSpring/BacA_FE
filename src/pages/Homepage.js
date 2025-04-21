@@ -1321,7 +1321,7 @@ export default function Homepage() {
         </div>
       </section>
       {/* CTA Section */}
-      <section
+      {/* <section
         style={{
           background: `linear-gradient(135deg, ${colors.lightGreen} 0%, ${colors.deepGreen} 100%)`,
           padding: "6rem 2rem",
@@ -1423,7 +1423,7 @@ export default function Homepage() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer
