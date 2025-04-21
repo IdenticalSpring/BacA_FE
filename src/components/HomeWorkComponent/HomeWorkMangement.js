@@ -42,6 +42,8 @@ import user_notificationService from "services/user_notificationService";
 import classService from "services/classService";
 import Compressor from "compressorjs";
 import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
+import VocabularyCreateComponent from "./VocabularyCreateComponent";
+import vocabularyService from "services/vocabularyService";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -186,6 +188,7 @@ export default function HomeWorkMangement({
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [dataSearch, setDataSearch] = useState([]);
+  const [vocabularyList, setVocabularyList] = useState([]);
   useEffect(() => {
     if (searchText === "") {
       setDataSearch(homeWorks);
@@ -233,7 +236,7 @@ export default function HomeWorkMangement({
       title: homeWork.title,
       // linkYoutube: homeWork.linkYoutube,
       // linkGame: homeWork.linkGame,
-      linkZalo: homeWork.linkZalo,
+      // linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
       // description: homeWork.description,
     });
@@ -246,6 +249,17 @@ export default function HomeWorkMangement({
     setModalUpdateHomeWorkVisible(true);
     setTextToSpeech(homeWork.textToSpeech || "");
   };
+  useEffect(() => {
+    const fetchVocabulary = async () => {
+      try {
+        const response = await vocabularyService.getVocabularyByHomworkId(selectedHomeWorkId);
+        setVocabularyList(response);
+      } catch (error) {
+        console.error("Error fetching vocabulary:", error);
+      }
+    };
+    fetchVocabulary();
+  }, [selectedHomeWorkId, editingHomeWork]);
   // console.log(textToSpeech);
   useEffect(() => {
     if (
@@ -337,17 +351,52 @@ export default function HomeWorkMangement({
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      formData.append("linkZalo", values.linkZalo);
-      formData.append("textToSpeech", textToSpeech);
+      // formData.append("linkZalo", values.linkZalo);
+      // formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
       if (editingHomeWork) {
         const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        if (vocabularyList.length > 0) {
+          const formDataForVocabulary = new FormData();
+          const vocabularies = [];
+          const mp3Files = [];
+          // console.log("vocabularyList", vocabularyList);
+
+          vocabularyList.forEach((item) => {
+            if (item?.isNew) {
+              const vocabulary = {
+                textToSpeech: item.word,
+                imageUrl: item.imageUrl,
+                homeworkId: HomeWorkdata.id,
+              };
+              vocabularies.push(vocabulary);
+              // mp3Files.push(mp3File);
+              // console.log(item, "aaaaa");
+              let fileToAppend;
+              if (item?.audioFile) {
+                fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
+              } else {
+                // 👇 Tạo file rỗng nếu không có audio
+                // console.log(item, "eeee", fileToAppend);
+
+                const emptyBlob = new Blob([], { type: "audio/mp3" });
+                fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+              }
+              formDataForVocabulary.append("mp3Files", fileToAppend);
+            }
+          });
+          formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+          // formDataForVocabulary.append("mp3Files", mp3Files);
+          const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
+            formDataForVocabulary
+          );
+        }
         setHomeWorks(
           homeWorks?.map((homeWork) =>
             homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
@@ -364,6 +413,7 @@ export default function HomeWorkMangement({
       setCurrentLink("");
       setHtmlContent("");
       setSwapHtmlMode(false);
+      setVocabularyList([]);
     } catch (err) {
       message.error("Please check your input and try again" + err);
     } finally {
@@ -388,17 +438,50 @@ export default function HomeWorkMangement({
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      formData.append("linkZalo", values.linkZalo);
-      formData.append("linkZalo", textToSpeech);
+      // formData.append("linkZalo", values.linkZalo);
+      // formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
       if (editingHomeWork) {
         const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        if (vocabularyList.length > 0) {
+          const formDataForVocabulary = new FormData();
+          const vocabularies = [];
+          const mp3Files = [];
+          // console.log("vocabularyList", vocabularyList);
+
+          vocabularyList.forEach((item) => {
+            if (item?.isNew) {
+              const vocabulary = {
+                textToSpeech: item.word,
+                imageUrl: item.imageUrl,
+                homeworkId: HomeWorkdata.id,
+              };
+              vocabularies.push(vocabulary);
+
+              // mp3Files.push(mp3File);
+              let fileToAppend;
+              if (item?.audioFile) {
+                fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
+              } else {
+                // 👇 Tạo file rỗng nếu không có audio
+                const emptyBlob = new Blob([], { type: "audio/mp3" });
+                fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+              }
+              formDataForVocabulary.append("mp3Files", fileToAppend);
+            }
+          });
+          formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+          // formDataForVocabulary.append("mp3Files", mp3Files);
+          const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
+            formDataForVocabulary
+          );
+        }
         setHomeWorks(
           homeWorks?.map((homeWork) =>
             homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
@@ -459,6 +542,7 @@ export default function HomeWorkMangement({
       setCurrentLink("");
       setHtmlContent("");
       setSwapHtmlMode(false);
+      setVocabularyList([]);
       // setOpenSend(false);
     } catch (error) {
       console.error("Error updating sending homework status:", error);
@@ -718,20 +802,20 @@ export default function HomeWorkMangement({
         </Typography.Text>
       ),
     },
-    {
-      title: "Link Zalo bài tập",
-      dataIndex: "linkZalo",
-      key: "linkZalo",
-      width: "20%",
-      render: (text) => (
-        <Typography.Text
-          ellipsis={{ tooltip: text }}
-          style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
-    },
+    // {
+    //   title: "Link Zalo bài tập",
+    //   dataIndex: "linkZalo",
+    //   key: "linkZalo",
+    //   width: "20%",
+    //   render: (text) => (
+    //     <Typography.Text
+    //       ellipsis={{ tooltip: text }}
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
+    //     >
+    //       {text}
+    //     </Typography.Text>
+    //   ),
+    // },
     {
       title: "Link Speech bài tập",
       dataIndex: "linkSpeech",
@@ -904,6 +988,7 @@ export default function HomeWorkMangement({
           setModalUpdateHomeWorkVisible(false);
           form.resetFields();
           setEditingHomeWork(null);
+          setVocabularyList([]);
         }}
         footer={[
           <Button
@@ -914,6 +999,7 @@ export default function HomeWorkMangement({
               form.resetFields();
               setEditingHomeWork(null);
               setCurrentLink("");
+              setVocabularyList([]);
             }}
           >
             Hủy
@@ -960,7 +1046,7 @@ export default function HomeWorkMangement({
             level: "",
             // linkYoutube: "",
             linkGame: "",
-            linkZalo: "",
+            // linkZalo: "",
             textToSpeech: "",
             description: "",
           }}
@@ -1067,8 +1153,14 @@ export default function HomeWorkMangement({
               ))}
             </Select>
           </Form.Item> */}
-
-          <Form.Item label="Văn bản thành giọng nói">
+          <Form.Item name="Speech to text">
+            <VocabularyCreateComponent
+              isMobile={isMobile}
+              setVocabularyList={setVocabularyList}
+              vocabularyList={vocabularyList}
+            />
+          </Form.Item>
+          {/* <Form.Item label="Văn bản thành giọng nói">
             <TextArea
               value={textToSpeech}
               onChange={(e) => setTextToSpeech(e.target.value)}
@@ -1110,7 +1202,8 @@ export default function HomeWorkMangement({
                 </audio>
               </div>
             </Form.Item>
-          )}
+          )} */}
+
           {/* {
           ||
             (form.getFieldValue("linkSpeech") && (
@@ -1315,7 +1408,7 @@ export default function HomeWorkMangement({
             />
           )}
 
-          <Form.Item name="linkZalo" label="Link Zalo bài tập">
+          {/*<Form.Item name="linkZalo" label="Link Zalo bài tập">
             <Input
               placeholder="Nhập link zalo bài tập"
               style={{
@@ -1323,11 +1416,11 @@ export default function HomeWorkMangement({
                 borderColor: colors.inputBorder,
               }}
             />
-          </Form.Item>
+          </Form.Item>*/}
         </Form>
-        <Form.Item name="Speech to text">
+        {/* <Form.Item name="Speech to text">
           <SpeechToTextComponent />
-        </Form.Item>
+        </Form.Item> */}
       </Modal>
       <Modal
         title="Danh sách các lịch học đang sử dụng bài tập này"

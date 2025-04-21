@@ -39,6 +39,8 @@ import {
 } from "@ant-design/icons";
 import { DeleteIcon, TrashIcon } from "lucide-react";
 import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
+import vocabularyService from "services/vocabularyService";
+import VocabularyCreateComponent from "components/HomeWorkComponent/VocabularyCreateComponent";
 
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -59,7 +61,7 @@ const cellPropTypes = {
       description: PropTypes.string,
       date: PropTypes.string,
       title: PropTypes.string,
-      linkZalo: PropTypes.string,
+      // linkZalo: PropTypes.string,
       feedback: PropTypes.string,
       datetime: PropTypes.string,
     }).isRequired,
@@ -178,6 +180,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
   const [loadingTTS, setLoadingTTS] = useState(false);
   const [loadingUpdateLesson, setLoadingUpdateLesson] = useState(false);
   const [loadingUpdateHomework, setLoadingUpdateHomework] = useState(false);
+  const [vocabularyList, setVocabularyList] = useState([]);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );
@@ -207,7 +210,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkYoutube: "",
     linkGame: "",
     linkSpeech: "",
-    linkZalo: "",
+    // linkZalo: "",
     TeacherId: "",
     textToSpeech: "",
     description: "",
@@ -643,20 +646,20 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     //   ),
     //   propTypes: cellPropTypes,
     // },
-    {
-      Header: "Link Zalo",
-      accessor: "linkZalo",
-      width: "30%",
-      Cell: ({ row }) => (
-        <span
-          style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
-          className="truncate-text"
-        >
-          {row.values.linkZalo}
-        </span>
-      ),
-      propTypes: cellPropTypes,
-    },
+    // {
+    //   Header: "Link Zalo",
+    //   accessor: "linkZalo",
+    //   width: "30%",
+    //   Cell: ({ row }) => (
+    //     <span
+    //       style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
+    //       className="truncate-text"
+    //     >
+    //       {row.values.linkZalo}
+    //     </span>
+    //   ),
+    //   propTypes: cellPropTypes,
+    // },
     // {
     //   Header: "Teacher",
     //   accessor: "TeacherId",
@@ -820,7 +823,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkYoutube: homework.linkYoutube,
     linkGame: homework.linkGame,
     linkSpeech: homework.linkSpeech,
-    linkZalo: homework.linkZalo,
+    // linkZalo: homework.linkZalo,
     TeacherId: homework?.teacher?.username || "N/A",
     textToSpeech: homework.textToSpeech,
     description: homework.description,
@@ -1595,7 +1598,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       title: homeWork.title,
       // linkYoutube: homeWork.linkYoutube,
       // linkGame: homeWork.linkGame,
-      linkZalo: homeWork.linkZalo,
+      // linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
       // description: homeWork.description,
     });
@@ -1608,6 +1611,17 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     setModalUpdateHomeWorkVisible(true);
     setTextToSpeech(homeWork.textToSpeech || "");
   };
+  useEffect(() => {
+    const fetchVocabulary = async () => {
+      try {
+        const response = await vocabularyService.getVocabularyByHomworkId(selectedHomeWorkId);
+        setVocabularyList(response);
+      } catch (error) {
+        console.error("Error fetching vocabulary:", error);
+      }
+    };
+    fetchVocabulary();
+  }, [selectedHomeWorkId, editingHomeWork]);
   // console.log(textToSpeech);
   useEffect(() => {
     setTimeout(() => {
@@ -1649,8 +1663,8 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       formData.append("level", editingHomeWork.level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      formData.append("linkZalo", values.linkZalo);
-      formData.append("textToSpeech", textToSpeech);
+      // formData.append("linkZalo", values.linkZalo);
+      // formData.append("textToSpeech", textToSpeech);
       formData.append(
         "description",
         quillRefHomeworkDescription.current?.getEditor()?.root?.innerHTML || ""
@@ -1658,11 +1672,46 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       formData.append("teacherId", teacher.id);
 
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
       if (editingHomeWork) {
         const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        if (vocabularyList.length > 0) {
+          const formDataForVocabulary = new FormData();
+          const vocabularies = [];
+          const mp3Files = [];
+          // console.log("vocabularyList", vocabularyList);
+
+          vocabularyList.forEach((item) => {
+            if (item?.isNew) {
+              const vocabulary = {
+                textToSpeech: item.word,
+                imageUrl: item.imageUrl,
+                homeworkId: HomeWorkdata.id,
+              };
+              vocabularies.push(vocabulary);
+              // mp3Files.push(mp3File);
+              // console.log(item, "aaaaa");
+              let fileToAppend;
+              if (item?.audioFile) {
+                fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
+              } else {
+                // 👇 Tạo file rỗng nếu không có audio
+                // console.log(item, "eeee", fileToAppend);
+
+                const emptyBlob = new Blob([], { type: "audio/mp3" });
+                fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+              }
+              formDataForVocabulary.append("mp3Files", fileToAppend);
+            }
+          });
+          formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+          // formDataForVocabulary.append("mp3Files", mp3Files);
+          const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
+            formDataForVocabulary
+          );
+        }
         setHomeworks(
           homeworks?.map((homeWork) =>
             homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
@@ -1897,7 +1946,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       linkYoutube: "",
       linkGame: "",
       linkSpeech: "",
-      linkZalo: "",
+      // linkZalo: "",
       TeacherId: "",
       textToSpeech: "",
       description: "",
@@ -2549,9 +2598,9 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               }}
             />
           </Form.Item> */}
-            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+            {/* <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
               <SpeechToTextComponent />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
         </DialogContent>
         <DialogActions>
@@ -2619,7 +2668,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               level: "",
               // linkYoutube: "",
               linkGame: "",
-              linkZalo: "",
+              // linkZalo: "",
               description: "",
             }}
           >
@@ -2728,8 +2777,14 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               ))}
             </Select>
           </Form.Item> */}
-
-            <Form.Item label="Văn bản thành giọng nói">
+            <Form.Item name="Speech to text">
+              <VocabularyCreateComponent
+                isMobile={isMobile}
+                setVocabularyList={setVocabularyList}
+                vocabularyList={vocabularyList}
+              />
+            </Form.Item>
+            {/* <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}
                 onChange={(e) => setTextToSpeech(e.target.value)}
@@ -2771,7 +2826,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   </audio>
                 </div>
               </Form.Item>
-            )}
+            )} */}
             {/* {
           ||
             (form.getFieldValue("linkSpeech") && (
@@ -2976,7 +3031,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
               />
             )}
 
-            <Form.Item name="linkZalo" label="Link Zalo bài tập">
+            {/* <Form.Item name="linkZalo" label="Link Zalo bài tập">
               <Input
                 placeholder="Nhập link zalo bài tập"
                 style={{
@@ -2984,10 +3039,10 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   borderColor: colors.inputBorder,
                 }}
               />
-            </Form.Item>
-            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+            </Form.Item> */}
+            {/* <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
               <SpeechToTextComponent />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
         </DialogContent>
         <DialogActions>

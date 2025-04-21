@@ -38,6 +38,8 @@ import classService from "services/classService";
 import { BookOutlined } from "@ant-design/icons";
 import Compressor from "compressorjs";
 import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
+import VocabularyCreateComponent from "./VocabularyCreateComponent";
+import vocabularyService from "services/vocabularyService";
 
 const { Title } = Typography;
 const { Text } = Typography;
@@ -188,6 +190,7 @@ export default function CreateHomeWork({
   const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
   const [htmlContent, setHtmlContent] = useState("");
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
+  const [vocabularyList, setVocabularyList] = useState([]);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -410,6 +413,8 @@ export default function CreateHomeWork({
       },
     },
   };
+  // console.log(vocabularyList);
+
   const handleSubmit = async (values, status) => {
     try {
       if (selected.size === 0) {
@@ -437,8 +442,8 @@ export default function CreateHomeWork({
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      formData.append("linkZalo", zaloLink);
-      formData.append("textToSpeech", textToSpeech);
+      // formData.append("linkZalo", zaloLink);
+      // formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
       // if (selected.size > 0) {
@@ -446,11 +451,42 @@ export default function CreateHomeWork({
       // }
 
       // Nếu có mp3Url thì fetch dữ liệu và append vào formData
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
 
       const homeworkData = await homeWorkService.createHomeWork(formData);
+      if (vocabularyList.length > 0) {
+        const formDataForVocabulary = new FormData();
+        const vocabularies = [];
+        const mp3Files = [];
+        vocabularyList.forEach((item) => {
+          if (item?.isNew) {
+            const vocabulary = {
+              textToSpeech: item.word,
+              imageUrl: item.imageUrl,
+              homeworkId: homeworkData.id,
+            };
+            vocabularies.push(vocabulary);
+            // mp3Files.push(mp3File);
+            // mp3Files.push(mp3File);
+            let fileToAppend;
+            if (item?.audioFile) {
+              fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
+            } else {
+              // 👇 Tạo file rỗng nếu không có audio
+              const emptyBlob = new Blob([], { type: "audio/mp3" });
+              fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+            }
+            formDataForVocabulary.append("mp3Files", fileToAppend);
+          }
+        });
+        formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+        // formDataForVocabulary.append("mp3Files", mp3Files);
+        const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
+          formDataForVocabulary
+        );
+      }
       setHomeWorks((homework) => [...homework, homeworkData]);
       let selectedSchedule = null;
       for (const item of selected) {
@@ -520,6 +556,7 @@ export default function CreateHomeWork({
       setCurrentLink("");
       setHtmlContent("");
       setSwapHtmlMode(false);
+      setVocabularyList([]);
       if (quillRef.current) {
         const editor = quillRef.current.getEditor();
         editor.setContents([]);
@@ -771,7 +808,7 @@ export default function CreateHomeWork({
               level: "",
               // linkYoutube: "",
               linkGame: "",
-              linkZalo: "",
+              // linkZalo: "",
               description: "",
               textToSpeech: "",
             }}
@@ -895,7 +932,7 @@ export default function CreateHomeWork({
             </Select>
           </Form.Item> */}
 
-            <Form.Item label="Văn bản thành giọng nói">
+            {/* <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}
                 onChange={(e) => setTextToSpeech(e.target.value)}
@@ -914,8 +951,8 @@ export default function CreateHomeWork({
                 value={gender}
                 optionType="button"
               />
-            </Form.Item>
-            <Form.Item>
+            </Form.Item> */}
+            {/* <Form.Item>
               <Button
                 type="primary"
                 onClick={handleConvertToSpeech}
@@ -937,7 +974,14 @@ export default function CreateHomeWork({
                   </audio>
                 </div>
               </Form.Item>
-            )}
+            )} */}
+            <Form.Item name="Speech to text">
+              <VocabularyCreateComponent
+                isMobile={isMobile}
+                setVocabularyList={setVocabularyList}
+                vocabularyList={vocabularyList}
+              />
+            </Form.Item>
             {/* <div style={{ marginBottom: "16px" }}>
             <audio controls style={{ width: "100%" }}>
               <source
@@ -1129,7 +1173,7 @@ export default function CreateHomeWork({
               />
             )}
 
-            <Form.Item label="Link Zalo bài tập">
+            {/* <Form.Item label="Link Zalo bài tập">
               <Input
                 placeholder="Nhập link zalo bài tập"
                 style={{
@@ -1139,10 +1183,7 @@ export default function CreateHomeWork({
                 value={zaloLink}
                 onChange={(e) => setZaloLink(e.target.value)}
               />
-            </Form.Item>
-            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
-              <SpeechToTextComponent />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
         </Card>
       </div>

@@ -61,6 +61,7 @@ import ProfileModal from "./profileModal";
 import StudentFeedbackModal from "./feedbackModal";
 import contentPageService from "services/contentpageService";
 import { Close } from "@mui/icons-material";
+import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -762,7 +763,7 @@ const StudentPage = () => {
                         })}
                       </div>
                     )} */}
-                    {hw.linkSpeech && (
+                    {/* {hw.linkSpeech && (
                       <div style={{ marginTop: hw.linkYoutube ? 16 : 0 }}>
                         <Text
                           strong
@@ -778,7 +779,7 @@ const StudentPage = () => {
                           Trình duyệt của bạn không hỗ trợ phát audio.
                         </audio>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 )}
                 <div
@@ -842,6 +843,7 @@ const StudentPage = () => {
                     {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
                   </Button> */}
                 </div>
+                <VocabularyStudyComponent selectedHomeWorkId={hw.id} />
               </Card>
             )}
           />

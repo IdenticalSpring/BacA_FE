@@ -1115,9 +1115,9 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item> */}
-            <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
+            {/* <Form.Item name="Speech to text" label="Chuyển giọng nói thành văn bản">
               <SpeechToTextComponent />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
         </Card>
       </div>
