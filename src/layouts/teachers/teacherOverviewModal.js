@@ -7,7 +7,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import DownloadIcon from "@mui/icons-material/Download";
 import EditIcon from "@mui/icons-material/Edit";
 import Pagination from "@mui/material/Pagination"; // Thêm Pagination
@@ -197,6 +197,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkGame: "",
     linkSpeech: "",
     TeacherId: "",
+    textToSpeech: "",
     description: "",
     date: "",
   });
@@ -208,6 +209,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkSpeech: "",
     linkZalo: "",
     TeacherId: "",
+    textToSpeech: "",
     description: "",
     date: "",
   });
@@ -804,6 +806,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkGame: lesson.linkGame,
     linkSpeech: lesson.linkSpeech,
     TeacherId: lesson?.teacher?.username || "N/A",
+    textToSpeech: lesson.textToSpeech,
     description: lesson.description,
     lessonPlan: lesson.lessonPlan,
     date: lesson.date,
@@ -819,6 +822,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     linkSpeech: homework.linkSpeech,
     linkZalo: homework.linkZalo,
     TeacherId: homework?.teacher?.username || "N/A",
+    textToSpeech: homework.textToSpeech,
     description: homework.description,
     date: homework.date,
     original: homework,
@@ -868,6 +872,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     });
     // Khởi tạo youtubeLinks từ linkYoutube
     const links = lesson.linkYoutube ? lesson.linkYoutube.split(", ").filter(Boolean) : [];
+    setTextToSpeech(lesson.textToSpeech || "");
     setYoutubeLinks(links);
     setMp3Url(lesson.linkSpeech);
     setModalUpdateLessonVisible(true);
@@ -1004,6 +1009,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       formData.append("linkYoutube", linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
+      formData.append("textToSpeech", textToSpeech);
       formData.append(
         "description",
         quillRefLessonDescription.current?.getEditor()?.root?.innerHTML || ""
@@ -1600,6 +1606,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
     // }
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
+    setTextToSpeech(homeWork.textToSpeech || "");
   };
   // console.log(textToSpeech);
   useEffect(() => {
@@ -1643,6 +1650,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
       formData.append("linkZalo", values.linkZalo);
+      formData.append("textToSpeech", textToSpeech);
       formData.append(
         "description",
         quillRefHomeworkDescription.current?.getEditor()?.root?.innerHTML || ""
@@ -1879,6 +1887,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       linkGame: "",
       linkSpeech: "",
       TeacherId: "",
+      textToSpeech: "",
       description: "",
       date: "",
     });
@@ -1890,6 +1899,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
       linkSpeech: "",
       linkZalo: "",
       TeacherId: "",
+      textToSpeech: "",
       description: "",
       date: "",
     });

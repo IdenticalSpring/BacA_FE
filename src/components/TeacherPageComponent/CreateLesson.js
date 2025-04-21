@@ -571,6 +571,7 @@ export default function CreateLesson({
       formData.append("linkYoutube", linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
+      formData.append("textToSpeech", textToSpeech);
       formData.append(
         "description",
         quillRefDescription.current?.getEditor()?.root.innerHTML || ""
@@ -775,6 +776,7 @@ export default function CreateLesson({
               level: "",
               // linkYoutube: "",
               linkGame: "",
+              textToSpeech: "",
               description: "",
               lessonPlan: "",
             }}

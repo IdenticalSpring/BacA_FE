@@ -438,6 +438,7 @@ export default function CreateHomeWork({
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
       formData.append("linkZalo", zaloLink);
+      formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
       // if (selected.size > 0) {
@@ -772,6 +773,7 @@ export default function CreateHomeWork({
               linkGame: "",
               linkZalo: "",
               description: "",
+              textToSpeech: "",
             }}
           >
             <Form.Item>
