@@ -39,7 +39,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
   const [loadingTTS, setLoadingTTS] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
-
+  const [isManualRecording, setIsManualRecording] = useState(false);
   // Speech to text hook
   const {
     error: speechError,
@@ -208,7 +208,17 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
       form.setFieldsValue({ word: lastResult });
     }
   }, [speechResults, form]);
+  useEffect(() => {
+    let timeout;
 
+    timeout = setTimeout(() => {
+      if (!isRecording && isManualRecording) {
+        console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecording);
+        startSpeechToText();
+      }
+    }, 500); // Delay nhẹ để tránh race condition
+    return () => clearTimeout(timeout);
+  }, [isRecording, isManualRecording]);
   const colors = {
     deepGreen: "#389e0d",
     inputBorder: "#d9d9d9",
@@ -223,10 +233,12 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
     }
     if (isRecording) {
       stopSpeechToText();
+      setIsManualRecording(false);
       const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
       form.setFieldsValue({ meaning: lastResult });
     } else {
       startSpeechToText();
+      setIsManualRecording(true);
     }
   };
   // console.log(vocabularyList);

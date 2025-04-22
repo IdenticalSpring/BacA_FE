@@ -81,6 +81,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
   const [addingItem, setAddingItem] = useState(false);
   const [activeRecordingId, setActiveRecordingId] = useState(null);
   const [resultSTT, setResultSTT] = useState("");
+  const [isManualRecording, setIsManualRecording] = useState(false);
   // Speech to text hook
   const {
     error: speechError,
@@ -97,6 +98,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
       interimResults: true,
     },
   });
+  // console.log("speechResults", speechResults);
 
   // Fetch data (simulated)
   useEffect(() => {
@@ -125,6 +127,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
       setCurrentText(lastResult);
     }
   }, [speechResults]);
+  useEffect(() => {
+    let timeout;
+
+    timeout = setTimeout(() => {
+      if (!isRecording && isManualRecording) {
+        console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecording);
+        startSpeechToText();
+      }
+    }, 500); // Delay nhẹ để tránh race condition
+    return () => clearTimeout(timeout);
+  }, [isRecording, isManualRecording]);
 
   // Toggle speech recognition
   const toggleSpeechToText = () => {
@@ -150,7 +163,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
     if (isRecording && activeRecordingId === itemId) {
       stopSpeechToText();
       setActiveRecordingId(null);
-
+      setIsManualRecording(false);
       // const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
       // setResultSTT(lastResult);
       //   // ✅ Gán kết quả vào đúng item
@@ -161,6 +174,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
     } else {
       setActiveRecordingId(itemId);
       startSpeechToText();
+      setIsManualRecording(true);
     }
   };
   // Handle text to speech conversion
@@ -424,7 +438,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
             placeholder="Luyện nói"
             readOnly
             value={
-              (isRecording && activeRecordingId === item.id && (interimResult || resultSTT)) ||
+              (isManualRecording &&
+                activeRecordingId === item.id &&
+                (interimResult || resultSTT)) ||
               // //   item.speechToText ||
               ""
               // item.id
@@ -437,10 +453,10 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
             }}
           />
           <Button
-            type={isRecording && activeRecordingId === item.id ? "primary" : "default"}
-            danger={isRecording && activeRecordingId === item.id}
+            type={isManualRecording && activeRecordingId === item.id ? "primary" : "default"}
+            danger={isManualRecording && activeRecordingId === item.id}
             icon={
-              isRecording && activeRecordingId === item.id ? (
+              isManualRecording && activeRecordingId === item.id ? (
                 <AudioMutedOutlined />
               ) : (
                 <AudioOutlined />
