@@ -272,18 +272,18 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
                 >
                   <Space>
                     <Text strong>Rèn luyện nói</Text>
-                    <Tag color={isRecording ? "error" : "default"}>
-                      {isRecording ? "Đang ghi âm" : "Chờ"}
+                    <Tag color={isManualRecording ? "error" : "default"}>
+                      {isManualRecording ? "Đang ghi âm" : "Chờ"}
                     </Tag>
                   </Space>
 
                   <Button
-                    type={isRecording ? "primary" : "default"}
-                    danger={isRecording}
-                    icon={isRecording ? <AudioMutedOutlined /> : <AudioOutlined />}
+                    type={isManualRecording ? "primary" : "default"}
+                    danger={isManualRecording}
+                    icon={isManualRecording ? <AudioMutedOutlined /> : <AudioOutlined />}
                     onClick={handleSpeechForMeaning}
                   >
-                    {isRecording ? "Dừng ghi âm" : "Bắt đầu ghi âm"}
+                    {isManualRecording ? "Dừng ghi âm" : "Bắt đầu ghi âm"}
                   </Button>
                 </div>
 
