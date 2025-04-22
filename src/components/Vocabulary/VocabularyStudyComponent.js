@@ -80,6 +80,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
   const [imageLoading, setImageLoading] = useState(false);
   const [addingItem, setAddingItem] = useState(false);
   const [activeRecordingId, setActiveRecordingId] = useState(null);
+  const [resultSTT, setResultSTT] = useState("");
   // Speech to text hook
   const {
     error: speechError,
@@ -133,6 +134,12 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
       startSpeechToText();
     }
   };
+  useEffect(() => {
+    if (speechResults.length > 0) {
+      const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
+      setResultSTT(lastResult);
+    }
+  }, [speechResults]);
   const handleSpeechForMeaning = (itemId) => {
     if (speechError) {
       message.error(
@@ -144,12 +151,13 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
       stopSpeechToText();
       setActiveRecordingId(null);
 
-      //   const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
-
+      // const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
+      // setResultSTT(lastResult);
       //   // ✅ Gán kết quả vào đúng item
       //   setVocabularyItems((prev) =>
       //     prev.map((item) => (item.id === itemId ? { ...item, speechToText: lastResult } : item))
       //   );
+      setResultSTT("");
     } else {
       setActiveRecordingId(itemId);
       startSpeechToText();
@@ -416,10 +424,10 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
             placeholder="Luyện nói"
             readOnly
             value={
-              (isRecording && activeRecordingId === item.id && interimResult) ||
+              (isRecording && activeRecordingId === item.id && (interimResult || resultSTT)) ||
               // //   item.speechToText ||
-              // ""
-              item.id
+              ""
+              // item.id
             }
             autoSize={{ minRows: 1, maxRows: 6 }}
             style={{
@@ -517,11 +525,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
           </Card>
         </div>
       )}
-      <div>
-        {isRecording}
+      {/* <div>
+        {isRecording ? "true" : "false"}
         {activeRecordingId}
         {interimResult}
-      </div>
+      </div> */}
     </>
   );
 };
