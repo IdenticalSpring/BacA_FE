@@ -91,6 +91,10 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
   } = useSpeechToText({
     continuous: true,
     useLegacyResults: false,
+    speechRecognitionProperties: {
+      lang: "en-US", // 👈 chỉ nhận tiếng Anh (Mỹ)
+      interimResults: true,
+    },
   });
 
   // Fetch data (simulated)
@@ -346,19 +350,20 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
     >
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         {/* Image area */}
-        <div
-          style={{
-            height: "160px",
-            border: `1px solid ${colors.lightGreen}`,
-            borderRadius: "8px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden",
-            backgroundColor: colors.paleGreen,
-          }}
-        >
-          {item.imageUrl ? (
+        {item.imageUrl && (
+          <div
+            style={{
+              height: "160px",
+              border: `1px solid ${colors.lightGreen}`,
+              borderRadius: "8px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              overflow: "hidden",
+              backgroundColor: colors.paleGreen,
+            }}
+          >
+            {/* {item.imageUrl ? ( */}
             <img
               src={item.imageUrl}
               alt={item.textToSpeech}
@@ -368,15 +373,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
                 objectFit: "contain",
               }}
             />
-          ) : (
+            {/* ) : (
             <Text style={{ color: colors.midGreen }}>Hình</Text>
-          )}
-        </div>
+           )} */}
+          </div>
+        )}
 
         {/* Text and audio controls */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <Text style={{ width: "30px", color: colors.deepGreen }}>Từ:</Text>
-          <Input
+          <TextArea
+            autoSize={{ minRows: 1, maxRows: 6 }}
             value={item.textToSpeech}
             readOnly
             style={{
@@ -385,26 +392,36 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
               borderColor: colors.inputBorder,
             }}
           />
-          <Button
+          {/* <Button
             type="text"
             icon={<SoundOutlined />}
             onClick={() => handleTextToSpeech(item.textToSpeech)}
             style={{ color: colors.deepGreen }}
           >
             Phát âm
-          </Button>
+          </Button> */}
         </div>
-
+        {item.audioUrl && (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {/* <Text style={{ color: colors.deepGreen }}>Âm thanh:</Text> */}
+            <audio controls style={{ flex: 1 }}>
+              <source src={item.audioUrl} type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
         {/* Speech to text */}
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Input
-            placeholder="Tạo văn bản từ âm thanh"
+          <TextArea
+            placeholder="Luyện nói"
             readOnly
             value={
               (isRecording && activeRecordingId === item.id && interimResult) ||
-              //   item.speechToText ||
-              ""
+              // //   item.speechToText ||
+              // ""
+              item.id
             }
+            autoSize={{ minRows: 1, maxRows: 6 }}
             style={{
               flex: 1,
               borderRadius: "6px",
@@ -424,15 +441,6 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
             onClick={() => handleSpeechForMeaning(item.id)}
           ></Button>
         </div>
-        {item.audioUrl && (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {/* <Text style={{ color: colors.deepGreen }}>Âm thanh:</Text> */}
-            <audio controls style={{ flex: 1 }}>
-              <source src={item.audioUrl} type="audio/mpeg" />
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-        )}
       </Space>
     </Card>
   );
@@ -509,6 +517,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId }) => {
           </Card>
         </div>
       )}
+      <div>
+        {isRecording}
+        {activeRecordingId}
+        {interimResult}
+      </div>
     </>
   );
 };

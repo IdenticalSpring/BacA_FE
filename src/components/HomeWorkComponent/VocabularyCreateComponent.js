@@ -51,6 +51,10 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
   } = useSpeechToText({
     continuous: true,
     useLegacyResults: false,
+    speechRecognitionProperties: {
+      lang: "en-US", // 👈 chỉ nhận tiếng Anh (Mỹ)
+      interimResults: true,
+    },
   });
 
   // Gender options for text-to-speech
@@ -230,7 +234,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
   return (
     <div style={{ maxWidth: "100%", margin: "0 auto" }}>
       <Card
-        title={<Title level={3}>Tạo Danh sách từ vựng cho bài tập</Title>}
+        title={<Title level={3}>Tạo từ vựng và luyện nghe nói</Title>}
         style={{ width: "100%", marginBottom: "20px" }}
       >
         <Form form={form} layout="vertical">
@@ -255,7 +259,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
                   }}
                 >
                   <Space>
-                    <Text strong>Chuyển giọng nói thành văn bản</Text>
+                    <Text strong>Rèn luyện nói</Text>
                     <Tag color={isRecording ? "error" : "default"}>
                       {isRecording ? "Đang ghi âm" : "Chờ"}
                     </Tag>
@@ -284,7 +288,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
           <Form.Item
             name="word"
             label="Từ mới"
-            rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
+            // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
           >
             <Input
               placeholder="Nhập từ vựng"
