@@ -208,33 +208,44 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
     try {
       setLoadingAddVocabulary(true);
       const formDataForVocabulary = new FormData();
-      const vocabularies = [];
-      const newVocab = {
-        // id: Date.now(),
-        textToSpeech: values.word,
-        // meaning: values.meaning,
-        imageUrl: null,
-        // audioUrl: mp3Url || null,
-        // audioFile: mp3file || null,
-        homeworkId: selectedHomeWorkId,
-        isStudent: 1,
-        // isNew: true,
-      };
-      vocabularies.push(newVocab);
-      let fileToAppend;
+      formDataForVocabulary.append("textToSpeech", values.word);
+      // formDataForVocabulary.append("imageUrl", null);
+      formDataForVocabulary.append("homeworkId", selectedHomeWorkId);
+      formDataForVocabulary.append("isStudent", 1);
+      // const vocabularies = [];
+      // const newVocab = {
+      //   // id: Date.now(),
+      //   textToSpeech: values.word,
+      //   // meaning: values.meaning,
+      //   imageUrl: null,
+      //   // audioUrl: mp3Url || null,
+      //   // audioFile: mp3file || null,
+      //   homeworkId: selectedHomeWorkId,
+      //   isStudent: 1,
+      //   // isNew: true,
+      // };
+      // vocabularies.push(newVocab);
       if (mp3file) {
-        fileToAppend = new File([mp3file], "audio.mp3", { type: "audio/mp3" });
-      } else {
-        // 👇 Tạo file rỗng nếu không có audio
-        const emptyBlob = new Blob([], { type: "audio/mp3" });
-        fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+        formDataForVocabulary.append(
+          "mp3File",
+          new File([mp3file], "audio.mp3", { type: "audio/mp3" })
+        );
       }
-      formDataForVocabulary.append("mp3Files", fileToAppend);
-      formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
-      const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
-        formDataForVocabulary
-      );
-      setVocabularyItems([...vocabularyItems, vocabularyResponse[0]]);
+      // let fileToAppend;
+      // if (mp3file) {
+      //   fileToAppend = new File([mp3file], "audio.mp3", { type: "audio/mp3" });
+      // } else {
+      //   // 👇 Tạo file rỗng nếu không có audio
+      //   const emptyBlob = new Blob([], { type: "audio/mp3" });
+      //   fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+      // }
+      // formDataForVocabulary.append("mp3Files", fileToAppend);
+      // formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+      // const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
+      //   formDataForVocabulary
+      // );
+      const vocabularyResponse = await vocabularyService.createVocabulary(formDataForVocabulary);
+      setVocabularyItems([...vocabularyItems, vocabularyResponse]);
       message.success(`Từ "${values.word}" đã được thêm vào danh sách`);
       form.resetFields();
       setTextToSpeech("");
