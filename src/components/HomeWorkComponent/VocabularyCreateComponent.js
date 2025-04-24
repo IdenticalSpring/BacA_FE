@@ -21,6 +21,7 @@ import {
   DeleteOutlined,
   UploadOutlined,
   LoadingOutlined,
+  SoundOutlined,
 } from "@ant-design/icons";
 import useSpeechToText from "react-hook-speech-to-text";
 import homeWorkService from "services/homeWorkService";
@@ -369,13 +370,13 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
               type="primary"
               onClick={handleConvertToSpeech}
               loading={loadingTTS}
-              icon={<AudioOutlined />}
+              icon={<SoundOutlined />}
               style={{
                 backgroundColor: colors.deepGreen,
                 borderColor: colors.deepGreen,
               }}
             >
-              Chuyển thành giọng nói
+              Play Audio
             </Button>
           </Form.Item>
 

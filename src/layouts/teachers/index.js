@@ -22,7 +22,8 @@ import { useNavigate } from "react-router-dom";
 import { colors } from "assets/theme/color";
 import TeacherOverViewModal from "./teacherOverviewModal"; // Import modal mới
 import link from "assets/theme/components/link";
-
+import axios from "axios";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Teachers() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState([
@@ -48,7 +49,26 @@ function Teachers() {
   const [files, setFiles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [openOverview, setOpenOverview] = useState(false); // State cho modal overview
+  const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
+  useEffect(() => {
+    // setTimeout(() => {
+    const fetchPlaceholder = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/contentpage/lessonPlanPlaceholder`, {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        console.log("Placeholder:", response.data);
 
+        setPlaceholderLessonPlan(response.data);
+      } catch (error) {
+        console.error("Error fetching placeholder:", error);
+      }
+    };
+    fetchPlaceholder();
+    // }, 1000); // Delay 1 giây
+  }, []);
   useEffect(() => {
     fetchTeachers();
   }, []);
@@ -391,6 +411,7 @@ function Teachers() {
         open={openOverview}
         onClose={() => setOpenOverview(false)}
         teacher={selectedTeacher}
+        placeholderLessonPlan={placeholderLessonPlan}
       />
     </DashboardLayout>
   );

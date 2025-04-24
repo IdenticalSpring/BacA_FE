@@ -78,6 +78,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Color palette
 export const colors = {
   lightGreen: "#8ED1B0",
@@ -212,6 +213,7 @@ const TeacherPage = () => {
   const quillRefLessonPlanUpdate = useRef(null);
   const quillRefHomeWorkCreate = useRef(null);
   const quillRefHomeWorkUpdate = useRef(null);
+  const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
   const toolbar = [
     [{ font: [] }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -253,7 +255,25 @@ const TeacherPage = () => {
     "video",
   ];
   // console.log(editingLesson);
+  useEffect(() => {
+    // setTimeout(() => {
+    const fetchPlaceholder = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/contentpage/lessonPlanPlaceholder`, {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        console.log("Placeholder:", response.data);
 
+        setPlaceholderLessonPlan(response.data);
+      } catch (error) {
+        console.error("Error fetching placeholder:", error);
+      }
+    };
+    fetchPlaceholder();
+    // }, 1000); // Delay 1 giây
+  }, []);
   useEffect(() => {
     // console.log(quillRefLessonCreate);
     const handlePaste = (e) => {
@@ -2187,6 +2207,7 @@ const TeacherPage = () => {
                 setLessons={setLessons}
                 quillRefDescription={quillRefLessonCreate}
                 quillRefLessonPlan={quillRefLessonPlanCreate}
+                placeholderLessonPlan={placeholderLessonPlan}
               />
             </div>
             {/* <div
@@ -2234,6 +2255,7 @@ const TeacherPage = () => {
                 students={students}
                 quillRef={quillRefLessonUpdate}
                 quillRefLessonPlan={quillRefLessonPlanUpdate}
+                placeholderLessonPlan={placeholderLessonPlan}
               />
             </div>
           </div>

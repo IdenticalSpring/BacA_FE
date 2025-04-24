@@ -155,6 +155,7 @@ export default function CreateLesson({
   setLessons,
   quillRefDescription,
   quillRefLessonPlan,
+  placeholderLessonPlan,
 }) {
   const [form] = Form.useForm();
   // const quillRefDescription = useRef(null); // Ref cho description
@@ -179,6 +180,7 @@ export default function CreateLesson({
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
   const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
   const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
+
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -194,6 +196,7 @@ export default function CreateLesson({
       setQuillLessonPlan(editor);
     }
   }, [quillRefDescription, quillRefLessonPlan]);
+
   // useEffect(() => {
   //   const quill = quillRefDescription.current?.getEditor();
   //   if (!quill) return;
@@ -730,6 +733,7 @@ export default function CreateLesson({
       }
     }
   }, [mp3Url]);
+  // console.log(placeholderLessonPlan);
 
   return (
     <div
@@ -908,7 +912,7 @@ export default function CreateLesson({
                   modules={modulesLessonPlan}
                   formats={quillFormats}
                   ref={quillRefLessonPlan}
-                  placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+                  placeholder={placeholderLessonPlan}
                   style={{
                     height: "250px",
                     marginBottom: "60px", // Consider reducing this
@@ -1303,4 +1307,5 @@ CreateLesson.propTypes = {
   setLessons: PropTypes.func.isRequired,
   quillRefDescription: PropTypes.object.isRequired,
   quillRefLessonPlan: PropTypes.object.isRequired,
+  placeholderLessonPlan: PropTypes.string.isRequired,
 };

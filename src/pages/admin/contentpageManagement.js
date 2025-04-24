@@ -1527,7 +1527,7 @@ function ContentPageManagement() {
             </>
           ) : (
             <>
-              <TextField
+              {/* <TextField
                 autoFocus
                 margin="dense"
                 label="Prompt Description"
@@ -1548,10 +1548,10 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root": { color: colors.darkGray },
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
-              />
+              /> */}
               <TextField
                 margin="dense"
-                label="Prompt Lesson Plan"
+                label="PlaceHolder Lesson Plan"
                 type="text"
                 fullWidth
                 multiline

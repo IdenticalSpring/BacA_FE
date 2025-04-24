@@ -154,7 +154,7 @@ class CustomImageBlot extends BlockEmbed {
 }
 Quill.register(CustomImageBlot);
 Quill.register(CustomVideo);
-function TeacherOverViewModal({ open, onClose, teacher }) {
+function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan }) {
   const [classes, setClasses] = useState([]);
   const [lessonByScheduleData, setLessonByScheduleData] = useState([]);
   const [lessons, setLessons] = useState([]);
@@ -2387,7 +2387,7 @@ function TeacherOverViewModal({ open, onClose, teacher }) {
                   modules={modulesLessonPlan}
                   formats={quillFormats}
                   ref={quillRefLessonPlan}
-                  placeholder={`📎 Nhập chủ đề hoặc mục tiêu cụ thể bạn muốn dạy.\n\nVí dụ:\n• "Lớp 7 – Kỹ năng nghe: Luyện nghe chủ đề thời tiết và trả lời câu hỏi."\n• "Lớp 9 – Ngữ pháp: Sử dụng thì hiện tại hoàn thành để mô tả trải nghiệm cá nhân."\n\nMẹo: Nên ghi rõ kỹ năng chính, lớp, nội dung muốn học sinh đạt được.`}
+                  placeholder={placeholderLessonPlan}
                   style={{
                     height: "250px",
                     marginBottom: "60px", // Consider reducing this
@@ -3103,6 +3103,7 @@ TeacherOverViewModal.propTypes = {
     fileUrl: PropTypes.string,
   }),
   row: PropTypes.object.isRequired,
+  placeholderLessonPlan: PropTypes.string,
 };
 
 export default TeacherOverViewModal;
