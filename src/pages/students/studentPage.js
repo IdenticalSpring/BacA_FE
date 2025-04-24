@@ -843,7 +843,7 @@ const StudentPage = () => {
                     {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
                   </Button> */}
                 </div>
-                <VocabularyStudyComponent selectedHomeWorkId={hw.id} />
+                <VocabularyStudyComponent selectedHomeWorkId={hw.id} isMobile={isMobile} />
               </Card>
             )}
           />

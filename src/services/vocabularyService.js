@@ -38,6 +38,45 @@ const vocabularyService = {
       throw error.response?.data?.message || "Error fetching vocabularies";
     }
   },
+  getAllVocabularyForStudent: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/vocabularies/student`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching vocabulary list";
+    }
+  },
+  getVocabularyByHomworkIdForStudent: async (homeworkId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/vocabularies/student/homework/${homeworkId}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching vocabularies";
+    }
+  },
+  getVocabularyByIdForStudent: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/vocabularies/student/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching vocabularies";
+    }
+  },
   createVocabulary: async (vocabularyData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/vocabularies`, vocabularyData, {

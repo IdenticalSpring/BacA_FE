@@ -12,6 +12,7 @@ import {
   List,
   Tag,
   Radio,
+  Modal,
 } from "antd";
 import {
   AudioOutlined,
@@ -180,19 +181,48 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
 
   // Delete vocabulary item
   const handleDeleteVocabulary = (id) => {
-    if (
-      vocabularyList.find((item) => item.id === id) &&
-      !vocabularyList.find((item) => item.id === id).isNew
-    ) {
-      vocabularyService
-        .deletevocabulary(id)
-        .then(() => {})
-        .catch((error) => {
-          message.error("Xóa từ vựng thất bại " + error);
-        });
+    const item = vocabularyList.find((item) => item.id === id);
+
+    if (!item) {
+      return;
     }
-    setVocabularyList(vocabularyList.filter((item) => item.id !== id));
-    message.success("Xóa từ vựng thành công");
+
+    Modal.confirm({
+      title: "Xác nhận xóa từ vựng?",
+      content: "Bạn có chắc chắn muốn xóa từ vựng này không?",
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
+      onOk: () => {
+        if (item.isNew) {
+          setVocabularyList(vocabularyList.filter((item) => item.id !== id));
+          message.success("Xóa từ vựng thành công");
+          return;
+        }
+        return vocabularyService
+          .deletevocabulary(id)
+          .then(() => {
+            setVocabularyList(vocabularyList.filter((item) => item.id !== id));
+            message.success("Xóa từ vựng thành công");
+          })
+          .catch((error) => {
+            message.error("Xóa từ vựng thất bại: " + error);
+          });
+      },
+    });
+    // if (
+    //   vocabularyList.find((item) => item.id === id) &&
+    //   !vocabularyList.find((item) => item.id === id).isNew
+    // ) {
+    //   vocabularyService
+    //     .deletevocabulary(id)
+    //     .then(() => {})
+    //     .catch((error) => {
+    //       message.error("Xóa từ vựng thất bại " + error);
+    //     });
+    // }
+    // setVocabularyList(vocabularyList.filter((item) => item.id !== id));
+    // message.success("Xóa từ vựng thành công");
   };
 
   // Update textToSpeech when the word field changes
