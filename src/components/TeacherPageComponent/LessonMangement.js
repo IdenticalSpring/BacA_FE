@@ -1104,6 +1104,7 @@ export default function LessonMangement({
           >
             {
               <ReactQuill
+                id="lessonDescriptionUpdate"
                 theme="snow"
                 modules={modules}
                 formats={quillFormats}

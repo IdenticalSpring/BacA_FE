@@ -235,8 +235,8 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
   useEffect(() => {
     if (speechResults.length > 0) {
       const lastResult = speechResults[speechResults.length - 1].transcript;
-      setTextToSpeech(lastResult);
-      form.setFieldsValue({ word: lastResult });
+      setTextToSpeech(textToSpeech + lastResult);
+      form.setFieldsValue({ word: textToSpeech + lastResult });
     }
   }, [speechResults, form]);
   useEffect(() => {
@@ -246,6 +246,8 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
       if (!isRecording && isManualRecording) {
         console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecording);
         startSpeechToText();
+        setTextToSpeech(textToSpeech + " ");
+        form.setFieldsValue({ word: textToSpeech + " " });
       }
     }, 500); // Delay nhẹ để tránh race condition
     return () => clearTimeout(timeout);
@@ -270,6 +272,8 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
     } else {
       startSpeechToText();
       setIsManualRecording(true);
+      setTextToSpeech("");
+      form.setFieldsValue({ word: "" });
     }
   };
   // console.log(vocabularyList);
@@ -302,7 +306,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
                   }}
                 >
                   <Space>
-                    <Text strong>Rèn luyện nói</Text>
+                    <Text strong>Nói để nhập văn bản</Text>
                     <Tag color={isManualRecording ? "error" : "default"}>
                       {isManualRecording ? "Đang ghi âm" : "Chờ"}
                     </Tag>
@@ -373,7 +377,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
 
           <Divider orientation="left">Âm thanh</Divider>
 
-          <Form.Item label="Văn bản thành giọng nói">
+          {/* <Form.Item label="Văn bản thành giọng nói">
             <TextArea
               value={textToSpeech}
               onChange={(e) => setTextToSpeech(e.target.value)}
@@ -384,7 +388,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
                 borderColor: colors.inputBorder,
               }}
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item>
             <Radio.Group

@@ -19,6 +19,7 @@ import {
   List,
   Form,
   Modal,
+  Avatar,
 } from "antd";
 import {
   AudioOutlined,
@@ -32,12 +33,14 @@ import {
   AudioMutedOutlined,
   LeftOutlined,
   RightOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import useSpeechToText from "react-hook-speech-to-text";
 import PropTypes from "prop-types";
 import { colors } from "assets/theme/color";
 import vocabularyService from "services/vocabularyService";
 import homeWorkService from "services/homeWorkService";
+import { ImageOutlined } from "@mui/icons-material";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 const genderOptions = [
@@ -66,9 +69,12 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
   const [loadingTTS, setLoadingTTS] = useState(false);
   const [loadingAddVocabulary, setLoadingAddVocabulary] = useState(false);
   const [isRecordingForCreate, setIsRecordingForCreate] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [onOpenManageVocabulary, setOnOpenManageVocabulary] = useState(false);
   // Swipe animation states
   const [cardIndex, setCardIndex] = useState(0);
   const [animation, setAnimation] = useState("");
+  const audioRefs = useRef([]);
   const cardRefs = useRef([]);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -137,6 +143,8 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
       interimResults: true,
     },
   });
+  // console.log(speechResults);
+
   const onChangeGender = (e) => {
     setGender(e.target.value);
   };
@@ -209,7 +217,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
       setLoadingAddVocabulary(true);
       const formDataForVocabulary = new FormData();
       formDataForVocabulary.append("textToSpeech", values.word);
-      // formDataForVocabulary.append("imageUrl", null);
+      formDataForVocabulary.append("imageUrl", imageUrl || null);
       formDataForVocabulary.append("homeworkId", selectedHomeWorkId);
       formDataForVocabulary.append("isStudent", 1);
       // const vocabularies = [];
@@ -250,7 +258,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
       form.resetFields();
       setTextToSpeech("");
       setMp3Url("");
-      // setImageUrl("");
+      setImageUrl("");
       setMp3file(null);
     } catch (error) {
       console.log("Error adding vocabulary:", error);
@@ -331,6 +339,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
     timeout = setTimeout(() => {
       if (!isRecording && isManualRecording) {
         startSpeechToText();
+        setResultSTT(resultSTT + " ");
       }
     }, 500);
     return () => clearTimeout(timeout);
@@ -348,7 +357,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
   useEffect(() => {
     if (speechResults.length > 0 && !isRecordingForCreate) {
       const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
-      setResultSTT(lastResult);
+      setResultSTT(resultSTT + lastResult);
     }
   }, [speechResults]);
 
@@ -364,30 +373,31 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
       setActiveRecordingId(null);
       setIsManualRecording(false);
       setResultSTT("");
+      // speechResults = [];
     } else {
       setActiveRecordingId(itemId);
       startSpeechToText();
       setIsManualRecording(true);
     }
   };
-  useEffect(() => {
-    if (speechResults.length > 0 && isRecordingForCreate) {
-      const lastResult = speechResults[speechResults.length - 1].transcript;
-      setTextToSpeech(lastResult);
-      form.setFieldsValue({ word: lastResult });
-    }
-  }, [speechResults, form]);
-  useEffect(() => {
-    let timeout;
+  // useEffect(() => {
+  //   if (speechResults.length > 0 && isRecordingForCreate) {
+  //     const lastResult = speechResults[speechResults.length - 1].transcript;
+  //     setTextToSpeech(lastResult);
+  //     form.setFieldsValue({ word: lastResult });
+  //   }
+  // }, [speechResults, form]);
+  // useEffect(() => {
+  //   let timeout;
 
-    timeout = setTimeout(() => {
-      if (!isRecording && isManualRecordingCreate) {
-        console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecordingCreate);
-        startSpeechToText();
-      }
-    }, 500); // Delay nhẹ để tránh race condition
-    return () => clearTimeout(timeout);
-  }, [isRecording, isManualRecordingCreate]);
+  //   timeout = setTimeout(() => {
+  //     if (!isRecording && isManualRecordingCreate) {
+  //       console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecordingCreate);
+  //       startSpeechToText();
+  //     }
+  //   }, 500); // Delay nhẹ để tránh race condition
+  //   return () => clearTimeout(timeout);
+  // }, [isRecording, isManualRecordingCreate]);
   const handleSpeechForMeaningCreate = () => {
     if (speechError) {
       message.error(
@@ -420,19 +430,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
     }, 100);
   };
 
-  // Handle image upload (simulated)
+  // Handle image upload
   const handleImageUpload = (info) => {
     if (info.file.status === "uploading") {
       setImageLoading(true);
       return;
     }
-
+    console.log(info);
     if (info.file.status === "done") {
+      // In a real app, you would use the response from your server
+      setImageUrl(info.file.response.url);
       setImageLoading(false);
-      message.success(`${info.file.name} uploaded successfully`);
-    } else if (info.file.status === "error") {
-      setImageLoading(false);
-      message.error(`${info.file.name} upload failed`);
     }
   };
 
@@ -563,7 +571,22 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
   useEffect(() => {
     cardRefs.current = cardRefs.current.slice(0, currentItems.length);
   }, [currentItems]);
+  useEffect(() => {
+    // console.log(cardIndex, audioRefs);
 
+    const currentAudio = audioRefs.current[cardIndex];
+    setTimeout(() => {
+      if (currentAudio) {
+        // Chỉ tự động phát nếu đã đủ tải
+        const playPromise = currentAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            console.log("Không thể tự phát audio: ", error);
+          });
+        }
+      }
+    }, 100);
+  }, [cardIndex]);
   // Vocabulary item card with swipe functionality
   const VocabularyItemCard = ({ item, index }) => {
     const isActive = index === cardIndex;
@@ -667,7 +690,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
 
           {item.audioUrl && (
             <div style={{ display: "flex", alignItems: "center" }}>
-              <audio controls style={{ flex: 1 }}>
+              <audio ref={(el) => (audioRefs.current[index] = el)} controls style={{ flex: 1 }}>
                 <source src={item.audioUrl} type="audio/mpeg" />
                 Your browser does not support the audio element.
               </audio>
@@ -679,12 +702,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
             <TextArea
               placeholder="Luyện nói"
               readOnly
-              value={
-                (isManualRecording &&
-                  activeRecordingId === item.id &&
-                  (interimResult || resultSTT)) ||
-                ""
-              }
+              value={(isManualRecording && activeRecordingId === item.id && resultSTT) || ""}
               autoSize={{ minRows: 1, maxRows: 6 }}
               style={{
                 flex: 1,
@@ -708,7 +726,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
 
           {/* Swipe instruction hint */}
           <div style={{ textAlign: "center", marginTop: "10px", color: colors.midGreen }}>
-            <Text style={{ fontSize: "13px" }}>Swipe để chuyển sang từ khác</Text>
+            <Text style={{ fontSize: "13px" }}>Lướt qua để xem thêm</Text>
           </div>
         </Space>
       </Card>
@@ -726,197 +744,10 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
           marginBottom: "24px",
         }}
       >
-        Học từ vựng
+        Luyện đọc
       </Title>
-      <Divider style={{ borderColor: colors.lightGreen }} />
-      <div style={{ maxWidth: "100%", margin: "0 auto" }}>
-        <Card
-          title={<Title level={3}>Tạo từ vựng và luyện nghe nói</Title>}
-          style={{ width: "100%", marginBottom: "20px" }}
-        >
-          <Form form={form} layout="vertical">
-            {/* <Divider orientation="left">Giọng nói thành văn bản</Divider> */}
+      {/* <Divider style={{ borderColor: colors.lightGreen }} /> */}
 
-            <Form.Item>
-              <Card
-                style={{
-                  width: "100%",
-                  boxShadow: "none",
-                  border: "1px solid #f0f0f0",
-                  borderRadius: "8px",
-                }}
-              >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexWrap: isMobile ? "wrap" : "nowrap",
-                    }}
-                  >
-                    <Space>
-                      <Text strong>Rèn luyện nói</Text>
-                      <Tag color={isManualRecordingCreate ? "error" : "default"}>
-                        {isManualRecordingCreate ? "Đang ghi âm" : "Chờ"}
-                      </Tag>
-                    </Space>
-
-                    <Button
-                      type={isManualRecordingCreate ? "primary" : "default"}
-                      danger={isManualRecordingCreate}
-                      icon={isManualRecordingCreate ? <AudioMutedOutlined /> : <AudioOutlined />}
-                      onClick={handleSpeechForMeaningCreate}
-                    >
-                      {isManualRecordingCreate ? "Dừng ghi âm" : "Bắt đầu ghi âm"}
-                    </Button>
-                  </div>
-
-                  {interimResult && (
-                    <div style={{ marginTop: 8 }}>
-                      <Text type="secondary" italic>
-                        {interimResult}
-                      </Text>
-                    </div>
-                  )}
-                </Space>
-              </Card>
-            </Form.Item>
-            <Form.Item
-              name="word"
-              label="Từ mới"
-              // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
-            >
-              <Input
-                placeholder="Nhập từ vựng"
-                value={textToSpeech}
-                onChange={handleWordChange}
-                style={{ borderRadius: "6px" }}
-              />
-            </Form.Item>
-
-            {/* <Form.Item
-            name="meaning"
-            label="Ý nghĩa"
-            rules={[{ required: true, message: "Vui lòng nhập ý nghĩa" }]}
-          >
-            <TextArea rows={3} placeholder="Nhập ý nghĩa của từ" style={{ borderRadius: "6px" }} />
-          </Form.Item> */}
-
-            <Divider orientation="left">Âm thanh</Divider>
-
-            <Form.Item label="Văn bản thành giọng nói">
-              <TextArea
-                value={textToSpeech}
-                onChange={(e) => setTextToSpeech(e.target.value)}
-                rows={2}
-                placeholder="Nhập văn bản để chuyển thành giọng nói"
-                style={{
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Radio.Group
-                options={genderOptions}
-                onChange={onChangeGender}
-                value={gender}
-                optionType="button"
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                onClick={handleConvertToSpeech}
-                loading={loadingTTS}
-                icon={<SoundOutlined />}
-                style={{
-                  backgroundColor: colors.deepGreen,
-                  borderColor: colors.deepGreen,
-                }}
-              >
-                Play Audio
-              </Button>
-            </Form.Item>
-
-            {mp3Url && (
-              <Form.Item>
-                <div style={{ marginBottom: "16px" }}>
-                  <audio id="audio-player" controls style={{ width: "100%" }}>
-                    <source src={mp3Url} type="audio/mp3" />
-                    Your browser does not support the audio element.
-                  </audio>
-                </div>
-              </Form.Item>
-            )}
-
-            <Divider />
-
-            <Form.Item>
-              <Button
-                type="primary"
-                onClick={handleAddVocabulary}
-                size="large"
-                icon={<PlusOutlined />}
-                loading={loadingAddVocabulary}
-                block
-              >
-                Thêm từ vựng
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
-
-        {vocabularyItems.length > 0 && (
-          <Card title={<Title level={3}>Danh sách từ vựng</Title>}>
-            <List
-              style={{ maxHeight: "40vh", overflowY: "auto" }}
-              itemLayout="horizontal"
-              dataSource={vocabularyItems}
-              renderItem={(item) => (
-                <List.Item
-                  key={item.id}
-                  actions={[
-                    item.isStudent && (
-                      <Button
-                        key={item.id}
-                        icon={<DeleteOutlined />}
-                        danger
-                        onClick={() => handleDeleteVocabulary(item.id)}
-                      >
-                        Xóa
-                      </Button>
-                    ),
-                  ]}
-                >
-                  <List.Item.Meta
-                    key={item.id}
-                    avatar={
-                      item.imageUrl && (
-                        <img src={item.imageUrl} alt={item.word} width={48} height={48} />
-                      )
-                    }
-                    title={
-                      <Text key={item.id} strong>
-                        {item.word || item.textToSpeech}
-                      </Text>
-                    }
-                    // description={item.meaning}
-                  />
-                  {item.audioUrl && (
-                    <audio controls style={{ height: "50px", marginRight: "10px" }}>
-                      <source src={item.audioUrl} type="audio/mp3" />
-                    </audio>
-                  )}
-                </List.Item>
-              )}
-            />
-          </Card>
-        )}
-      </div>
       <Divider style={{ borderColor: colors.lightGreen }} />
       {vocabularyItems.length > 0 && (
         <div style={{ maxWidth: "100%", margin: "10px auto", padding: "0px" }}>
@@ -931,7 +762,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
             {/* Vocabulary list */}
             <div>
               <Title level={4} style={{ color: colors.deepGreen, marginBottom: "16px" }}>
-                Danh sách từ vựng cho bài tập hôm nay
+                Bộ từ vựng hôm nay
               </Title>
 
               {loading ? (
@@ -951,7 +782,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
                   <div
                     style={{
                       position: "relative",
-                      height: "500px",
+                      height: "600px",
                       maxHeight: "80vh",
                       margin: "0 auto",
                       maxWidth: "600px",
@@ -1053,6 +884,25 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
                       />
                     </div>
                   </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button
+                      color="green"
+                      variant="solid"
+                      style={{ width: "200px", height: "70px" }}
+                      onClick={() => {
+                        setOnOpenManageVocabulary(true);
+                      }}
+                    >
+                      Chỉnh sửa
+                    </Button>
+                  </div>
                   {/* Card indicator dots */}
                   <div
                     style={{
@@ -1109,6 +959,300 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
           `}</style>
         </div>
       )}
+      <Modal
+        centered
+        title={"Quản lý từ vựng"}
+        open={onOpenManageVocabulary}
+        onCancel={() => {
+          setOnOpenManageVocabulary(false);
+          form.resetFields();
+          setTextToSpeech("");
+          setMp3Url("");
+          setImageUrl("");
+          setMp3file(null);
+        }}
+        footer={[
+          <Button
+            style={{ marginTop: isMobile ? "20px" : "" }}
+            key="cancel"
+            onClick={() => {
+              setOnOpenManageVocabulary(false);
+              form.resetFields();
+              setTextToSpeech("");
+              setMp3Url("");
+              setImageUrl("");
+              setMp3file(null);
+            }}
+          >
+            Hủy
+          </Button>,
+          // <Button
+          //   loading={loadingUpdate}
+          //   key="submit"
+          //   type="primary"
+          //   onClick={handleSave}
+          //   style={{
+          //     backgroundColor: colors.emerald,
+          //     borderColor: colors.emerald,
+          //   }}
+          // >
+          //   {editingLesson ? "Lưu" : "Create"}
+          // </Button>,
+          // <Button
+          //   loading={loadingSchedule}
+          //   key="send"
+          //   type="primary"
+          //   onClick={() => {
+          //     // setOpenSend(true);
+          //     const entity = lessonByScheduleData?.find(
+          //       (item) => item.lessonID === selectedLessonId
+          //     );
+          //     handleUpdateSendingLessonStatus(entity?.id);
+          //   }}
+          //   style={{
+          //     backgroundColor: colors.emerald,
+          //     borderColor: colors.emerald,
+          //   }}
+          // >
+          //   {"Gửi bài học"}
+          // </Button>,
+        ]}
+        width={"95%"}
+      >
+        <div style={{ maxWidth: "100%", margin: "0 auto" }}>
+          <Card
+            title={<Title level={3}>Tạo bộ từ vựng</Title>}
+            style={{ width: "100%", marginBottom: "20px" }}
+          >
+            <Form form={form} layout="vertical">
+              {/* <Divider orientation="left">Giọng nói thành văn bản</Divider> */}
+
+              {/* <Form.Item>
+              <Card
+                style={{
+                  width: "100%",
+                  boxShadow: "none",
+                  border: "1px solid #f0f0f0",
+                  borderRadius: "8px",
+                }}
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: isMobile ? "wrap" : "nowrap",
+                    }}
+                  >
+                    <Space>
+                      <Text strong>Rèn luyện nói</Text>
+                      <Tag color={isManualRecordingCreate ? "error" : "default"}>
+                        {isManualRecordingCreate ? "Đang ghi âm" : "Chờ"}
+                      </Tag>
+                    </Space>
+
+                    <Button
+                      type={isManualRecordingCreate ? "primary" : "default"}
+                      danger={isManualRecordingCreate}
+                      icon={isManualRecordingCreate ? <AudioMutedOutlined /> : <AudioOutlined />}
+                      onClick={handleSpeechForMeaningCreate}
+                    >
+                      {isManualRecordingCreate ? "Dừng ghi âm" : "Bắt đầu ghi âm"}
+                    </Button>
+                  </div>
+
+                  {interimResult && (
+                    <div style={{ marginTop: 8 }}>
+                      <Text type="secondary" italic>
+                        {interimResult}
+                      </Text>
+                    </div>
+                  )}
+                </Space>
+              </Card>
+            </Form.Item> */}
+              <Form.Item
+                name="word"
+                label="Từ mới"
+                // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
+              >
+                <Input
+                  placeholder="Nhập từ vựng"
+                  value={textToSpeech}
+                  onChange={handleWordChange}
+                  style={{ borderRadius: "6px" }}
+                />
+              </Form.Item>
+
+              {/* <Form.Item
+            name="meaning"
+            label="Ý nghĩa"
+            rules={[{ required: true, message: "Vui lòng nhập ý nghĩa" }]}
+          >
+            <TextArea rows={3} placeholder="Nhập ý nghĩa của từ" style={{ borderRadius: "6px" }} />
+          </Form.Item> */}
+              <Divider orientation="left">Hình ảnh</Divider>
+
+              <Form.Item>
+                <Upload
+                  name="avatar"
+                  listType="picture-card"
+                  className="avatar-uploader"
+                  showUploadList={false}
+                  action={process.env.REACT_APP_API_BASE_URL + "/upload/avatar"}
+                  onChange={handleImageUpload}
+                >
+                  {imageUrl ? (
+                    <img src={imageUrl} alt="vocabulary" style={{ width: "100%" }} />
+                  ) : (
+                    <div>
+                      {imageLoading ? <LoadingOutlined /> : <PlusOutlined />}
+                      <div style={{ marginTop: 8 }}>Tải lên</div>
+                    </div>
+                  )}
+                </Upload>
+              </Form.Item>
+              <Divider orientation="left">Âm thanh</Divider>
+
+              {/* <Form.Item label="Văn bản thành giọng nói">
+              <TextArea
+                value={textToSpeech}
+                onChange={(e) => setTextToSpeech(e.target.value)}
+                rows={2}
+                placeholder="Nhập văn bản để chuyển thành giọng nói"
+                style={{
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+            </Form.Item> */}
+
+              <Form.Item>
+                <Radio.Group
+                  options={genderOptions}
+                  onChange={onChangeGender}
+                  value={gender}
+                  optionType="button"
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  onClick={handleConvertToSpeech}
+                  loading={loadingTTS}
+                  icon={<SoundOutlined />}
+                  style={{
+                    backgroundColor: colors.deepGreen,
+                    borderColor: colors.deepGreen,
+                  }}
+                >
+                  Play Audio
+                </Button>
+              </Form.Item>
+
+              {mp3Url && (
+                <Form.Item>
+                  <div style={{ marginBottom: "16px" }}>
+                    <audio id="audio-player" controls style={{ width: "100%" }}>
+                      <source src={mp3Url} type="audio/mp3" />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                </Form.Item>
+              )}
+
+              <Divider />
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  onClick={handleAddVocabulary}
+                  size="large"
+                  icon={<PlusOutlined />}
+                  loading={loadingAddVocabulary}
+                  block
+                >
+                  Thêm từ vựng
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+
+          {vocabularyItems.filter((item) => item.isStudent).length > 0 && (
+            <Card title={<Title level={3}>Danh sách từ vựng</Title>}>
+              <List
+                style={{ maxHeight: "40vh", overflowY: "auto" }}
+                itemLayout="horizontal"
+                dataSource={vocabularyItems.filter((item) => item.isStudent)}
+                renderItem={(item) => (
+                  <List.Item
+                    key={item.id}
+                    actions={[
+                      item.isStudent && (
+                        <Button
+                          key={item.id}
+                          icon={<DeleteOutlined />}
+                          danger
+                          onClick={() => handleDeleteVocabulary(item.id)}
+                        >
+                          Xóa
+                        </Button>
+                      ),
+                    ]}
+                  >
+                    {/* <List.Item.Meta
+                      key={item.id}
+                      avatar={
+                        item.imageUrl && (
+                          <img src={item.imageUrl} alt={item.word} width={48} height={48} />
+                        )
+                      }
+                      // title={
+
+                      // }
+                      // description={item.meaning}
+                    /> */}
+                    <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
+                      <Avatar
+                        shape="square"
+                        style={{
+                          width: "15vw",
+                          height: "15vw",
+                          marginRight: "10px",
+                        }}
+                        icon={<ImageOutlined style={{ width: "10vw", height: "10vw" }} />}
+                        src={item.imageUrl || ""}
+                      />
+                      <Text
+                        key={item.id}
+                        style={{ width: "70%", fontSize: isMobile ? "16px" : "32px" }}
+                        strong
+                      >
+                        {item.word || item.textToSpeech}
+                      </Text>
+                      {item.audioUrl && (
+                        <audio
+                          controls
+                          style={{
+                            height: "50px",
+                            margin: "10px 0",
+                            marginRight: "10px",
+                            width: "100%",
+                          }}
+                        >
+                          <source src={item.audioUrl} type="audio/mp3" />
+                        </audio>
+                      )}
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          )}
+        </div>
+      </Modal>
     </>
   );
 };

@@ -1470,6 +1470,27 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+              <TextField
+                margin="dense"
+                label="Center Zalo Link"
+                type="text"
+                fullWidth
+                multiline
+                rows={4}
+                value={currentEditItem?.centerZaloLink || ""}
+                onChange={(e) =>
+                  setCurrentEditItem({ ...currentEditItem, centerZaloLink: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
               <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
                 Image 1 Preview
               </MDTypography>

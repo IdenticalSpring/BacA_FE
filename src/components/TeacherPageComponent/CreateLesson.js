@@ -676,7 +676,11 @@ export default function CreateLesson({
         const editor = quillRefDescription.current.getEditor();
         editor.setContents([]);
       }
-      quillLessonPlan.setText("");
+      if (quillRefLessonPlan.current) {
+        const editor = quillRefLessonPlan.current.getEditor();
+        editor.setContents([]);
+      }
+      // quillLessonPlan.setText("");
     } catch (err) {
       message.error("Failed to create lesson. Please try again." + err);
     } finally {
@@ -843,6 +847,7 @@ export default function CreateLesson({
             >
               {
                 <ReactQuill
+                  id="lessonDescriptionCreate"
                   theme="snow"
                   modules={modules}
                   formats={quillFormats}

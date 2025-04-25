@@ -214,6 +214,7 @@ const TeacherPage = () => {
   const quillRefHomeWorkCreate = useRef(null);
   const quillRefHomeWorkUpdate = useRef(null);
   const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
+  const [isLessonCreate, setIsLessonCreate] = useState(false);
   const toolbar = [
     [{ font: [] }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -274,6 +275,7 @@ const TeacherPage = () => {
     fetchPlaceholder();
     // }, 1000); // Delay 1 giây
   }, []);
+  console.log(homeworkModal);
   useEffect(() => {
     // console.log(quillRefLessonCreate);
     const handlePaste = (e) => {
@@ -288,6 +290,10 @@ const TeacherPage = () => {
         document.activeElement.parentElement.parentElement.id === "lessonPlanCreate";
       const isLessonPlanUpdate =
         document.activeElement.parentElement.parentElement.id === "lessonPlanUpdate";
+      const isLessonDescriptionCreate =
+        document.activeElement.parentElement.parentElement.id === "lessonDescriptionCreate";
+      const isLessonDescriptionUpdate =
+        document.activeElement.parentElement.parentElement.id === "lessonDescriptionUpdate";
       // console.log(isLessonPlan);
 
       // console.log("Editor A:", quillRefLessonCreate.current?.getEditor().hasFocus(), isEditorA);
@@ -360,7 +366,7 @@ const TeacherPage = () => {
             }
           };
           handlePaste(e);
-        } else {
+        } else if (isLessonDescriptionCreate) {
           const quill = quillRefLessonCreate.current?.getEditor();
           if (!quill) return;
 
@@ -425,7 +431,7 @@ const TeacherPage = () => {
           };
           handlePaste(e);
         }
-      } else if (editingLesson) {
+      } else if (editingLesson && assignmentModal) {
         if (isLessonPlanUpdate) {
           const quill = quillRefLessonPlanUpdate.current?.getEditor();
           if (!quill) return;
@@ -490,7 +496,7 @@ const TeacherPage = () => {
             }
           };
           handlePaste(e);
-        } else {
+        } else if (isLessonDescriptionUpdate) {
           const quill = quillRefLessonUpdate.current?.getEditor();
           if (!quill) return;
 
@@ -595,10 +601,13 @@ const TeacherPage = () => {
       const isEditorA = editorA?.contains(document.activeElement);
       const isEditorB = editorB?.contains(document.activeElement);
       // console.log("Editor A:", quillRefHomeWorkCreate.current?.getEditor().hasFocus(), isEditorA);
-      // console.log("Editor B:", editorB);
+      // console.log(editorA, editorB);
       // console.log(editingHomeWork);
-
-      if (!editingHomeWork) {
+      const isHomeworkDescriptionCreate =
+        document.activeElement.parentElement.parentElement.id === "HomeworkDescriptionCreate";
+      const isHomeworkDescriptionUpdate =
+        document.activeElement.parentElement.parentElement.id === "HomeworkDescriptionUpdate";
+      if (!editingHomeWork && isHomeworkDescriptionCreate) {
         const quill = quillRefHomeWorkCreate.current?.getEditor();
         if (!quill) return;
 
@@ -664,7 +673,7 @@ const TeacherPage = () => {
           }
         };
         handlePaste(e);
-      } else if (editingHomeWork) {
+      } else if (editingHomeWork && isHomeworkDescriptionUpdate) {
         const quill = quillRefHomeWorkUpdate.current?.getEditor();
         if (!quill) return;
 
@@ -875,12 +884,14 @@ const TeacherPage = () => {
     setSelectedStudents([]);
     setAllStudentsSelected(false);
     setAssignmentModal(true);
+    setIsLessonCreate(true);
   };
 
   const openHomeworkModal = () => {
     setSelectedStudents([]);
     setAllStudentsSelected(false);
     setHomeworkModal(true);
+    setIsLessonCreate(false);
   };
 
   const checkClassScheduleForToday = () => {
@@ -1165,12 +1176,12 @@ const TeacherPage = () => {
     };
     fetchLevels();
   }, [teacherId]);
-
+  useEffect(() => {
+    fetchContentData();
+  }, []);
   useEffect(() => {
     if (selectedClass) {
       fetchLessonByScheduleAndLessonByLevel();
-
-      fetchContentData();
     }
   }, [selectedClass, loadingCreateHomeWork, loadingCreateLesson]);
 
@@ -1473,7 +1484,9 @@ const TeacherPage = () => {
             {/* Help/Question Icon */}
             <Button
               type="text"
-              onClick={handleViewNotification}
+              onClick={() => {
+                window.open(contentData?.centerZaloLink || "https://chat.zalo.me/");
+              }}
               style={{
                 marginRight: 12,
                 color: colors.darkGreen,
@@ -1816,6 +1829,7 @@ const TeacherPage = () => {
               onEnterScores={handleEnterTestScores}
               onAttendanceCheck={handleAttendanceCheck}
               setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
+              // setIsLessonCreate = {setIsLessonCreate}
             />
 
             {/* Social Buttons */}
@@ -2143,12 +2157,48 @@ const TeacherPage = () => {
       <Modal
         title="Nội dung bài học"
         open={assignmentModal}
-        onCancel={() => setAssignmentModal(false)}
+        onCancel={() => {
+          if (quillRefLessonCreate.current) {
+            const editor = quillRefLessonCreate.current.getEditor();
+            editor.setContents([]);
+          }
+          if (quillRefLessonPlanCreate.current) {
+            const editor = quillRefLessonPlanCreate.current.getEditor();
+            editor.setContents([]);
+          }
+          if (quillRefLessonUpdate.current) {
+            const editor = quillRefLessonUpdate.current.getEditor();
+            editor.setContents([]);
+          }
+          if (quillRefLessonPlanUpdate.current) {
+            const editor = quillRefLessonPlanUpdate.current.getEditor();
+            editor.setContents([]);
+          }
+          setAssignmentModal(false);
+        }}
         footer={[
           <Button
             style={{ marginTop: "20px" }}
             key="close"
-            onClick={() => setAssignmentModal(false)}
+            onClick={() => {
+              if (quillRefLessonCreate.current) {
+                const editor = quillRefLessonCreate.current.getEditor();
+                editor.setContents([]);
+              }
+              if (quillRefLessonPlanCreate.current) {
+                const editor = quillRefLessonPlanCreate.current.getEditor();
+                editor.setContents([]);
+              }
+              if (quillRefLessonUpdate.current) {
+                const editor = quillRefLessonUpdate.current.getEditor();
+                editor.setContents([]);
+              }
+              if (quillRefLessonPlanUpdate.current) {
+                const editor = quillRefLessonPlanUpdate.current.getEditor();
+                editor.setContents([]);
+              }
+              setAssignmentModal(false);
+            }}
           >
             Đóng
           </Button>,
@@ -2270,9 +2320,33 @@ const TeacherPage = () => {
       <Modal
         title="Quản lý bài tập"
         open={homeworkModal}
-        onCancel={() => setHomeworkModal(false)}
+        onCancel={() => {
+          if (quillRefHomeWorkCreate.current) {
+            const editor = quillRefHomeWorkCreate.current.getEditor();
+            editor.setContents([]);
+          }
+          if (quillRefHomeWorkUpdate.current) {
+            const editor = quillRefHomeWorkUpdate.current.getEditor();
+            editor.setContents([]);
+          }
+          setHomeworkModal(false);
+        }}
         footer={[
-          <Button style={{ marginTop: "20px" }} key="close" onClick={() => setHomeworkModal(false)}>
+          <Button
+            style={{ marginTop: "20px" }}
+            key="close"
+            onClick={() => {
+              if (quillRefHomeWorkCreate.current) {
+                const editor = quillRefHomeWorkCreate.current.getEditor();
+                editor.setContents([]);
+              }
+              if (quillRefHomeWorkUpdate.current) {
+                const editor = quillRefHomeWorkUpdate.current.getEditor();
+                editor.setContents([]);
+              }
+              setHomeworkModal(false);
+            }}
+          >
             Đóng
           </Button>,
         ]}

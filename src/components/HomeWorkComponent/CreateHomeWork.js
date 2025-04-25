@@ -884,6 +884,7 @@ export default function CreateHomeWork({
             >
               {
                 <ReactQuill
+                  id="HomeworkDescriptionCreate"
                   theme="snow"
                   modules={modules}
                   formats={quillFormats}
