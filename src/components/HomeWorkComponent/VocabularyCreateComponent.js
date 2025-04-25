@@ -155,7 +155,7 @@ const VocabularyCreateComponent = ({ isMobile, vocabularyList, setVocabularyList
           id: Date.now(),
           word: values.word,
           // meaning: values.meaning,
-          imageUrl: imageUrl || null,
+          imageUrl: imageUrl || "",
           audioUrl: mp3Url || null,
           audioFile: mp3file || null,
           isNew: true,

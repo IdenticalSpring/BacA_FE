@@ -217,7 +217,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
       setLoadingAddVocabulary(true);
       const formDataForVocabulary = new FormData();
       formDataForVocabulary.append("textToSpeech", values.word);
-      formDataForVocabulary.append("imageUrl", imageUrl || null);
+      formDataForVocabulary.append("imageUrl", imageUrl || "");
       formDataForVocabulary.append("homeworkId", selectedHomeWorkId);
       formDataForVocabulary.append("isStudent", 1);
       // const vocabularies = [];
