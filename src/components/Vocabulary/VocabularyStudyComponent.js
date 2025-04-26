@@ -604,7 +604,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       // console.log(height);
       setCardHeight(height + 10);
     }
-  }, [cardIndex]);
+  }, [cardIndex, vocabularyItems]);
   // Vocabulary item card with swipe functionality
   const VocabularyItemCard = ({ item, index }) => {
     const isActive = index === cardIndex;
@@ -1243,7 +1243,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                           margin: "10px",
                         }}
                         icon={<ImageOutlined style={{ width: "10vw", height: "10vw" }} />}
-                        src={item.imageUrl || ""}
+                        src={item && item.imageUrl}
                       />
                       <Text
                         key={item.id}

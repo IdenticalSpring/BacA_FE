@@ -561,7 +561,7 @@ const VocabularyCreateComponent = ({
                         }}
                       />
                     }
-                    src={item?.imageUrl || ""}
+                    src={item && item?.imageUrl}
                   />
                   <Text
                     key={item?.id}
@@ -757,7 +757,7 @@ const VocabularyCreateComponent = ({
                           }}
                         />
                       }
-                      src={item?.imageUrl}
+                      src={item && item?.imageUrl}
                     />
                     <Text
                       key={item?.id}
