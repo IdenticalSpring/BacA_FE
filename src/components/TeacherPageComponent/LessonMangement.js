@@ -1042,7 +1042,7 @@ export default function LessonMangement({
             {"Gửi bài học"}
           </Button>,
         ]}
-        width={720}
+        width={"90%"}
       >
         <Form
           form={form}

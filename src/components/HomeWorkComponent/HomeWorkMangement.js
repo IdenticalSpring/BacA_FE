@@ -1035,7 +1035,7 @@ export default function HomeWorkMangement({
             {"Gửi bài tập"}
           </Button>,
         ]}
-        width={720}
+        width={"90%"}
       >
         <Form
           form={form}
@@ -1159,6 +1159,7 @@ export default function HomeWorkMangement({
               isMobile={isMobile}
               setVocabularyList={setVocabularyList}
               vocabularyList={vocabularyList}
+              selectedHomeWorkId={selectedHomeWorkId}
             />
           </Form.Item>
           {/* <Form.Item label="Văn bản thành giọng nói">

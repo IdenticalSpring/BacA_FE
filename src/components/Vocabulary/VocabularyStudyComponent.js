@@ -47,7 +47,7 @@ const genderOptions = [
   { label: "Nam", value: 1 },
   { label: "Nữ", value: 0 },
 ];
-const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
+const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) => {
   // States
   const [vocabularyItems, setVocabularyItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +71,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
   const [isRecordingForCreate, setIsRecordingForCreate] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [onOpenManageVocabulary, setOnOpenManageVocabulary] = useState(false);
+  const [cardHeight, setCardHeight] = useState(null);
   // Swipe animation states
   const [cardIndex, setCardIndex] = useState(0);
   const [animation, setAnimation] = useState("");
@@ -217,9 +218,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
       setLoadingAddVocabulary(true);
       const formDataForVocabulary = new FormData();
       formDataForVocabulary.append("textToSpeech", values.word);
-      formDataForVocabulary.append("imageUrl", imageUrl || "");
+      formDataForVocabulary.append("imageUrl", imageUrl || undefined);
       formDataForVocabulary.append("homeworkId", selectedHomeWorkId);
-      formDataForVocabulary.append("isStudent", 1);
+      formDataForVocabulary.append("studentId", studentId);
       // const vocabularies = [];
       // const newVocab = {
       //   // id: Date.now(),
@@ -312,6 +313,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
   useEffect(() => {
     const fetchVocabulary = async () => {
       try {
+        const data = { homeworkId: selectedHomeWorkId, studentId };
         const response = await vocabularyService.getVocabularyByHomworkIdForStudent(
           selectedHomeWorkId
         );
@@ -572,6 +574,16 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
     cardRefs.current = cardRefs.current.slice(0, currentItems.length);
   }, [currentItems]);
   useEffect(() => {
+    setTimeout(() => {
+      const element = cardRefs.current[cardIndex];
+      if (element) {
+        const height = element.offsetHeight;
+        // console.log(height);
+        setCardHeight(height + 10);
+      }
+    }, 800);
+  }, []);
+  useEffect(() => {
     // console.log(cardIndex, audioRefs);
 
     const currentAudio = audioRefs.current[cardIndex];
@@ -585,7 +597,13 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
           });
         }
       }
-    }, 100);
+    }, 800);
+    const element = cardRefs.current[cardIndex];
+    if (element) {
+      const height = element.offsetHeight;
+      // console.log(height);
+      setCardHeight(height + 10);
+    }
   }, [cardIndex]);
   // Vocabulary item card with swipe functionality
   const VocabularyItemCard = ({ item, index }) => {
@@ -782,11 +800,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
                   <div
                     style={{
                       position: "relative",
-                      height: "600px",
-                      maxHeight: "80vh",
+                      height: cardHeight,
+                      // maxHeight: "80vh",
                       margin: "0 auto",
                       maxWidth: "600px",
-                      overflow: "auto",
+                      // overflow: "auto",
                     }}
                   >
                     {/* Cards */}
@@ -884,25 +902,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
                       />
                     </div>
                   </div>
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Button
-                      color="green"
-                      variant="solid"
-                      style={{ width: "200px", height: "70px" }}
-                      onClick={() => {
-                        setOnOpenManageVocabulary(true);
-                      }}
-                    >
-                      Chỉnh sửa
-                    </Button>
-                  </div>
+
                   {/* Card indicator dots */}
                   <div
                     style={{
@@ -959,6 +959,26 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
           `}</style>
         </div>
       )}
+      <Divider style={{ borderColor: colors.lightGreen }} />
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          color="green"
+          variant="solid"
+          style={{ width: "200px", height: "70px" }}
+          onClick={() => {
+            setOnOpenManageVocabulary(true);
+          }}
+        >
+          Thêm từ vựng
+        </Button>
+      </div>
       <Modal
         centered
         title={"Quản lý từ vựng"}
@@ -1180,17 +1200,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
             </Form>
           </Card>
 
-          {vocabularyItems.filter((item) => item.isStudent).length > 0 && (
+          {vocabularyItems.filter((item) => item?.student?.id === studentId).length > 0 && (
             <Card title={<Title level={3}>Danh sách từ vựng</Title>}>
               <List
                 style={{ maxHeight: "40vh", overflowY: "auto" }}
                 itemLayout="horizontal"
-                dataSource={vocabularyItems.filter((item) => item.isStudent)}
+                dataSource={vocabularyItems.filter((item) => item?.student?.id === studentId)}
                 renderItem={(item) => (
                   <List.Item
                     key={item.id}
                     actions={[
-                      item.isStudent && (
+                      item.student && (
                         <Button
                           key={item.id}
                           icon={<DeleteOutlined />}
@@ -1220,7 +1240,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile }) => {
                         style={{
                           width: "15vw",
                           height: "15vw",
-                          marginRight: "10px",
+                          margin: "10px",
                         }}
                         icon={<ImageOutlined style={{ width: "10vw", height: "10vw" }} />}
                         src={item.imageUrl || ""}
@@ -1264,4 +1284,5 @@ VocabularyStudyComponent.propTypes = {
   item: PropTypes.object,
   index: PropTypes.number,
   isMobile: PropTypes.bool,
+  studentId: PropTypes.number,
 };

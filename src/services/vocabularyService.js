@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const vocabularyService = {
   getAllVocabulary: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/vocabularies`, {
+      const response = await axios.get(`${API_BASE_URL}/vocabularies/student/`, {
         headers: {
           "ngrok-skip-browser-warning": "true",
         },
@@ -16,11 +16,14 @@ const vocabularyService = {
   },
   getVocabularyByHomworkId: async (homeworkId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/vocabularies/homework/${homeworkId}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}/vocabularies/student/homework/${homeworkId}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching vocabularies";
@@ -28,7 +31,7 @@ const vocabularyService = {
   },
   getVocabularyById: async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/vocabularies/${id}`, {
+      const response = await axios.get(`${API_BASE_URL}/vocabularies/student/${id}`, {
         headers: {
           "ngrok-skip-browser-warning": "true",
         },
@@ -60,6 +63,18 @@ const vocabularyService = {
           },
         }
       );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching vocabularies";
+    }
+  },
+  getVocabularyByHomworkIdAndStudentIdForStudent: async (data) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/vocabularies/student/homework/`, data, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error fetching vocabularies";
