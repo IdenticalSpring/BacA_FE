@@ -669,7 +669,9 @@ const VocabularyCreateComponent = ({
                       // setSelectedStudentId(item[0]?.student?.id || 0);
                       setOpenDetailVocabularies(true);
                       setDeleteForStudentFlag(true);
-                      handleFetchVocabulariesForStudent(item[0]?.student?.id || 0);
+                      if (item) {
+                        handleFetchVocabulariesForStudent(item[0]?.student?.id || 0);
+                      }
                       setSelectedStudentName(item && item[0]?.student?.name);
                     }}
                     icon={<EyeOutlined style={{ fontSize: "20px" }} />}
