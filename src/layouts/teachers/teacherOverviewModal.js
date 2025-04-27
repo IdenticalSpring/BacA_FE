@@ -2782,6 +2782,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 isMobile={isMobile}
                 setVocabularyList={setVocabularyList}
                 vocabularyList={vocabularyList}
+                selectedHomeWorkId={selectedHomeWorkId}
               />
             </Form.Item>
             {/* <Form.Item label="Văn bản thành giọng nói">
