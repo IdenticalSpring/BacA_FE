@@ -182,7 +182,19 @@ export default function LessonMangement({
   const [loadingEnhanceLessonPlan, setLoadingEnhanceLessonPlan] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [dataSearch, setDataSearch] = useState([]);
-
+  const [voices, setVoices] = useState(null);
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const resData = await homeWorkService.voices();
+        setVoices(resData);
+        setGender(resData ? resData[0] : null);
+      } catch (error) {
+        message.error("voices fetch failed");
+      }
+    };
+    fetchVoices();
+  }, []);
   useEffect(() => {
     if (searchText === "") {
       setDataSearch(lessons);
@@ -288,7 +300,7 @@ export default function LessonMangement({
     setLoadingTTSForUpdateLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
 
       let base64String = response;
 
@@ -316,7 +328,7 @@ export default function LessonMangement({
   useEffect(() => {
     if (mp3Url) {
       // console.log("🔄 Cập nhật audio URL:", mp3Url);
-      const audioElement = document.getElementById("audio-player");
+      const audioElement = document.getElementById("audio-player-update");
       if (audioElement) {
         audioElement.src = ""; // Xóa src để tránh giữ URL cũ
         audioElement.load(); // Tải lại audio
@@ -1264,10 +1276,12 @@ export default function LessonMangement({
           </Form.Item>
           <Form.Item>
             <Radio.Group
-              options={genderOptions}
+              options={voices?.map((item) => {
+                return { label: item?.split("_")[1], value: item };
+              })}
               onChange={onChangeGender}
               value={gender}
-              optionType="button"
+              // optionType="button"
             />
           </Form.Item>
           <Form.Item>
@@ -1286,7 +1300,7 @@ export default function LessonMangement({
           {mp3Url && (
             <Form.Item>
               <div style={{ marginBottom: "16px" }}>
-                <audio id="audio-player" controls style={{ width: "100%" }}>
+                <audio id="audio-player-update" controls style={{ width: "100%" }}>
                   <source src={mp3Url} type="audio/mp3" />
                   Your browser does not support the audio element.
                 </audio>

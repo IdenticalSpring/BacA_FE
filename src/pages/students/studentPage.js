@@ -1117,7 +1117,7 @@ const StudentPage = () => {
                 alignItems: "center",
                 gap: "10px",
                 position: "fixed",
-                bottom: "20px",
+                bottom: "60px",
                 right: "20px",
                 flexDirection: "column",
               }}

@@ -73,6 +73,19 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   const [onOpenManageVocabulary, setOnOpenManageVocabulary] = useState(false);
   const [cardHeight, setCardHeight] = useState(null);
   const [studentCardHeight, setStudentCardHeight] = useState(null);
+  const [voices, setVoices] = useState(null);
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const resData = await homeWorkService.voices();
+        setVoices(resData);
+        setGender(resData ? resData[0] : null);
+      } catch (error) {
+        message.error("voices fetch failed");
+      }
+    };
+    fetchVoices();
+  }, []);
   // Swipe animation states
   const [cardIndex, setCardIndex] = useState(0);
   const [cardIndexForStudent, setCardIndexForStudent] = useState(0);
@@ -211,7 +224,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
     setLoadingTTS(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
 
       let base64String = response;
       // console.log(response);
@@ -1702,10 +1715,12 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
               <Form.Item>
                 <Radio.Group
-                  options={genderOptions}
+                  options={voices?.map((item) => {
+                    return { label: item?.split("_")[1], value: item };
+                  })}
                   onChange={onChangeGender}
                   value={gender}
-                  optionType="button"
+                  // optionType="button"
                 />
               </Form.Item>
 

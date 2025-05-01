@@ -87,13 +87,13 @@ const homeWorkService = {
       throw error.response?.data?.message || "Error deleting homework";
     }
   },
-  textToSpeech: async ({ textToSpeech, gender }) => {
+  textToSpeech: async ({ textToSpeech, voice }) => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/homeworks/textToSpeech`,
         {
           textToSpeech,
-          gender,
+          voice,
         },
         {
           headers: {
@@ -101,6 +101,16 @@ const homeWorkService = {
           },
         }
       );
+      // console.log(response);
+
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error deleting homework";
+    }
+  },
+  voices: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/homeworks/textToSpeech/voices`);
       // console.log(response);
 
       return response.data;

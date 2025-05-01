@@ -244,6 +244,19 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   const [gameLinks, setGameLinks] = useState([]);
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
+  const [voices, setVoices] = useState(null);
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const resData = await homeWorkService.voices();
+        setVoices(resData);
+        setGender(resData ? resData[0] : null);
+      } catch (error) {
+        message.error("voices fetch failed");
+      }
+    };
+    fetchVoices();
+  }, []);
   const toolbar = [
     [{ font: [] }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -962,7 +975,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
     setLoadingTTSForUpdateLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
 
       let base64String = response;
 
@@ -1889,7 +1902,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
     setLoadingTTSForUpdateHomeWork(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
 
       let base64String = response;
 
@@ -2478,10 +2491,12 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
             </Form.Item>
             <Form.Item>
               <Radio.Group
-                options={genderOptions}
+                options={voices?.map((item) => {
+                  return { label: item?.split("_")[1], value: item };
+                })}
                 onChange={onChangeGender}
                 value={gender}
-                optionType="button"
+                // optionType="button"
               />
             </Form.Item>
             <Form.Item>

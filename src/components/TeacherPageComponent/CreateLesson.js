@@ -180,7 +180,19 @@ export default function CreateLesson({
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
   const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
   const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
-
+  const [voices, setVoices] = useState(null);
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const resData = await homeWorkService.voices();
+        setVoices(resData);
+        setGender(resData ? resData[0] : null);
+      } catch (error) {
+        message.error("voices fetch failed");
+      }
+    };
+    fetchVoices();
+  }, []);
   const onChangeGender = ({ target: { value } }) => {
     console.log("radio3 checked", value);
     setGender(value);
@@ -703,7 +715,7 @@ export default function CreateLesson({
     setLoadingTTSLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
       let base64String = response;
 
       function base64ToBlob(base64, mimeType) {
@@ -994,10 +1006,12 @@ export default function CreateLesson({
             </Form.Item>
             <Form.Item>
               <Radio.Group
-                options={genderOptions}
+                options={voices?.map((item) => {
+                  return { label: item?.split("_")[1], value: item };
+                })}
                 onChange={onChangeGender}
                 value={gender}
-                optionType="button"
+                // optionType="button"
               />
             </Form.Item>
             <Form.Item>

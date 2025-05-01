@@ -58,6 +58,19 @@ const VocabularyCreateComponent = ({
   const [selectedStudentVocabularies, setSelectedStudentVocabularies] = useState([]);
   const [deleteForStudentFlag, setDeleteForStudentFlag] = useState(false);
   const [isLoadingStudentVocabularies, setIsLoadingStudentVocabularies] = useState(false);
+  const [voices, setVoices] = useState(null);
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const resData = await homeWorkService.voices();
+        setVoices(resData);
+        setGender(resData ? resData[0] : null);
+      } catch (error) {
+        message.error("voices fetch failed");
+      }
+    };
+    fetchVoices();
+  }, []);
   // Speech to text hook
   const {
     error: speechError,
@@ -111,7 +124,7 @@ const VocabularyCreateComponent = ({
     setLoadingTTS(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
+      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
 
       let base64String = response;
       // console.log(response);
@@ -454,10 +467,12 @@ const VocabularyCreateComponent = ({
 
           <Form.Item>
             <Radio.Group
-              options={genderOptions}
+              options={voices?.map((item) => {
+                return { label: item?.split("_")[1], value: item };
+              })}
               onChange={onChangeGender}
               value={gender}
-              optionType="button"
+              // optionType="button"
             />
           </Form.Item>
 
