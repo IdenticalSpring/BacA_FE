@@ -14,6 +14,7 @@ import {
   Radio,
   Modal,
   Avatar,
+  Select,
 } from "antd";
 import {
   AudioOutlined,
@@ -33,6 +34,7 @@ import homeWorkService from "services/homeWorkService";
 import PropTypes from "prop-types";
 import vocabularyService from "services/vocabularyService";
 import { ImageOutlined } from "@mui/icons-material";
+import { useSpeechRecognition } from "react-speech-kit";
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
@@ -87,7 +89,27 @@ const VocabularyCreateComponent = ({
       interimResults: true,
     },
   });
-
+  const onError = (event) => {
+    if (event.error === "not-allowed") {
+      // setBlocked(true);
+      message.error(" Oh no, it looks like your browser doesn&#39;t support Speech Recognition.");
+    }
+  };
+  const onResult = (result) => {
+    // console.log(result);
+    setTextToSpeech((prev) => prev + " " + result);
+  };
+  useEffect(() => {
+    form.setFieldsValue({ word: textToSpeech });
+  }, [textToSpeech]);
+  const { listen, listening, stop, supported } = useSpeechRecognition({
+    // onResult: (result) => {
+    //   // console.log(result);
+    //   setResultSTT((prev) => prev + " " + result);
+    // },
+    onResult,
+    onError,
+  });
   // Gender options for text-to-speech
   const genderOptions = [
     { label: "Nam", value: 1 },
@@ -114,8 +136,8 @@ const VocabularyCreateComponent = ({
   // console.log(groupedByStudent);
 
   // Handle gender change
-  const onChangeGender = (e) => {
-    setGender(e.target.value);
+  const onChangeGender = (value) => {
+    setGender(value);
   };
 
   // Handle text-to-speech conversion
@@ -307,26 +329,26 @@ const VocabularyCreateComponent = ({
   };
 
   // Update form when speech is recognized
-  useEffect(() => {
-    if (speechResults.length > 0) {
-      const lastResult = speechResults[speechResults.length - 1].transcript;
-      setTextToSpeech(textToSpeech + lastResult);
-      form.setFieldsValue({ word: textToSpeech + lastResult });
-    }
-  }, [speechResults, form]);
-  useEffect(() => {
-    let timeout;
+  // useEffect(() => {
+  //   if (speechResults.length > 0) {
+  //     const lastResult = speechResults[speechResults.length - 1].transcript;
+  //     setTextToSpeech(textToSpeech + lastResult);
+  //     form.setFieldsValue({ word: textToSpeech + lastResult });
+  //   }
+  // }, [speechResults, form]);
+  // useEffect(() => {
+  //   let timeout;
 
-    timeout = setTimeout(() => {
-      if (!isRecording && isManualRecording) {
-        console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecording);
-        startSpeechToText();
-        setTextToSpeech(textToSpeech + " ");
-        form.setFieldsValue({ word: textToSpeech + " " });
-      }
-    }, 500); // Delay nhẹ để tránh race condition
-    return () => clearTimeout(timeout);
-  }, [isRecording, isManualRecording]);
+  //   timeout = setTimeout(() => {
+  //     if (!isRecording && isManualRecording) {
+  //       console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecording);
+  //       startSpeechToText();
+  //       setTextToSpeech(textToSpeech + " ");
+  //       form.setFieldsValue({ word: textToSpeech + " " });
+  //     }
+  //   }, 500); // Delay nhẹ để tránh race condition
+  //   return () => clearTimeout(timeout);
+  // }, [isRecording, isManualRecording]);
   const colors = {
     deepGreen: "#389e0d",
     inputBorder: "#d9d9d9",
@@ -334,18 +356,19 @@ const VocabularyCreateComponent = ({
 
   // Handle speech to text specific for meaning field
   const handleSpeechForMeaning = () => {
-    if (speechError) {
+    if (!supported) {
       message.error(
         "Web Speech API không được hỗ trợ cho trình duyệt này vui lòng tải google chrome để sử dụng 🤷"
       );
+      return;
     }
-    if (isRecording) {
-      stopSpeechToText();
+    if (listening) {
+      stop();
       setIsManualRecording(false);
-      const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
-      form.setFieldsValue({ meaning: lastResult });
+      // const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
+      // form.setFieldsValue({ meaning: lastResult });
     } else {
-      startSpeechToText();
+      listen({ lang: "en-AU", interimResults: false });
       setIsManualRecording(true);
       setTextToSpeech("");
       form.setFieldsValue({ word: "" });
@@ -429,7 +452,12 @@ const VocabularyCreateComponent = ({
           </Form.Item> */}
 
           <Divider orientation="left">Hình ảnh</Divider>
-
+          <style>{`
+                .ant-upload-select {
+                  width: 90px !important;
+                  height: 90px !important;
+                }
+              `}</style>
           <Form.Item>
             <Upload
               name="avatar"
@@ -465,7 +493,7 @@ const VocabularyCreateComponent = ({
             />
           </Form.Item> */}
 
-          <Form.Item>
+          {/* <Form.Item>
             <Radio.Group
               options={voices?.map((item) => {
                 return { label: item?.split("_")[1], value: item };
@@ -474,8 +502,23 @@ const VocabularyCreateComponent = ({
               value={gender}
               // optionType="button"
             />
+          </Form.Item> */}
+          <style>{`
+            .ant-select-dropdown{
+            z-index: 10000000000 !important;
+            }
+          `}</style>
+          <Form.Item>
+            <Select
+              style={{ width: "50%" }}
+              value={gender}
+              onChange={onChangeGender}
+              placeholder="Chọn giọng"
+              options={voices?.map((item) => {
+                return { label: item?.split("_")[1], value: item };
+              })}
+            />
           </Form.Item>
-
           <Form.Item>
             <Button
               type="primary"

@@ -20,6 +20,7 @@ import {
   Form,
   Modal,
   Avatar,
+  Select,
 } from "antd";
 import {
   AudioOutlined,
@@ -41,6 +42,7 @@ import { colors } from "assets/theme/color";
 import vocabularyService from "services/vocabularyService";
 import homeWorkService from "services/homeWorkService";
 import { ImageOutlined } from "@mui/icons-material";
+import { useSpeechRecognition } from "react-speech-kit";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 const genderOptions = [
@@ -211,9 +213,26 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
     },
   });
   // console.log(speechResults);
-
-  const onChangeGender = (e) => {
-    setGender(e.target.value);
+  const onError = (event) => {
+    if (event.error === "not-allowed") {
+      // setBlocked(true);
+      message.error(" Oh no, it looks like your browser doesn&#39;t support Speech Recognition.");
+    }
+  };
+  const onResult = (result) => {
+    // console.log(result);
+    setResultSTT((prev) => prev + " " + result);
+  };
+  const { listen, listening, stop, supported } = useSpeechRecognition({
+    // onResult: (result) => {
+    //   // console.log(result);
+    //   setResultSTT((prev) => prev + " " + result);
+    // },
+    onResult,
+    onError,
+  });
+  const onChangeGender = (value) => {
+    setGender(value);
   };
   const handleWordChange = (e) => {
     setTextToSpeech(e.target.value);
@@ -395,57 +414,57 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   }, []);
 
   // Handle speech to text
-  useEffect(() => {
-    if (speechResults.length > 0) {
-      const lastResult = speechResults[speechResults.length - 1].transcript;
-      setCurrentText(lastResult);
-    }
-  }, [speechResults]);
+  // useEffect(() => {
+  //   if (speechResults.length > 0) {
+  //     const lastResult = speechResults[speechResults.length - 1].transcript;
+  //     setCurrentText(lastResult);
+  //   }
+  // }, [speechResults]);
 
-  useEffect(() => {
-    let timeout;
+  // useEffect(() => {
+  //   let timeout;
 
-    timeout = setTimeout(() => {
-      if (!isRecording && isManualRecording) {
-        startSpeechToText();
-        setResultSTT(resultSTT + " ");
-      }
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [isRecording, isManualRecording]);
+  //   timeout = setTimeout(() => {
+  //     if (!isRecording && isManualRecording) {
+  //       startSpeechToText();
+  //       setResultSTT(resultSTT + " ");
+  //     }
+  //   }, 500);
+  //   return () => clearTimeout(timeout);
+  // }, [isRecording, isManualRecording]);
 
-  // Toggle speech recognition
-  const toggleSpeechToText = () => {
-    if (isRecording) {
-      stopSpeechToText();
-    } else {
-      startSpeechToText();
-    }
-  };
+  // // Toggle speech recognition
+  // const toggleSpeechToText = () => {
+  //   if (isRecording) {
+  //     stopSpeechToText();
+  //   } else {
+  //     startSpeechToText();
+  //   }
+  // };
 
-  useEffect(() => {
-    if (speechResults.length > 0 && !isRecordingForCreate) {
-      const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
-      setResultSTT(resultSTT + lastResult);
-    }
-  }, [speechResults]);
+  // useEffect(() => {
+  //   if (speechResults.length > 0 && !isRecordingForCreate) {
+  //     const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
+  //     setResultSTT(resultSTT + lastResult);
+  //   }
+  // }, [speechResults]);
 
   const handleSpeechForMeaning = (itemId) => {
-    if (speechError) {
+    if (!supported) {
       message.error(
         "Web Speech API không được hỗ trợ cho trình duyệt này vui lòng tải google chrome để sử dụng 🤷"
       );
       return;
     }
-    if (isRecording) {
-      stopSpeechToText();
+    if (listening) {
+      stop();
       setActiveRecordingId(null);
       setIsManualRecording(false);
       setResultSTT("");
       // speechResults = [];
     } else {
       setActiveRecordingId(itemId);
-      startSpeechToText();
+      listen({ lang: "en-AU", interimResults: false });
       setIsManualRecording(true);
     }
   };
@@ -477,7 +496,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       stopSpeechToText();
       setIsManualRecordingCreate(false);
       setIsRecordingForCreate(false);
-      const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
+      // const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
       // form.setFieldsValue({ meaning: lastResult });
       setResultSTT("");
     } else {
@@ -923,6 +942,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                   <AudioOutlined />
                 )
               }
+              disabled={!supported}
               onClick={() => handleSpeechForMeaning(item.id)}
             />
           </div>
@@ -1067,6 +1087,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                   <AudioOutlined />
                 )
               }
+              disabled={!supported}
               onClick={() => handleSpeechForMeaning(item.id)}
             />
           </div>
@@ -1678,15 +1699,21 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
             <TextArea rows={3} placeholder="Nhập ý nghĩa của từ" style={{ borderRadius: "6px" }} />
           </Form.Item> */}
               <Divider orientation="left">Hình ảnh</Divider>
-
+              <style>{`
+                .ant-upload-select {
+                  width: 90px !important;
+                  height: 90px !important;
+                }
+              `}</style>
               <Form.Item>
                 <Upload
                   name="avatar"
                   listType="picture-card"
-                  className="avatar-uploader"
+                  // className="avatar-uploader"
                   showUploadList={false}
                   action={process.env.REACT_APP_API_BASE_URL + "/upload/avatar"}
                   onChange={handleImageUpload}
+                  // style={{ width: 10, height: 10 }}
                 >
                   {imageUrl ? (
                     <img src={imageUrl} alt="vocabulary" style={{ width: "100%" }} />
@@ -1713,7 +1740,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               />
             </Form.Item> */}
 
-              <Form.Item>
+              {/* <Form.Item>
                 <Radio.Group
                   options={voices?.map((item) => {
                     return { label: item?.split("_")[1], value: item };
@@ -1722,8 +1749,18 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                   value={gender}
                   // optionType="button"
                 />
+              </Form.Item> */}
+              <Form.Item>
+                <Select
+                  style={{ width: "50%" }}
+                  value={gender}
+                  onChange={onChangeGender}
+                  placeholder="Chọn giọng"
+                  options={voices?.map((item) => {
+                    return { label: item?.split("_")[1], value: item };
+                  })}
+                />
               </Form.Item>
-
               <Form.Item>
                 <Button
                   type="primary"
