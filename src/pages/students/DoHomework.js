@@ -25,6 +25,7 @@ import {
   BookOutlined,
   ArrowLeftOutlined,
   SearchOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import classService from "services/classService";
 import { colors } from "assets/theme/color";
@@ -202,12 +203,38 @@ export default function DoHomework() {
             alignItems: "center",
             height: "100%",
             color: colors.white,
+            justifyContent: "space-between",
           }}
         >
-          <BookOutlined style={{ fontSize: "24px", marginRight: "12px" }} />
-          <Title level={3} style={{ color: colors.white, margin: 0 }}>
-            Homework Portal
-          </Title>
+          <div
+            style={{
+              width: "50%",
+              display: "flex",
+              alignItems: "center",
+              flexGrow: 1,
+            }}
+          >
+            <BookOutlined style={{ fontSize: "24px", marginRight: "12px" }} />
+            <Title level={3} style={{ color: colors.white, margin: 0 }}>
+              Homework Portal
+            </Title>
+          </div>
+          <div style={{ color: "white" }}>
+            <Button
+              type="primary"
+              icon={<HomeOutlined />}
+              onClick={() => navigate("/")}
+              style={{
+                backgroundColor: "#368A68",
+                borderColor: "#368A68",
+                color: "white",
+                fontWeight: "bold",
+                height: "100%",
+              }}
+            >
+              Home Page
+            </Button>
+          </div>
         </div>
       </Header>
 

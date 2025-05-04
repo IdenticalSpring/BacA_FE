@@ -155,7 +155,7 @@ export default function Homepage() {
     }
   `;
   const navigateToStudentLogin = () => {
-    navigate("/login/student");
+    navigate("/do-homework");
   };
 
   const navigateToTeacherLogin = () => {

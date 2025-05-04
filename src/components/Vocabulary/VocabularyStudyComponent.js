@@ -925,7 +925,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               placeholder="Luyện nói"
               readOnly
               value={(isManualRecording && activeRecordingId === item.id && resultSTT) || ""}
-              autoSize={{ minRows: 1, maxRows: 2 }}
+              autoSize={{ minRows: 1, maxRows: 6 }}
               style={{
                 flex: 1,
                 borderRadius: "6px",
