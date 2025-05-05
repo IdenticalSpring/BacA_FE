@@ -21,7 +21,7 @@ import teacherFeedbackService from "services/teacherFeedbackService";
 import { colors } from "assets/theme/color";
 import TextField from "@mui/material/TextField";
 import TextArea from "antd/es/input/TextArea";
-import { Button as AntButton, Button, Form, Input, message, Radio, Table, Tag } from "antd";
+import { Button as AntButton, Button, Form, Input, message, Radio, Select, Table, Tag } from "antd";
 import ReactQuill, { Quill } from "react-quill";
 import axios from "axios";
 import levelService from "services/levelService";
@@ -863,8 +863,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
 
   const fileUrls = teacher?.fileUrl ? teacher.fileUrl.split(",") : [];
 
-  const onChangeGender = ({ target: { value } }) => {
-    console.log("radio3 checked", value);
+  const onChangeGender = (value) => {
     setGender(value);
   };
   const handleDeleteLesson = async (id) => {
@@ -2489,14 +2488,20 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 }}
               />
             </Form.Item>
+            <style>{`
+            .ant-select-dropdown{
+            z-index: 10000000000 !important;
+            }
+          `}</style>
             <Form.Item>
-              <Radio.Group
+              <Select
+                style={{ width: "50%" }}
+                value={gender}
+                onChange={onChangeGender}
+                placeholder="Chọn giọng"
                 options={voices?.map((item) => {
                   return { label: item?.split("_")[1], value: item };
                 })}
-                onChange={onChangeGender}
-                value={gender}
-                // optionType="button"
               />
             </Form.Item>
             <Form.Item>

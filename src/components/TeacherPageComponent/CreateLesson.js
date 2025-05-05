@@ -193,8 +193,7 @@ export default function CreateLesson({
     };
     fetchVoices();
   }, []);
-  const onChangeGender = ({ target: { value } }) => {
-    console.log("radio3 checked", value);
+  const onChangeGender = (value) => {
     setGender(value);
   };
 
@@ -1004,14 +1003,20 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
+            <style>{`
+            .ant-select-dropdown{
+            z-index: 10000000000 !important;
+            }
+          `}</style>
             <Form.Item>
-              <Radio.Group
+              <Select
+                style={{ width: "50%" }}
+                value={gender}
+                onChange={onChangeGender}
+                placeholder="Chọn giọng"
                 options={voices?.map((item) => {
                   return { label: item?.split("_")[1], value: item };
                 })}
-                onChange={onChangeGender}
-                value={gender}
-                // optionType="button"
               />
             </Form.Item>
             <Form.Item>
