@@ -299,7 +299,11 @@ export default function LessonMangement({
     setLoadingTTSForUpdateLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
+      const modifiedText = textToSpeech.replace(/\n/g, "..");
+      const response = await homeWorkService.textToSpeech({
+        textToSpeech: modifiedText,
+        voice: gender,
+      });
 
       let base64String = response;
 

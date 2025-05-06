@@ -974,7 +974,11 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
     setLoadingTTSForUpdateLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
+      const modifiedText = textToSpeech.replace(/\n/g, "..");
+      const response = await homeWorkService.textToSpeech({
+        textToSpeech: modifiedText,
+        voice: gender,
+      });
 
       let base64String = response;
 
@@ -2803,6 +2807,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 setVocabularyList={setVocabularyList}
                 vocabularyList={vocabularyList}
                 selectedHomeWorkId={selectedHomeWorkId}
+                audioId={"audio-player-update"}
               />
             </Form.Item>
             {/* <Form.Item label="Văn bản thành giọng nói">

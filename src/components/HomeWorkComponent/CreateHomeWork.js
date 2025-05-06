@@ -981,6 +981,7 @@ export default function CreateHomeWork({
                 isMobile={isMobile}
                 setVocabularyList={setVocabularyList}
                 vocabularyList={vocabularyList}
+                audioId={"audio-player-create"}
               />
             </Form.Item>
             {/* <div style={{ marginBottom: "16px" }}>

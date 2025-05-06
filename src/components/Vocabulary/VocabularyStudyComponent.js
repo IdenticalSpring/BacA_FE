@@ -243,7 +243,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
     setLoadingTTS(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
+      const modifiedText = textToSpeech.replace(/\n/g, "..");
+      const response = await homeWorkService.textToSpeech({
+        textToSpeech: modifiedText,
+        voice: gender,
+      });
 
       let base64String = response;
       // console.log(response);

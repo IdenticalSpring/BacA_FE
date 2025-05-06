@@ -43,6 +43,7 @@ const VocabularyCreateComponent = ({
   vocabularyList,
   setVocabularyList,
   selectedHomeWorkId,
+  audioId,
 }) => {
   // States
   const [form] = Form.useForm();
@@ -110,6 +111,8 @@ const VocabularyCreateComponent = ({
     onResult,
     onError,
   });
+  // console.log(textToSpeech);
+
   // Gender options for text-to-speech
   const genderOptions = [
     { label: "Nam", value: 1 },
@@ -146,7 +149,11 @@ const VocabularyCreateComponent = ({
     setLoadingTTS(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
+      const modifiedText = textToSpeech.replace(/\n/g, "..");
+      const response = await homeWorkService.textToSpeech({
+        textToSpeech: modifiedText,
+        voice: gender,
+      });
 
       let base64String = response;
       // console.log(response);
@@ -173,7 +180,7 @@ const VocabularyCreateComponent = ({
       // console.log(audioBlob);
 
       // if (mp3Url) {
-      //   const audioElement = document.getElementById("audio-player");
+      //   const audioElement = document.getElementById(audioId);
       //   if (audioElement) {
       //     audioElement.src = ""; // Xóa src trước khi revoke
       //     audioElement.load(); // Yêu cầu cập nhật
@@ -193,7 +200,7 @@ const VocabularyCreateComponent = ({
   useEffect(() => {
     if (mp3Url) {
       // console.log("🔄 Cập nhật audio URL:", mp3Url);
-      const audioElement = document.getElementById("audio-player");
+      const audioElement = document.getElementById(audioId);
       if (audioElement) {
         audioElement.src = ""; // Xóa src để tránh giữ URL cũ
         audioElement.load(); // Tải lại audio
@@ -537,7 +544,7 @@ const VocabularyCreateComponent = ({
           {mp3Url && (
             <Form.Item>
               <div style={{ marginBottom: "16px" }}>
-                <audio id="audio-player" controls style={{ width: "100%" }}>
+                <audio id={audioId} controls style={{ width: "100%" }}>
                   <source src={mp3Url} type="audio/mp3" />
                   Your browser does not support the audio element.
                 </audio>
@@ -857,4 +864,5 @@ VocabularyCreateComponent.propTypes = {
   vocabularyList: PropTypes.array.isRequired,
   setVocabularyList: PropTypes.func.isRequired,
   selectedHomeWorkId: PropTypes.number.isRequired,
+  audioId: PropTypes.string.isRequired,
 };

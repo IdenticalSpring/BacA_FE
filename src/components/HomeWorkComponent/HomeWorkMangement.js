@@ -1160,6 +1160,7 @@ export default function HomeWorkMangement({
               setVocabularyList={setVocabularyList}
               vocabularyList={vocabularyList}
               selectedHomeWorkId={selectedHomeWorkId}
+              audioId={"audio-player-update"}
             />
           </Form.Item>
           {/* <Form.Item label="Văn bản thành giọng nói">
