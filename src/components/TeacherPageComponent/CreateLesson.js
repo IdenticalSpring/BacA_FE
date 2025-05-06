@@ -709,12 +709,47 @@ export default function CreateLesson({
         console.error("Validation failed:", err);
       });
   };
+  // const handleConvertToSpeech = async () => {
+  //   if (!textToSpeech) return;
+  //   setLoadingTTSLesson(true);
+
+  //   try {
+  //     const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
+  //     let base64String = response;
+
+  //     function base64ToBlob(base64, mimeType) {
+  //       let byteCharacters = atob(base64);
+  //       let byteNumbers = new Array(byteCharacters.length);
+  //       for (let i = 0; i < byteCharacters.length; i++) {
+  //         byteNumbers[i] = byteCharacters.charCodeAt(i);
+  //       }
+  //       let byteArray = new Uint8Array(byteNumbers);
+  //       return new Blob([byteArray], { type: mimeType });
+  //     }
+
+  //     let audioBlob = base64ToBlob(base64String, "audio/mp3");
+  //     setMp3file(audioBlob);
+
+  //     let audioUrl = URL.createObjectURL(audioBlob);
+  //     setMp3Url(audioUrl);
+  //   } catch (error) {
+  //     console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+  //   }
+  //   setLoadingTTSLesson(false);
+  // };
+
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) return;
     setLoadingTTSLesson(true);
 
     try {
-      const response = await homeWorkService.textToSpeech({ textToSpeech, voice: gender });
+      // Thay thế tất cả các ký tự xuống dòng (\n) thành '..'
+      const modifiedText = textToSpeech.replace(/\n/g, "..");
+
+      const response = await homeWorkService.textToSpeech({
+        textToSpeech: modifiedText,
+        voice: gender,
+      });
       let base64String = response;
 
       function base64ToBlob(base64, mimeType) {
@@ -734,6 +769,7 @@ export default function CreateLesson({
       setMp3Url(audioUrl);
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+      message.error("Lỗi chuyển văn bản thành giọng nói. Vui lòng thử lại!");
     }
     setLoadingTTSLesson(false);
   };
