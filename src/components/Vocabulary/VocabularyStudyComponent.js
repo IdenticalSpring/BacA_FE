@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Card,
   Typography,
@@ -76,6 +76,8 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   const [cardHeight, setCardHeight] = useState(null);
   const [studentCardHeight, setStudentCardHeight] = useState(null);
   const [voices, setVoices] = useState(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState("");
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -231,6 +233,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
     onResult,
     onError,
   });
+  const handleClickImage = useCallback((imageUrl) => {
+    setPreviewSrc(imageUrl);
+    setPreviewVisible(true);
+    // console.log(imageUrl);
+  }, []);
   const onChangeGender = (value) => {
     setGender(value);
   };
@@ -888,7 +895,10 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                   maxWidth: "100%",
                   maxHeight: "100%",
                   objectFit: "contain",
+                  cursor: "pointer",
                 }}
+                // onClick={handleClickImage(item.imageUrl)}
+                onClick={() => handleClickImage(item.imageUrl)}
               />
             </div>
           )}
@@ -1033,7 +1043,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                   maxWidth: "100%",
                   maxHeight: "100%",
                   objectFit: "contain",
+                  cursor: "pointer",
                 }}
+                onClick={() => handleClickImage(item.imageUrl)}
               />
             </div>
           )}
@@ -1119,7 +1131,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
           marginBottom: "24px",
         }}
       >
-        Luyện đọc
+        Luyện đọc và nói
       </Title>
       {/* <Divider style={{ borderColor: colors.lightGreen }} /> */}
 
@@ -1880,6 +1892,34 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
             </Card>
           )}
         </div>
+      </Modal>
+      <Modal
+        open={previewVisible}
+        onCancel={() => setPreviewVisible(false)}
+        footer={null}
+        style={{ zIndex: 100000000 }}
+        centered
+        width="90%"
+      >
+        <img
+          src={previewSrc}
+          style={{
+            // position: "absolute",
+            // top: "50%",
+            // left: "50%",
+            // transform: "translate(-50%, -50%)",
+            transform: "translateX(-1%)",
+            width: "102%",
+            // height: isMobile ? "auto" : "102%",
+            // height: "100%",
+            borderRadius: "12px",
+            maxWidth: "102%",
+            // maxHeight: "102%",
+            objectFit: "contain",
+            borderRadius: "12px",
+            margin: "0 auto",
+          }}
+        ></img>
       </Modal>
     </>
   );
