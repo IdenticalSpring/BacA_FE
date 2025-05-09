@@ -178,7 +178,7 @@ const Sidebar = ({
                     rowGap: "5px",
                   }}
                 >
-                  <Text
+                  {/* <Text
                     style={{
                       color: isSelected ? colors.darkGreen : colors.darkGray,
                       fontWeight: "600",
@@ -190,7 +190,7 @@ const Sidebar = ({
                     }}
                   >
                     {"Bài học ngày"}
-                  </Text>
+                  </Text> */}
 
                   <Text
                     style={{
@@ -212,6 +212,10 @@ const Sidebar = ({
                       lineHeight: "1.2",
                       width: "100%",
                       textAlign: "center",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap", // Ngăn văn bản xuống dòng
+                      overflow: "hidden",
+                      maxWidth: isMobile ? "150px" : "130px",
                     }}
                   >
                     {lessonNames[item.lessonID] || "Đang tải..."}
