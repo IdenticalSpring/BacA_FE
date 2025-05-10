@@ -2450,6 +2450,7 @@ const TeacherPage = () => {
                 classID={selectedClass}
                 students={students}
                 quillRef={quillRefHomeWorkUpdate}
+                selectedClass={selectedClass}
               />
             </div>
           </div>

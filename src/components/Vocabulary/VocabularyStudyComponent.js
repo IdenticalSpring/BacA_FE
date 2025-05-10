@@ -43,6 +43,7 @@ import vocabularyService from "services/vocabularyService";
 import homeWorkService from "services/homeWorkService";
 import { ImageOutlined } from "@mui/icons-material";
 import { useSpeechRecognition } from "react-speech-kit";
+import student_vocabularyService from "services/student_vocabulary";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 const genderOptions = [
@@ -471,12 +472,26 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       stop();
       setActiveRecordingId(null);
       setIsManualRecording(false);
+      handleAddOrUpdateStudentVocabulary(itemId, selectedHomeWorkId, studentId, resultSTT);
       setResultSTT("");
       // speechResults = [];
     } else {
       setActiveRecordingId(itemId);
       listen({ lang: "en-AU", interimResults: false });
       setIsManualRecording(true);
+    }
+  };
+  const handleAddOrUpdateStudentVocabulary = async (vocabularyId, homeworkId, studentId, text) => {
+    try {
+      const data = {
+        vocabularyId,
+        homeworkId,
+        studentId,
+        text,
+      };
+      const res = await student_vocabularyService.createStudent_vocabulary(data);
+    } catch (err) {
+      message.error("failed to add or update student vocabulary " + err);
     }
   };
   // useEffect(() => {

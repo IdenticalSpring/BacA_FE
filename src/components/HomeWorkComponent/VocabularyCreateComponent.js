@@ -15,6 +15,7 @@ import {
   Modal,
   Avatar,
   Select,
+  Empty,
 } from "antd";
 import {
   AudioOutlined,
@@ -35,6 +36,8 @@ import PropTypes from "prop-types";
 import vocabularyService from "services/vocabularyService";
 import { ImageOutlined } from "@mui/icons-material";
 import { useSpeechRecognition } from "react-speech-kit";
+import studentService from "services/studentService";
+import student_vocabularyService from "services/student_vocabulary";
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
@@ -44,6 +47,7 @@ const VocabularyCreateComponent = ({
   setVocabularyList,
   selectedHomeWorkId,
   audioId,
+  selectedClass,
 }) => {
   // States
   const [form] = Form.useForm();
@@ -61,6 +65,8 @@ const VocabularyCreateComponent = ({
   const [selectedStudentVocabularies, setSelectedStudentVocabularies] = useState([]);
   const [deleteForStudentFlag, setDeleteForStudentFlag] = useState(false);
   const [isLoadingStudentVocabularies, setIsLoadingStudentVocabularies] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [studentVocabularies, setStudentVocabularies] = useState([]);
   const [voices, setVoices] = useState(null);
   useEffect(() => {
     const fetchVoices = async () => {
@@ -74,6 +80,22 @@ const VocabularyCreateComponent = ({
     };
     fetchVoices();
   }, []);
+
+  useEffect(() => {
+    if (selectedClass) {
+      const fetchStudents = async () => {
+        try {
+          const data = await studentService.getAllStudentsbyClass(selectedClass);
+          setStudents(data);
+        } catch (error) {
+          console.error("Lỗi khi lấy danh sách học sinh:", error);
+          setStudents([]);
+        }
+      };
+      fetchStudents();
+    }
+  }, [selectedClass]);
+
   // Speech to text hook
   const {
     error: speechError,
@@ -235,7 +257,9 @@ const VocabularyCreateComponent = ({
           return item;
         });
         // console.log(vocaDataFilter);
-
+        const studentVocabularies =
+          await student_vocabularyService.getStudent_vocabularyByHomeworkIdAndStudentId(data);
+        setStudentVocabularies(studentVocabularies);
         setSelectedStudentVocabularies(vocaDataFilter);
       } catch (err) {
         message.error(err);
@@ -697,7 +721,7 @@ const VocabularyCreateComponent = ({
             }}
           /> */}
           <Divider />
-          <Title level={3}>Danh sách các bạn học sinh đã tạo từ vựng</Title>
+          <Title level={3}>Danh sách các bạn học sinh đã tạo từ vựng và trả lời câu hỏi</Title>
           {/* <Divider /> */}
           <div
             style={{
@@ -706,7 +730,7 @@ const VocabularyCreateComponent = ({
               overflowY: "auto",
             }}
           >
-            {groupedByStudent?.map((item, index) => {
+            {students?.map((item, index) => {
               // console.log(item[0]?.student?.id);
               return (
                 <div
@@ -723,21 +747,21 @@ const VocabularyCreateComponent = ({
                 >
                   <Divider />
                   <Avatar
-                    src={item && item[0]?.student?.imgUrl}
+                    src={item && item?.imgUrl}
                     icon={<UserOutlined />}
                     shape="square"
                     style={{ width: "50px", height: "50px" }}
                   />
-                  <div style={{ width: "60%" }}>{item && item[0]?.student?.name}</div>
+                  <div style={{ width: "60%" }}>{item && item?.name}</div>
                   <Button
                     onClick={() => {
                       // setSelectedStudentId(item[0]?.student?.id || 0);
                       setOpenDetailVocabularies(true);
                       setDeleteForStudentFlag(true);
                       if (item) {
-                        handleFetchVocabulariesForStudent(item[0]?.student?.id || 0);
+                        handleFetchVocabulariesForStudent(item?.id || 0);
                       }
-                      setSelectedStudentName(item && item[0]?.student?.name);
+                      setSelectedStudentName(item && item?.name);
                     }}
                     icon={<EyeOutlined style={{ fontSize: "20px" }} />}
                     style={{ width: "40px", height: "40px" }}
@@ -750,10 +774,16 @@ const VocabularyCreateComponent = ({
           </div>
         </Card>
       )}
-
+      <style>
+        {`
+        .ant-modal-wrap{
+          z-index: 1000000 !important;
+        }
+        `}
+      </style>
       <Modal
         centered
-        title={"Danh sách từ vựng của bạn " + selectedStudentName}
+        title={"Danh sách từ vựng và câu trả lời của bạn " + selectedStudentName}
         open={openDetailVocabularies}
         onCancel={() => {
           setSelectedStudentVocabularies([]);
@@ -774,6 +804,7 @@ const VocabularyCreateComponent = ({
           </Button>,
         ]}
         width={"85%"}
+        style={{ zIndex: "10000000000" }}
       >
         {/* <Card title={<Title level={3}>Danh sách từ vựng</Title>}> */}
         {isLoadingStudentVocabularies ? (
@@ -789,32 +820,98 @@ const VocabularyCreateComponent = ({
             <LoadingOutlined style={{ fontSize: "100px" }} />
           </div>
         ) : (
-          selectedStudentVocabularies?.length > 0 && (
-            <List
-              style={{ maxHeight: "70vh", overflowY: "auto" }}
-              itemLayout="horizontal"
-              dataSource={selectedStudentVocabularies || []}
-              renderItem={(item) => (
-                <List.Item
-                  key={item?.id}
-                  actions={[
-                    <Button
+          <>
+            {selectedStudentVocabularies?.length > 0 && (
+              <>
+                <h3>{"Danh sách từ vựng của bạn " + selectedStudentName}</h3>
+                <List
+                  style={{ maxHeight: "70vh", overflowY: "auto" }}
+                  itemLayout="horizontal"
+                  dataSource={selectedStudentVocabularies || []}
+                  renderItem={(item) => (
+                    <List.Item
                       key={item?.id}
-                      icon={<DeleteOutlined />}
-                      danger
-                      onClick={() => handleDeleteVocabulary(item?.id)}
+                      actions={[
+                        <Button
+                          key={item?.id}
+                          icon={<DeleteOutlined />}
+                          danger
+                          onClick={() => handleDeleteVocabulary(item?.id)}
+                        >
+                          Xóa
+                        </Button>,
+                      ]}
                     >
-                      Xóa
-                    </Button>,
-                  ]}
-                >
-                  <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
+                      <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
+                        <Avatar
+                          shape="square"
+                          style={{
+                            width: isMobile ? "50px" : "5vw",
+                            height: isMobile ? "50px" : "5vw",
+                            margin: "10px",
+                          }}
+                          icon={
+                            <ImageOutlined
+                              style={{
+                                width: isMobile ? "50px" : "5vw",
+                                height: isMobile ? "50px" : "5vw",
+                              }}
+                            />
+                          }
+                          src={item && item?.imageUrl}
+                        />
+                        <Text
+                          key={item?.id}
+                          style={{ width: "70%", fontSize: isMobile ? "16px" : "24px" }}
+                          strong
+                        >
+                          {item?.word || item?.textToSpeech}
+                        </Text>
+                        {item?.audioUrl && (
+                          <audio
+                            controls
+                            style={{
+                              height: "50px",
+                              margin: "10px 0",
+                              marginRight: "10px",
+                              width: "100%",
+                            }}
+                          >
+                            <source src={item?.audioUrl} type="audio/mp3" />
+                          </audio>
+                        )}
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </>
+            )}
+          </>
+        )}
+        {studentVocabularies?.length > 0 && (
+          <>
+            <h3>{"Danh sách câu trả lời của bạn " + selectedStudentName}</h3>
+            <List
+              style={{ maxHeight: "70vh", overflowY: "auto", padding: "10px" }}
+              itemLayout="horizontal"
+              dataSource={studentVocabularies || []}
+              renderItem={(item) => (
+                <List.Item key={item?.id} style={{ padding: "10px 0" }}>
+                  <Card
+                    style={{
+                      width: "100%",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    }}
+                    bodyStyle={{ display: "flex", alignItems: "center" }}
+                  >
                     <Avatar
                       shape="square"
                       style={{
-                        width: isMobile ? "50px" : "5vw",
-                        height: isMobile ? "50px" : "5vw",
-                        margin: "10px",
+                        width: isMobile ? 50 : 70,
+                        height: isMobile ? 50 : 70,
+                        marginRight: "15px",
+                        backgroundColor: "#f0f0f0",
                       }}
                       icon={
                         <ImageOutlined
@@ -824,33 +921,42 @@ const VocabularyCreateComponent = ({
                           }}
                         />
                       }
-                      src={item && item?.imageUrl}
+                      src={item?.vocabulary?.imageUrl}
                     />
-                    <Text
-                      key={item?.id}
-                      style={{ width: "70%", fontSize: isMobile ? "16px" : "24px" }}
-                      strong
-                    >
-                      {item?.word || item?.textToSpeech}
-                    </Text>
-                    {item?.audioUrl && (
-                      <audio
-                        controls
-                        style={{
-                          height: "50px",
-                          margin: "10px 0",
-                          marginRight: "10px",
-                          width: "100%",
-                        }}
-                      >
-                        <source src={item?.audioUrl} type="audio/mp3" />
-                      </audio>
-                    )}
-                  </div>
+                    <div style={{ flex: 1 }}>
+                      <Text strong style={{ fontSize: isMobile ? 16 : 20 }}>
+                        Từ: {item?.vocabulary?.textToSpeech}
+                      </Text>
+                      <br />
+                      <Text type="secondary" style={{ fontSize: isMobile ? 14 : 18 }}>
+                        Câu trả lời: {item?.text}
+                      </Text>
+                    </div>
+                    {/* Uncomment if you want audio */}
+                    {/* {item?.audioUrl && (
+          <audio controls style={{ width: isMobile ? 100 : 150 }}>
+            <source src={item?.audioUrl} type="audio/mp3" />
+          </audio>
+        )} */}
+                  </Card>
                 </List.Item>
               )}
             />
-          )
+          </>
+        )}
+        {studentVocabularies?.length === 0 && selectedStudentVocabularies?.length === 0 && (
+          <div
+            style={{
+              width: "100%",
+              height: "30vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Empty style={{ width: "100%" }}></Empty>
+          </div>
         )}
         {/* </Card> */}
       </Modal>
@@ -865,4 +971,5 @@ VocabularyCreateComponent.propTypes = {
   setVocabularyList: PropTypes.func.isRequired,
   selectedHomeWorkId: PropTypes.number.isRequired,
   audioId: PropTypes.string.isRequired,
+  selectedClass: PropTypes.number.isRequired,
 };

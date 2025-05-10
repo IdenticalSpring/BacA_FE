@@ -161,6 +161,7 @@ export default function HomeWorkMangement({
   classID,
   students,
   quillRef,
+  selectedClass,
 }) {
   const [form] = Form.useForm();
   // const quillRef = useRef(null);
@@ -1161,6 +1162,7 @@ export default function HomeWorkMangement({
               vocabularyList={vocabularyList}
               selectedHomeWorkId={selectedHomeWorkId}
               audioId={"audio-player-update"}
+              selectedClass={selectedClass}
             />
           </Form.Item>
           {/* <Form.Item label="Văn bản thành giọng nói">
@@ -1559,4 +1561,5 @@ HomeWorkMangement.propTypes = {
   classID: PropTypes.number.isRequired,
   students: PropTypes.array.isRequired,
   quillRef: PropTypes.object.isRequired,
+  selectedClass: PropTypes.object.isRequired,
 };

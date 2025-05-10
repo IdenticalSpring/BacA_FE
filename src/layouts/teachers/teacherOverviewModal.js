@@ -226,7 +226,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
-  const [selectedHomeWorkId, setSelectedHomeWorkId] = useState(null);
+  const [selectedHomeWorkId, setSelectedHomeWorkId] = useState(0);
   const [editingLesson, setEditingLesson] = useState(null);
   const [editingHomeWork, setEditingHomeWork] = useState(null);
   const [youtubeLinks, setYoutubeLinks] = useState([]);
@@ -245,6 +245,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
   const [voices, setVoices] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(0);
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -1599,6 +1600,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       }
     }
   };
+
   const handleEditHomework = (homeWork) => {
     setEditingHomeWork(homeWork);
     setSelectedHomeWorkId(homeWork?.id);
@@ -1637,6 +1639,17 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       }
     };
     fetchVocabulary();
+    const fetchClassId = async () => {
+      try {
+        const response = await lessonByScheduleService.getLessonByScheduleByHomeworkId(
+          selectedHomeWorkId
+        );
+        setSelectedClass(response?.class?.id);
+      } catch (error) {
+        console.error("Error fetching vocabulary:", error);
+      }
+    };
+    fetchClassId();
   }, [selectedHomeWorkId, editingHomeWork]);
   // console.log(textToSpeech);
   useEffect(() => {
@@ -2808,6 +2821,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 vocabularyList={vocabularyList}
                 selectedHomeWorkId={selectedHomeWorkId}
                 audioId={"audio-player-update"}
+                selectedClass={selectedClass}
               />
             </Form.Item>
             {/* <Form.Item label="Văn bản thành giọng nói">
