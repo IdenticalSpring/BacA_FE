@@ -1,8 +1,9 @@
-import React, { useEffect } from "react"; // Thêm useEffect
+import React, { useEffect, useState } from "react"; // Thêm useEffect
 import PropTypes from "prop-types";
 import { Layout, Typography, List, Divider } from "antd";
 import { CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import lessonService from "services/lessonService";
 
 const { Title, Text } = Typography;
 
@@ -35,6 +36,30 @@ const Sidebar = ({
     .sort((a, b) => {
       return dayjs(b.date).valueOf() - dayjs(a.date).valueOf(); // Sắp xếp giảm dần (mới nhất trước)
     });
+  const [lessonNames, setLessonNames] = useState({});
+  // Lấy tên bài học từ API dựa trên lessonID
+  useEffect(() => {
+    const fetchLessonNames = async () => {
+      const allLessons = [...filteredLessons, ...upcomingLessons];
+      const newLessonNames = { ...lessonNames };
+
+      for (const lesson of allLessons) {
+        if (lesson.lessonID && !newLessonNames[lesson.lessonID]) {
+          try {
+            const lessonData = await lessonService.getLessonById(lesson.lessonID);
+            newLessonNames[lesson.lessonID] = lessonData.name || "Bài học không có tên";
+          } catch (error) {
+            console.error(`Error fetching name for lesson ${lesson.lessonID}:`, error);
+            newLessonNames[lesson.lessonID] = "Bài học không có tên";
+          }
+        }
+      }
+
+      setLessonNames(newLessonNames);
+    };
+
+    fetchLessonNames();
+  }, [lessonsBySchedule]);
 
   // // Lọc ra các bài học sắp tới
   // const upcomingLessons = lessonsBySchedule
@@ -153,7 +178,7 @@ const Sidebar = ({
                     rowGap: "5px",
                   }}
                 >
-                  <Text
+                  {/* <Text
                     style={{
                       color: isSelected ? colors.darkGreen : colors.darkGray,
                       fontWeight: "600",
@@ -165,7 +190,8 @@ const Sidebar = ({
                     }}
                   >
                     {"Bài học ngày"}
-                  </Text>
+                  </Text> */}
+
                   <Text
                     style={{
                       color: isSelected ? colors.darkGreen : colors.darkGray,
@@ -176,6 +202,23 @@ const Sidebar = ({
                     }}
                   >
                     {new Date(item.date).toLocaleDateString("vi-VN")}
+                  </Text>
+                  <Text
+                    style={{
+                      color: isSelected ? colors.darkGreen : colors.darkGray,
+                      fontWeight: "600",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                      display: "block",
+                      lineHeight: "1.2",
+                      width: "100%",
+                      textAlign: "center",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap", // Ngăn văn bản xuống dòng
+                      overflow: "hidden",
+                      maxWidth: isMobile ? "150px" : "130px",
+                    }}
+                  >
+                    {lessonNames[item.lessonID] || "Đang tải..."}
                   </Text>
                 </div>
               </div>

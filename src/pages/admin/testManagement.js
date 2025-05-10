@@ -34,6 +34,7 @@ import classService from "services/classService";
 import testSkillService from "services/testSkillService"; // Thêm service cho TestSkill
 import { colors } from "assets/theme/color";
 import AssessmentManagement from "./assessmentsManagement";
+import TableScoreTest from "./tableScoreTest";
 
 function TestManagement() {
   // State cho Test Schedules
@@ -93,6 +94,10 @@ function TestManagement() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleScoreError = (message) => {
+    setNotification({ open: true, message, severity: "error" });
+  };
 
   // Fetch tất cả dữ liệu từ API
   const fetchData = async () => {
@@ -882,8 +887,17 @@ function TestManagement() {
                 )}
               </MDBox>
             </Card>
+
+            {/* Student Scores */}
           </Grid>
         </Grid>
+        <MDBox mt={3}>
+          <Card
+            sx={{ backgroundColor: colors.cardBg, boxShadow: `0 4px 12px ${colors.softShadow}` }}
+          >
+            <TableScoreTest onError={handleScoreError} />
+          </Card>
+        </MDBox>
       </MDBox>
 
       {/* Edit Test Dialog */}

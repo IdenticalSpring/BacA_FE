@@ -244,7 +244,10 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   const [gameLinks, setGameLinks] = useState([]);
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
+  const [selectedLessonClass, setSelectedLessonClass] = useState(null); // Lớp được chọn để lọc Lesson
+  const [selectedHomeworkClass, setSelectedHomeworkClass] = useState(null); // Lớp được chọn để lọc Homework
   const [voices, setVoices] = useState(null);
+
   const [selectedClass, setSelectedClass] = useState(0);
   useEffect(() => {
     const fetchVoices = async () => {
@@ -878,6 +881,58 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       }
     }
   };
+
+  const filteredLessonRows = useMemo(() => {
+    return lessons
+      .filter((lesson) => {
+        if (!selectedLessonClass) return true; // Nếu không chọn lớp, hiển thị tất cả
+        const classForLesson = lessonByScheduleData.find(
+          (item) => item.lessonID === lesson.id
+        )?.class;
+        return classForLesson?.id === selectedLessonClass;
+      })
+      .map((lesson) => ({
+        id: lesson.id,
+        name: lesson.name,
+        level: lesson.level,
+        linkYoutube: lesson.linkYoutube,
+        linkGame: lesson.linkGame,
+        linkSpeech: lesson.linkSpeech,
+        TeacherId: lesson?.teacher?.username || "N/A",
+        textToSpeech: lesson.textToSpeech,
+        description: lesson.description,
+        lessonPlan: lesson.lessonPlan,
+        date: lesson.date,
+        original: lesson,
+      }));
+  }, [lessons, lessonByScheduleData, selectedLessonClass]);
+
+  console.log("lessonByScheduleData", lessonByScheduleData);
+  // Lọc Homeworks theo lớp được chọn
+  const filteredHomeworkRows = useMemo(() => {
+    return homeworks
+      .filter((homework) => {
+        if (!selectedHomeworkClass) return true; // Nếu không chọn lớp, hiển thị tất cả
+        const classForHomework = lessonByScheduleData.find(
+          (item) => item.homeWorkId === homework.id
+        )?.class;
+        return classForHomework?.id === selectedHomeworkClass;
+      })
+      .map((homework) => ({
+        id: homework.id,
+        title: homework.title,
+        level: homework.level,
+        linkYoutube: homework.linkYoutube,
+        linkGame: homework.linkGame,
+        linkSpeech: homework.linkSpeech,
+        TeacherId: homework?.teacher?.username || "N/A",
+        textToSpeech: homework.textToSpeech,
+        description: homework.description,
+        date: homework.date,
+        original: homework,
+      }));
+  }, [homeworks, lessonByScheduleData, selectedHomeworkClass]);
+
   const handleEditLesson = (lesson) => {
     setSelectedLessonId(lesson.id);
     setEditingLesson(lesson);
@@ -2149,17 +2204,30 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
             <Card
               sx={{ padding: 3, borderRadius: "12px", boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)" }}
             >
-              <MDTypography
-                variant="h6"
-                sx={{ color: colors.deepGreen, fontWeight: "bold", mb: 2 }}
-              >
-                Lessons
-              </MDTypography>
+              <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <MDTypography variant="h6" sx={{ color: colors.deepGreen, fontWeight: "bold" }}>
+                  Lessons
+                </MDTypography>
+                <Select
+                  style={{ width: 200 }}
+                  placeholder="Chọn lớp để lọc"
+                  allowClear
+                  dropdownStyle={{ zIndex: 2000 }}
+                  onChange={(value) => setSelectedLessonClass(value)}
+                  options={[
+                    { label: "Tất cả lớp", value: null },
+                    ...classes.map((cls) => ({
+                      label: cls.name,
+                      value: cls.id,
+                    })),
+                  ]}
+                />
+              </MDBox>
               {loading ? (
                 <MDTypography>Loading...</MDTypography>
               ) : (
                 <DataTable
-                  table={{ columns: lessonColumns, rows: lessonRows }}
+                  table={{ columns: lessonColumns, rows: filteredLessonRows }}
                   isSorted={false}
                   entriesPerPage={true}
                   showTotalEntries={false}
@@ -2175,17 +2243,30 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
             <Card
               sx={{ padding: 3, borderRadius: "12px", boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)" }}
             >
-              <MDTypography
-                variant="h6"
-                sx={{ color: colors.deepGreen, fontWeight: "bold", mb: 2 }}
-              >
-                Homeworks
-              </MDTypography>
+              <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <MDTypography variant="h6" sx={{ color: colors.deepGreen, fontWeight: "bold" }}>
+                  Homeworks
+                </MDTypography>
+                <Select
+                  style={{ width: 200 }}
+                  placeholder="Chọn lớp để lọc"
+                  allowClear
+                  onChange={(value) => setSelectedHomeworkClass(value)}
+                  dropdownStyle={{ zIndex: 2000 }}
+                  options={[
+                    { label: "Tất cả lớp", value: null },
+                    ...classes.map((cls) => ({
+                      label: cls.name,
+                      value: cls.id,
+                    })),
+                  ]}
+                />
+              </MDBox>
               {loading ? (
                 <MDTypography>Loading...</MDTypography>
               ) : (
                 <DataTable
-                  table={{ columns: homeworkColumns, rows: homeworkRows }}
+                  table={{ columns: homeworkColumns, rows: filteredHomeworkRows }}
                   isSorted={false}
                   entriesPerPage={true}
                   showTotalEntries={false}
