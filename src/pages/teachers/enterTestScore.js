@@ -21,7 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import PropTypes from "prop-types";
 import studentService from "services/studentService";
-import classTestScheduleSerivce from "services/classTestScheduleService";
+import classTestScheduleService from "services/classTestScheduleService";
 import studentScoreService from "services/studentScoreService";
 import MDTypography from "components/MDTypography";
 import testSkillService from "services/testSkillService";
@@ -29,6 +29,7 @@ import assessmentService from "services/assessmentService";
 import { colors } from "./teacherPage";
 import DataTable from "examples/Tables/DataTable";
 import TextField from "@mui/material/TextField";
+import TestSchedule from "./TestSchedule"; // Import TestSchedule
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -90,7 +91,7 @@ const EnterTestScore = () => {
     try {
       const [scheduleData, studentData, skillData, assessmentData, scoreData, detailsData] =
         await Promise.all([
-          classTestScheduleSerivce.getAllClassTestSchedule(),
+          classTestScheduleService.getAllClassTestSchedule(),
           studentService.getAllStudentsbyClass(classId),
           testSkillService.getAllTestSkill(),
           assessmentService.getAllAssessments(),
@@ -347,6 +348,18 @@ const EnterTestScore = () => {
           </div>
         )}
 
+        {/* Test Schedule Management Section */}
+        <Card
+          title="Test Schedule Management"
+          style={{
+            borderRadius: "12px",
+            boxShadow: `0 4px 12px ${colors.softShadow}`,
+            marginBottom: "24px",
+          }}
+        >
+          <TestSchedule classId={classId} classTestSchedules={classTestSchedules} />
+        </Card>
+
         <Card
           style={{
             borderRadius: "12px",
@@ -495,8 +508,8 @@ const EnterTestScore = () => {
 
                           <Col xs={24} md={12}>
                             <MDTypography variant="caption" color="text" mb={12}>
-                              Chú thích trạng thái: Điểm &le; 5 - Cần cải thiện | 5 &lt; Điểm &le; 7
-                              - Khá | Điểm = 8 - Giỏi | Điểm = 9, 10 - Xuất sắc
+                              Chú thích trạng thái: Điểm ≤ 5 - Cần cải thiện | 5 ≤ Điểm ≤ 7 - Khá |
+                              Điểm = 8 - Giỏi | Điểm = 9, 10 - Xuất sắc
                             </MDTypography>
 
                             <Form.Item
