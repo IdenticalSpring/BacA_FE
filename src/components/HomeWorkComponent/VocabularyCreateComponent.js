@@ -463,11 +463,11 @@ const VocabularyCreateComponent = ({
           </Form.Item>
           <Form.Item
             name="word"
-            label="Từ mới"
+            label="Từ/Câu hỏi"
             // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
           >
             <Input
-              placeholder="Nhập từ vựng"
+              placeholder="Nhập từ/câu hỏi"
               value={textToSpeech}
               onChange={handleWordChange}
               style={{ borderRadius: "6px" }}

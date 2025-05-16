@@ -920,7 +920,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
           {/* Text and audio controls */}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Text style={{ width: "30px", color: colors.deepGreen }}>Từ:</Text>
+            <Text style={{ width: "30px", color: colors.deepGreen }}>Từ/Câu hỏi:</Text>
             <TextArea
               autoSize={{ minRows: 1, maxRows: 6 }}
               value={item.textToSpeech}
@@ -1018,6 +1018,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       <Card
         key={item.id}
         style={cardStyles}
+        bodyStyle={{
+          padding: "10px",
+        }}
         ref={(el) => (cardRefs.current[index] = el)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMoveForStudent}
@@ -1067,7 +1070,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
           {/* Text and audio controls */}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Text style={{ width: "30px", color: colors.deepGreen }}>Từ:</Text>
+            <Text style={{ width: "50px", color: colors.deepGreen }}>Từ/câu hỏi</Text>
             <TextArea
               autoSize={{ minRows: 1, maxRows: 6 }}
               value={item.textToSpeech}
@@ -1155,7 +1158,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
         // console.log(index, item.student);
         return !item?.student;
       }).length > 0 && (
-        <div style={{ maxWidth: "100%", margin: "10px auto", padding: "0px" }}>
+        <div style={{ maxWidth: "100%", margin: "10px auto" }}>
           <Card
             style={{
               borderRadius: "16px",
@@ -1374,6 +1377,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               boxShadow: `0 8px 24px ${colors.softShadow}`,
               borderColor: colors.borderGreen,
               backgroundColor: colors.white,
+            }}
+            bodyStyle={{
+              padding: "10px",
             }}
           >
             {/* Vocabulary list */}
@@ -1711,11 +1717,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
             </Form.Item> */}
               <Form.Item
                 name="word"
-                label="Từ mới"
+                label="Từ/Câu hỏi"
                 // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
               >
                 <Input
-                  placeholder="Nhập từ vựng"
+                  placeholder="Nhập từ/câu hỏi"
                   value={textToSpeech}
                   onChange={handleWordChange}
                   style={{ borderRadius: "6px" }}

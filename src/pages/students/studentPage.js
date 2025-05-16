@@ -543,16 +543,16 @@ const StudentPage = () => {
                   style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{ __html: lesson.description || " " }}
                 />
-                {(lesson.linkYoutube || lesson.linkSpeech) && (
-                  <div
+                {/* {(lesson.linkYoutube || lesson.linkSpeech) && ( */}
+                {/* <div
                     style={{
                       backgroundColor: colors.paleGreen,
                       padding: 12,
                       borderRadius: 8,
                       marginBottom: 16,
                     }}
-                  >
-                    {/* {lesson.linkYoutube && (
+                  > */}
+                {/* {lesson.linkYoutube && (
                       <iframe
                         width="100%"
                         height="315"
@@ -563,7 +563,7 @@ const StudentPage = () => {
                         allowFullScreen
                       />
                     )} */}
-                    {/* {lesson.linkYoutube && lesson.linkYoutube.trim() && (
+                {/* {lesson.linkYoutube && lesson.linkYoutube.trim() && (
                       <div>
                         <Text
                           strong
@@ -590,7 +590,7 @@ const StudentPage = () => {
                         })}
                       </div>
                     )} */}
-                    {lesson.linkSpeech && (
+                {/* {lesson.linkSpeech && (
                       <audio controls style={{ width: "100%", marginTop: 16 }}>
                         <source
                           src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
@@ -598,9 +598,9 @@ const StudentPage = () => {
                         />
                         Trình duyệt của bạn không hỗ trợ phát audio.
                       </audio>
-                    )}
-                  </div>
-                )}
+                    )} */}
+                {/* </div> */}
+                {/* )} */}
                 {/* Thêm nút Luyện tập */}
                 {/* {lesson.linkGame && (
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -727,7 +727,7 @@ const StudentPage = () => {
                     </div>
                   </div>
                 )} */}
-                {(hw.linkYoutube || hw.linkSpeech) && (
+                {/* {(hw.linkYoutube || hw.linkSpeech) && (
                   <div
                     style={{
                       backgroundColor: colors.paleGreen,
@@ -735,8 +735,8 @@ const StudentPage = () => {
                       borderRadius: 8,
                       marginBottom: 16,
                     }}
-                  >
-                    {/* {hw.linkYoutube && hw.linkYoutube.trim() && (
+                  > */}
+                {/* {hw.linkYoutube && hw.linkYoutube.trim() && (
                       <div>
                         <Text
                           strong
@@ -763,7 +763,7 @@ const StudentPage = () => {
                         })}
                       </div>
                     )} */}
-                    {/* {hw.linkSpeech && (
+                {/* {hw.linkSpeech && (
                       <div style={{ marginTop: hw.linkYoutube ? 16 : 0 }}>
                         <Text
                           strong
@@ -780,8 +780,8 @@ const StudentPage = () => {
                         </audio>
                       </div>
                     )} */}
-                  </div>
-                )}
+                {/* </div> */}
+                {/* )} */}
                 <div
                   style={{
                     display: "flex",
