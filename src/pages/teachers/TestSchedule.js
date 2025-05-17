@@ -25,7 +25,7 @@ import classService from "services/classService";
 import testService from "services/testService";
 import { colors } from "assets/theme/color";
 
-function TestSchedule({ classId, classTestSchedules }) {
+function TestSchedule({ classId, classTestSchedules, onScheduleChange }) {
   // State cho Test Schedules
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedClassLabel, setSelectedClassLabel] = useState("Choose Class");
@@ -248,6 +248,7 @@ function TestSchedule({ classId, classTestSchedules }) {
       setSelectedTestType("");
       setSelectedTestTypeLabel("Choose Test Type");
       setSelectedDate("");
+      onScheduleChange();
       setNotification({ open: true, message: "Test schedule created", severity: "success" });
     } catch (error) {
       setNotification({ open: true, message: error.toString(), severity: "error" });
@@ -284,6 +285,7 @@ function TestSchedule({ classId, classTestSchedules }) {
       setEditTestDialogOpen(false);
       setCurrentEditItem(null);
       setNotification({ open: true, message: "Test schedule updated", severity: "success" });
+      onScheduleChange();
     } catch (error) {
       setNotification({ open: true, message: error.toString(), severity: "error" });
     }
@@ -306,6 +308,7 @@ function TestSchedule({ classId, classTestSchedules }) {
       setDeleteTestDialogOpen(false);
       setCurrentEditItem(null);
       setNotification({ open: true, message: "Test schedule deleted", severity: "success" });
+      onScheduleChange();
     } catch (error) {
       setNotification({ open: true, message: error.toString(), severity: "error" });
     }
@@ -644,6 +647,7 @@ TestSchedule.propTypes = {
       }),
     })
   ),
+  onScheduleChange: PropTypes.func,
 };
 
 export default TestSchedule;

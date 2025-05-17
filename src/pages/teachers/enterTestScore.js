@@ -86,6 +86,23 @@ const EnterTestScore = () => {
     }
   }, [classId]);
 
+  // Hàm fetch lại classTestSchedules
+  const fetchClassTestSchedules = async () => {
+    try {
+      setLoading(true);
+      const scheduleData = await classTestScheduleService.getAllClassTestSchedule();
+      setClassTestSchedules(scheduleData.filter((schedule) => schedule.classID === classId));
+    } catch (error) {
+      console.error("Error fetching class test schedules:", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to refresh test schedules.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -357,7 +374,11 @@ const EnterTestScore = () => {
             marginBottom: "24px",
           }}
         >
-          <TestSchedule classId={classId} classTestSchedules={classTestSchedules} />
+          <TestSchedule
+            classId={classId}
+            classTestSchedules={classTestSchedules}
+            onScheduleChange={fetchClassTestSchedules} // Truyền callback
+          />
         </Card>
 
         <Card
