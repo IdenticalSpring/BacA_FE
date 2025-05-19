@@ -272,6 +272,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
             value={selectedDate}
             onChange={setSelectedDate}
             allowClear
+            dropdownStyle={{ zIndex: 2000 }}
           >
             {uniqueDates.map((date) => (
               <Option key={date} value={date}>

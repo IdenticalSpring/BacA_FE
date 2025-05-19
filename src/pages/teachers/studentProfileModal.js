@@ -605,6 +605,8 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
             </Row>
           </Card>
 
+          {renderSkillDetails()}
+
           {recentScores && (
             <Card
               title={
@@ -726,8 +728,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
               style={{ padding: "30px 0" }}
             />
           )}
-
-          {renderSkillDetails()}
 
           <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Biểu đồ đánh giá

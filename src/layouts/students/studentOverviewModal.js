@@ -217,7 +217,7 @@ export default function StudentOverviewModal({ open, onClose, student }) {
           {/* Phần điểm số */}
           <MDTypography variant="h6">Score Details</MDTypography>
           <StudentScoreTab studentId={student?.id} colors={colors} />
-          <EvaluationStudent studentId={student?.id} colors={colors} />
+          {/* <EvaluationStudent studentId={student?.id} colors={colors} /> */}
           {/* Phần feedback */}
           <MDTypography variant="h6" mt={3} sx={{ mb: 2, color: colors.deepGreen }}>
             Feedback

@@ -348,12 +348,12 @@ export default function Homepage() {
               >
                 <li>
                   <a href="#home" style={{ color: colors.deepGreen, textDecoration: "none" }}>
-                    Home page
+                    Trang chủ
                   </a>
                 </li>
                 <li>
                   <a href="#features" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Our Features
+                    Tính năng
                   </a>
                 </li>
                 <li>
@@ -361,12 +361,12 @@ export default function Homepage() {
                     href="#testimonials"
                     style={{ color: colors.darkGray, textDecoration: "none" }}
                   >
-                    Testimonials
+                    Đánh giá
                   </a>
                 </li>
                 <li>
                   <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Contact
+                    Liên hệ
                   </a>
                 </li>
               </ul>
@@ -1253,7 +1253,7 @@ export default function Homepage() {
                 fontWeight: "bold",
               }}
             >
-              TESTIMONIALS
+              Đánh giá
             </span>
             <h2
               style={{
@@ -1485,22 +1485,22 @@ export default function Homepage() {
 
           <div className="footer-links">
             <h4 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
-              Quick Links
+              Về chúng tôi
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               <li style={{ marginBottom: "0.75rem" }}>
                 <a href="#home" style={{ color: colors.white, textDecoration: "none" }}>
-                  Home
+                  Trang chủ
                 </a>
               </li>
               <li style={{ marginBottom: "0.75rem" }}>
                 <a href="#features" style={{ color: colors.white, textDecoration: "none" }}>
-                  Features
+                  Tính năng
                 </a>
               </li>
               <li style={{ marginBottom: "0.75rem" }}>
                 <a href="#testimonials" style={{ color: colors.white, textDecoration: "none" }}>
-                  Testimonials
+                  Đánh giá
                 </a>
               </li>
             </ul>
@@ -1508,7 +1508,7 @@ export default function Homepage() {
 
           <div>
             <h4 style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
-              Contact Us
+              Liên hệ
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               <li style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center" }}>

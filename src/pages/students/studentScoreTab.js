@@ -30,6 +30,7 @@ import studentService from "services/studentService";
 import testSkillService from "services/testSkillService"; // Thêm import testSkillService
 import PropTypes from "prop-types";
 import classTestScheduleSerivce from "services/classTestScheduleService";
+import EvaluationStudent from "./evaluationStudent";
 
 const { Title, Text } = Typography;
 
@@ -396,6 +397,8 @@ const StudentScoreTab = ({ studentId, colors }) => {
           </Col>
         </Row>
       </Card>
+
+      <EvaluationStudent studentId={studentId} colors={colors} />
 
       <Modal
         visible={isModalVisible}
