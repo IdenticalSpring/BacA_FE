@@ -870,6 +870,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       <Card
         key={item.id}
         style={cardStyles}
+        bodyStyle={{
+          padding: "10px",
+        }}
         ref={(el) => (cardRefs.current[index] = el)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -920,7 +923,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
           {/* Text and audio controls */}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Text style={{ width: "30px", color: colors.deepGreen }}>Từ/Câu hỏi:</Text>
+            <Text style={{ width: "50px", color: colors.deepGreen }}>Từ/câu hỏi</Text>
             <TextArea
               autoSize={{ minRows: 1, maxRows: 6 }}
               value={item.textToSpeech}
@@ -1158,13 +1161,16 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
         // console.log(index, item.student);
         return !item?.student;
       }).length > 0 && (
-        <div style={{ maxWidth: "100%", margin: "10px auto" }}>
+        <div style={{ maxWidth: "100%", margin: "10px auto", padding: "0px" }}>
           <Card
             style={{
               borderRadius: "16px",
               boxShadow: `0 8px 24px ${colors.softShadow}`,
               borderColor: colors.borderGreen,
               backgroundColor: colors.white,
+            }}
+            bodyStyle={{
+              padding: "10px",
             }}
           >
             {/* Vocabulary list */}
