@@ -15,7 +15,6 @@ const StudentScoreService = {
       throw error.response?.data?.message || "Error fetching levels list";
     }
   },
-  // Hàm mới: Lấy và xử lý student-score-details
   getAllStudentScoreDetailsProcessed: async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/student-score-details`, {
@@ -25,7 +24,6 @@ const StudentScoreService = {
       });
       const details = response.data;
 
-      // Nhóm dữ liệu theo studentScoreID
       const groupedDetails = details.reduce((acc, detail) => {
         const { studentScoreID, testSkill, score } = detail;
         if (!acc[studentScoreID]) {
@@ -62,8 +60,8 @@ const StudentScoreService = {
         classTestScheduleID: score.classTestScheduleID,
         assessmentID: score.assessmentID,
         teacherComment: score.teacherComment || "-",
-        scores: {}, // Sẽ được ghép với student-score-details
-        avgScore: "-", // Sẽ được cập nhật từ student-score-details
+        scores: {},
+        avgScore: "-",
       }));
     } catch (error) {
       throw error.response?.data?.message || "Error fetching student scores";
@@ -120,7 +118,6 @@ const StudentScoreService = {
       throw error.response?.data?.message || "Error creating Score";
     }
   },
-
   createScoreStudentDetails: async (levelData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/student-score-details`, levelData, {
@@ -133,7 +130,6 @@ const StudentScoreService = {
       throw error.response?.data?.message || "Error creating Score";
     }
   },
-
   editScoreStudent: async (id, levelData) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/studentScore/${id}`, levelData, {
@@ -144,6 +140,33 @@ const StudentScoreService = {
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error updating Score";
+    }
+  },
+  updateScoreStudentDetails: async (id, levelData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/student-score-details/${id}`, levelData, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error updating score details";
+    }
+  },
+  getScoreDetailsByStudentScoreID: async (studentScoreID) => {
+    try {
+      // Assuming an API call to fetch score details
+      const response = await fetch(`${API_BASE_URL}/student-score-details/${studentScoreID}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error(`Failed to fetch score details: ${error.message}`);
     }
   },
 
@@ -160,4 +183,5 @@ const StudentScoreService = {
     }
   },
 };
+
 export default StudentScoreService;

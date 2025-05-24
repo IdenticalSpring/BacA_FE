@@ -16,7 +16,12 @@ import {
   Space,
   Breadcrumb,
 } from "antd";
-import { ArrowLeftOutlined, SaveOutlined, CalculatorOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  SaveOutlined,
+  CalculatorOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import PropTypes from "prop-types";
@@ -29,13 +34,14 @@ import assessmentService from "services/assessmentService";
 import { colors } from "./teacherPage";
 import DataTable from "examples/Tables/DataTable";
 import TextField from "@mui/material/TextField";
-import TestSchedule from "./TestSchedule"; // Import TestSchedule
+import TestSchedule from "./TestSchedule";
+import EditScoreModal from "./EditScoreModal";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Component for rendering Cell
+// Component for rendering ScoreCell
 const ScoreCell = ({ value }) => {
   return value || "-";
 };
@@ -44,12 +50,58 @@ ScoreCell.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
+// Component for rendering AvgScoreCell
 const AvgScoreCell = ({ value }) => {
   return <strong>{value}</strong>;
 };
 
 AvgScoreCell.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+// Component for rendering ActionsCell
+const ActionsCell = ({ row }) => (
+  <Button type="link" icon={<EditOutlined />} onClick={() => row.handleEditScore(row.original)}>
+    Edit
+  </Button>
+);
+
+ActionsCell.propTypes = {
+  row: PropTypes.shape({
+    original: PropTypes.shape({
+      key: PropTypes.string,
+      studentScoreID: PropTypes.string,
+      studentID: PropTypes.string,
+      studentName: PropTypes.string,
+      testScheduleID: PropTypes.string,
+      testScheduleName: PropTypes.string,
+      assessmentName: PropTypes.string,
+      assessmentID: PropTypes.string,
+      scores: PropTypes.object,
+      avgScore: PropTypes.string,
+      teacherComment: PropTypes.string,
+    }).isRequired,
+    handleEditScore: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
+// PropTypes for the Cell function in the Actions column
+const actionsCellPropTypes = {
+  row: PropTypes.shape({
+    original: PropTypes.shape({
+      key: PropTypes.string,
+      studentScoreID: PropTypes.string,
+      studentID: PropTypes.string,
+      studentName: PropTypes.string,
+      testScheduleID: PropTypes.string,
+      testScheduleName: PropTypes.string,
+      assessmentName: PropTypes.string,
+      assessmentID: PropTypes.string,
+      scores: PropTypes.object,
+      avgScore: PropTypes.string,
+      teacherComment: PropTypes.string,
+    }).isRequired,
+  }).isRequired,
 };
 
 const EnterTestScore = () => {
@@ -68,6 +120,9 @@ const EnterTestScore = () => {
   const [previousScores, setPreviousScores] = useState([]);
   const [filterTestSchedule, setFilterTestSchedule] = useState("");
   const [filterName, setFilterName] = useState("");
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editScoreData, setEditScoreData] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const token = sessionStorage.getItem("token");
   const decoded = token ? jwtDecode(token) : null;
@@ -86,7 +141,6 @@ const EnterTestScore = () => {
     }
   }, [classId]);
 
-  // Hàm fetch lại classTestSchedules
   const fetchClassTestSchedules = async () => {
     try {
       setLoading(true);
@@ -130,7 +184,6 @@ const EnterTestScore = () => {
       setTestSkills(skillData);
       setAssessments(assessmentData);
 
-      // Ghép dữ liệu studentScore và student-score-details
       const studentScores = scoreData
         .filter((score) => studentData.some((student) => student.id === score.studentID))
         .map((score) => {
@@ -147,6 +200,7 @@ const EnterTestScore = () => {
             testScheduleID: score.classTestScheduleID,
             testScheduleName: schedule ? `${schedule.date}` : "Unknown",
             assessmentName: assessment ? assessment.name : "Unknown",
+            assessmentID: score.assessmentID,
             scores: detail ? detail.scores : {},
             avgScore: detail ? detail.avgScore : "-",
             teacherComment: score.teacherComment || "-",
@@ -236,6 +290,7 @@ const EnterTestScore = () => {
           testScheduleID: selectedClassTest,
           testScheduleName: schedule ? `${schedule.date}` : "Unknown",
           assessmentName: assessment ? assessment.name : "Unknown",
+          assessmentID: values[`${studentId}_assessmentId`],
           scores: { ...scores },
           avgScore: avgScore,
           teacherComment: values[`${studentId}_teacherComment`],
@@ -274,6 +329,26 @@ const EnterTestScore = () => {
     form.resetFields();
   };
 
+  const handleEditScore = (record) => {
+    setEditScoreData(record);
+    setEditModalVisible(true);
+  };
+
+  const handleEditModalOk = (updatedScore) => {
+    setPreviousScores((prev) =>
+      prev.map((score) =>
+        score.studentScoreID === updatedScore.studentScoreID ? updatedScore : score
+      )
+    );
+    setEditModalVisible(false);
+    setEditScoreData(null);
+  };
+
+  const handleEditModalCancel = () => {
+    setEditModalVisible(false);
+    setEditScoreData(null);
+  };
+
   const scoreColumns = [
     {
       Header: "Student Name",
@@ -309,6 +384,13 @@ const EnterTestScore = () => {
       accessor: "teacherComment",
       width: "19%",
       Cell: ScoreCell,
+    },
+    {
+      Header: "Actions",
+      accessor: "actions",
+      width: "10%",
+      Cell: ({ row }) => <ActionsCell row={{ ...row, handleEditScore }} />,
+      propTypes: actionsCellPropTypes,
     },
   ];
 
@@ -365,7 +447,6 @@ const EnterTestScore = () => {
           </div>
         )}
 
-        {/* Test Schedule Management Section */}
         <Card
           title="Test Schedule Management"
           style={{
@@ -377,7 +458,7 @@ const EnterTestScore = () => {
           <TestSchedule
             classId={classId}
             classTestSchedules={classTestSchedules}
-            onScheduleChange={fetchClassTestSchedules} // Truyền callback
+            onScheduleChange={fetchClassTestSchedules}
           />
         </Card>
 
@@ -418,6 +499,7 @@ const EnterTestScore = () => {
                     <Select
                       mode="multiple"
                       placeholder="Select students"
+                      წ
                       value={selectedStudents}
                       onChange={(value) => {
                         setSelectedStudents(value);
@@ -648,6 +730,17 @@ const EnterTestScore = () => {
             </div>
           )}
         </Card>
+
+        <EditScoreModal
+          visible={editModalVisible}
+          onCancel={handleEditModalCancel}
+          onOk={handleEditModalOk}
+          scoreData={editScoreData}
+          testSkills={testSkills}
+          assessments={assessments}
+          studentName={editScoreData?.studentName}
+          loading={editLoading}
+        />
       </Content>
     </Layout>
   );
