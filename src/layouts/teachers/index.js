@@ -29,7 +29,7 @@ function Teachers() {
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
     { Header: "Start Date", accessor: "startDate", width: "20%" },
-    { Header: "End Date", accessor: "endDate", width: "20%" },
+    // { Header: "End Date", accessor: "endDate", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "10%" },
   ]);
   const [rows, setRows] = useState([]);

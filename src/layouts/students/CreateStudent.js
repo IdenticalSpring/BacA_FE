@@ -40,7 +40,7 @@ function CreateStudent() {
     username: "",
     password: "",
     startDate: "",
-    endDate: "",
+    // endDate: "",
     note: "",
     classID: "",
     // schedule: "",
@@ -372,7 +372,7 @@ function CreateStudent() {
                 value={studentData.startDate}
                 onChange={(e) => setStudentData({ ...studentData, startDate: e.target.value })}
               />
-              <TextField
+              {/* <TextField
                 fullWidth
                 margin="normal"
                 type="date"
@@ -380,7 +380,7 @@ function CreateStudent() {
                 InputLabelProps={{ shrink: true }}
                 value={studentData.endDate}
                 onChange={(e) => setStudentData({ ...studentData, endDate: e.target.value })}
-              />
+              /> */}
               <TextField
                 label="Note"
                 fullWidth

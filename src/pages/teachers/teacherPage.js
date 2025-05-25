@@ -72,6 +72,7 @@ import notificationService from "services/notificationService";
 import HomeworkStatisticsDashboard from "./HomeworkStatisticsDashboard";
 import TeacherFeedbackModal from "./teacherFeedbackModal";
 import contentPageService from "services/contentpageService";
+import CreateStudentModal from "./CreateStudentModal";
 import Compressor from "compressorjs";
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -155,6 +156,7 @@ const TeacherPage = () => {
   const [isMultiStudentEvaluationModalVisible, setIsMultiStudentEvaluationModalVisible] =
     useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [isCreateStudentModalVisible, setIsCreateStudentModalVisible] = useState(false);
 
   const [allStudentsSelected, setAllStudentsSelected] = useState(false);
   // Homework form states
@@ -568,6 +570,63 @@ const TeacherPage = () => {
       document.removeEventListener("paste", handlePaste);
     };
   }, [quillRefLessonCreate, quillRefLessonUpdate, editingLesson]);
+
+  const handleDeleteStudents = async () => {
+    if (selectedStudents.length === 0) {
+      notification.warning({
+        message: "No Students Selected",
+        description: "Please select at least one student to delete.",
+        placement: "topRight",
+        duration: 4,
+      });
+      return;
+    }
+
+    Modal.confirm({
+      title: "Confirm Remove",
+      content: `Are you sure you want to remove ${selectedStudents.length} student(s) from this class?`,
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const studentIds = selectedStudents.map((student) => student.id);
+
+          // Cập nhật classID thành null cho từng học sinh
+          await Promise.all(
+            studentIds.map((studentId) =>
+              studentService.editStudent(studentId, { classID: null }, null)
+            )
+          );
+
+          // Làm mới danh sách học sinh sau khi cập nhật
+          await refreshStudents();
+
+          // Xóa danh sách học sinh đã chọn
+          setSelectedStudents([]);
+          setAllStudentsSelected(false);
+
+          notification.success({
+            message: "Success",
+            description: "Selected students have been removed from the class.",
+            placement: "topRight",
+            duration: 4,
+          });
+        } catch (error) {
+          console.error("Error removing students:", error);
+          notification.error({
+            message: "Error",
+            description: "Failed to remove students from the class.",
+            placement: "topRight",
+            duration: 4,
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
   // console.log(editingHomeWork);
   useEffect(() => {
     const menu = document.getElementById(":0.container");
@@ -1210,6 +1269,16 @@ const TeacherPage = () => {
     }
   }, [selectedClass]);
 
+  const refreshStudents = async () => {
+    try {
+      const data = await studentService.getAllStudentsbyClass(selectedClass);
+      setStudents(data);
+    } catch (error) {
+      console.error("Error refreshing students:", error);
+      setStudents([]);
+    }
+  };
+
   const fetchLessonByScheduleAndLessonByLevel = async () => {
     try {
       setLoading(true);
@@ -1575,6 +1644,7 @@ const TeacherPage = () => {
                 paddingBottom: "16px",
                 display: "flex",
                 justifyContent: "flex-end",
+                gap: "10px",
               }}
             >
               <Button
@@ -1587,6 +1657,17 @@ const TeacherPage = () => {
                 }}
               >
                 {allStudentsSelected ? "Deselect All Students" : "Select All Students"}
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => setIsCreateStudentModalVisible(true)}
+                disabled={isAttendanceMode}
+                style={{
+                  backgroundColor: colors.midGreen,
+                  borderColor: colors.midGreen,
+                }}
+              >
+                Create Student
               </Button>
             </div>
           )}
@@ -1751,6 +1832,14 @@ const TeacherPage = () => {
             students={selectedStudents}
           />
         )}
+
+        <CreateStudentModal
+          visible={isCreateStudentModalVisible}
+          onClose={() => setIsCreateStudentModalVisible(false)}
+          classID={selectedClass}
+          isMobile={isMobile}
+          refreshStudents={refreshStudents}
+        />
 
         <TeacherFeedbackModal
           visible={isFeedbackModalVisible}

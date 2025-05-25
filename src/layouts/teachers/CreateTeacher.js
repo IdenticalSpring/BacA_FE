@@ -17,7 +17,7 @@ function CreateTeacher() {
     password: "",
     startDate: "",
     linkDrive: "",
-    endDate: "",
+    // endDate: "",
   });
   const [files, setFiles] = useState([]); // Thay đổi từ file thành files để lưu mảng
 
@@ -88,7 +88,7 @@ function CreateTeacher() {
                 value={teacherData.startDate}
                 onChange={(e) => setTeacherData({ ...teacherData, startDate: e.target.value })}
               />
-              <TextField
+              {/* <TextField
                 fullWidth
                 margin="normal"
                 type="date"
@@ -96,7 +96,7 @@ function CreateTeacher() {
                 InputLabelProps={{ shrink: true }}
                 value={teacherData.endDate}
                 onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
-              />
+              /> */}
               <TextField
                 label="Link Drive"
                 fullWidth

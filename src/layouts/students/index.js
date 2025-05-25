@@ -42,7 +42,7 @@ function Students() {
     { Header: "Phone", accessor: "phone", width: "15%" },
     { Header: "Avatar", accessor: "avatar", width: "10%" },
     { Header: "Start Date", accessor: "startDate", width: "10%" },
-    { Header: "End Date", accessor: "endDate", width: "10%" },
+    // { Header: "End Date", accessor: "endDate", width: "10%" },
     { Header: "Actions", accessor: "actions", width: "10%" },
   ]);
   const [rows, setRows] = useState([]);
