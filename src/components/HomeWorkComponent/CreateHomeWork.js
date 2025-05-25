@@ -370,39 +370,43 @@ export default function CreateHomeWork({
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "audio/*");
+    input.setAttribute("multiple", "true"); // Allow multiple audio selection
     input.click();
 
     input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
+      const files = Array.from(input.files);
+      if (!files.length) return;
 
-      const formData = new FormData();
-      formData.append("file", file);
+      const editor = quillRef.current?.getEditor();
+      if (!editor) return;
 
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
+      let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current?.getEditor();
-          if (!editor) return;
-          const range = editor.getSelection(true);
-          const audioUrl = response?.data?.url;
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
-          editor.insertEmbed(range?.index ?? editor.getLength(), "audio", audioUrl, "user");
-          editor.setSelection(range?.index ?? editor.getLength() + 1); // move cursor
-        } else {
-          message.error("Upload failed. Try again!");
+        try {
+          const response = await axios.post(
+            process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+            formData
+          );
+
+          if (response.status === 201) {
+            const audioUrl = response?.data?.url;
+            editor.insertEmbed(currentIndex, "audio", audioUrl, "user");
+            currentIndex++; // Increment index for the next audio
+            editor.setSelection(currentIndex); // Move cursor
+          } else {
+            message.error(`Upload failed for ${file.name}. Try again!`);
+          }
+        } catch (error) {
+          console.error(`Error uploading audio ${file.name}:`, error);
+          message.error(`Upload error for ${file.name}. Please try again!`);
         }
-      } catch (error) {
-        console.error("Error uploading audio:", error);
-        message.error("Upload error. Please try again!");
       }
     };
-  }, []);
+  }, [quillRef]);
   const modules = {
     toolbar: {
       container: toolbar,
