@@ -593,17 +593,15 @@ const TeacherPage = () => {
           setLoading(true);
           const studentIds = selectedStudents.map((student) => student.id);
 
-          // Cập nhật classID thành null cho từng học sinh
+          // Call removeClassFromStudent for each student
           await Promise.all(
-            studentIds.map((studentId) =>
-              studentService.editStudent(studentId, { classID: null }, null)
-            )
+            studentIds.map((studentId) => studentService.removeClassFromStudent(studentId))
           );
 
-          // Làm mới danh sách học sinh sau khi cập nhật
+          // Refresh the student list
           await refreshStudents();
 
-          // Xóa danh sách học sinh đã chọn
+          // Clear selected students
           setSelectedStudents([]);
           setAllStudentsSelected(false);
 
@@ -1669,6 +1667,20 @@ const TeacherPage = () => {
               >
                 Create Student
               </Button>
+              {selectedStudents.length > 0 && (
+                <Button
+                  type="primary"
+                  danger
+                  onClick={handleDeleteStudents}
+                  disabled={isAttendanceMode}
+                  style={{
+                    backgroundColor: colors.errorRed,
+                    borderColor: colors.errorRed,
+                  }}
+                >
+                  Delete Students
+                </Button>
+              )}
             </div>
           )}
           {students?.map((student) => {

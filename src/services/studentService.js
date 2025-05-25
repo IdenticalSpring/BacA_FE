@@ -114,6 +114,23 @@ const studentService = {
     }
   },
 
+  removeClassFromStudent: async (id) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/students/${id}/remove-class`,
+        {},
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error removing student from class";
+    }
+  },
+
   async getEvaluationStudent(id) {
     try {
       const response = await axios.get(`${API_BASE_URL}/teacher-comments/student/${id}`, {
