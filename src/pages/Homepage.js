@@ -61,7 +61,11 @@ export default function Homepage() {
   });
   const [contentData, setContentData] = useState(null);
   const navigate = useNavigate();
-  const [buttonHover, setButtonHover] = useState({ student: false, teacher: false });
+  const [buttonHover, setButtonHover] = useState({
+    student: false,
+    teacher: false,
+    teacherSignUp: false,
+  });
   const [selectLanguageClick, setSelectLanguageClick] = useState(false);
   const containerStyle = {
     padding: "20px",
@@ -371,7 +375,54 @@ export default function Homepage() {
                 </li>
               </ul>
             </nav>
-            <button
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<BookOutlined />}
+                onClick={() => window.open(contentData?.linkTeacherSignUp)}
+                onMouseEnter={() => setButtonHover({ ...buttonHover, teacherSignUp: true })}
+                onMouseLeave={() => setButtonHover({ ...buttonHover, teacherSignUp: false })}
+                style={{
+                  height: "54px",
+                  borderRadius: "30px",
+                  background: buttonHover.teacherSignUp
+                    ? "linear-gradient(90deg, #43A047, #4CAF50)"
+                    : "linear-gradient(90deg, #4CAF50, #43A047)",
+                  borderColor: "#43A047",
+                  fontSize: "16px",
+                  boxShadow: buttonHover.teacherSignUp
+                    ? "0 6px 15px rgba(67, 160, 71, 0.4)"
+                    : "0 4px 10px rgba(67, 160, 71, 0.3)",
+                  transition: "all 0.3s ease",
+                  transform: buttonHover.teacherSignUp ? "translateY(-3px)" : "translateY(0)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <span style={{ position: "relative", zIndex: 2 }}>Teacher SignUp</span>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-50%",
+                    left: "-50%",
+                    right: "-50%",
+                    bottom: "-50%",
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                    animation: buttonHover.teacherSignUp ? "shimmer 1.5s infinite" : "none",
+                    transform: "rotate(30deg)",
+                    zIndex: 1,
+                  }}
+                />
+              </Button>
+              <div
+                id="google_translate_element"
+                style={{ marginRight: "5px" }}
+                onClick={() => setSelectLanguageClick(!selectLanguageClick)}
+              ></div>
+            </div>
+            {/* <button
               onClick={() => {
                 count++;
                 if (count >= 5) {
@@ -391,14 +442,9 @@ export default function Homepage() {
                 fontSize: "16px",
                 fontWeight: "bold",
               }}
-            >
-              {/* Sign In */}
-            </button>
-            <div
-              id="google_translate_element"
-              style={{ marginRight: "5px" }}
-              onClick={() => setSelectLanguageClick(!selectLanguageClick)}
-            ></div>
+            > */}
+            {/* Sign In */}
+            {/* </button> */}
 
             {/* <button onClick={resetGoogleTranslate}>quay lại ngôn ngữ gốc</button> */}
           </>
@@ -730,28 +776,28 @@ export default function Homepage() {
                   type="primary"
                   size="large"
                   icon={<BookOutlined />}
-                  onClick={navigateToTeacherLogin}
-                  onMouseEnter={() => setButtonHover({ ...buttonHover, teacher: true })}
-                  onMouseLeave={() => setButtonHover({ ...buttonHover, teacher: false })}
+                  onClick={() => window.open(contentData?.linkTeacherSignUp)}
+                  onMouseEnter={() => setButtonHover({ ...buttonHover, teacherSignUp: true })}
+                  onMouseLeave={() => setButtonHover({ ...buttonHover, teacherSignUp: false })}
                   style={{
                     height: "54px",
                     borderRadius: "30px",
-                    background: buttonHover.teacher
+                    background: buttonHover.teacherSignUp
                       ? "linear-gradient(90deg, #43A047, #4CAF50)"
                       : "linear-gradient(90deg, #4CAF50, #43A047)",
                     borderColor: "#43A047",
                     fontSize: "16px",
-                    boxShadow: buttonHover.teacher
+                    boxShadow: buttonHover.teacherSignUp
                       ? "0 6px 15px rgba(67, 160, 71, 0.4)"
                       : "0 4px 10px rgba(67, 160, 71, 0.3)",
                     width: "100%",
                     transition: "all 0.3s ease",
-                    transform: buttonHover.teacher ? "translateY(-3px)" : "translateY(0)",
+                    transform: buttonHover.teacherSignUp ? "translateY(-3px)" : "translateY(0)",
                     position: "relative",
                     overflow: "hidden",
                   }}
                 >
-                  <span style={{ position: "relative", zIndex: 2 }}>Teacher Sing Up</span>
+                  <span style={{ position: "relative", zIndex: 2 }}>Teacher SignUp</span>
                   <div
                     style={{
                       position: "absolute",
@@ -761,7 +807,7 @@ export default function Homepage() {
                       bottom: "-50%",
                       background:
                         "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                      animation: buttonHover.teacher ? "shimmer 1.5s infinite" : "none",
+                      animation: buttonHover.teacherSignUp ? "shimmer 1.5s infinite" : "none",
                       transform: "rotate(30deg)",
                       zIndex: 1,
                     }}

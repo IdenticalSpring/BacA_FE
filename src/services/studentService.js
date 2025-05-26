@@ -131,6 +131,23 @@ const studentService = {
     }
   },
 
+  requestDeleteStudent: async (id) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/students/${id}/request-delete`,
+        {},
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Lỗi khi gửi yêu cầu xóa học sinh";
+    }
+  },
+
   async getEvaluationStudent(id) {
     try {
       const response = await axios.get(`${API_BASE_URL}/teacher-comments/student/${id}`, {

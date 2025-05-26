@@ -574,8 +574,8 @@ const TeacherPage = () => {
   const handleDeleteStudents = async () => {
     if (selectedStudents.length === 0) {
       notification.warning({
-        message: "No Students Selected",
-        description: "Please select at least one student to delete.",
+        message: "Chưa chọn học sinh",
+        description: "Vui lòng chọn ít nhất một học sinh để xóa.",
         placement: "topRight",
         duration: 4,
       });
@@ -583,39 +583,34 @@ const TeacherPage = () => {
     }
 
     Modal.confirm({
-      title: "Confirm Remove",
-      content: `Are you sure you want to remove ${selectedStudents.length} student(s) from this class?`,
-      okText: "Yes",
+      title: "Xác nhận gửi yêu cầu xóa",
+      content: `Bạn có chắc chắn muốn gửi yêu cầu xóa ${selectedStudents.length} học sinh khỏi lớp này? Yêu cầu sẽ được gửi đến admin để xử lý.`,
+      okText: "Có",
       okType: "danger",
-      cancelText: "No",
+      cancelText: "Không",
       onOk: async () => {
         try {
           setLoading(true);
           const studentIds = selectedStudents.map((student) => student.id);
 
-          // Call removeClassFromStudent for each student
           await Promise.all(
-            studentIds.map((studentId) => studentService.removeClassFromStudent(studentId))
+            studentIds.map((studentId) => studentService.requestDeleteStudent(studentId))
           );
 
-          // Refresh the student list
-          await refreshStudents();
-
-          // Clear selected students
           setSelectedStudents([]);
           setAllStudentsSelected(false);
 
           notification.success({
-            message: "Success",
-            description: "Selected students have been removed from the class.",
+            message: "Thành công",
+            description: "Yêu cầu xóa học sinh đã được gửi đến admin.",
             placement: "topRight",
             duration: 4,
           });
         } catch (error) {
-          console.error("Error removing students:", error);
+          console.error("Lỗi khi gửi yêu cầu xóa học sinh:", error);
           notification.error({
-            message: "Error",
-            description: "Failed to remove students from the class.",
+            message: "Lỗi",
+            description: "Không thể gửi yêu cầu xóa học sinh. Vui lòng thử lại.",
             placement: "topRight",
             duration: 4,
           });

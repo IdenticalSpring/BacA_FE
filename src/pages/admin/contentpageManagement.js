@@ -1491,6 +1491,27 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
+
+              <TextField
+                margin="dense"
+                label="Link for Teacher Sign Up"
+                type="text"
+                fullWidth
+                value={currentEditItem?.linkTeacherSignUp || ""}
+                onChange={(e) =>
+                  setCurrentEditItem({ ...currentEditItem, linkTeacherSignUp: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: colors.inputBorder },
+                    "&:hover fieldset": { borderColor: colors.midGreen },
+                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
+                  },
+                  "& .MuiInputLabel-root": { color: colors.darkGray },
+                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
+                }}
+              />
+
               <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
                 Image 1 Preview
               </MDTypography>
