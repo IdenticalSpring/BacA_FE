@@ -1,4 +1,3 @@
-// StudentProfileModal.js
 import React, { useState, useEffect } from "react";
 import {
   Modal,
@@ -27,7 +26,6 @@ import {
   EditOutlined,
   SoundOutlined,
   AudioOutlined,
-  PieChartOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { Pie } from "react-chartjs-2";
@@ -38,7 +36,6 @@ import classTestScheduleSerivce from "services/classTestScheduleService";
 import testSkillService from "services/testSkillService";
 import PropTypes from "prop-types";
 import { colors } from "assets/theme/color";
-import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -56,7 +53,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
   const [testSkills, setTestSkills] = useState([]);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null); // State cho ngày được chọn
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
@@ -148,7 +145,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
         setSkillEvaluations(skillData);
         setTestSkills(testSkillsData);
 
-        // Tự động chọn ngày mới nhất
         const uniqueDates = getUniqueDates(skillData);
         if (uniqueDates.length > 0) {
           setSelectedDate(uniqueDates[0]);
@@ -164,7 +160,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     fetchData();
   }, [student?.id]);
 
-  // Hàm format ngày
   const formatDate = (date) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, "0");
@@ -173,7 +168,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     return `${day}/${month}/${year}`;
   };
 
-  // Hàm lấy mô tả điểm số
   const getScoreDescription = (score) => {
     const descriptions = {
       1: "Cần cải thiện",
@@ -185,12 +179,10 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     return descriptions[score] || "Không xác định";
   };
 
-  // Hàm lấy danh sách các ngày duy nhất
   const getUniqueDates = (evaluations = skillEvaluations) => {
     return [...new Set(evaluations.map((s) => s.date))].sort((a, b) => new Date(b) - new Date(a));
   };
 
-  // Hàm tạo dữ liệu cho Donut Chart
   const getSkillsChartData = (type, date) => {
     if (!date) return { labels: [], datasets: [] };
 
@@ -203,12 +195,12 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     const labels = filteredSkills.map((skill) => skill.skill.name);
     const data = filteredSkills.map((skill) => skill.score);
     const backgroundColors = [
-      "#FF6B6B", // Coral
-      "#4ECDC4", // Turquoise
-      "#45B7D1", // Sky Blue
-      "#96CEB4", // Mint
-      "#FFEEAD", // Light Yellow
-      "#D4A5A5", // Soft Pink
+      "#FF6B6B",
+      "#4ECDC4",
+      "#45B7D1",
+      "#96CEB4",
+      "#FFEEAD",
+      "#D4A5A5",
     ].slice(0, filteredSkills.length);
 
     return {
@@ -226,7 +218,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     };
   };
 
-  // Cấu hình cho Donut Chart
   const chartOptions = {
     plugins: {
       legend: {
@@ -249,10 +240,9 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     },
     maintainAspectRatio: false,
     responsive: true,
-    cutout: "50%", // Tạo phần trống ở giữa
+    cutout: "50%",
   };
 
-  // Hàm render Donut Chart
   const renderSkillsChart = (type, title) => {
     const chartData = getSkillsChartData(type, selectedDate);
     return chartData.labels.length ? (
@@ -264,7 +254,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     );
   };
 
-  // Hàm render chi tiết kỹ năng
   const renderSkillDetails = () => {
     const uniqueDates = getUniqueDates();
     return (
@@ -328,7 +317,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     );
   };
 
-  // Các hàm khác (groupScoresByTest, getMostRecentScores, calculateAverage, v.v.) giữ nguyên
   const groupScoresByTest = () => {
     const grouped = {};
     scoreDetailsData.forEach((score) => {
@@ -402,28 +390,32 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
     return Math.min(Math.round((avg / 10) * 100), 100);
   };
 
-  const getScoresForChart = () => {
+  const getPieChartData = () => {
     const groupedScores = groupScoresByTest();
-    return groupedScores
-      .map((score) => {
-        const scores = {};
-        testSkills.forEach((skill) => {
-          const skillName = skill.name.toLowerCase();
-          scores[skillName] = parseFloat(score[`${skillName}Score`]) || 0;
-        });
-        const validScores = Object.values(scores).filter((s) => s > 0);
-        const average =
-          validScores.length > 0
-            ? validScores.reduce((sum, s) => sum + s, 0) / validScores.length
-            : 0;
+    if (!groupedScores || groupedScores.length === 0 || !testSkills || testSkills.length === 0)
+      return null;
 
-        return {
-          date: score.date,
-          ...scores,
-          average: Number(average.toFixed(1)),
-        };
-      })
-      .reverse();
+    const skillAverages = testSkills.map((skill) => {
+      const skillName = skill.name.toLowerCase();
+      const scores = groupedScores
+        .map((score) => parseFloat(score[`${skillName}Score`]) || 0)
+        .filter((score) => score > 0);
+      const average = scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) / scores.length : 0;
+      return Number(average.toFixed(1));
+    });
+
+    return {
+      labels: testSkills.map((skill) => skill.name),
+      datasets: [
+        {
+          label: "Điểm trung bình các kỹ năng",
+          data: skillAverages,
+          backgroundColor: ["#52c41a", "#1890ff", "#faad14", "#f5222d", "#722ed1"],
+          borderColor: colors.borderGreen || "#d9d9d9",
+          borderWidth: 1,
+        },
+      ],
+    };
   };
 
   const groupedScores = groupScoresByTest();
@@ -435,23 +427,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
       })
     : groupedScores;
   const recentScores = getMostRecentScores();
-  const chartData = getScoresForChart();
-
-  const lineChartData = {
-    labels: chartData.map((item) => new Date(item.date).toLocaleDateString()),
-    datasets: [
-      {
-        label: "Điểm trung bình",
-        color: "info",
-        data: chartData.map((item) => item.average),
-      },
-      ...testSkills.map((skill, index) => ({
-        label: skill.name,
-        color: ["warning", "success", "error", "secondary", "primary"][index % 5],
-        data: chartData.map((item) => item[skill.name.toLowerCase()] || 0),
-      })),
-    ],
-  };
+  const pieChartData = getPieChartData();
 
   const scoreHistoryColumns = [
     {
@@ -550,7 +526,6 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
         />
       ) : (
         <>
-          {/* Thông tin học sinh và điểm số giữ nguyên */}
           <Card
             style={{
               marginBottom: 16,
@@ -673,11 +648,11 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
           <Divider style={{ margin: "16px 0" }} orientation="left">
             <Space>
               <TrophyOutlined />
-              <span>Thống kê điểm</span>
+              <span>Thống kê điểm trung bình các kỹ năng</span>
             </Space>
           </Divider>
 
-          {chartData && chartData.length > 0 ? (
+          {pieChartData && pieChartData.datasets[0].data.some((score) => score > 0) ? (
             <Card
               style={{
                 marginBottom: 16,
@@ -685,7 +660,34 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
                 boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
               }}
             >
-              <DefaultLineChart chart={lineChartData} height="400px" />
+              <Pie
+                data={pieChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  cutout: "50%",
+                  plugins: {
+                    legend: {
+                      position: "top",
+                      labels: {
+                        font: {
+                          size: 14,
+                        },
+                      },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const label = context.label || "";
+                          const value = context.raw || 0;
+                          return `${label}: ${value}/9`;
+                        },
+                      },
+                    },
+                  },
+                }}
+                height={400}
+              />
             </Card>
           ) : (
             <Empty

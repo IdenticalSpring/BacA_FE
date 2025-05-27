@@ -24,13 +24,16 @@ import {
   SoundOutlined,
   AudioOutlined,
 } from "@ant-design/icons";
-import DefaultLineChart from "examples/Charts/LineCharts/DefaultLineChart";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import studentScoreService from "services/studentScoreService";
 import studentService from "services/studentService";
-import testSkillService from "services/testSkillService"; // Thêm import testSkillService
-import PropTypes from "prop-types";
+import testSkillService from "services/testSkillService";
 import classTestScheduleSerivce from "services/classTestScheduleService";
 import EvaluationStudent from "./evaluationStudent";
+import PropTypes from "prop-types";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const { Title, Text } = Typography;
 
@@ -41,7 +44,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
   const [studentInfo, setStudentInfo] = useState(null);
   const [error, setError] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [testSkills, setTestSkills] = useState([]); // State mới để lưu danh sách kỹ năng
+  const [testSkills, setTestSkills] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +54,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
       setError(null);
 
       try {
-        // Lấy danh sách kỹ năng kiểm tra
         const skills = await testSkillService.getAllTestSkill();
         setTestSkills(skills);
 
@@ -150,7 +152,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
           comment: null,
         };
       }
-      // Sử dụng testSkill.name từ dữ liệu thay vì hard-code
       const skill = testSkills.find((s) => s.id === score.testSkill.id);
       const skillName = skill?.name.toLowerCase() || score.testSkill.name.toLowerCase();
       grouped[key][`${skillName}Score`] = score.score;
@@ -181,7 +182,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
     const mostRecentScore = getMostRecentScores();
     if (!mostRecentScore) return 0;
 
-    // Tính trung bình dựa trên các kỹ năng động
     const skillScores = testSkills
       .map((skill) => {
         const skillName = skill.name.toLowerCase();
@@ -208,51 +208,34 @@ const StudentScoreTab = ({ studentId, colors }) => {
     return Math.min(Math.round((avg / 10) * 100), 100);
   };
 
-  const getScoresForChart = () => {
+  const getPieChartData = () => {
     const groupedScores = groupScoresByTest();
-    return groupedScores
-      .map((score) => {
-        const scores = {};
-        testSkills.forEach((skill) => {
-          const skillName = skill.name.toLowerCase();
-          scores[skillName] = parseFloat(score[`${skillName}Score`]) || 0;
-        });
-        const validScores = Object.values(scores).filter((s) => s > 0);
-        const average =
-          validScores.length > 0
-            ? validScores.reduce((sum, s) => sum + s, 0) / validScores.length
-            : 0;
+    if (!groupedScores || groupedScores.length === 0 || !testSkills || testSkills.length === 0)
+      return null;
 
-        return {
-          date: score.date,
-          ...scores,
-          average: Number(average.toFixed(1)),
-        };
-      })
-      .reverse();
+    const skillAverages = testSkills.map((skill) => {
+      const skillName = skill.name.toLowerCase();
+      const scores = groupedScores
+        .map((score) => parseFloat(score[`${skillName}Score`]) || 0)
+        .filter((score) => score > 0);
+      const average = scores.length > 0 ? scores.reduce((sum, s) => sum + s, 0) / scores.length : 0;
+      return Number(average.toFixed(1));
+    });
+
+    return {
+      labels: testSkills.map((skill) => skill.name),
+      datasets: [
+        {
+          label: "Điểm trung bình các kỹ năng",
+          data: skillAverages,
+          backgroundColor: ["#52c41a", "#1890ff", "#faad14", "#f5222d", "#722ed1"],
+          borderColor: colors.borderGreen || "#d9d9d9",
+          borderWidth: 1,
+        },
+      ],
+    };
   };
 
-  const groupedScores = groupScoresByTest();
-  const recentScores = getMostRecentScores();
-  const chartData = getScoresForChart();
-
-  const lineChartData = {
-    labels: chartData.map((item) => new Date(item.date).toLocaleDateString()),
-    datasets: [
-      {
-        label: "Điểm trung bình",
-        color: "info",
-        data: chartData.map((item) => item.average),
-      },
-      ...testSkills.map((skill, index) => ({
-        label: skill.name,
-        color: ["warning", "success", "error", "secondary", "primary"][index % 5], // Gán màu động
-        data: chartData.map((item) => item[skill.name.toLowerCase()] || 0),
-      })),
-    ],
-  };
-
-  // Cập nhật cột bảng lịch sử điểm số động dựa trên testSkills
   const scoreHistoryColumns = [
     {
       title: "Ngày thi",
@@ -282,7 +265,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
         style: { backgroundColor: colors.paleGreen || "#f6ffed" },
       }),
     },
-    // Tạo cột động cho từng kỹ năng
     ...testSkills.map((skill) => ({
       title: skill.name,
       dataIndex: `${skill.name.toLowerCase()}Score`,
@@ -339,6 +321,9 @@ const StudentScoreTab = ({ studentId, colors }) => {
       />
     );
   }
+
+  const recentScores = getMostRecentScores();
+  const pieChartData = getPieChartData();
 
   return (
     <>
@@ -445,7 +430,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
                   <Statistic
                     title={
                       <Space>
-                        {/* Icon động dựa trên tên kỹ năng */}
                         {skill.name.toLowerCase().includes("writ") ? (
                           <EditOutlined />
                         ) : skill.name.toLowerCase().includes("read") ? (
@@ -484,11 +468,11 @@ const StudentScoreTab = ({ studentId, colors }) => {
       <Divider style={{ margin: "16px 0" }} orientation="left">
         <Space>
           <TrophyOutlined />
-          <span>Thống kê điểm</span>
+          <span>Thống kê điểm trung bình các kỹ năng</span>
         </Space>
       </Divider>
 
-      {chartData && chartData.length > 0 ? (
+      {pieChartData && pieChartData.datasets[0].data.some((score) => score > 0) ? (
         <Card
           style={{
             marginBottom: 16,
@@ -496,7 +480,34 @@ const StudentScoreTab = ({ studentId, colors }) => {
             boxShadow: `0 2px 8px ${colors.softShadow || "rgba(0,0,0,0.1)"}`,
           }}
         >
-          <DefaultLineChart chart={lineChartData} height="400px" />
+          <Pie
+            data={pieChartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: "50%",
+              plugins: {
+                legend: {
+                  position: "top",
+                  labels: {
+                    font: {
+                      size: 14,
+                    },
+                  },
+                },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => {
+                      const label = context.label || "";
+                      const value = context.raw || 0;
+                      return `${label}: ${value}/9`;
+                    },
+                  },
+                },
+              },
+            }}
+            height={400}
+          />
         </Card>
       ) : (
         <Empty description="Chưa có dữ liệu để hiển thị biểu đồ" style={{ padding: "30px 0" }} />
@@ -509,10 +520,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
         </Space>
       </Divider>
 
-      {groupedScores && groupedScores.length > 0 ? (
+      {groupScoresByTest().length > 0 ? (
         <Table
           columns={scoreHistoryColumns}
-          dataSource={groupedScores.map((score, index) => ({ ...score, key: index }))}
+          dataSource={groupScoresByTest().map((score, index) => ({ ...score, key: index }))}
           pagination={{
             pageSize: 4,
             showSizeChanger: false,
