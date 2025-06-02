@@ -1651,17 +1651,6 @@ const TeacherPage = () => {
               >
                 {allStudentsSelected ? "Deselect All Students" : "Select All Students"}
               </Button>
-              <Button
-                type="primary"
-                onClick={() => setIsCreateStudentModalVisible(true)}
-                disabled={isAttendanceMode}
-                style={{
-                  backgroundColor: colors.midGreen,
-                  borderColor: colors.midGreen,
-                }}
-              >
-                Create Student
-              </Button>
               {selectedStudents.length > 0 && (
                 <Button
                   type="primary"
@@ -1831,6 +1820,53 @@ const TeacherPage = () => {
               </Col>
             );
           })}
+          {selectedClass && (
+            <Col xs={20} sm={10} md={8} lg={6} xl={4}>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: `0 2px 8px ${colors.softShadow}`,
+                  border: `1px solid ${colors.borderGreen}`,
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                  backgroundColor: colors.white,
+                }}
+                hoverable
+                bodyStyle={{ padding: "16px" }}
+                onClick={() => setIsCreateStudentModalVisible(true)}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <Avatar
+                    size={isMobile ? 48 : 64}
+                    style={{
+                      backgroundColor: colors.midGreen,
+                      color: colors.white,
+                      marginBottom: "12px",
+                      fontSize: isMobile ? "24px" : "32px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    +
+                  </Avatar>
+                  <Typography.Title
+                    level={5}
+                    style={{ margin: "0 0 8px 0", color: colors.darkGreen }}
+                  >
+                    Create Student
+                  </Typography.Title>
+                </div>
+              </Card>
+            </Col>
+          )}
         </Row>
         {selectedStudents.length > 0 && (
           <EvaluationModal

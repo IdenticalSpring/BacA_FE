@@ -35,13 +35,13 @@ function CreateStudent() {
     name: "",
     level: "",
     // yearOfBirth: "",
-    phone: "",
+    // phone: "",
     imgUrl: "",
     username: "",
     password: "",
     startDate: "",
     // endDate: "",
-    note: "",
+    // note: "",
     classID: "",
     // schedule: "",
   });
@@ -207,13 +207,13 @@ function CreateStudent() {
                 value={studentData.yearOfBirth}
                 onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
               /> */}
-              <TextField
+              {/* <TextField
                 label="Phone"
                 fullWidth
                 margin="normal"
                 value={studentData.phone}
                 onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
-              />
+              /> */}
 
               {/* Phần tải file Avatar */}
               <Box
@@ -381,13 +381,13 @@ function CreateStudent() {
                 value={studentData.endDate}
                 onChange={(e) => setStudentData({ ...studentData, endDate: e.target.value })}
               /> */}
-              <TextField
+              {/* <TextField
                 label="Note"
                 fullWidth
                 margin="normal"
                 value={studentData.note}
                 onChange={(e) => setStudentData({ ...studentData, note: e.target.value })}
-              />
+              /> */}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="text"

@@ -71,11 +71,11 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("level", values.level);
-      formData.append("phone", values.phone || "");
+      // formData.append("phone", values.phone || "");
       formData.append("username", values.username);
       formData.append("password", values.password);
       formData.append("startDate", values.startDate);
-      formData.append("note", values.note || "");
+      // formData.append("note", values.note || "");
       formData.append("classID", classID);
 
       if (fileList.length > 0 && fileList[0].status === "done" && fileList[0].response) {
@@ -121,11 +121,11 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
         initialValues={{
           name: "",
           level: "",
-          phone: "",
+          // phone: "",
           username: "",
           password: "",
           startDate: "",
-          note: "",
+          // note: "",
         }}
       >
         <Form.Item
@@ -150,9 +150,9 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
           </Select>
         </Form.Item>
 
-        <Form.Item name="phone" label="Phone">
+        {/* <Form.Item name="phone" label="Phone">
           <Input placeholder="Enter phone number" />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item
           name="username"
@@ -178,9 +178,9 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
           <Input type="date" />
         </Form.Item>
 
-        <Form.Item name="note" label="Note">
+        {/* <Form.Item name="note" label="Note">
           <Input.TextArea rows={3} placeholder="Enter any notes" />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item label="Avatar">
           <Upload

@@ -39,7 +39,7 @@ function Students() {
     // { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
     { Header: "Level", accessor: "level", width: "15%" },
     { Header: "Class", accessor: "note", width: "15%" },
-    { Header: "Phone", accessor: "phone", width: "15%" },
+    // { Header: "Phone", accessor: "phone", width: "15%" },
     { Header: "Avatar", accessor: "avatar", width: "10%" },
     { Header: "Start Date", accessor: "startDate", width: "10%" },
     // { Header: "End Date", accessor: "endDate", width: "10%" },
@@ -61,12 +61,12 @@ function Students() {
     name: "",
     level: "",
     // yearOfBirth: "",
-    phone: "",
+    // phone: "",
     classID: "",
     imgUrl: "",
     startDate: "",
     endDate: "",
-    note: "",
+    // note: "",
   });
   const [searchName, setSearchName] = useState("");
   const [searchSchedule, setSearchSchedule] = useState("");
@@ -157,7 +157,7 @@ function Students() {
           name: student.name,
           level: levelName, // Hiển thị tên thay vì ID
           // yearOfBirth: student.yearOfBirth,
-          phone: student.phone,
+          // phone: student.phone,
           avatar: (
             <Box display="flex" justifyContent="center">
               <Avatar
@@ -246,13 +246,13 @@ function Students() {
       username: student.username || "",
       password: student.password || "",
       // yearOfBirth: student.yearOfBirth,
-      phone: student.phone,
+      // phone: student.phone,
       imgUrl: student.imgUrl,
       classID: student.class?.id,
       level: +student.level,
       startDate: student.startDate,
       endDate: student.endDate,
-      note: student.note,
+      // note: student.note,
     });
     setPreviewImage(student.imgUrl);
     setOpen(true);
@@ -303,11 +303,11 @@ function Students() {
         password: studentData.password,
         // yearOfBirth: studentData.yearOfBirth,
         classID: studentData.classID,
-        phone: studentData.phone,
+        // phone: studentData.phone,
         level: studentData.level,
         startDate: studentData.startDate,
         endDate: studentData.endDate,
-        note: studentData.note,
+        // note: studentData.note,
       };
 
       if (editMode && selectedStudent) {
@@ -326,7 +326,7 @@ function Students() {
                   name: updatedStudent.name,
                   level: levels.find((lv) => lv.id === +updatedStudent.level)?.name || "N/A",
                   // yearOfBirth: updatedStudent.yearOfBirth,
-                  phone: updatedStudent.phone,
+                  // phone: updatedStudent.phone,
                   avatar: (
                     <Box display="flex" justifyContent="center">
                       <Avatar
@@ -345,7 +345,7 @@ function Students() {
                   imgUrl: updatedStudent.imgUrl,
                   startDate: updatedStudent.startDate,
                   endDate: updatedStudent.endDate,
-                  note: updatedStudent.class?.name,
+                  // note: updatedStudent.class?.name,
                   rawLevel: updatedStudent.level,
                   actions: (
                     <>
@@ -383,12 +383,12 @@ function Students() {
         name: "",
         level: "",
         // yearOfBirth: "",
-        phone: "",
+        // phone: "",
         classID: "",
         imgUrl: "",
         startDate: "",
         endDate: "",
-        note: "",
+        // note: "",
       });
       setPreviewImage(null);
       setEditMode(false);
@@ -531,13 +531,13 @@ function Students() {
             value={studentData.yearOfBirth}
             onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
           /> */}
-          <TextField
+          {/* <TextField
             label="Phone"
             fullWidth
             margin="normal"
             value={studentData.phone}
             onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
-          />
+          /> */}
           <Box sx={{ mt: 3, mb: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
               Student Avatar
