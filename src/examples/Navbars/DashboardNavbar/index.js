@@ -12,6 +12,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import MDBox from "components/MDBox";
 import Breadcrumbs from "examples/Breadcrumbs";
 import NotificationItem from "examples/Items/NotificationItem";
@@ -31,6 +35,7 @@ import {
 import EditAdminModal from "./EditAdminModal";
 import { jwtDecode } from "jwt-decode";
 import notificationService from "services/notificationService";
+import { colors } from "assets/theme/color";
 
 function DashboardNavbar({ absolute, light, isMini }) {
   const [navbarType, setNavbarType] = useState();
@@ -50,9 +55,14 @@ function DashboardNavbar({ absolute, light, isMini }) {
     const fetchNotifications = async () => {
       try {
         const data = await notificationService.getAllNotifications();
+        const readNotifications = JSON.parse(localStorage.getItem("readNotifications")) || [];
         const adminNotifications = data
           .filter((notification) => notification.type === true)
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sắp xếp mới nhất lên đầu
+          .map((notification) => ({
+            ...notification,
+            isRead: readNotifications.includes(notification.id) || notification.isRead,
+          }))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setNotifications(adminNotifications);
       } catch (error) {
         console.error("Lỗi khi lấy thông báo:", error);
@@ -63,20 +73,39 @@ function DashboardNavbar({ absolute, light, isMini }) {
   }, []);
 
   // Xử lý nhấp vào thông báo để xem chi tiết
-  const handleNotificationClick = async (id) => {
+  const handleNotificationClick = (id) => {
     try {
-      const notification = await notificationService.getNotificationById(id);
+      const notification = notifications.find((notif) => notif.id === id);
       setSelectedNotification(notification);
       setOpenDetailModal(true);
       handleCloseMenu();
+
+      // Cập nhật trạng thái đã đọc trong state và localStorage
+      if (!notification.isRead) {
+        setNotifications((prev) =>
+          prev.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif))
+        );
+        const readNotifications = JSON.parse(localStorage.getItem("readNotifications")) || [];
+        if (!readNotifications.includes(id)) {
+          readNotifications.push(id);
+          localStorage.setItem("readNotifications", JSON.stringify(readNotifications));
+        }
+      }
     } catch (error) {
-      console.error("Lỗi khi lấy chi tiết thông báo:", error);
+      console.error("Lỗi khi xử lý thông báo:", error);
     }
   };
 
   const handleCloseDetailModal = () => {
     setOpenDetailModal(false);
     setSelectedNotification(null);
+  };
+
+  // Đánh dấu tất cả là đã đọc
+  const handleMarkAllRead = () => {
+    const allIds = notifications.map((n) => n.id);
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
+    localStorage.setItem("readNotifications", JSON.stringify(allIds));
   };
 
   useEffect(() => {
@@ -106,6 +135,18 @@ function DashboardNavbar({ absolute, light, isMini }) {
   // Đếm số lượng thông báo chưa đọc
   const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
+  // Format thời gian
+  const formatTime = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return "Vừa xong";
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
+  };
+
   const renderMenu = () => (
     <Menu
       anchorEl={openMenu}
@@ -118,31 +159,173 @@ function DashboardNavbar({ absolute, light, isMini }) {
       onClose={handleCloseMenu}
       sx={{
         mt: 2,
-        maxHeight: "400px", // Giới hạn chiều cao menu
         "& .MuiPaper-root": {
-          maxHeight: "400px",
-          overflowY: "auto", // Kích hoạt thanh cuộn
-          width: "300px", // Đặt chiều rộng cố định cho menu
+          maxHeight: "500px",
+          overflowY: "auto",
+          width: "380px",
+          borderRadius: "12px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          border: "1px solid rgba(0,0,0,0.08)",
         },
       }}
     >
-      {notifications.length > 0 ? (
-        notifications.map(
-          (
-            notification // Hiển thị tất cả thông báo
-          ) => (
-            <NotificationItem
-              key={notification.id}
-              icon={<Icon>notifications</Icon>}
-              title={notification.title}
-              description={notification.detail}
-              onClick={() => handleNotificationClick(notification.id)}
+      {/* Header của menu notification */}
+      <Box
+        sx={{
+          p: 2,
+          borderBottom: `1px solid ${colors.borderGreen}`,
+          background: `linear-gradient(135deg, ${colors.deepGreen} 0%, ${colors.darkGreen} 100%)`,
+          color: colors.white,
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: colors.white }}>
+            Thông báo
+          </Typography>
+          {unreadCount > 0 && (
+            <Chip
+              label={`${unreadCount} mới`}
+              size="small"
+              sx={{
+                backgroundColor: colors.highlightGreen,
+                color: colors.white,
+                fontWeight: 600,
+              }}
             />
-          )
-        )
-      ) : (
-        <NotificationItem icon={<Icon>info</Icon>} title="Không có thông báo mới" />
-      )}
+          )}
+        </Box>
+        {unreadCount > 0 && (
+          <Button
+            size="small"
+            onClick={handleMarkAllRead}
+            sx={{
+              color: colors.white,
+              textTransform: "none",
+              fontSize: "12px",
+              minWidth: "auto",
+              p: 0.5,
+              "&:hover": {
+                backgroundColor: colors.safeGreen,
+              },
+            }}
+          >
+            Đánh dấu tất cả đã đọc
+          </Button>
+        )}
+      </Box>
+
+      {/* Danh sách thông báo */}
+      <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
+        {notifications.length > 0 ? (
+          notifications.map((notification, index) => (
+            <Box key={notification.id}>
+              <Box
+                onClick={() => handleNotificationClick(notification.id)}
+                sx={{
+                  p: 2,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  borderLeft: notification.isRead
+                    ? "4px solid transparent"
+                    : `4px solid ${colors.emerald}`,
+                  backgroundColor: notification.isRead ? "transparent" : colors.paleGreen,
+                  "&:hover": {
+                    backgroundColor: notification.isRead ? colors.gray : colors.tableRowHover,
+                    transform: "translateX(2px)",
+                  },
+                  position: "relative",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+                  {/* Icon thông báo */}
+                  <Box
+                    sx={{
+                      minWidth: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: notification.isRead ? colors.gray : colors.emerald,
+                      color: notification.isRead ? colors.darkGray : colors.white,
+                    }}
+                  >
+                    <Icon fontSize="small">notifications</Icon>
+                  </Box>
+
+                  {/* Nội dung thông báo */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: notification.isRead ? 400 : 600,
+                        color: notification.isRead ? colors.darkGray : colors.darkGreen,
+                        mb: 0.5,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {notification.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: notification.isRead ? colors.darkGray : colors.seaGreen,
+                        lineHeight: 1.4,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
+                      {notification.detail}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: colors.darkGray,
+                        mt: 0.5,
+                        display: "block",
+                      }}
+                    >
+                      {formatTime(notification.createdAt)}
+                    </Typography>
+                  </Box>
+
+                  {/* Chấm tròn cho thông báo chưa đọc */}
+                  {!notification.isRead && (
+                    <Box
+                      sx={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        backgroundColor: colors.emerald,
+                        mt: 0.5,
+                      }}
+                    />
+                  )}
+                </Box>
+              </Box>
+              {index < notifications.length - 1 && (
+                <Divider sx={{ borderColor: colors.borderGreen }} />
+              )}
+            </Box>
+          ))
+        ) : (
+          <Box
+            sx={{
+              p: 4,
+              textAlign: "center",
+              color: colors.darkGray,
+            }}
+          >
+            <Icon sx={{ fontSize: 48, mb: 2, opacity: 0.3, color: colors.midGreen }}>
+              notifications_none
+            </Icon>
+            <Typography variant="body2">Không có thông báo nào</Typography>
+          </Box>
+        )}
+      </Box>
     </Menu>
   );
 
@@ -208,7 +391,23 @@ function DashboardNavbar({ absolute, light, isMini }) {
                   variant="contained"
                   onClick={handleOpenMenu}
                 >
-                  <Badge badgeContent={unreadCount} color="error">
+                  <Badge
+                    badgeContent={unreadCount}
+                    color="error"
+                    sx={{
+                      "& .MuiBadge-badge": {
+                        fontSize: "10px",
+                        minWidth: "18px",
+                        height: "18px",
+                        animation: unreadCount > 0 ? "pulse 2s infinite" : "none",
+                        "@keyframes pulse": {
+                          "0%": { transform: "scale(1)" },
+                          "50%": { transform: "scale(1.1)" },
+                          "100%": { transform: "scale(1)" },
+                        },
+                      },
+                    }}
+                  >
                     <Icon sx={iconsStyle}>notifications</Icon>
                   </Badge>
                 </IconButton>
@@ -219,18 +418,68 @@ function DashboardNavbar({ absolute, light, isMini }) {
         </Toolbar>
       </AppBar>
       <EditAdminModal open={openModal} handleClose={handleCloseModal} adminId={adminId} />
-      <Dialog open={openDetailModal} onClose={handleCloseDetailModal}>
-        <DialogTitle>{selectedNotification?.title || "Chi tiết thông báo"}</DialogTitle>
-        <DialogContent>
-          <p>{selectedNotification?.detail || "Không có chi tiết thông báo."}</p>
+
+      {/* Enhanced Detail Modal */}
+      <Dialog
+        open={openDetailModal}
+        onClose={handleCloseDetailModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: `linear-gradient(135deg, ${colors.deepGreen} 0%, ${colors.darkGreen} 100%)`,
+            color: colors.white,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Icon>notifications</Icon>
+          {selectedNotification?.title || "Chi tiết thông báo"}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
+            {selectedNotification?.detail || "Không có chi tiết thông báo."}
+          </Typography>
           {selectedNotification?.createdAt && (
-            <p>
-              <strong>Ngày tạo:</strong> {new Date(selectedNotification.createdAt).toLocaleString()}
-            </p>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.paleGreen,
+                borderRadius: "8px",
+                borderLeft: `4px solid ${colors.emerald}`,
+              }}
+            >
+              <Typography variant="caption" sx={{ color: colors.darkGray }}>
+                <strong>Thời gian:</strong>{" "}
+                {new Date(selectedNotification.createdAt).toLocaleString("vi-VN")}
+              </Typography>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDetailModal}>Đóng</Button>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleCloseDetailModal}
+            variant="contained"
+            sx={{
+              background: `linear-gradient(135deg, ${colors.deepGreen} 0%, ${colors.darkGreen} 100%)`,
+              textTransform: "none",
+              borderRadius: "8px",
+              "&:hover": {
+                background: `linear-gradient(135deg, ${colors.safeGreen} 0%, ${colors.deepGreen} 100%)`,
+              },
+              color: colors.white,
+            }}
+          >
+            Đóng
+          </Button>
         </DialogActions>
       </Dialog>
     </>

@@ -723,7 +723,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
                   },
                 },
                 {
-                  title: "Tình hình làm bài tập về nhà",
+                  title: "Tình hình đăng nhập",
                   dataIndex: "isDoneHomework",
                   key: "isDoneHomework",
                   render: (text) => {
@@ -731,11 +731,11 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
 
                     return text ? (
                       <Tag style={{ margin: 0 }} color="green">
-                        Đã làm bài
+                        Đã đăng nhập
                       </Tag>
                     ) : (
                       <Tag style={{ margin: 0 }} color="red">
-                        Chưa làm bài
+                        Chưa đăng nhập
                       </Tag>
                     );
                   },
