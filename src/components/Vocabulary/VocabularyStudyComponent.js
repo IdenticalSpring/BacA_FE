@@ -107,12 +107,25 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   // const currentItems = vocabularyItems.slice(indexOfFirstItem, indexOfLastItem);
-  const filterArray = vocabularyItems?.filter(
-    (item) => !item.student || (item?.student && item?.student.id === studentId)
+  // 1. Gắn index ban đầu
+  const withIndex = vocabularyItems?.map((item, index) => ({ ...item, originalIndex: index }));
+
+  // 2. Lọc như bạn làm
+  const filterArray = withIndex?.filter(
+    (item) => !item.student || (item.student && item.student.id === studentId)
   );
+
+  // 3. Sort: ưu tiên student === null lên trước, giữ nguyên thứ tự ban đầu nếu bằng
   const sortedArray = filterArray?.sort((a, b) => {
-    return (a.student === null ? -1 : 1) - (b.student === null ? -1 : 1);
+    const aPriority = a.student === null ? 0 : 1;
+    const bPriority = b.student === null ? 0 : 1;
+
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority; // null lên trước
+    }
+    return a.originalIndex - b.originalIndex; // giữ thứ tự gốc
   });
+
   const currentItems = sortedArray;
   const countStudentNull = vocabularyItems?.filter((item) => !item.student).length;
   const firstStudent = sortedArray?.findIndex((item) => item.student !== null);
