@@ -22,6 +22,7 @@ import {
   Space,
   Tag,
   Drawer,
+  Divider,
 } from "antd";
 import {
   UserOutlined,
@@ -172,6 +173,8 @@ const TeacherPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loadingNotification, setLoadingNotification] = useState(false);
   const [errorNotification, setErrorNotification] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null); // State mới cho thông báo được chọn
+  const [openDetailModal, setOpenDetailModal] = useState(false); // State mới cho modal chi tiết
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
 
@@ -803,29 +806,213 @@ const TeacherPage = () => {
     const fetchNotification = async () => {
       try {
         setLoadingNotification(true);
-        const notiData = {
-          type: true,
-        };
+        const notiData = { type: true };
         const res = await notificationService.getAllGeneralNotificationsByType(notiData);
+        const readNotifications = JSON.parse(localStorage.getItem("readNotifications")) || [];
 
-        if (res[0]?.createdAt) {
-          const sortedData = [...res].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          const data = sortedData.map((item) => ({
+        // Sắp xếp thông báo theo createdAt (mới nhất trước) và thêm timeElapsed, isRead
+        const sortedData = res
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .map((item) => ({
             ...item,
             timeElapsed: getTimeElapsed(item.createdAt),
+            isRead: readNotifications.includes(item.id) || item.isRead,
           }));
-          //   console.log(data);
 
-          setNotifications(data);
-        }
+        setNotifications(sortedData);
       } catch (error) {
-        setErrorNotification(error || "fail to fetch notification");
+        setErrorNotification(error.message || "Không thể tải thông báo");
       } finally {
-        setLoadingNotification(true);
+        setLoadingNotification(false);
       }
     };
     fetchNotification();
   }, []);
+
+  // Hàm định dạng thời gian cho thông báo (tương tự index.js)
+  const formatTime = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return "Vừa xong";
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
+  };
+
+  // Xử lý khi nhấp vào thông báo
+  const handleNotificationClick = (notification) => {
+    setSelectedNotification(notification);
+    setOpenDetailModal(true);
+    if (!notification.isRead) {
+      setNotifications((prev) =>
+        prev.map((notif) => (notif.id === notification.id ? { ...notif, isRead: true } : notif))
+      );
+      const readNotifications = JSON.parse(localStorage.getItem("readNotifications")) || [];
+      if (!readNotifications.includes(notification.id)) {
+        readNotifications.push(notification.id);
+        localStorage.setItem("readNotifications", JSON.stringify(readNotifications));
+      }
+    }
+  };
+
+  // Đánh dấu tất cả thông báo là đã đọc
+  const handleMarkAllRead = () => {
+    const allIds = notifications.map((n) => n.id);
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
+    localStorage.setItem("readNotifications", JSON.stringify(allIds));
+  };
+
+  // Menu thông báo
+  const notificationMenu = (
+    <Menu
+      style={{
+        maxHeight: "500px",
+        overflowY: "auto",
+        width: "380px",
+        borderRadius: "12px",
+        boxShadow: `0 8px 32px rgba(0,0,0,0.12)`,
+        border: `1px solid ${colors.borderGreen}`,
+      }}
+    >
+      <div
+        style={{
+          padding: "16px",
+          borderBottom: `1px solid ${colors.borderGreen}`,
+          background: `linear-gradient(135deg, ${colors.deepGreen} 0%, ${colors.darkGreen} 100%)`,
+          color: colors.white,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
+          <Typography.Title level={5} style={{ color: colors.white, margin: 0 }}>
+            Thông báo
+          </Typography.Title>
+          {notifications.filter((n) => !n.isRead).length > 0 && (
+            <Tag color={colors.highlightGreen} style={{ fontWeight: 600 }}>
+              {notifications.filter((n) => !n.isRead).length} mới
+            </Tag>
+          )}
+        </div>
+        {notifications.filter((n) => !n.isRead).length > 0 && (
+          <Button
+            size="small"
+            onClick={handleMarkAllRead}
+            style={{
+              color: colors.white,
+              border: "none",
+              background: "transparent",
+              padding: "4px 0",
+            }}
+          >
+            Đánh dấu tất cả đã đọc
+          </Button>
+        )}
+      </div>
+      {loadingNotification ? (
+        <div style={{ textAlign: "center", padding: "20px" }}>
+          <Spin />
+          <div style={{ marginTop: "10px" }}>Đang tải...</div>
+        </div>
+      ) : errorNotification ? (
+        <Alert
+          message="Lỗi"
+          description={errorNotification}
+          type="error"
+          showIcon
+          style={{ margin: "8px" }}
+        />
+      ) : notifications.length > 0 ? (
+        notifications.map((notification, index) => (
+          <Menu.Item
+            key={notification.id}
+            onClick={() => handleNotificationClick(notification)}
+            style={{
+              padding: "12px 16px",
+              borderLeft: notification.isRead
+                ? "4px solid transparent"
+                : `4px solid ${colors.emerald}`,
+              backgroundColor: notification.isRead ? "transparent" : colors.paleGreen,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+              <Avatar
+                style={{
+                  backgroundColor: notification.isRead ? colors.gray : colors.emerald,
+                  color: colors.white,
+                }}
+                icon={<BellOutlined />}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Typography.Text
+                  strong={!notification.isRead}
+                  style={{
+                    color: notification.isRead ? colors.darkGray : colors.darkGreen,
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {notification.title}
+                </Typography.Text>
+                <Typography.Text
+                  style={{
+                    color: notification.isRead ? colors.darkGray : colors.seaGreen,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {notification.detail}
+                </Typography.Text>
+                <Typography.Text
+                  style={{
+                    color: colors.darkGray,
+                    fontSize: "12px",
+                    display: "block",
+                    marginTop: "4px",
+                  }}
+                >
+                  {formatTime(notification.createdAt)}
+                </Typography.Text>
+              </div>
+              {!notification.isRead && (
+                <div
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: colors.emerald,
+                    marginTop: "8px",
+                  }}
+                />
+              )}
+            </div>
+            {index < notifications.length - 1 && (
+              <Divider style={{ margin: "8px 0", borderColor: colors.borderGreen }} />
+            )}
+          </Menu.Item>
+        ))
+      ) : (
+        <div style={{ padding: "24px", textAlign: "center", color: colors.darkGray }}>
+          <BellOutlined
+            style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3, color: colors.midGreen }}
+          />
+          <Typography.Text>Không có thông báo nào</Typography.Text>
+        </div>
+      )}
+    </Menu>
+  );
+
   const fetchContentData = async () => {
     try {
       const data = await contentPageService.getAllContentPages();
@@ -1527,21 +1714,79 @@ const TeacherPage = () => {
                 {classes.find((cls) => cls.id === selectedClass)?.accessId}
               </Tag>
             )}
-            {/* Notification Bell */}
-            <Button
-              type="text"
-              onClick={handleViewNotification}
-              style={{
-                marginRight: 12,
-                display: "flex",
-                alignItems: "center",
-                padding: 0,
-              }}
-            >
-              <Badge count={notifications.length} size="small">
-                <BellOutlined style={{ fontSize: 20, color: colors.darkGreen }} />
-              </Badge>
-            </Button>
+            <Dropdown overlay={notificationMenu} trigger={["click"]} placement="bottomRight">
+              <Button
+                type="text"
+                style={{
+                  marginRight: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0 8px",
+                  borderRadius: "8px",
+                  transition: "all 0.3s ease",
+                  ...(notifications.filter((n) => !n.isRead).length > 0 && {
+                    backgroundColor: "#FF6B6B",
+                    border: "2px solid #FF4757",
+                    boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)",
+                    animation: "pulse 2s infinite",
+                  }),
+                }}
+              >
+                <Badge count={notifications.filter((n) => !n.isRead).length} size="small">
+                  <BellOutlined
+                    style={{
+                      fontSize: 20,
+                      color:
+                        notifications.filter((n) => !n.isRead).length > 0
+                          ? colors.white
+                          : colors.darkGreen,
+                      ...(notifications.filter((n) => !n.isRead).length > 0 && {
+                        filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))",
+                        animation: "glow 1.5s ease-in-out infinite alternate",
+                      }),
+                    }}
+                  />
+                </Badge>
+                {/* {notifications.filter((n) => !n.isRead).length > 0 && (
+                  <Typography.Text
+                    style={{
+                      backgroundColor: "#FFD700",
+                      color: "#D32F2F",
+                      borderRadius: "14px",
+                      padding: "3px 8px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      marginLeft: "8px",
+                      border: "2px solid #FFFFFF",
+                      boxShadow: "0 2px 8px rgba(255, 215, 0, 0.6)",
+                      animation: "bounce 2s infinite",
+                    }}
+                  >
+                    {notifications.filter((n) => !n.isRead).length > 99
+                      ? "99+"
+                      : notifications.filter((n) => !n.isRead).length}
+                  </Typography.Text>
+                )} */}
+              </Button>
+            </Dropdown>
+            <style>
+              {`
+      @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3); }
+        50% { transform: scale(1.08); box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5); }
+        100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3); }
+      }
+      @keyframes glow {
+        from { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)); }
+        to { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 1)); }
+      }
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1); }
+        40% { transform: translateY(-3px) scale(1.1); }
+        60% { transform: translateY(-1px) scale(1.05); }
+      }
+    `}
+            </style>
 
             {/* Help/Question Icon */}
             <Button
@@ -2589,6 +2834,59 @@ const TeacherPage = () => {
         )}
       </Modal>
       <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <BellOutlined />
+            <span>{selectedNotification?.title || "Chi tiết thông báo"}</span>
+          </div>
+        }
+        open={openDetailModal}
+        onCancel={() => {
+          setOpenDetailModal(false);
+          setSelectedNotification(null);
+        }}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => {
+              setOpenDetailModal(false);
+              setSelectedNotification(null);
+            }}
+            style={{
+              background: `linear-gradient(135deg, ${colors.deepGreen} 0%, ${colors.darkGreen} 100%)`,
+              color: colors.white,
+              borderRadius: "8px",
+            }}
+          >
+            Đóng
+          </Button>,
+        ]}
+        width="500px"
+        centered
+        style={{ borderRadius: "12px" }}
+      >
+        <div style={{ padding: "16px 0" }}>
+          <Typography.Text style={{ lineHeight: 1.6, display: "block", marginBottom: "16px" }}>
+            {selectedNotification?.detail || "Không có chi tiết thông báo."}
+          </Typography.Text>
+          {selectedNotification?.createdAt && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: colors.paleGreen,
+                borderRadius: "8px",
+                borderLeft: `4px solid ${colors.emerald}`,
+              }}
+            >
+              <Typography.Text style={{ color: colors.darkGray }}>
+                <strong>Thời gian:</strong>{" "}
+                {new Date(selectedNotification.createdAt).toLocaleString("vi-VN")}
+              </Typography.Text>
+            </div>
+          )}
+        </div>
+      </Modal>
+      {/* <Modal
         open={openNotification}
         onCancel={() => setOpenNotification(false)}
         footer={<></>}
@@ -2608,7 +2906,7 @@ const TeacherPage = () => {
           errorNotification={errorNotification}
           loadingNotification={loadingNotification}
         />
-      </Modal>
+      </Modal> */}
       <Modal
         open={openHomeworkStatisticsDashboard}
         onCancel={() => setOpenHomeworkStatisticsDashboard(false)}
