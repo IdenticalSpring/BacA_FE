@@ -157,12 +157,15 @@ const StudentScoreService = {
   getScoreDetailsByStudentScoreID: async (studentScoreID) => {
     try {
       // Assuming an API call to fetch score details
-      const response = await fetch(`${API_BASE_URL}/student-score-details/${studentScoreID}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/student-score-details/student/${studentScoreID}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
       const data = await response.json();
       return data;
     } catch (error) {

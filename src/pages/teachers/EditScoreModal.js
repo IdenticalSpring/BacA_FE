@@ -171,7 +171,7 @@ const EditScoreModal = ({
                 name={`score_${skill.id}`}
                 label={`${skill.name} Score`}
                 rules={[
-                  { required: true, message: `Please enter ${skill.name} score` },
+                  // { required: true, message: `Please enter ${skill.name} score` },
                   { type: "number", min: 0, max: 10, message: "Score must be between 0 and 10" },
                 ]}
               >
@@ -190,7 +190,7 @@ const EditScoreModal = ({
         <Form.Item
           name="assessmentId"
           label="Select Assessment"
-          rules={[{ required: true, message: "Please select an assessment" }]}
+          // rules={[{ required: true, message: "Please select an assessment" }]}
         >
           <Select placeholder="Select an assessment">
             {assessments.map((assessment) => (
@@ -203,7 +203,7 @@ const EditScoreModal = ({
         <Form.Item
           name="teacherComment"
           label="Teacher Comment"
-          rules={[{ required: true, message: "Please enter a teacher comment" }]}
+          // rules={[{ required: true, message: "Please enter a teacher comment" }]}
         >
           <TextArea rows={3} placeholder="Enter your comment here" />
         </Form.Item>

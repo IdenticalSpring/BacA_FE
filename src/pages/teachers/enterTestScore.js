@@ -568,10 +568,6 @@ const EnterTestScore = () => {
                                   label={`${skill.name} Score`}
                                   rules={[
                                     {
-                                      required: true,
-                                      message: `Please enter ${skill.name} score`,
-                                    },
-                                    {
                                       type: "number",
                                       min: 0,
                                       max: 10,
@@ -615,11 +611,7 @@ const EnterTestScore = () => {
                               Điểm = 8 - Giỏi | Điểm = 9, 10 - Xuất sắc
                             </MDTypography>
 
-                            <Form.Item
-                              name={`${studentId}_assessmentId`}
-                              label="Select Assessment"
-                              rules={[{ required: true, message: "Please select an assessment" }]}
-                            >
+                            <Form.Item name={`${studentId}_assessmentId`} label="Select Assessment">
                               <Select placeholder="Select an assessment" style={{ width: "100%" }}>
                                 {assessments.map((assessment) => (
                                   <Option key={assessment.id} value={assessment.id}>
@@ -631,13 +623,7 @@ const EnterTestScore = () => {
                           </Col>
 
                           <Col xs={24}>
-                            <Form.Item
-                              name={`${studentId}_teacherComment`}
-                              label="Teacher Comment"
-                              rules={[
-                                { required: true, message: "Please enter a teacher comment" },
-                              ]}
-                            >
+                            <Form.Item name={`${studentId}_teacherComment`} label="Teacher Comment">
                               <Input.TextArea rows={3} placeholder="Enter your comment here" />
                             </Form.Item>
                           </Col>

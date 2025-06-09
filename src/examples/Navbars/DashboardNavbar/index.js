@@ -381,35 +381,108 @@ function DashboardNavbar({ absolute, light, isMini }) {
                 >
                   <Icon sx={iconsStyle}>settings</Icon>
                 </IconButton>
+
+                {/* Icon thông báo với UI cải tiến - hiển thị cả icon và số lượng */}
                 <IconButton
                   size="small"
                   disableRipple
                   color="inherit"
-                  sx={navbarIconButton}
+                  sx={{
+                    ...navbarIconButton,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    padding: "6px 8px",
+                    borderRadius: "8px",
+                    minWidth: unreadCount > 0 ? "50px" : "auto",
+                    transition: "all 0.3s ease",
+                    ...(unreadCount > 0 && {
+                      backgroundColor: "#FF6B6B",
+                      border: "2px solid #FF4757",
+                      boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)",
+                      animation: "pulse 2s infinite",
+                      "@keyframes pulse": {
+                        "0%": {
+                          transform: "scale(1)",
+                          boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)",
+                        },
+                        "50%": {
+                          transform: "scale(1.08)",
+                          boxShadow: "0 6px 20px rgba(255, 71, 87, 0.5)",
+                        },
+                        "100%": {
+                          transform: "scale(1)",
+                          boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)",
+                        },
+                      },
+                      "&:hover": {
+                        backgroundColor: "#FF5722",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 25px rgba(255, 87, 34, 0.4)",
+                      },
+                    }),
+                  }}
                   aria-controls="notification-menu"
                   aria-haspopup="true"
                   variant="contained"
                   onClick={handleOpenMenu}
                 >
-                  <Badge
-                    badgeContent={unreadCount}
-                    color="error"
+                  {/* Icon chuông thông báo */}
+                  <Icon
                     sx={{
-                      "& .MuiBadge-badge": {
-                        fontSize: "10px",
-                        minWidth: "18px",
-                        height: "18px",
-                        animation: unreadCount > 0 ? "pulse 2s infinite" : "none",
-                        "@keyframes pulse": {
-                          "0%": { transform: "scale(1)" },
-                          "50%": { transform: "scale(1.1)" },
-                          "100%": { transform: "scale(1)" },
+                      ...iconsStyle,
+                      fontSize: "22px",
+                      ...(unreadCount > 0 && {
+                        color: "#FFFFFF !important",
+                        filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))",
+                        animation: "glow 1.5s ease-in-out infinite alternate",
+                        "@keyframes glow": {
+                          from: {
+                            filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))",
+                          },
+                          to: {
+                            filter: "drop-shadow(0 0 15px rgba(255, 255, 255, 1))",
+                          },
                         },
-                      },
+                      }),
                     }}
                   >
-                    <Icon sx={iconsStyle}>notifications</Icon>
-                  </Badge>
+                    {unreadCount > 0 ? "notifications_active" : "notifications"}
+                  </Icon>
+
+                  {/* Hiển thị số lượng thông báo bên cạnh icon */}
+                  {unreadCount > 0 && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        backgroundColor: "#FFD700",
+                        color: "#D32F2F",
+                        borderRadius: "14px",
+                        padding: "3px 8px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        minWidth: "20px",
+                        textAlign: "center",
+                        lineHeight: 1.1,
+                        border: "2px solid #FFFFFF",
+                        boxShadow: "0 2px 8px rgba(255, 215, 0, 0.6)",
+                        animation: "bounce 2s infinite",
+                        "@keyframes bounce": {
+                          "0%, 20%, 50%, 80%, 100%": {
+                            transform: "translateY(0) scale(1)",
+                          },
+                          "40%": {
+                            transform: "translateY(-3px) scale(1.1)",
+                          },
+                          "60%": {
+                            transform: "translateY(-1px) scale(1.05)",
+                          },
+                        },
+                      }}
+                    >
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Typography>
+                  )}
                 </IconButton>
                 {renderMenu()}
               </MDBox>
