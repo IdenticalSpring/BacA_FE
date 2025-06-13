@@ -43,10 +43,12 @@ import {
   MenuOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
+import EditStudentModal from "./EditStudentModal";
 import { jwtDecode } from "jwt-decode";
 import classService from "services/classService";
 import TeacherProfileModal from "./teacherProfileModal";
@@ -135,6 +137,8 @@ const getTimeElapsed = (createdAt) => {
 const TeacherPage = () => {
   const [isAttendanceMode, setIsAttendanceMode] = useState(false);
   const [isAttendanceGuideVisible, setIsAttendanceGuideVisible] = useState(false);
+  const [isEditStudentModalVisible, setIsEditStudentModalVisible] = useState(false);
+  const [selectedStudentForEdit, setSelectedStudentForEdit] = useState(null);
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -193,6 +197,31 @@ const TeacherPage = () => {
   const teacherId = userId.userId;
   const userName = userId.username || "Teacher";
   const navigate = useNavigate();
+
+  const studentContextMenu = (student) => (
+    <Menu>
+      <Menu.Item
+        key="view-profile"
+        icon={<UserOutlined />}
+        onClick={() => {
+          setSelectedStudentForProfile(student);
+          setIsProfileModalVisible(true);
+        }}
+      >
+        View Profile
+      </Menu.Item>
+      <Menu.Item
+        key="edit-profile"
+        icon={<EditOutlined />}
+        onClick={() => {
+          setSelectedStudentForEdit(student);
+          setIsEditStudentModalVisible(true);
+        }}
+      >
+        Edit Profile
+      </Menu.Item>
+    </Menu>
+  );
 
   //Student information
   const [selectedStudents, setSelectedStudents] = useState([]);
@@ -1114,10 +1143,13 @@ const TeacherPage = () => {
   };
 
   // Thêm hàm xử lý khi nhấn chuột phải
+  // const handleRightClick = (student, e) => {
+  //   e.preventDefault(); // Ngăn menu context mặc định của trình duyệt
+  //   setSelectedStudentForProfile(student);
+  //   setIsProfileModalVisible(true);
+  // };
   const handleRightClick = (student, e) => {
-    e.preventDefault(); // Ngăn menu context mặc định của trình duyệt
-    setSelectedStudentForProfile(student);
-    setIsProfileModalVisible(true);
+    e.preventDefault(); // Prevent default browser context menu
   };
   const openAssignmentModal = () => {
     setSelectedStudents([]);
@@ -1917,151 +1949,163 @@ const TeacherPage = () => {
               present: 1,
               note: "",
             };
-            const isSelected = selectedStudents.some((s) => s.id === student.id); // Kiểm tra xem học sinh có được chọn không
+            const isSelected = selectedStudents.some((s) => s.id === student.id);
 
             return (
               <Col xs={20} sm={10} md={8} lg={6} xl={4} key={student.id}>
-                <Card
-                  style={{
-                    borderRadius: "12px",
-                    boxShadow: `0 2px 8px ${colors.softShadow}`,
-                    border: `1px solid ${colors.borderGreen}`,
-                    transition: "all 0.3s ease",
-                    cursor: "pointer",
-                    backgroundColor: isAttendanceMode
-                      ? studentAttendance.present === 1
-                        ? colors.paleGreen
-                        : studentAttendance.present === 0
-                        ? colors.errorRed
-                        : colors.lightAccent
-                      : isSelected
-                      ? colors.lightGreen
-                      : colors.white,
-                  }}
-                  hoverable={!isAttendanceMode}
-                  bodyStyle={{ padding: "16px" }}
-                  onClick={!isAttendanceMode ? () => handleSelectStudent(student) : undefined}
-                  onContextMenu={(e) => handleRightClick(student, e)}
-                >
-                  <div
+                <Dropdown overlay={studentContextMenu(student)} trigger={["contextMenu"]}>
+                  <Card
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      textAlign: "center",
+                      borderRadius: "12px",
+                      boxShadow: `0 2px 8px ${colors.softShadow}`,
+                      border: `1px solid ${colors.borderGreen}`,
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
+                      backgroundColor: isAttendanceMode
+                        ? studentAttendance.present === 1
+                          ? colors.paleGreen
+                          : studentAttendance.present === 0
+                          ? colors.errorRed
+                          : colors.lightAccent
+                        : isSelected
+                        ? colors.lightGreen
+                        : colors.white,
                     }}
+                    hoverable={!isAttendanceMode}
+                    bodyStyle={{ padding: "16px" }}
+                    onClick={!isAttendanceMode ? () => handleSelectStudent(student) : undefined}
+                    onContextMenu={(e) => handleRightClick(student, e)}
                   >
-                    <Avatar
-                      size={isMobile ? 48 : 64}
+                    <div
                       style={{
-                        backgroundColor: colors.deepGreen,
-                        color: colors.white,
-                        marginBottom: "12px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
                       }}
-                      src={student.imgUrl || ""}
                     >
-                      {student.name.charAt(0)}
-                    </Avatar>
-                    <Typography.Title
-                      level={5}
-                      style={{ margin: "0 0 8px 0", color: colors.darkGreen }}
-                    >
-                      {student.name}
-                    </Typography.Title>
-                    {isAttendanceMode && (
-                      <div style={{ width: "100%", marginTop: 8 }}>
-                        <Space direction="vertical" style={{ width: "100%", gap: "8px" }}>
-                          <Space
-                            style={{
-                              width: "100%",
-                              justifyContent: "space-between",
-                              gap: "4px",
-                            }}
-                          >
-                            <Button
-                              type={studentAttendance.present === 1 ? "primary" : "default"}
+                      <Avatar
+                        size={isMobile ? 48 : 64}
+                        style={{
+                          backgroundColor: colors.deepGreen,
+                          color: colors.white,
+                          marginBottom: "12px",
+                        }}
+                        src={student.imgUrl || ""}
+                      >
+                        {student.name.charAt(0)}
+                      </Avatar>
+                      <Typography.Title
+                        level={5}
+                        style={{ margin: "0 0 8px 0", color: colors.darkGreen }}
+                      >
+                        {student.name}
+                      </Typography.Title>
+                      {isAttendanceMode && (
+                        <div style={{ width: "100%", marginTop: 8 }}>
+                          <Space direction="vertical" style={{ width: "100%", gap: "8px" }}>
+                            <Space
                               style={{
-                                flex: 1,
-                                backgroundColor:
-                                  studentAttendance.present === 1 ? colors.safeGreen : colors.white,
-                                borderColor:
-                                  studentAttendance.present === 1
-                                    ? colors.safeGreen
-                                    : colors.borderGreen,
-                                color:
-                                  studentAttendance.present === 1 ? colors.white : colors.darkGray,
-                                borderRadius: "8px",
-                                padding: "4px 8px",
-                                fontSize: "12px",
-                                height: "32px",
+                                width: "100%",
+                                justifyContent: "space-between",
+                                gap: "4px",
                               }}
-                              onClick={() => handleStatusChange(student.id, 1)}
                             >
-                              <SmileOutlined style={{ fontSize: "20px" }} />
-                            </Button>
-                            <Button
-                              type={studentAttendance.present === 0 ? "primary" : "default"}
+                              <Button
+                                type={studentAttendance.present === 1 ? "primary" : "default"}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor:
+                                    studentAttendance.present === 1
+                                      ? colors.safeGreen
+                                      : colors.white,
+                                  borderColor:
+                                    studentAttendance.present === 1
+                                      ? colors.safeGreen
+                                      : colors.borderGreen,
+                                  color:
+                                    studentAttendance.present === 1
+                                      ? colors.white
+                                      : colors.darkGray,
+                                  borderRadius: "8px",
+                                  padding: "4px 8px",
+                                  fontSize: "12px",
+                                  height: "32px",
+                                }}
+                                onClick={() => handleStatusChange(student.id, 1)}
+                              >
+                                <SmileOutlined style={{ fontSize: "20px" }} />
+                              </Button>
+                              <Button
+                                type={studentAttendance.present === 0 ? "primary" : "default"}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor:
+                                    studentAttendance.present === 0
+                                      ? colors.errorRed
+                                      : colors.white,
+                                  borderColor:
+                                    studentAttendance.present === 0
+                                      ? colors.errorRed
+                                      : colors.borderGreen,
+                                  color:
+                                    studentAttendance.present === 0
+                                      ? colors.white
+                                      : colors.darkGray,
+                                  borderRadius: "8px",
+                                  padding: "4px 8px",
+                                  fontSize: "12px",
+                                  height: "32px",
+                                }}
+                                onClick={() => handleStatusChange(student.id, 0)}
+                              >
+                                <FrownOutlined style={{ fontSize: "20px" }} />
+                              </Button>
+                              <Button
+                                type={studentAttendance.present === 2 ? "primary" : "default"}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor:
+                                    studentAttendance.present === 2 ? colors.accent : colors.white,
+                                  borderColor:
+                                    studentAttendance.present === 2
+                                      ? colors.accent
+                                      : colors.borderGreen,
+                                  color:
+                                    studentAttendance.present === 2
+                                      ? colors.white
+                                      : colors.darkGray,
+                                  borderRadius: "8px",
+                                  padding: "4px 8px",
+                                  fontSize: "12px",
+                                  height: "32px",
+                                }}
+                                onClick={() => handleStatusChange(student.id, 2)}
+                              >
+                                <MehOutlined style={{ fontSize: "20px" }} />
+                              </Button>
+                            </Space>
+                            <Input.TextArea
+                              rows={2}
+                              value={studentAttendance.note}
+                              onChange={(e) => handleNoteChange(student.id, e.target.value)}
+                              placeholder="Enter note here..."
                               style={{
-                                flex: 1,
-                                backgroundColor:
-                                  studentAttendance.present === 0 ? colors.errorRed : colors.white,
-                                borderColor:
-                                  studentAttendance.present === 0
-                                    ? colors.errorRed
-                                    : colors.borderGreen,
-                                color:
-                                  studentAttendance.present === 0 ? colors.white : colors.darkGray,
                                 borderRadius: "8px",
-                                padding: "4px 8px",
+                                borderColor: colors.borderGreen,
                                 fontSize: "12px",
-                                height: "32px",
+                                padding: "8px",
+                                backgroundColor: colors.white,
+                                color: colors.darkGray,
+                                resize: "none",
                               }}
-                              onClick={() => handleStatusChange(student.id, 0)}
-                            >
-                              <FrownOutlined style={{ fontSize: "20px" }} />
-                            </Button>
-                            <Button
-                              type={studentAttendance.present === 2 ? "primary" : "default"}
-                              style={{
-                                flex: 1,
-                                backgroundColor:
-                                  studentAttendance.present === 2 ? colors.accent : colors.white,
-                                borderColor:
-                                  studentAttendance.present === 2
-                                    ? colors.accent
-                                    : colors.borderGreen,
-                                color:
-                                  studentAttendance.present === 2 ? colors.white : colors.darkGray,
-                                borderRadius: "8px",
-                                padding: "4px 8px",
-                                fontSize: "12px",
-                                height: "32px",
-                              }}
-                              onClick={() => handleStatusChange(student.id, 2)}
-                            >
-                              <MehOutlined style={{ fontSize: "20px" }} />
-                            </Button>
+                            />
                           </Space>
-                          <Input.TextArea
-                            rows={2}
-                            value={studentAttendance.note}
-                            onChange={(e) => handleNoteChange(student.id, e.target.value)}
-                            placeholder="Enter note here..."
-                            style={{
-                              borderRadius: "8px",
-                              borderColor: colors.borderGreen,
-                              fontSize: "12px",
-                              padding: "8px",
-                              backgroundColor: colors.white,
-                              color: colors.darkGray,
-                              resize: "none",
-                            }}
-                          />
-                        </Space>
-                      </div>
-                    )}
-                  </div>
-                </Card>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </Dropdown>
               </Col>
             );
           })}
@@ -2124,6 +2168,18 @@ const TeacherPage = () => {
         <CreateStudentModal
           visible={isCreateStudentModalVisible}
           onClose={() => setIsCreateStudentModalVisible(false)}
+          classID={selectedClass}
+          isMobile={isMobile}
+          refreshStudents={refreshStudents}
+        />
+
+        <EditStudentModal
+          visible={isEditStudentModalVisible}
+          onClose={() => {
+            setIsEditStudentModalVisible(false);
+            setSelectedStudentForEdit(null);
+          }}
+          student={selectedStudentForEdit}
           classID={selectedClass}
           isMobile={isMobile}
           refreshStudents={refreshStudents}
