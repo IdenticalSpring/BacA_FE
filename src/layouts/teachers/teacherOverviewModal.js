@@ -2537,7 +2537,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                   color: colors.white,
                 }}
               >
-                Cải thiện mô tả
+                Gợi ý kế hoạch bài học
               </Button>
             </Form.Item>
             <Form.Item>
@@ -2557,7 +2557,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                   color: colors.white,
                 }}
               >
-                Cải thiện kế hoạch bài học
+                Làm nhiều hơn với Gemini
               </Button>
             </Form.Item>
             {/* <Form.Item

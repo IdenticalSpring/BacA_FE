@@ -1139,7 +1139,7 @@ export default function CreateLesson({
                   color: colors.white,
                 }}
               >
-                Cải thiện mô tả
+                Gợi ý kế hoạch bài học
               </Button>
             </Form.Item>
             <Form.Item>
@@ -1159,7 +1159,7 @@ export default function CreateLesson({
                   color: colors.white,
                 }}
               >
-                Cải thiện kế hoạch bài học
+                Làm nhiều hơn với Gemini
               </Button>
             </Form.Item>
             <Form.Item label="Văn bản thành giọng nói">

@@ -1174,7 +1174,7 @@ function Lessons() {
               color: colors.white,
             }}
           >
-            Cải thiện mô tả
+            Gợi ý kế hoạch bài học
           </Button>
           <Button
             icon={<RobotOutlined />}
@@ -1192,7 +1192,7 @@ function Lessons() {
               color: colors.white,
             }}
           >
-            Cải thiện kế hoạch bài học
+            Làm nhiều hơn với Gemini
           </Button>
         </DialogContent>
         <DialogActions>
