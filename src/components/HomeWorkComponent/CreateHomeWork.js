@@ -40,6 +40,9 @@ import Compressor from "compressorjs";
 import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
 import VocabularyCreateComponent from "./VocabularyCreateComponent";
 import vocabularyService from "services/vocabularyService";
+import questionService from "services/questionService";
+import QuestionCreateComponent from "./QuestionCreateComponent";
+import teacherService from "services/teacherService";
 
 const { Title } = Typography;
 const { Text } = Typography;
@@ -191,6 +194,9 @@ export default function CreateHomeWork({
   const [htmlContent, setHtmlContent] = useState("");
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
   const [vocabularyList, setVocabularyList] = useState([]);
+  const [questionList, setQuestionList] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [classes, setClasses] = useState([]);
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
@@ -209,6 +215,42 @@ export default function CreateHomeWork({
   useEffect(() => {
     setZaloLink(homeworkZaloLink);
   }, [homeworkZaloLink]);
+
+  useEffect(() => {
+    const fetchClassData = async () => {
+      try {
+        setLoadingClass(true);
+        const classData = await classService.getClassById(classID);
+        setAccessId(classData?.accessId);
+        setClasses([classData]);
+
+        // Kiểm tra xem teacherId có trong classData.teachers không
+        const teacherInClass = classData.teachers?.find((t) => t.id === Number(teacherId));
+        if (teacherInClass) {
+          // Nếu giáo viên đã có trong classData.teachers
+          setTeachers([{ id: teacherInClass.id, name: teacherInClass.name }]);
+        } else {
+          // Gọi API để lấy thông tin giáo viên nếu không có trong classData
+          try {
+            const teacherData = await teacherService.getTeacherById(teacherId);
+            setTeachers([{ id: teacherId, name: teacherData.name || `Teacher ${teacherId}` }]);
+          } catch (teacherErr) {
+            console.error("Failed to fetch teacher data:", teacherErr);
+            setTeachers([{ id: teacherId, name: `Teacher ${teacherId}` }]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch class data:", err);
+        setAccessId("Error");
+        setTeachers([{ id: teacherId, name: `Teacher ${teacherId}` }]);
+        setClasses([]);
+      } finally {
+        setLoadingClass(false);
+      }
+    };
+    fetchClassData();
+  }, [classID, teacherId]);
+
   // console.log(zaloLink);
   // useEffect(() => {
   //   const quill = quillRef.current?.getEditor();
@@ -489,6 +531,23 @@ export default function CreateHomeWork({
         // formDataForVocabulary.append("mp3Files", mp3Files);
         const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
           formDataForVocabulary
+        );
+      }
+
+      // Xử lý câu hỏi (gọi createQuestion từng cái)
+      if (questionList.length > 0) {
+        const newQuestions = questionList.filter((item) => item.isNew);
+        await Promise.all(
+          newQuestions.map(async (item) => {
+            const questionData = {
+              teacherID: item.teacher.id,
+              classID: item.class.id,
+              homeWorkId: homeworkData.id,
+              text: item.text,
+              isDelete: item.isDelete,
+            };
+            await questionService.createQuestion(questionData);
+          })
         );
       }
       setHomeWorks((homework) => [...homework, homeworkData]);
@@ -986,6 +1045,17 @@ export default function CreateHomeWork({
                 setVocabularyList={setVocabularyList}
                 vocabularyList={vocabularyList}
                 audioId={"audio-player-create"}
+              />
+            </Form.Item>
+            <Form.Item name="Questions">
+              <QuestionCreateComponent
+                teacherId={teacherId}
+                classID={classID}
+                teachers={teachers}
+                classes={classes}
+                homeworks={homeWorks}
+                questionList={questionList}
+                setQuestionList={setQuestionList}
               />
             </Form.Item>
             {/* <div style={{ marginBottom: "16px" }}>

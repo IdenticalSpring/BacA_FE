@@ -17,8 +17,6 @@ import {
 import { colors } from "assets/theme/color";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
-const { Title } = Typography;
-const { Option } = Select;
 import PropTypes from "prop-types";
 import {
   CheckCircleOutlined,
@@ -43,12 +41,16 @@ import classService from "services/classService";
 import Compressor from "compressorjs";
 import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
 import VocabularyCreateComponent from "./VocabularyCreateComponent";
+import QuestionCreateComponent from "./QuestionCreateComponent";
 import vocabularyService from "services/vocabularyService";
-const { Text } = Typography;
+import questionService from "services/questionService";
+
+const { Title, Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
   { label: "Giọng nữ", value: 0 },
 ];
+
 const BlockEmbed = Quill.import("blots/block/embed");
 const icons = Quill.import("ui/icons");
 icons["undo"] = `
@@ -68,6 +70,7 @@ icons["video"] = `
     <path d="M21.8 8.001c-.2-1.5-.9-2.2-2.3-2.4C17.1 5.2 12 5.2 12 5.2s-5.1 0-7.5.4c-1.4.2-2.1.9-2.3 2.4C2 9.5 2 12 2 12s0 2.5.2 4c.2 1.5.9 2.2 2.3 2.4 2.4.4 7.5.4 7.5.4s5.1 0 7.5-.4c1.4-.2 2.1-.9 2.3-2.4.2-1.5.2-4 .2-4s0-2.5-.2-4zM10 15V9l5 3-5 3z"/>
   </svg>
 `;
+
 class AudioBlot extends BlockEmbed {
   static create(url) {
     const node = super.create();
@@ -80,31 +83,26 @@ class AudioBlot extends BlockEmbed {
     return node.getAttribute("src");
   }
 }
-
 AudioBlot.blotName = "audio";
 AudioBlot.tagName = "audio";
-Quill.register(AudioBlot);
+
 class CustomVideo extends BlockEmbed {
-  static blotName = "video"; // override mặc định
+  static blotName = "video";
   static tagName = "iframe";
 
   static create(value) {
     const node = super.create();
-
     const src = typeof value === "string" ? value : value.src;
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");
     node.classList.add("responsive-iframe");
-    // Thêm width/height mặc định hoặc theo người dùng truyền vào
     node.setAttribute("width", "100%");
     node.setAttribute("height", "315");
-
     if (typeof value !== "string") {
       if (value.width) node.setAttribute("width", value.width);
       if (value.height) node.setAttribute("height", value.height);
     }
-
     return node;
   }
 
@@ -116,20 +114,16 @@ class CustomVideo extends BlockEmbed {
     };
   }
 }
+
 class CustomImageBlot extends BlockEmbed {
   static blotName = "image";
   static tagName = "img";
 
   static create(value) {
     const node = super.create();
-
     node.setAttribute("src", value);
     node.setAttribute("class", "ql-image");
     node.style.cursor = "zoom-in";
-    // node.setAttribute("onclick", "handleClickQLImage");
-    // node.onclick = () => {
-    //   console.log("clicked image"); // thay thế bằng hàm của bạn // gọi hàm toàn cục
-    // };
     return node;
   }
 
@@ -137,9 +131,11 @@ class CustomImageBlot extends BlockEmbed {
     return node.getAttribute("src");
   }
 }
+Quill.register(AudioBlot);
 Quill.register(CustomImageBlot);
 Quill.register(CustomVideo);
-export default function HomeWorkMangement({
+
+export default function HomeWorkManagement({
   toolbar,
   quillFormats,
   levels,
@@ -162,9 +158,10 @@ export default function HomeWorkMangement({
   students,
   quillRef,
   selectedClass,
+  teachers,
+  classes,
 }) {
   const [form] = Form.useForm();
-  // const quillRef = useRef(null);
   const [quill, setQuill] = useState(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
@@ -177,6 +174,7 @@ export default function HomeWorkMangement({
   const [showAccessId, setShowAccessId] = useState(false);
   const [accessId, setAccessId] = useState("");
   const [loadingClass, setLoadingClass] = useState(false);
+  const [questionList, setQuestionList] = useState([]);
   const homeworkLink = "https://happyclass.com.vn/do-homework";
   const [copySuccess, setCopySuccess] = useState(false);
   const [gameLinks, setGameLinks] = useState([]);
@@ -190,29 +188,47 @@ export default function HomeWorkMangement({
   const [searchText, setSearchText] = useState("");
   const [dataSearch, setDataSearch] = useState([]);
   const [vocabularyList, setVocabularyList] = useState([]);
+
   useEffect(() => {
     if (searchText === "") {
       setDataSearch(homeWorks);
     } else {
-      const filteredData = homeWorks?.filter((homework) => {
-        return homework.title.toLowerCase().includes(searchText.toLowerCase());
-      });
+      const filteredData = homeWorks?.filter((homework) =>
+        homework.title.toLowerCase().includes(searchText.toLowerCase())
+      );
       setDataSearch(filteredData);
     }
   }, [searchText, homeWorks]);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      if (selectedHomeWorkId) {
+        try {
+          const questions = await questionService.getQuestionsByHomeworkId(selectedHomeWorkId);
+          setQuestionList(questions);
+        } catch (error) {
+          console.error("Error fetching questions:", error);
+          message.error("Không thể tải danh sách câu hỏi");
+        }
+      } else {
+        setQuestionList([]);
+      }
+    };
+    fetchQuestions();
+  }, [selectedHomeWorkId]);
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
       setCopySuccess(true);
-      message.success("Copied to clipboard!"); // Hiển thị thông báo
-
-      // Reset hiệu ứng sau 2 giây
+      message.success("Copied to clipboard!");
       setTimeout(() => setCopySuccess(false), 2000);
     });
   };
+
   const onChangeGender = ({ target: { value } }) => {
-    console.log("radio3 checked", value);
     setGender(value);
   };
+
   const handleDelete = async (id) => {
     try {
       await homeWorkService.deleteHomeWork(id);
@@ -222,34 +238,25 @@ export default function HomeWorkMangement({
       message.error("Error deleting homework!");
     }
   };
+
   const handleEdit = (homeWork) => {
     setEditingHomeWork(homeWork);
     setSelectedHomeWorkId(homeWork?.id);
-    const links = homeWork?.linkGame.split(", ");
-    const filterLinks = links?.filter((link) => link !== "");
-    // console.log(links, filterLinks);
-    setGameLinks(filterLinks);
+    const links = homeWork?.linkGame.split(", ").filter((link) => link !== "");
+    setGameLinks(links);
     const youtubeLinks = homeWork?.linkYoutube
       ? homeWork.linkYoutube.split(", ").filter((link) => link !== "")
       : [];
     setYoutubeLinks(youtubeLinks);
     form.setFieldsValue({
       title: homeWork.title,
-      // linkYoutube: homeWork.linkYoutube,
-      // linkGame: homeWork.linkGame,
-      // linkZalo: homeWork.linkZalo,
       linkSpeech: homeWork.linkSpeech,
-      // description: homeWork.description,
     });
-    // if (quill && homeWork?.description) {
-    //   setTimeout(() => {
-    //     quill.clipboard.dangerouslyPasteHTML(0, homeWork.description);
-    //   }, 1000);
-    // }
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
     setTextToSpeech(homeWork.textToSpeech || "");
   };
+
   useEffect(() => {
     const fetchVocabulary = async () => {
       try {
@@ -261,36 +268,32 @@ export default function HomeWorkMangement({
     };
     fetchVocabulary();
   }, [selectedHomeWorkId, editingHomeWork]);
-  // console.log(textToSpeech);
+
   useEffect(() => {
     if (
       modalUpdateHomeWorkVisible &&
       quillRef.current?.getEditor() &&
       editingHomeWork?.description
     ) {
-      // Thêm delay nhẹ để chắc chắn editor đã render xong
       setTimeout(() => {
-        quillRef.current?.getEditor().setContents([]); // reset
+        quillRef.current?.getEditor().setContents([]);
         quillRef.current
           ?.getEditor()
           .clipboard.dangerouslyPasteHTML(0, editingHomeWork.description);
-      }, 100); // thử 100ms nếu 0ms chưa đủ
+      }, 100);
     }
-  }, [modalUpdateHomeWorkVisible, editingHomeWork, quillRef.current?.getEditor()]);
+  }, [modalUpdateHomeWorkVisible, editingHomeWork, quillRef]);
+
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) {
       return;
     }
     setLoadingTTSForUpdateHomeWork(true);
-
     try {
       const response = await homeWorkService.textToSpeech({ textToSpeech, gender });
-
       let base64String = response;
-
-      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
       function base64ToBlob(base64, mimeType) {
-        let byteCharacters = atob(base64); // Giải mã base64
+        let byteCharacters = atob(base64);
         let byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -298,9 +301,7 @@ export default function HomeWorkMangement({
         let byteArray = new Uint8Array(byteNumbers);
         return new Blob([byteArray], { type: mimeType });
       }
-
-      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
-      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+      let audioBlob = base64ToBlob(base64String, "audio/mp3");
       setMp3file(audioBlob);
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
@@ -309,17 +310,18 @@ export default function HomeWorkMangement({
     }
     setLoadingTTSForUpdateHomeWork(false);
   };
+
   useEffect(() => {
     if (mp3Url) {
-      // console.log("🔄 Cập nhật audio URL:", mp3Url);
       const audioElement = document.getElementById("audio-player");
       if (audioElement) {
-        audioElement.src = ""; // Xóa src để tránh giữ URL cũ
-        audioElement.load(); // Tải lại audio
+        audioElement.src = "";
+        audioElement.load();
         audioElement.src = mp3Url;
       }
     }
   }, [mp3Url]);
+
   useEffect(() => {
     const fetchClass = async () => {
       try {
@@ -334,77 +336,73 @@ export default function HomeWorkMangement({
     };
     fetchClass();
   }, [classID]);
+
   const handleSave = async () => {
     try {
       setLoadingUpdate(true);
       const values = await form.validateFields();
       const formData = new FormData();
-      let linkGame = "";
-      if (gameLinks?.length > 0) {
-        linkGame = gameLinks.join(", ");
-        // gameLinks.map((link) => (linkGame += link + ", "));
-      }
-      let linkYoutube = "";
-      if (youtubeLinks?.length > 0) {
-        linkYoutube = youtubeLinks.join(", ");
-      }
+      let linkGame = gameLinks?.length > 0 ? gameLinks.join(", ") : "";
+      let linkYoutube = youtubeLinks?.length > 0 ? youtubeLinks.join(", ") : "";
       formData.append("title", values.title);
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      // formData.append("linkZalo", values.linkZalo);
-      // formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
-      // Nếu có mp3Url thì fetch dữ liệu và append vào formData
-      // if (mp3file) {
-      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      // }
+      let homeWorkId;
       if (editingHomeWork) {
-        const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
-        if (vocabularyList.length > 0) {
-          const formDataForVocabulary = new FormData();
-          const vocabularies = [];
-          const mp3Files = [];
-          // console.log("vocabularyList", vocabularyList);
-
-          vocabularyList.forEach((item) => {
-            if (item?.isNew) {
-              const vocabulary = {
-                textToSpeech: item.word,
-                imageUrl: item.imageUrl,
-                homeworkId: HomeWorkdata.id,
-              };
-              vocabularies.push(vocabulary);
-              // mp3Files.push(mp3File);
-              // console.log(item, "aaaaa");
-              let fileToAppend;
-              if (item?.audioFile) {
-                fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
-              } else {
-                // 👇 Tạo file rỗng nếu không có audio
-                // console.log(item, "eeee", fileToAppend);
-
-                const emptyBlob = new Blob([], { type: "audio/mp3" });
-                fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
-              }
-              formDataForVocabulary.append("mp3Files", fileToAppend);
-            }
-          });
-          formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
-          // formDataForVocabulary.append("mp3Files", mp3Files);
-          const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
-            formDataForVocabulary
-          );
-        }
+        const homeWorkData = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        homeWorkId = homeWorkData.id;
         setHomeWorks(
           homeWorks?.map((homeWork) =>
-            homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
+            homeWork.id === editingHomeWork.id ? { ...homeWork, ...homeWorkData } : homeWork
           )
         );
         message.success("HomeWork updated successfully");
+      } else {
+        const homeWorkData = await homeWorkService.createHomeWork(formData);
+        homeWorkId = homeWorkData.id;
+        setHomeWorks([...homeWorks, homeWorkData]);
+        message.success("HomeWork created successfully");
       }
+
+      if (vocabularyList.length > 0) {
+        const formDataForVocabulary = new FormData();
+        const vocabularies = vocabularyList
+          .filter((item) => item?.isNew)
+          .map((item) => ({
+            textToSpeech: item.word,
+            imageUrl: item.imageUrl,
+            homeworkId: homeWorkId,
+          }));
+        formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+        vocabularyList
+          .filter((item) => item?.isNew)
+          .forEach((item) => {
+            const fileToAppend = item?.audioFile
+              ? new File([item.audioFile], "audio.mp3", { type: "audio/mp3" })
+              : new File([new Blob([], { type: "audio/mp3" })], "audio.mp3", { type: "audio/mp3" });
+            formDataForVocabulary.append("mp3Files", fileToAppend);
+          });
+        await vocabularyService.bulkCreateVocabulary(formDataForVocabulary);
+      }
+
+      if (questionList.length > 0) {
+        const questionPromises = questionList
+          .filter((item) => item?.isNew)
+          .map((item) =>
+            questionService.createQuestion({
+              text: item.text,
+              teacherId: item.teacher.id,
+              classId: item.class.id,
+              homeWorkId: homeWorkId,
+            })
+          );
+        await Promise.all(questionPromises);
+      }
+
       setModalUpdateHomeWorkVisible(false);
       form.resetFields();
       setEditingHomeWork(null);
@@ -415,95 +413,85 @@ export default function HomeWorkMangement({
       setHtmlContent("");
       setSwapHtmlMode(false);
       setVocabularyList([]);
+      setQuestionList([]);
     } catch (err) {
-      message.error("Please check your input and try again" + err);
+      message.error("Please check your input and try again: " + err);
     } finally {
       setLoadingUpdate(false);
     }
   };
+
   const handleUpdateSendingHomeworkStatus = async (id) => {
     setLoadingSchedule(true);
     try {
       const values = await form.validateFields();
       const formData = new FormData();
-      let linkGame = "";
-      if (gameLinks?.length > 0) {
-        linkGame = gameLinks.join(", ");
-        // gameLinks.map((link) => (linkGame += link + ", "));
-      }
-      let linkYoutube = "";
-      if (youtubeLinks?.length > 0) {
-        linkYoutube = youtubeLinks.join(", ");
-      }
+      let linkGame = gameLinks?.length > 0 ? gameLinks.join(", ") : "";
+      let linkYoutube = youtubeLinks?.length > 0 ? youtubeLinks.join(", ") : "";
       formData.append("title", values.title);
       formData.append("level", level);
       formData.append("linkYoutube", linkYoutube);
       formData.append("linkGame", linkGame);
-      // formData.append("linkZalo", values.linkZalo);
-      // formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("teacherId", teacherId);
 
-      // Nếu có mp3Url thì fetch dữ liệu và append vào formData
-      // if (mp3file) {
-      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      // }
+      let homeWorkId;
       if (editingHomeWork) {
-        const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
-        if (vocabularyList.length > 0) {
-          const formDataForVocabulary = new FormData();
-          const vocabularies = [];
-          const mp3Files = [];
-          // console.log("vocabularyList", vocabularyList);
-
-          vocabularyList.forEach((item) => {
-            if (item?.isNew) {
-              const vocabulary = {
-                textToSpeech: item.word,
-                imageUrl: item.imageUrl,
-                homeworkId: HomeWorkdata.id,
-              };
-              vocabularies.push(vocabulary);
-
-              // mp3Files.push(mp3File);
-              let fileToAppend;
-              if (item?.audioFile) {
-                fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
-              } else {
-                // 👇 Tạo file rỗng nếu không có audio
-                const emptyBlob = new Blob([], { type: "audio/mp3" });
-                fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
-              }
-              formDataForVocabulary.append("mp3Files", fileToAppend);
-            }
-          });
-          formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
-          // formDataForVocabulary.append("mp3Files", mp3Files);
-          const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
-            formDataForVocabulary
-          );
-        }
+        const homeWorkData = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
+        homeWorkId = homeWorkData.id;
         setHomeWorks(
           homeWorks?.map((homeWork) =>
-            homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
+            homeWork.id === editingHomeWork.id ? { ...homeWork, ...homeWorkData } : homeWork
           )
         );
-        // message.success("HomeWork updated successfully");
+      } else {
+        const homeWorkData = await homeWorkService.createHomeWork(formData);
+        homeWorkId = homeWorkData.id;
+        setHomeWorks([...homeWorks, homeWorkData]);
       }
+
+      if (vocabularyList.length > 0) {
+        const formDataForVocabulary = new FormData();
+        const vocabularies = vocabularyList
+          .filter((item) => item?.isNew)
+          .map((item) => ({
+            textToSpeech: item.word,
+            imageUrl: item.imageUrl,
+            homeworkId: homeWorkId,
+          }));
+        formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+        vocabularyList
+          .filter((item) => item?.isNew)
+          .forEach((item) => {
+            const fileToAppend = item?.audioFile
+              ? new File([item.audioFile], "audio.mp3", { type: "audio/mp3" })
+              : new File([new Blob([], { type: "audio/mp3" })], "audio.mp3", { type: "audio/mp3" });
+            formDataForVocabulary.append("mp3Files", fileToAppend);
+          });
+        await vocabularyService.bulkCreateVocabulary(formDataForVocabulary);
+      }
+
+      if (questionList.length > 0) {
+        const questionPromises = questionList
+          .filter((item) => item?.isNew)
+          .map((item) =>
+            questionService.createQuestion({
+              text: item.text,
+              teacherId: item.teacher.id,
+              classId: item.class.id,
+              homeWorkId: homeWorkId,
+            })
+          );
+        await Promise.all(questionPromises);
+      }
+
       const response = await lessonByScheduleService.updateSendingHomeworkStatus(id, true);
-      console.log("Update response:", response);
-      const lessonByScheduleDataUpdated = lessonByScheduleData?.map((item) => {
-        if (item?.id === id) {
-          return { ...item, isHomeWorkSent: true };
-        }
-        return item;
-      });
+      const lessonByScheduleDataUpdated = lessonByScheduleData?.map((item) =>
+        item?.id === id ? { ...item, isHomeWorkSent: true } : item
+      );
       setLessonByScheduleData(lessonByScheduleDataUpdated);
       let detailStr = "Bạn mới có bài tập mới vào ngày:";
-      // console.log(data);
       const date = lessonByScheduleDataUpdated.find((item) => item?.id === id)?.date || null;
-      // console.log(lessonByScheduleDataUpdated.find((item) => item.id === id));
-
       detailStr +=
         " " +
           (date &&
@@ -521,15 +509,13 @@ export default function HomeWorkMangement({
         createdAt: new Date(),
       };
       const notificationRes = await notificationService.createNotification(notificationData);
-      const userNotificationCreate = students.forEach(async (element) => {
+      students.forEach(async (element) => {
         const userNotificationData = {
           status: false,
           notificationID: notificationRes?.id,
           studentID: element?.id,
         };
-        const userNotificationRes = await user_notificationService.createUserNotification(
-          userNotificationData
-        );
+        await user_notificationService.createUserNotification(userNotificationData);
       });
 
       message.success("Gửi bài tập thành công!");
@@ -544,103 +530,40 @@ export default function HomeWorkMangement({
       setHtmlContent("");
       setSwapHtmlMode(false);
       setVocabularyList([]);
-      // setOpenSend(false);
+      setQuestionList([]);
     } catch (error) {
       console.error("Error updating sending homework status:", error);
-      message.error("Có lỗi xảy ra trong quá trình gửi bài tập" + error);
+      message.error("Có lỗi xảy ra trong quá trình gửi bài tập: " + error);
     } finally {
       setLoadingSchedule(false);
     }
   };
+
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       setQuill(editor);
     }
   }, [quillRef]);
-  // useEffect(() => {
-  //   const quill = quillRef.current?.getEditor();
-  //   if (!quill) return;
 
-  //   const handlePaste = (e) => {
-  //     const clipboardData = e.clipboardData;
-  //     const items = clipboardData?.items;
-
-  //     if (!items) return;
-
-  //     for (const item of items) {
-  //       if (item.type.indexOf("image") !== -1) {
-  //         e.preventDefault(); // chặn mặc định Quill xử lý
-
-  //         const file = item.getAsFile();
-
-  //         if (!file) return;
-
-  //         // 👇 Resize trước khi upload như trong imageHandler
-  //         new Compressor(file, {
-  //           quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-  //           maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-  //           maxHeight: 800,
-  //           success(compressedFile) {
-  //             const formData = new FormData();
-  //             formData.append("file", compressedFile);
-
-  //             axios
-  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-  //               .then((response) => {
-  //                 if (response.status === 201) {
-  //                   const range = quill.getSelection(true);
-  //                   quill.insertEmbed(range.index, "image", response.data.url);
-  //                 } else {
-  //                   message.error("Upload failed. Try again!");
-  //                 }
-  //               })
-  //               .catch((err) => {
-  //                 console.error("Upload error:", err);
-  //                 message.error("Upload error. Please try again!");
-  //               });
-  //           },
-  //           error(err) {
-  //             console.error("Compression error:", err);
-  //             message.error("Image compression failed!");
-  //           },
-  //         });
-
-  //         break; // chỉ xử lý ảnh đầu tiên
-  //       }
-  //     }
-  //   };
-
-  //   const editor = quill?.root;
-  //   editor?.addEventListener("paste", handlePaste);
-
-  //   return () => {
-  //     editor?.removeEventListener("paste", handlePaste);
-  //   };
-  // }, [quillRef]);
   const undoHandler = useCallback(() => {
     const quill = quillRef.current?.getEditor();
-    if (quill) {
-      const history = quill.history;
-      if (history.stack.undo.length > 0) {
-        history.undo();
-      } else {
-        message.warning("No more undo available.");
-      }
+    if (quill && quill.history.stack.undo.length > 0) {
+      quill.history.undo();
+    } else {
+      message.warning("No more undo available.");
     }
   }, []);
+
   const redoHandler = useCallback(() => {
     const quill = quillRef.current?.getEditor();
-    if (quill) {
-      const history = quill.history;
-
-      if (history.stack.redo.length > 0) {
-        history.redo();
-      } else {
-        message.warning("No more redo available.");
-      }
+    if (quill && quill.history.stack.redo.length > 0) {
+      quill.history.redo();
+    } else {
+      message.warning("No more redo available.");
     }
   }, []);
+
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -653,16 +576,12 @@ export default function HomeWorkMangement({
 
       const formData = new FormData();
       formData.append("file", file);
-      // console.log([...formData]);
 
       try {
         const response = await axios.post(
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-        console.log(response.data.url);
-
-        // const result = await response.json();
 
         if (response.status === 201 && quillRef.current) {
           const editor = quillRef.current?.getEditor();
@@ -672,7 +591,7 @@ export default function HomeWorkMangement({
           setTimeout(() => {
             const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
             imgs.forEach((img) => {
-              img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
+              img.classList.add("ql-image");
             });
           }, 0);
         } else {
@@ -682,37 +601,9 @@ export default function HomeWorkMangement({
         console.error("Error uploading image:", error);
         message.error("Upload error. Please try again!");
       }
-      // new Compressor(file, {
-      //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-      //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-      //   maxHeight: 800, // Optional, resize chiều cao nếu cần
-      //   success(compressedFile) {
-      //     const formData = new FormData();
-      //     formData.append("file", compressedFile);
-
-      //     axios
-      //       .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-      //       .then((response) => {
-      //         if (response.status === 201 && quillRef.current) {
-      //           const editor = quillRef.current?.getEditor();
-      //           const range = editor.getSelection(true);
-      //           editor.insertEmbed(range.index, "image", response.data.url);
-      //         } else {
-      //           message.error("Upload failed. Try again!");
-      //         }
-      //       })
-      //       .catch((err) => {
-      //         console.error("Upload error:", err);
-      //         message.error("Upload error. Please try again!");
-      //       });
-      //   },
-      //   error(err) {
-      //     console.error("Compression error:", err);
-      //     message.error("Image compression failed!");
-      //   },
-      // });
     };
   }, []);
+
   const audioHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -736,11 +627,13 @@ export default function HomeWorkMangement({
           const editor = quillRef.current?.getEditor();
           if (!editor) return;
           const range = editor.getSelection(true);
-          const audioUrl = response?.data?.url;
-
-          // 👇 Đây là điểm quan trọng: insertEmbed với blot 'audio'
-          editor.insertEmbed(range?.index ?? editor.getLength(), "audio", audioUrl, "user");
-          editor.setSelection(range?.index ?? editor.getLength() + 1); // move cursor
+          editor.insertEmbed(
+            range?.index ?? editor.getLength(),
+            "audio",
+            response.data.url,
+            "user"
+          );
+          editor.setSelection(range?.index ?? editor.getLength() + 1);
         } else {
           message.error("Upload failed. Try again!");
         }
@@ -750,6 +643,7 @@ export default function HomeWorkMangement({
       }
     };
   }, []);
+
   const modules = {
     toolbar: {
       container: toolbar,
@@ -768,27 +662,6 @@ export default function HomeWorkMangement({
       key: "title",
       width: "20%",
     },
-    // {
-    //   title: "Cấp độ",
-    //   dataIndex: "level",
-    //   key: "level",
-    //   width: "15%",
-    //   render: (text) => levels?.find((level) => level.id === text)?.name,
-    // },
-    // {
-    //   title: "Link Youtube bài tập",
-    //   dataIndex: "linkYoutube",
-    //   key: "linkYoutube",
-    //   width: "20%",
-    //   render: (text) => (
-    //     <Typography.Text
-    //       ellipsis={{ tooltip: text }}
-    //       style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
-    //     >
-    //       {text}
-    //     </Typography.Text>
-    //   ),
-    // },
     {
       title: "Link Game bài tập",
       dataIndex: "linkGame",
@@ -803,20 +676,6 @@ export default function HomeWorkMangement({
         </Typography.Text>
       ),
     },
-    // {
-    //   title: "Link Zalo bài tập",
-    //   dataIndex: "linkZalo",
-    //   key: "linkZalo",
-    //   width: "20%",
-    //   render: (text) => (
-    //     <Typography.Text
-    //       ellipsis={{ tooltip: text }}
-    //       style={{ textOverflow: "ellipsis", maxWidth: "100px" }}
-    //     >
-    //       {text}
-    //     </Typography.Text>
-    //   ),
-    // },
     {
       title: "Link Speech bài tập",
       dataIndex: "linkSpeech",
@@ -852,8 +711,6 @@ export default function HomeWorkMangement({
       width: "25%",
       render: (text) => {
         const date = lessonByScheduleData?.filter((item) => item.homeWorkId === text)[0]?.date;
-        // console.log(lessonByScheduleData.filter((item) => item.lessonID === text));
-
         return (
           <p>
             {(date &&
@@ -874,14 +731,10 @@ export default function HomeWorkMangement({
       key: "id",
       width: "10%",
       render: (text) => {
-        // console.log(text);
-
         const length = lessonByScheduleData.filter((item) => item.homeWorkId === text).length;
         const isSentLength = lessonByScheduleData.filter(
           (item) => item.homeWorkId === text && item.isHomeWorkSent === true
         ).length;
-        // console.log(length, isSentLength);
-
         return (
           <Tag
             color={isSentLength === 0 ? "red" : isSentLength === length ? "green" : "yellow"}
@@ -922,22 +775,10 @@ export default function HomeWorkMangement({
               borderColor: colors.deepGreen,
             }}
           />
-          {/* <Popconfirm
-            title="Bạn có chắc muốn xóa bài tập này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{
-              style: { backgroundColor: colors.errorRed, borderColor: colors.errorRed },
-            }}
-          >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm> */}
         </Space>
       ),
     },
   ];
-  // console.log(mp3Url == true);
 
   return (
     <div style={{ padding: "14px" }}>
@@ -983,13 +824,14 @@ export default function HomeWorkMangement({
 
       <Modal
         centered
-        title={editingHomeWork ? "Điều chỉnh bài tập" : "Create New HomeWork"}
+        title={editingHomeWork ? "Điều chỉnh bài tập" : "Tạo bài tập mới"}
         open={modalUpdateHomeWorkVisible}
         onCancel={() => {
           setModalUpdateHomeWorkVisible(false);
           form.resetFields();
           setEditingHomeWork(null);
           setVocabularyList([]);
+          setQuestionList([]);
         }}
         footer={[
           <Button
@@ -1001,6 +843,7 @@ export default function HomeWorkMangement({
               setEditingHomeWork(null);
               setCurrentLink("");
               setVocabularyList([]);
+              setQuestionList([]);
             }}
           >
             Hủy
@@ -1015,14 +858,13 @@ export default function HomeWorkMangement({
               borderColor: colors.emerald,
             }}
           >
-            {editingHomeWork ? "Lưu" : "Create"}
+            {editingHomeWork ? "Lưu" : "Tạo"}
           </Button>,
           <Button
             loading={loadingSchedule}
             key="send"
             type="primary"
             onClick={() => {
-              // setOpenSend(true);
               const entity = lessonByScheduleData?.find(
                 (item) => item.homeWorkId === selectedHomeWorkId
               );
@@ -1033,7 +875,7 @@ export default function HomeWorkMangement({
               borderColor: colors.emerald,
             }}
           >
-            {"Gửi bài tập"}
+            Gửi bài tập
           </Button>,
         ]}
         width={"90%"}
@@ -1044,10 +886,7 @@ export default function HomeWorkMangement({
           name="HomeWorkForm"
           initialValues={{
             title: "",
-            level: "",
-            // linkYoutube: "",
             linkGame: "",
-            // linkZalo: "",
             textToSpeech: "",
             description: "",
           }}
@@ -1056,8 +895,8 @@ export default function HomeWorkMangement({
             name="title"
             label="Tiêu đề bài tập"
             rules={[
-              { required: true, message: "Please enter the homework name" },
-              { max: 100, message: "Title cannot be longer than 100 characters" },
+              { required: true, message: "Vui lòng nhập tiêu đề bài tập" },
+              { max: 100, message: "Tiêu đề không được dài quá 100 ký tự" },
             ]}
           >
             <Input
@@ -1101,27 +940,20 @@ export default function HomeWorkMangement({
           >
             Swap to {swapHtmlMode ? "Quill" : "HTML"}
           </Button>
-          <Form.Item
-            // name="description"
-            label="Mô tả"
-            // rules={[{ required: true, message: "Please enter a description" }]}
-          >
-            {
-              <ReactQuill
-                id="HomeworkDescriptionUpdate"
-                theme="snow"
-                modules={modules}
-                formats={quillFormats}
-                ref={quillRef}
-                style={{
-                  height: "250px",
-                  marginBottom: "60px", // Consider reducing this
-                  borderRadius: "6px",
-                  // border: `1px solid ${colors.inputBorder}`,
-                  display: swapHtmlMode ? "none" : "block",
-                }}
-              />
-            }
+          <Form.Item label="Mô tả">
+            <ReactQuill
+              id="HomeworkDescriptionUpdate"
+              theme="snow"
+              modules={modules}
+              formats={quillFormats}
+              ref={quillRef}
+              style={{
+                height: "250px",
+                marginBottom: "60px",
+                borderRadius: "6px",
+                display: swapHtmlMode ? "none" : "block",
+              }}
+            />
             {swapHtmlMode && (
               <TextArea
                 value={htmlContent}
@@ -1130,32 +962,14 @@ export default function HomeWorkMangement({
                 }}
                 style={{
                   height: "250px",
-                  marginBottom: "60px", // Consider reducing this
+                  marginBottom: "60px",
                   borderRadius: "6px",
                   border: `1px solid ${colors.inputBorder}`,
                 }}
               />
             )}
           </Form.Item>
-          {/* <Form.Item
-            name="level"
-            label="Level"
-            rules={[{ required: true, message: "Please select a level" }]}
-          >
-            <Select
-              placeholder="Select level"
-              style={{
-                borderRadius: "6px",
-              }}
-            >
-              {levels?.map((level, index) => (
-                <Option key={index} value={level.id}>
-                  {level.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item> */}
-          <Form.Item name="Speech to text">
+          <Form.Item label="Từ vựng">
             <VocabularyCreateComponent
               isMobile={isMobile}
               setVocabularyList={setVocabularyList}
@@ -1165,173 +979,16 @@ export default function HomeWorkMangement({
               selectedClass={selectedClass}
             />
           </Form.Item>
-          {/* <Form.Item label="Văn bản thành giọng nói">
-            <TextArea
-              value={textToSpeech}
-              onChange={(e) => setTextToSpeech(e.target.value)}
-              rows={3}
-              placeholder="Nhập văn bản để chuyển thành giọng nói"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
+          <Form.Item label="Câu hỏi">
+            <QuestionCreateComponent
+              teacherId={teacherId}
+              classID={classID}
+              teachers={teachers}
+              classes={classes}
+              questionList={questionList}
+              setQuestionList={setQuestionList}
             />
           </Form.Item>
-          <Form.Item>
-            <Radio.Group
-              options={genderOptions}
-              onChange={onChangeGender}
-              value={gender}
-              optionType="button"
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              onClick={handleConvertToSpeech}
-              loading={loadingTTSForUpdateHomeWork}
-              style={{
-                backgroundColor: colors.deepGreen,
-                borderColor: colors.deepGreen,
-              }}
-            >
-              Chuyển thành giọng nói
-            </Button>
-          </Form.Item>
-          {mp3Url && (
-            <Form.Item>
-              <div style={{ marginBottom: "16px" }}>
-                <audio id="audio-player" controls style={{ width: "100%" }}>
-                  <source src={mp3Url} type="audio/mp3" />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            </Form.Item>
-          )} */}
-
-          {/* {
-          ||
-            (form.getFieldValue("linkSpeech") && (
-              <Form.Item>
-                <div style={{ marginBottom: "16px" }}>
-                  <audio id="audio-player" controls style={{ width: "100%" }}>
-                    <source src={form.getFieldValue("linkSpeech")} type="audio/mp3" />
-                    Your browser does not support the audio element.
-                  </audio>
-                </div>
-              </Form.Item>
-            ))} */}
-          {/* <div style={{ marginBottom: "16px" }}>
-            <audio controls style={{ width: "100%" }}>
-              <source
-                src={
-                  "https://res.cloudinary.com/ddd1hxsx0/video/upload/v1742718873/o7o1ouv3el4w72s4rxnc.mp3"
-                }
-                type="audio/mp3"
-              />
-              Your browser does not support the audio element.
-            </audio>
-          </div> */}
-          {/* <Form.Item
-            name="linkYoutube"
-            label="Link Youtube Bài tập"
-            // rules={[{ required: true, message: "Please enter the homework link" }]}
-          >
-            <Input
-              placeholder="Nhập link youtube bài tập"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item> */}
-          {/* <Form.Item label="Link Youtube bài tập">
-            <Input.Group compact>
-              <Input
-                value={currentYoutubeLink}
-                placeholder="Nhập link youtube bài tập"
-                style={{
-                  width: "calc(100% - 120px)",
-                  borderRadius: "6px",
-                  borderColor: colors.inputBorder,
-                }}
-                onChange={(e) => setCurrentYoutubeLink(e.target.value)}
-              />
-              <Button
-                type="primary"
-                onClick={() => {
-                  if (!currentYoutubeLink) return;
-                  if (editYoutubeIndex !== null) {
-                    const updated = [...youtubeLinks];
-                    updated[editYoutubeIndex] = currentYoutubeLink;
-                    setYoutubeLinks(updated);
-                    setEditYoutubeIndex(null);
-                  } else {
-                    setYoutubeLinks([...youtubeLinks, currentYoutubeLink]);
-                  }
-                  setCurrentYoutubeLink("");
-                }}
-              >
-                {editYoutubeIndex !== null ? "Cập nhật" : "Thêm"}
-              </Button>
-            </Input.Group>
-          </Form.Item>
-          {youtubeLinks?.length > 0 && (
-            <Table
-              columns={[
-                {
-                  title: "STT",
-                  dataIndex: "index",
-                  render: (_, __, i) => i + 1,
-                },
-                {
-                  title: "Link YouTube",
-                  dataIndex: "link",
-                },
-                {
-                  title: "Hành động",
-                  render: (_, record, index) => (
-                    <>
-                      <Button
-                        type="link"
-                        onClick={() => {
-                          setCurrentYoutubeLink(record.link);
-                          setEditYoutubeIndex(index);
-                        }}
-                      >
-                        Sửa
-                      </Button>
-                      <Button
-                        type="link"
-                        danger
-                        onClick={() => {
-                          const updated = youtubeLinks.filter((_, i) => i !== index);
-                          setYoutubeLinks(updated);
-                          if (editYoutubeIndex === index) {
-                            setCurrentYoutubeLink("");
-                            setEditYoutubeIndex(null);
-                          }
-                        }}
-                      >
-                        Xoá
-                      </Button>
-                    </>
-                  ),
-                },
-              ]}
-              dataSource={youtubeLinks.map((link, index) => ({ key: `${link}-${index}`, link }))}
-              pagination={false}
-            />
-          )} */}
-          {/* <Form.Item name="linkGame" label="Link Game bài tập">
-            <Input
-              placeholder="Nhập link game bài tập"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item> */}
           <Form.Item label="Link game bài tập">
             <Input.Group compact>
               <Input
@@ -1406,26 +1063,14 @@ export default function HomeWorkMangement({
                   ),
                 },
               ]}
-              dataSource={gameLinks.map((link, index) => {
-                return { key: `${link}-${index}`, link };
-              })}
+              dataSource={gameLinks.map((link, index) => ({
+                key: `${link}-${index}`,
+                link,
+              }))}
               pagination={false}
             />
           )}
-
-          {/*<Form.Item name="linkZalo" label="Link Zalo bài tập">
-            <Input
-              placeholder="Nhập link zalo bài tập"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item>*/}
         </Form>
-        {/* <Form.Item name="Speech to text">
-          <SpeechToTextComponent />
-        </Form.Item> */}
       </Modal>
       <Modal
         title="Danh sách các lịch học đang sử dụng bài tập này"
@@ -1434,20 +1079,18 @@ export default function HomeWorkMangement({
         footer={<></>}
         centered
         width={isMobile ? "90%" : "60%"}
-        // style={{ display: "flex", justifyContent: "center" }}
       >
         <div
           style={{
             width: "100%",
-            // margin: "15px 0",
             display: "flex",
             justifyContent: "center",
             flexDirection: "column",
           }}
         >
           {lessonByScheduleData?.length > 0 ? (
-            lessonByScheduleData?.map((item, index) => {
-              return item.homeWorkId === selectedHomeWorkId ? (
+            lessonByScheduleData?.map((item, index) =>
+              item.homeWorkId === selectedHomeWorkId ? (
                 <div
                   key={index}
                   style={{
@@ -1476,8 +1119,7 @@ export default function HomeWorkMangement({
                     }}
                   >
                     📅 {daysOfWeek[item.schedule.dayOfWeek]} | {item.date} | 🕒{" "}
-                    {item.schedule.startTime} - {item.schedule.endTime} |{" "}
-                    {/* {homeWorksData.find((hw) => hw.id === item.homeWorkId)?.title} */}
+                    {item.schedule.startTime} - {item.schedule.endTime}
                   </div>
                   <Button
                     disabled={item.isHomeWorkSent}
@@ -1489,8 +1131,8 @@ export default function HomeWorkMangement({
                     {item.isHomeWorkSent ? <Text>Đã gửi bài tập</Text> : <Text>Gửi bài tập</Text>}
                   </Button>
                 </div>
-              ) : null;
-            })
+              ) : null
+            )
           ) : (
             <Text>Không có bài học nào</Text>
           )}
@@ -1523,8 +1165,6 @@ export default function HomeWorkMangement({
                 Mã lớp của bạn là: <Text type="danger">{accessId}</Text>
               </Text>
               <Input value={homeworkLink} readOnly style={{ textAlign: "center", width: "100%" }} />
-
-              {/* Nút Copy với hiệu ứng */}
               <Button
                 icon={<CopyOutlined />}
                 onClick={copyToClipboard}
@@ -1539,16 +1179,17 @@ export default function HomeWorkMangement({
     </div>
   );
 }
-HomeWorkMangement.propTypes = {
+
+HomeWorkManagement.propTypes = {
   toolbar: PropTypes.array.isRequired,
   quillFormats: PropTypes.array.isRequired,
   levels: PropTypes.array.isRequired,
   isMobile: PropTypes.bool.isRequired,
   loading: PropTypes.bool.isRequired,
   setModalUpdateHomeWorkVisible: PropTypes.func.isRequired,
-  setEditingHomeWork: PropTypes.array.isRequired,
+  setEditingHomeWork: PropTypes.func.isRequired,
   modalUpdateHomeWorkVisible: PropTypes.bool.isRequired,
-  editingHomeWork: PropTypes.array.isRequired,
+  editingHomeWork: PropTypes.object,
   homeWorks: PropTypes.array.isRequired,
   setHomeWorks: PropTypes.func.isRequired,
   loadingTTSForUpdateHomeWork: PropTypes.bool.isRequired,
@@ -1562,4 +1203,6 @@ HomeWorkMangement.propTypes = {
   students: PropTypes.array.isRequired,
   quillRef: PropTypes.object.isRequired,
   selectedClass: PropTypes.object.isRequired,
+  teachers: PropTypes.array.isRequired,
+  classes: PropTypes.array.isRequired,
 };
