@@ -11,12 +11,15 @@ import {
   Modal,
   Avatar,
   Divider,
+  Upload,
 } from "antd";
 import {
   DeleteOutlined,
   QuestionCircleOutlined,
   UploadOutlined,
   SwapOutlined,
+  LoadingOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { colors } from "assets/theme/color";
@@ -65,8 +68,8 @@ const { Title, Text } = Typography;
 const QuestionCreateComponent = ({
   teacherId,
   classID,
-  teachers = [], // Default to empty array
-  classes = [], // Default to empty array
+  teachers = [],
+  classes = [],
   questionList,
   setQuestionList,
 }) => {
@@ -74,6 +77,8 @@ const QuestionCreateComponent = ({
   const quillRef = useRef(null);
   const [swapHtmlMode, setSwapHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
   const teacherName =
     teachers.length > 0
       ? teachers.find((t) => t.id === Number(teacherId))?.name || `Teacher ${teacherId}`
@@ -195,6 +200,17 @@ const QuestionCreateComponent = ({
     };
   }, [quillRef]);
 
+  const handleImageUpload = (info) => {
+    if (info.file.status === "uploading") {
+      setImageLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      setImageUrl(info.file.response.url);
+      setImageLoading(false);
+    }
+  };
+
   const modules = {
     toolbar: {
       container: toolbar,
@@ -220,6 +236,7 @@ const QuestionCreateComponent = ({
         const newQuestion = {
           id: Date.now(),
           text: quillContent,
+          imageUrl: imageUrl || undefined,
           teacher:
             teachers.length > 0
               ? teachers.find((t) => t.id === Number(values.teacherID)) || {
@@ -250,6 +267,8 @@ const QuestionCreateComponent = ({
         }
         setHtmlContent("");
         setSwapHtmlMode(false);
+        setImageUrl("");
+        setImageLoading(false);
       })
       .catch((errorInfo) => {
         errorInfo.errorFields.forEach((field) => {
@@ -317,6 +336,33 @@ const QuestionCreateComponent = ({
               ))}
             </Select>
           </Form.Item>
+          <Divider orientation="left">Hình ảnh</Divider>
+          <style>{`
+            .ant-upload-select {
+              width: 90px !important;
+              height: 90px !important;
+            }
+          `}</style>
+          <Form.Item>
+            <Upload
+              name="avatar"
+              listType="picture-card"
+              className="avatar-uploader"
+              showUploadList={false}
+              action={process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary"}
+              onChange={handleImageUpload}
+            >
+              {imageUrl ? (
+                <img src={imageUrl} alt="question" style={{ width: "100%" }} />
+              ) : (
+                <div>
+                  {imageLoading ? <LoadingOutlined /> : <PlusOutlined />}
+                  <div style={{ marginTop: 8 }}>Tải lên</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
+          <Divider orientation="left">Nội dung câu hỏi</Divider>
           <Form.Item name="text" label="Nội dung câu hỏi">
             <div>
               <Button
@@ -422,17 +468,33 @@ const QuestionCreateComponent = ({
                   </Button>,
                 ]}
               >
-                <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
-                  <Avatar
-                    shape="square"
-                    style={{
-                      width: "50px",
-                      height: "50px",
-                      margin: "10px",
-                      backgroundColor: colors.paleGreen,
-                    }}
-                    icon={<QuestionCircleOutlined />}
-                  />
+                <div
+                  style={{ width: "100%", display: "flex", flexWrap: "wrap", alignItems: "center" }}
+                >
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt="question"
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        margin: "10px",
+                        objectFit: "cover",
+                        borderRadius: "4px",
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      shape="square"
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        margin: "10px",
+                        backgroundColor: colors.paleGreen,
+                      }}
+                      icon={<QuestionCircleOutlined />}
+                    />
+                  )}
                   <div
                     style={{ width: "70%", fontSize: "16px" }}
                     dangerouslySetInnerHTML={{ __html: item.text }}
