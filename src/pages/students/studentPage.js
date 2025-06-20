@@ -37,6 +37,7 @@ import {
   CopyOutlined,
   MessageOutlined,
   CloseCircleFilled,
+  ReadOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -62,6 +63,7 @@ import StudentFeedbackModal from "./feedbackModal";
 import contentPageService from "services/contentpageService";
 import { Close } from "@mui/icons-material";
 import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
+// import StudentAnswerQuestion from "components/QuestionComponent/StudentAnswerQuestionComponent";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -843,11 +845,11 @@ const StudentPage = () => {
                     {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
                   </Button> */}
                 </div>
-                <VocabularyStudyComponent
+                {/* <VocabularyStudyComponent
                   selectedHomeWorkId={hw.id}
                   isMobile={isMobile}
                   studentId={studentId}
-                />
+                /> */}
               </Card>
             )}
           />
@@ -874,6 +876,67 @@ const StudentPage = () => {
             borderRadius: "12px",
           }}
         />
+      )}
+    </div>
+  );
+
+  const renderVocabularyContent = () => (
+    <div style={{ maxWidth: "100%", overflowX: "auto", padding: isMobile ? "10px" : "20px" }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: `0 2px 8px ${colors.softShadow}`,
+          backgroundColor: colors.paleGreen,
+          marginBottom: 20,
+          padding: isMobile ? "10px" : "20px",
+        }}
+      >
+        <Title
+          level={3}
+          style={{
+            color: colors.darkGreen,
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            fontFamily: "'Roboto', sans-serif",
+            fontSize: isMobile ? 18 : 24,
+          }}
+        >
+          <BookOutlined style={{ marginRight: 8, fontSize: isMobile ? 20 : 24 }} />
+          Từ Vựng
+        </Title>
+        <VocabularyStudyComponent
+          selectedHomeWorkId={homework[0]?.id}
+          isMobile={isMobile}
+          studentId={studentId}
+        />
+      </Card>
+      {homework[0]?.id && (
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: `0 2px 8px ${colors.softShadow}`,
+            backgroundColor: colors.white,
+            marginBottom: 20,
+            padding: isMobile ? "10px" : "20px",
+          }}
+        >
+          <Title
+            level={3}
+            style={{
+              color: colors.darkGreen,
+              marginBottom: 20,
+              display: "flex",
+              alignItems: "center",
+              fontFamily: "'Roboto', sans-serif",
+              fontSize: isMobile ? 18 : 24,
+            }}
+          >
+            <ReadOutlined style={{ marginRight: 8, fontSize: isMobile ? 20 : 24 }} />
+            Câu Hỏi
+          </Title>
+          {/* <StudentAnswerQuestion homeworkId={homework[0]?.id} studentId={studentId} /> */}
+        </Card>
       )}
     </div>
   );
@@ -1034,6 +1097,7 @@ const StudentPage = () => {
             <Tabs activeKey={activeTab} tabBarStyle={{ display: "none" }}>
               <TabPane key="lessons">{renderLessonContent()}</TabPane>
               <TabPane key="homework">{renderHomeworkContent()}</TabPane>
+              <TabPane key="vocabulary">{renderVocabularyContent()}</TabPane>
             </Tabs>
           )}
         </Content>
@@ -1092,6 +1156,21 @@ const StudentPage = () => {
                 }}
               >
                 {screens.xs ? "" : "Bài Tập"}
+              </Button>
+              <Button
+                type={activeTab === "vocabulary" ? "primary" : "link"}
+                icon={<BookOutlined />}
+                onClick={() => handleTabClick("vocabulary")}
+                style={{
+                  backgroundColor: activeTab === "vocabulary" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "vocabulary" ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
+                }}
+              >
+                {screens.xs ? "" : "Từ Vựng"}
               </Button>
               <Button
                 type={activeTab === "scores" ? "primary" : "link"}

@@ -1157,6 +1157,25 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
   return (
     <>
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "right",
+          alignItems: "right",
+        }}
+      >
+        <Button
+          color="green"
+          variant="solid"
+          style={{ width: "200px", height: "70px" }}
+          onClick={() => {
+            setOnOpenManageVocabulary(true);
+          }}
+        >
+          Thêm từ vựng
+        </Button>
+      </div>
       <Title
         level={2}
         style={{
@@ -1602,7 +1621,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
         </div>
       )}
       <Divider style={{ borderColor: colors.lightGreen }} />
-      <div
+      {/* <div
         style={{
           width: "100%",
           display: "flex",
@@ -1620,7 +1639,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
         >
           Thêm từ vựng
         </Button>
-      </div>
+      </div> */}
       <Modal
         centered
         title={"Quản lý từ vựng"}
