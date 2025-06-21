@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import questionService from "services/questionService";
 import answerQuestionService from "services/answerQuestionService";
+import { useSpeechRecognition } from "react-speech-kit";
+import { Button, message } from "antd";
+import { AudioOutlined, AudioMutedOutlined } from "@ant-design/icons";
 
 const htmlToText = (html) => {
   const parser = new DOMParser();
@@ -33,16 +36,30 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
   const [submitting, setSubmitting] = useState({});
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(null);
-
-  // Kiểm tra nếu là mobile (màn hình < 768px)
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // State cho Speech-to-Text
+  const [isRecording, setIsRecording] = useState(false);
+  const { listen, listening, stop, supported } = useSpeechRecognition({
+    onResult: (result) => {
+      setNewAnswers((prev) => ({
+        ...prev,
+        [activeTab]: (prev[activeTab] || "") + " " + result,
+      }));
+    },
+    onError: (event) => {
+      if (event.error === "not-allowed") {
+        message.error("Browser does not support Speech Recognition. Please use Google Chrome.");
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const questionsData = await questionService.getQuestionsByHomeworkId(homeworkId);
-        console.log("Dữ liệu questions:", questionsData);
+        console.log("Questions data:", questionsData);
         setQuestions(questionsData);
 
         const initialNewAnswers = {};
@@ -85,33 +102,47 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
     fetchData();
   }, [homeworkId, studentId]);
 
+  // Dừng ghi âm khi chuyển tab
+  useEffect(() => {
+    if (isRecording) {
+      stop();
+      setIsRecording(false);
+    }
+  }, [activeTab]);
+
   const handleAnswerChange = (questionId, value) => {
-    console.log("Cập nhật newAnswers cho questionId:", questionId, "giá trị:", value);
+    console.log("Updating newAnswers for questionId:", questionId, "value:", value);
     setNewAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleAnswerSubmit = async (questionId) => {
-    console.log("Gửi câu trả lời cho questionId:", questionId, "activeTab:", activeTab);
+    console.log("Submitting answer for questionId:", questionId, "activeTab:", activeTab);
     if (questionId !== activeTab) {
-      console.error("QuestionId không khớp với activeTab!");
+      console.error("QuestionId does not match activeTab!");
       return;
     }
 
     const answerText = newAnswers[questionId]?.trim();
     if (!answerText) return;
 
+    // Dừng ghi âm trước khi gửi
+    if (isRecording) {
+      stop();
+      setIsRecording(false);
+    }
+
     try {
       setSubmitting((prev) => ({ ...prev, [questionId]: true }));
       const answerData = {
-        questionID: questionId, // Lưu ý: API sử dụng questionID, cần kiểm tra backend
+        questionId: questionId, // Đồng bộ với backend
         studentId,
         answer: answerText,
         text: answerText,
         homeWorkId: homeworkId,
       };
-      console.log("Dữ liệu gửi API:", answerData);
+      console.log("API payload:", answerData);
       const createdAnswer = await answerQuestionService.createStudentQuestionAnswer(answerData);
-      console.log("Câu trả lời từ API:", createdAnswer);
+      console.log("Answer from API:", createdAnswer);
 
       const newAnswer = {
         id: createdAnswer.id || Date.now(),
@@ -120,7 +151,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
       };
 
       setAnswers((prev) => {
-        console.log("Cập nhật answers cho questionId:", questionId, "newAnswer:", newAnswer);
+        console.log("Updating answers for questionId:", questionId, "newAnswer:", newAnswer);
         return {
           ...prev,
           [questionId]: [...(prev[questionId] || []), newAnswer],
@@ -130,28 +161,62 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
       setNewAnswers((prev) => ({ ...prev, [questionId]: "" }));
     } catch (err) {
       setError(err.message);
-      console.error("Lỗi gửi câu trả lời:", err);
+      console.error("Error submitting answer:", err);
     } finally {
       setSubmitting((prev) => ({ ...prev, [questionId]: false }));
     }
   };
 
-  if (loading) return <div style={{ textAlign: "center", padding: "16px" }}>Đang tải...</div>;
-  if (error) return <div style={{ color: "red", padding: "16px" }}>Lỗi: {error}</div>;
+  // Hàm xử lý bật/tắt ghi âm
+  const toggleSpeechToText = (questionId) => {
+    if (!supported) {
+      message.error("Browser does not support Speech Recognition. Please use Google Chrome.");
+      return;
+    }
+
+    if (isRecording) {
+      stop();
+      setIsRecording(false);
+    } else {
+      setIsRecording(true);
+      listen({ lang: "en-US" }); // Sử dụng tiếng Anh
+    }
+  };
+
+  // Hàm xử lý Speech-to-Text, tương tự handleSpeechForMeaning
+  const handleSpeechForMeaning = (questionId) => {
+    if (!supported) {
+      message.error("Browser does not support Speech Recognition. Please use Google Chrome.");
+      return;
+    }
+
+    if (listening) {
+      stop();
+      setIsRecording(false);
+      console.log("Stopped recording for questionId:", questionId);
+    } else {
+      setIsRecording(true);
+      listen({ lang: "en-US" });
+      console.log("Started recording for questionId:", questionId);
+    }
+  };
+
+  if (loading) return <div style={{ textAlign: "center", padding: "16px" }}>Loading...</div>;
+  if (error) return <div style={{ color: "red", padding: "16px" }}>Error: {error}</div>;
   if (questions.length === 0)
-    return <div style={{ textAlign: "center", padding: "16px" }}>Không có câu hỏi nào</div>;
+    return <div style={{ textAlign: "center", padding: "16px" }}>No questions available</div>;
 
   return (
     <div
       style={{
-        maxWidth: isMobile ? "100%" : "800px", // Giảm maxWidth trên mobile
+        maxWidth: isMobile ? "100%" : "800px",
         margin: "0 auto",
-        padding: isMobile ? "8px" : "16px", // Giảm padding trên mobile
+        padding: isMobile ? "8px" : "16px",
       }}
     >
       <h2
         style={{
-          fontSize: isMobile ? "18px" : "24px", // Giảm fontSize trên mobile
+          fontSize: isMobile ? "18px" : "24px",
           fontWeight: "bold",
           marginBottom: isMobile ? "16px" : "24px",
           textAlign: "center",
@@ -168,19 +233,19 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
           marginBottom: isMobile ? "16px" : "24px",
           overflowX: "auto",
           whiteSpace: "nowrap",
-          scrollbarWidth: isMobile ? "thin" : "auto", // Thanh cuộn mỏng hơn trên mobile
+          scrollbarWidth: isMobile ? "thin" : "auto",
         }}
       >
         {questions.map((question, index) => (
           <button
             key={question.id}
             onClick={() => {
-              console.log("Đặt activeTab thành:", question.id);
+              console.log("Setting activeTab to:", question.id);
               setActiveTab(question.id);
             }}
             style={{
-              padding: isMobile ? "8px 12px" : "12px 20px", // Giảm padding trên mobile
-              fontSize: isMobile ? "12px" : "14px", // Giảm fontSize trên mobile
+              padding: isMobile ? "8px 12px" : "12px 20px",
+              fontSize: isMobile ? "12px" : "14px",
               fontWeight: activeTab === question.id ? "600" : "400",
               color: activeTab === question.id ? "#007bff" : "#555",
               backgroundColor: activeTab === question.id ? "#f0f8ff" : "transparent",
@@ -189,9 +254,8 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
               cursor: "pointer",
               transition: "all 0.2s",
               flexShrink: 0,
-              marginRight: isMobile ? "4px" : "0", // Thêm khoảng cách giữa các tab trên mobile
+              marginRight: isMobile ? "4px" : "0",
             }}
-            // Loại bỏ hover trên mobile vì không cần thiết
             onMouseOver={
               !isMobile
                 ? (e) =>
@@ -215,7 +279,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
       {/* Nội dung tab */}
       {(() => {
         const currentQuestion = questions.find((q) => q.id === activeTab);
-        if (!currentQuestion) return <div>Không tìm thấy câu hỏi</div>;
+        if (!currentQuestion) return <div>Question not found</div>;
 
         return (
           <div
@@ -224,20 +288,20 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
               backgroundColor: "#ffffff",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               borderRadius: "8px",
-              padding: isMobile ? "12px" : "24px", // Giảm padding trên mobile
+              padding: isMobile ? "12px" : "24px",
             }}
           >
             <div
               style={{
                 backgroundColor: "#f0f0f0",
                 borderRadius: "8px",
-                padding: isMobile ? "8px" : "16px", // Giảm padding trên mobile
+                padding: isMobile ? "8px" : "16px",
                 marginBottom: isMobile ? "12px" : "16px",
-                maxHeight: isMobile ? "500px" : "384px", // Tăng maxHeight trên mobile
+                maxHeight: isMobile ? "500px" : "384px",
                 overflowY: "auto",
                 display: "flex",
                 flexDirection: "column",
-                gap: isMobile ? "8px" : "12px", // Giảm gap trên mobile
+                gap: isMobile ? "8px" : "12px",
               }}
             >
               {/* Bong bóng câu hỏi */}
@@ -246,8 +310,8 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                   backgroundColor: "#007bff",
                   color: "white",
                   borderRadius: "12px",
-                  padding: isMobile ? "8px" : "12px", // Giảm padding trên mobile
-                  maxWidth: isMobile ? "90%" : "70%", // Tăng maxWidth trên mobile
+                  padding: isMobile ? "8px" : "12px",
+                  maxWidth: isMobile ? "90%" : "70%",
                   alignSelf: "flex-start",
                 }}
               >
@@ -261,7 +325,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                     opacity: "0.8",
                   }}
                 >
-                  Từ giáo viên: {currentQuestion.teacher?.name || "Không rõ"}
+                  Giáo viên: {currentQuestion.teacher?.name || "Unknown"}
                 </p>
               </div>
 
@@ -273,8 +337,8 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                     style={{
                       backgroundColor: "#d4edda",
                       borderRadius: "12px",
-                      padding: isMobile ? "8px" : "12px", // Giảm padding trên mobile
-                      maxWidth: isMobile ? "90%" : "70%", // Tăng maxWidth trên mobile
+                      padding: isMobile ? "8px" : "12px",
+                      maxWidth: isMobile ? "90%" : "70%",
                       alignSelf: "flex-end",
                       marginBottom: isMobile ? "8px" : "12px",
                     }}
@@ -288,7 +352,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                         textAlign: "right",
                       }}
                     >
-                      {new Date(answer.timestamp).toLocaleString("vi-VN")}
+                      {new Date(answer.timestamp).toLocaleString("en-US")}
                     </p>
                   </div>
                 ))
@@ -301,17 +365,18 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                     textAlign: "center",
                   }}
                 >
-                  Chưa có câu trả lời
+                  No answers yet
                 </p>
               )}
             </div>
 
-            {/* Trường nhập câu trả lời */}
+            {/* Trường nhập câu trả lời với nút ghi âm */}
             <div
               style={{
                 display: "flex",
-                flexDirection: isMobile ? "column" : "row", // Xếp dọc trên mobile
+                flexDirection: isMobile ? "column" : "row",
                 gap: isMobile ? "8px" : "12px",
+                alignItems: isMobile ? "stretch" : "center",
               }}
             >
               <input
@@ -322,28 +387,44 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                 disabled={submitting[currentQuestion.id]}
                 style={{
                   flex: 1,
-                  padding: isMobile ? "8px" : "12px", // Giảm padding trên mobile
+                  padding: isMobile ? "8px" : "12px",
                   border: "1px solid #ccc",
                   borderRadius: "8px",
-                  fontSize: isMobile ? "12px" : "14px", // Giảm fontSize trên mobile
+                  fontSize: isMobile ? "12px" : "14px",
                   outline: "none",
                   boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.1)",
-                  width: isMobile ? "100%" : "auto", // Chiếm toàn bộ chiều rộng trên mobile
+                  width: isMobile ? "100%" : "auto",
                 }}
               />
+              <Button
+                type={isRecording ? "primary" : "default"}
+                danger={isRecording}
+                icon={isRecording ? <AudioMutedOutlined /> : <AudioOutlined />}
+                onClick={() => handleSpeechForMeaning(currentQuestion.id)}
+                disabled={submitting[currentQuestion.id] || !supported}
+                style={{
+                  padding: isMobile ? "8px" : "12px",
+                  borderRadius: "8px",
+                  fontSize: isMobile ? "12px" : "14px",
+                  width: isMobile ? "100%" : "auto",
+                  transition: !isMobile ? "background-color 0.2s" : "none",
+                }}
+              >
+                {isRecording ? "Dừng" : "Ghi âm"}
+              </Button>
               <button
                 onClick={() => handleAnswerSubmit(currentQuestion.id)}
                 disabled={submitting[currentQuestion.id]}
                 style={{
                   backgroundColor: submitting[currentQuestion.id] ? "#6c757d" : "#007bff",
                   color: "white",
-                  padding: isMobile ? "8px 16px" : "12px 20px", // Giảm padding trên mobile
+                  padding: isMobile ? "8px 16px" : "12px 20px",
                   borderRadius: "8px",
                   border: "none",
                   cursor: submitting[currentQuestion.id] ? "not-allowed" : "pointer",
-                  fontSize: isMobile ? "12px" : "14px", // Giảm fontSize trên mobile
-                  width: isMobile ? "100%" : "auto", // Chiếm toàn bộ chiều rộng trên mobile
-                  transition: !isMobile ? "background-color 0.2s" : "none", // Tắt transition trên mobile
+                  fontSize: isMobile ? "12px" : "14px",
+                  width: isMobile ? "100%" : "auto",
+                  transition: !isMobile ? "background-color 0.2s" : "none",
                 }}
                 onMouseOver={
                   !isMobile
@@ -360,7 +441,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                     : undefined
                 }
               >
-                {submitting[currentQuestion.id] ? "Đang gửi..." : "Gửi"}
+                {submitting[currentQuestion.id] ? "Đang gửi" : "Gửi"}
               </button>
             </div>
           </div>
