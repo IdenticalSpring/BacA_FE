@@ -63,7 +63,7 @@ import StudentFeedbackModal from "./feedbackModal";
 import contentPageService from "services/contentpageService";
 import { Close } from "@mui/icons-material";
 import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
-// import StudentAnswerQuestion from "components/QuestionComponent/StudentAnswerQuestionComponent";
+import AnswerQuestionComponent from "components/QuestionComponent/AnswerQuestionComponet";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -935,7 +935,7 @@ const StudentPage = () => {
             <ReadOutlined style={{ marginRight: 8, fontSize: isMobile ? 20 : 24 }} />
             Câu Hỏi
           </Title>
-          {/* <StudentAnswerQuestion homeworkId={homework[0]?.id} studentId={studentId} /> */}
+          <AnswerQuestionComponent homeworkId={homework[0]?.id} studentId={studentId} />
         </Card>
       )}
     </div>

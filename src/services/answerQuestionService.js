@@ -93,6 +93,26 @@ class StudentQuestionAnswerService {
     }
   }
 
+  async getStudentQuestionAnswersByQuestionId(questionId, studentId) {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/student-question-answers/by-question/${questionId}/student/${studentId}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch student question answers for question: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    }
+  }
+
   async deleteStudentQuestionAnswer(id) {
     try {
       await axios.delete(`${API_BASE_URL}/student-question-answers/${id}`, {
