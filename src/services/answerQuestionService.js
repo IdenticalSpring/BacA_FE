@@ -112,6 +112,19 @@ class StudentQuestionAnswerService {
       );
     }
   }
+  async suggestAnswerQuestion(question, imageUrls = []) {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/chatbot/analyze`,
+        { question, imageUrls },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data.response; // Trả về nội dung đã cải thiện
+    } catch (error) {
+      console.error("Error enhancing lesson plan:", error);
+      throw new Error("Failed to enhance lesson plan. Please try again!");
+    }
+  }
 
   async deleteStudentQuestionAnswer(id) {
     try {

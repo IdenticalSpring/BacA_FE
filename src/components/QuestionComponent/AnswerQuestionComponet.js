@@ -134,7 +134,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
     try {
       setSubmitting((prev) => ({ ...prev, [questionId]: true }));
       const answerData = {
-        questionId: questionId, // Đồng bộ với backend
+        questionId: questionId,
         studentId,
         answer: answerText,
         text: answerText,
@@ -167,6 +167,55 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
     }
   };
 
+  // Hàm xử lý gợi ý câu trả lời
+  const handleSuggestAnswer = async (questionId) => {
+    const currentQuestion = questions.find((q) => q.id === questionId);
+    if (!currentQuestion) {
+      message.error("Question not found!");
+      return;
+    }
+
+    try {
+      setSubmitting((prev) => ({ ...prev, [questionId]: true }));
+      const questionText = htmlToText(currentQuestion.text);
+      const imageUrls = currentQuestion.imageUrls || []; // Giả sử question có trường imageUrls
+      const suggestedAnswer = await answerQuestionService.suggestAnswerQuestion(
+        questionText,
+        imageUrls
+      );
+      console.log("Suggested answer:", suggestedAnswer);
+
+      // Tạo câu trả lời mới với gợi ý
+      const answerData = {
+        questionId: questionId,
+        studentId,
+        answer: suggestedAnswer,
+        text: suggestedAnswer,
+        homeWorkId: homeworkId,
+      };
+      const createdAnswer = await answerQuestionService.createStudentQuestionAnswer(answerData);
+      console.log("Created answer from suggestion:", createdAnswer);
+
+      const newAnswer = {
+        id: createdAnswer.id || Date.now(),
+        text: createdAnswer.answer || createdAnswer.text || suggestedAnswer,
+        timestamp: createdAnswer.createdAt || new Date().toISOString(),
+      };
+
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: [...(prev[questionId] || []), newAnswer],
+      }));
+      message.success("Suggested answer submitted successfully!");
+    } catch (err) {
+      setError(err.message);
+      message.error("Failed to generate or submit suggested answer!");
+      console.error("Error suggesting answer:", err);
+    } finally {
+      setSubmitting((prev) => ({ ...prev, [questionId]: false }));
+    }
+  };
+
   // Hàm xử lý bật/tắt ghi âm
   const toggleSpeechToText = (questionId) => {
     if (!supported) {
@@ -179,11 +228,11 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
       setIsRecording(false);
     } else {
       setIsRecording(true);
-      listen({ lang: "en-US" }); // Sử dụng tiếng Anh
+      listen({ lang: "en-US" });
     }
   };
 
-  // Hàm xử lý Speech-to-Text, tương tự handleSpeechForMeaning
+  // Hàm xử lý Speech-to-Text
   const handleSpeechForMeaning = (questionId) => {
     if (!supported) {
       message.error("Browser does not support Speech Recognition. Please use Google Chrome.");
@@ -370,7 +419,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
               )}
             </div>
 
-            {/* Trường nhập câu trả lời với nút ghi âm */}
+            {/* Trường nhập câu trả lời với các nút */}
             <div
               style={{
                 display: "flex",
@@ -412,6 +461,37 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
               >
                 {isRecording ? "Dừng" : "Ghi âm"}
               </Button>
+              <button
+                onClick={() => handleSuggestAnswer(currentQuestion.id)}
+                disabled={submitting[currentQuestion.id]}
+                style={{
+                  backgroundColor: submitting[currentQuestion.id] ? "#6c757d" : "#28a745",
+                  color: "white",
+                  padding: isMobile ? "8px 16px" : "12px 20px",
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: submitting[currentQuestion.id] ? "not-allowed" : "pointer",
+                  fontSize: isMobile ? "12px" : "14px",
+                  width: isMobile ? "100%" : "auto",
+                  transition: !isMobile ? "background-color 0.2s" : "none",
+                }}
+                onMouseOver={
+                  !isMobile
+                    ? (e) =>
+                        !submitting[currentQuestion.id] &&
+                        (e.target.style.backgroundColor = "#218838")
+                    : undefined
+                }
+                onMouseOut={
+                  !isMobile
+                    ? (e) =>
+                        !submitting[currentQuestion.id] &&
+                        (e.target.style.backgroundColor = "#28a745")
+                    : undefined
+                }
+              >
+                {submitting[currentQuestion.id] ? "Đang gợi ý" : "Gợi ý câu trả lời"}
+              </button>
               <button
                 onClick={() => handleAnswerSubmit(currentQuestion.id)}
                 disabled={submitting[currentQuestion.id]}
