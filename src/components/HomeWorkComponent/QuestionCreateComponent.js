@@ -309,33 +309,6 @@ const QuestionCreateComponent = ({
             isDelete: false,
           }}
         >
-          <Form.Item name="teacherID" label="Giáo viên" hidden>
-            <Input hidden />
-          </Form.Item>
-          <Form.Item label="Giáo viên">
-            <Text strong>{teacherName}</Text>
-          </Form.Item>
-          <Form.Item
-            name="classID"
-            label="Lớp học"
-            rules={[{ required: true, message: "Vui lòng chọn lớp học" }]}
-          >
-            <Select
-              placeholder="Chọn lớp học"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-              disabled={!!classID}
-            >
-              <Option value="">Chọn lớp học</Option>
-              {classes.map((cls) => (
-                <Option key={cls.id} value={cls.id.toString()}>
-                  {cls.name || `Class ${cls.id}`}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
           <Divider orientation="left">Hình ảnh</Divider>
           <style>{`
             .ant-upload-select {
@@ -502,11 +475,6 @@ const QuestionCreateComponent = ({
                   {item.teacher && (
                     <Text type="secondary" style={{ width: "100%", marginLeft: "60px" }}>
                       Giáo viên: {item.teacher.name || `Teacher ${item.teacher.id}`}
-                    </Text>
-                  )}
-                  {item.class && (
-                    <Text type="secondary" style={{ width: "100%", marginLeft: "60px" }}>
-                      Lớp: {item.class.name || `Class ${item.class.id}`}
                     </Text>
                   )}
                 </div>

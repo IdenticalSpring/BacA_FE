@@ -215,7 +215,7 @@ export default function HomeWorkManagement({
       }
     };
     fetchQuestions();
-  }, [selectedHomeWorkId]);
+  }, [selectedHomeWorkId, editingHomeWork]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkLink).then(() => {
