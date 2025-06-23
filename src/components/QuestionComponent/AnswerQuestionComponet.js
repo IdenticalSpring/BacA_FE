@@ -134,7 +134,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
     try {
       setSubmitting((prev) => ({ ...prev, [questionId]: true }));
       const answerData = {
-        questionId: questionId,
+        questionID: questionId,
         studentId,
         answer: answerText,
         text: answerText,
@@ -187,7 +187,7 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
 
       // Tạo câu trả lời mới với gợi ý
       const answerData = {
-        questionId: questionId,
+        questionID: questionId,
         studentId,
         answer: suggestedAnswer,
         text: suggestedAnswer,

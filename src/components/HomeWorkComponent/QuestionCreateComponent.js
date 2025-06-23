@@ -12,6 +12,7 @@ import {
   Avatar,
   Divider,
   Upload,
+  Empty,
 } from "antd";
 import {
   DeleteOutlined,
@@ -20,11 +21,15 @@ import {
   SwapOutlined,
   LoadingOutlined,
   PlusOutlined,
+  EyeOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { colors } from "assets/theme/color";
 import ReactQuill, { Quill } from "react-quill";
 import axios from "axios";
+import studentService from "services/studentService";
+import answerQuestionService from "services/answerQuestionService";
 
 const BlockEmbed = Quill.import("blots/block/embed");
 class AudioBlot extends BlockEmbed {
@@ -34,7 +39,6 @@ class AudioBlot extends BlockEmbed {
     node.setAttribute("controls", true);
     return node;
   }
-
   static value(node) {
     return node.getAttribute("src");
   }
@@ -45,7 +49,6 @@ AudioBlot.tagName = "audio";
 class CustomImageBlot extends BlockEmbed {
   static blotName = "image";
   static tagName = "img";
-
   static create(value) {
     const node = super.create();
     node.setAttribute("src", value);
@@ -53,7 +56,6 @@ class CustomImageBlot extends BlockEmbed {
     node.style.cursor = "zoom-in";
     return node;
   }
-
   static value(node) {
     return node.getAttribute("src");
   }
@@ -83,6 +85,31 @@ const QuestionCreateComponent = ({
     teachers.length > 0
       ? teachers.find((t) => t.id === Number(teacherId))?.name || `Teacher ${teacherId}`
       : `Teacher ${teacherId}`;
+  const [students, setStudents] = useState([]);
+  const [openDetailQuestions, setOpenDetailQuestions] = useState(false);
+  const [selectedStudentName, setSelectedStudentName] = useState("");
+  const [selectedStudentQuestions, setSelectedStudentQuestions] = useState([]);
+  const [isLoadingStudentQuestions, setIsLoadingStudentQuestions] = useState(false);
+
+  useEffect(() => {
+    if (teacherId && classID) {
+      form.setFieldsValue({
+        teacherID: teacherId.toString(),
+        classID: classID.toString(),
+        isDelete: false,
+      });
+    }
+    const fetchStudents = async () => {
+      try {
+        const data = await studentService.getAllStudentsbyClass(classID);
+        setStudents(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách học sinh:", error);
+        setStudents([]);
+      }
+    };
+    fetchStudents();
+  }, [teacherId, classID, form]);
 
   const toolbar = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -107,16 +134,6 @@ const QuestionCreateComponent = ({
     "audio",
   ];
 
-  useEffect(() => {
-    if (teacherId && classID) {
-      form.setFieldsValue({
-        teacherID: teacherId.toString(),
-        classID: classID.toString(),
-        isDelete: false,
-      });
-    }
-  }, [teacherId, classID, form]);
-
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -136,7 +153,6 @@ const QuestionCreateComponent = ({
           process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
           formData
         );
-
         if (response.status === 201 && quillRef.current) {
           const editor = quillRef.current.getEditor();
           if (!editor) return;
@@ -183,7 +199,6 @@ const QuestionCreateComponent = ({
             process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
             formData
           );
-
           if (response.status === 201) {
             const audioUrl = response?.data?.url;
             editor.insertEmbed(currentIndex, "audio", audioUrl, "user");
@@ -292,6 +307,33 @@ const QuestionCreateComponent = ({
         message.success("Xóa câu hỏi thành công");
       },
     });
+  };
+
+  const handleFetchQuestionsForStudent = async (studentId) => {
+    try {
+      setIsLoadingStudentQuestions(true);
+      const answers = [];
+      for (const question of questionList) {
+        const studentAnswers = await answerQuestionService.getStudentQuestionAnswersByQuestionId(
+          question.id,
+          studentId
+        );
+        answers.push(
+          ...studentAnswers.map((answer) => ({
+            ...answer,
+            question,
+          }))
+        );
+      }
+      setSelectedStudentQuestions(answers);
+      const student = students.find((s) => s.id === studentId);
+      setSelectedStudentName(student ? student.name : "");
+      setOpenDetailQuestions(true);
+    } catch (error) {
+      message.error("Lỗi khi lấy câu trả lời của học sinh:", error);
+    } finally {
+      setIsLoadingStudentQuestions(false);
+    }
   };
 
   return (
@@ -483,6 +525,152 @@ const QuestionCreateComponent = ({
           />
         </Card>
       )}
+
+      <Card
+        title={
+          <Title level={3}>Danh sách các bạn học sinh đã tạo từ vựng và trả lời câu hỏi</Title>
+        }
+      >
+        <div
+          style={{
+            width: "100%",
+            maxHeight: "40vh",
+            overflowY: "auto",
+          }}
+        >
+          {students?.map((item, index) => (
+            <div
+              key={index}
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Divider />
+              <Avatar
+                src={item?.imgUrl}
+                icon={<UserOutlined />}
+                shape="square"
+                style={{ width: "50px", height: "50px" }}
+              />
+              <div style={{ width: "60%" }}>{item?.name}</div>
+              <Button
+                onClick={() => handleFetchQuestionsForStudent(item?.id || 0)}
+                icon={<EyeOutlined style={{ fontSize: "20px" }} />}
+                style={{ width: "40px", height: "40px" }}
+                color="green"
+                variant="filled"
+              ></Button>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Modal
+        centered
+        title={"Danh sách câu trả lời của bạn " + selectedStudentName}
+        open={openDetailQuestions}
+        onCancel={() => {
+          setSelectedStudentQuestions([]);
+          setSelectedStudentName("");
+          setOpenDetailQuestions(false);
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setSelectedStudentQuestions([]);
+              setSelectedStudentName("");
+              setOpenDetailQuestions(false);
+            }}
+          >
+            Hủy
+          </Button>,
+        ]}
+        width={"85%"}
+        style={{ zIndex: "10000000000" }}
+      >
+        {isLoadingStudentQuestions ? (
+          <div
+            style={{
+              width: "100%",
+              height: "70vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <LoadingOutlined style={{ fontSize: "100px" }} />
+          </div>
+        ) : (
+          <>
+            {selectedStudentQuestions?.length > 0 && (
+              <>
+                <h3>{"Danh sách câu trả lời của bạn " + selectedStudentName}</h3>
+                <List
+                  style={{ maxHeight: "70vh", overflowY: "auto", padding: "10px" }}
+                  itemLayout="horizontal"
+                  dataSource={selectedStudentQuestions || []}
+                  renderItem={(item) => (
+                    <List.Item key={item?.id} style={{ padding: "10px 0" }}>
+                      <Card
+                        style={{
+                          width: "100%",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                        }}
+                        bodyStyle={{ display: "flex", alignItems: "center" }}
+                      >
+                        <Avatar
+                          shape="square"
+                          style={{
+                            width: 50,
+                            height: 50,
+                            marginRight: "15px",
+                            backgroundColor: "#f0f0f0",
+                          }}
+                          icon={<QuestionCircleOutlined />}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <Text strong style={{ fontSize: 16 }}>
+                            Câu hỏi:{" "}
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: item.question?.text || "Không tìm thấy câu hỏi",
+                              }}
+                            />
+                          </Text>
+                          <br />
+                          <Text type="secondary" style={{ fontSize: 14 }}>
+                            Câu trả lời: {item?.text}
+                          </Text>
+                        </div>
+                      </Card>
+                    </List.Item>
+                  )}
+                />
+              </>
+            )}
+            {selectedStudentQuestions?.length === 0 && (
+              <div
+                style={{
+                  width: "100%",
+                  height: "30vh",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Empty style={{ width: "100%" }}></Empty>
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 };
