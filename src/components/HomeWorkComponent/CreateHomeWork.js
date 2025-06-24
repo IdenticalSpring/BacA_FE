@@ -543,6 +543,7 @@ export default function CreateHomeWork({
               teacherID: item.teacher.id,
               classID: item.class.id,
               homeWorkId: homeworkData.id,
+              imageUrl: item.imageUrl || "",
               text: item.text,
               isDelete: item.isDelete,
             };

@@ -398,6 +398,7 @@ export default function HomeWorkManagement({
               teacherId: item.teacher.id,
               classId: item.class.id,
               homeWorkId: homeWorkId,
+              imageUrl: item.imageUrl || "",
             })
           );
         await Promise.all(questionPromises);
@@ -480,6 +481,7 @@ export default function HomeWorkManagement({
               teacherId: item.teacher.id,
               classId: item.class.id,
               homeWorkId: homeWorkId,
+              imageUrl: item.imageUrl || "",
             })
           );
         await Promise.all(questionPromises);

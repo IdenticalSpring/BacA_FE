@@ -5,6 +5,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 class QuestionService {
   async createQuestion(questionData) {
     try {
+      console.log("Sending question data:", questionData); // Debugging
       const response = await axios.post(`${API_BASE_URL}/questions`, questionData, {
         headers: {
           "ngrok-skip-browser-warning": "true",

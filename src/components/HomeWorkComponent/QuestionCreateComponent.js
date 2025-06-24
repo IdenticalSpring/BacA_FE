@@ -30,6 +30,7 @@ import ReactQuill, { Quill } from "react-quill";
 import axios from "axios";
 import studentService from "services/studentService";
 import answerQuestionService from "services/answerQuestionService";
+import questionService from "services/questionService";
 
 const BlockEmbed = Quill.import("blots/block/embed");
 class AudioBlot extends BlockEmbed {
@@ -150,7 +151,7 @@ const QuestionCreateComponent = ({
 
       try {
         const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          process.env.REACT_APP_API_BASE_URL + "/upload/avatar",
           formData
         );
         if (response.status === 201 && quillRef.current) {
@@ -251,7 +252,7 @@ const QuestionCreateComponent = ({
         const newQuestion = {
           id: Date.now(),
           text: quillContent,
-          imageUrl: imageUrl || undefined,
+          imageUrl: imageUrl,
           teacher:
             teachers.length > 0
               ? teachers.find((t) => t.id === Number(values.teacherID)) || {
@@ -303,8 +304,20 @@ const QuestionCreateComponent = ({
       okType: "danger",
       cancelText: "Hủy",
       onOk: () => {
-        setQuestionList(questionList.filter((item) => item.id !== id));
-        message.success("Xóa câu hỏi thành công");
+        if (item.isNew) {
+          setQuestionList(questionList.filter((item) => item.id !== id));
+          message.success("Xóa câu hỏi thành công");
+          return;
+        }
+        return questionService
+          .deleteQuestion(id)
+          .then(() => {
+            setQuestionList(questionList.filter((item) => item.id !== id));
+            message.success("Xóa câu hỏi thành công");
+          })
+          .catch((error) => {
+            message.error("Xóa câu hỏi thất bại: " + error.message);
+          });
       },
     });
   };
@@ -364,7 +377,7 @@ const QuestionCreateComponent = ({
               listType="picture-card"
               className="avatar-uploader"
               showUploadList={false}
-              action={process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary"}
+              action={process.env.REACT_APP_API_BASE_URL + "/upload/avatar"}
               onChange={handleImageUpload}
             >
               {imageUrl ? (
