@@ -367,6 +367,24 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
                 <p style={{ fontSize: isMobile ? "12px" : "14px", fontWeight: "600" }}>
                   {htmlToText(currentQuestion.text)}
                 </p>
+                {currentQuestion.imageUrl && (
+                  <img
+                    src={currentQuestion.imageUrl}
+                    alt="Question image"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: isMobile ? "150px" : "200px",
+                      height: "auto",
+                      borderRadius: "8px",
+                      marginTop: "8px",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/150?text=Image+Not+Found";
+                      e.target.alt = "Image not found";
+                    }}
+                  />
+                )}
                 <p
                   style={{
                     fontSize: isMobile ? "10px" : "12px",
