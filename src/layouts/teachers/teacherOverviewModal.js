@@ -41,6 +41,8 @@ import { DeleteIcon, TrashIcon } from "lucide-react";
 import SpeechToTextComponent from "components/TeacherPageComponent/SpeechToTextComponent";
 import vocabularyService from "services/vocabularyService";
 import VocabularyCreateComponent from "components/HomeWorkComponent/VocabularyCreateComponent";
+import questionService from "services/questionService";
+import QuestionCreateComponent from "components/HomeWorkComponent/QuestionCreateComponent";
 
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -184,6 +186,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );
+  const [questionList, setQuestionList] = useState([]);
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -1656,7 +1659,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
     }
   };
 
-  const handleEditHomework = (homeWork) => {
+  const handleEditHomework = async (homeWork) => {
     setEditingHomeWork(homeWork);
     setSelectedHomeWorkId(homeWork?.id);
     const links = homeWork?.linkGame.split(", ");
@@ -1683,6 +1686,14 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
     setMp3Url(homeWork.linkSpeech);
     setModalUpdateHomeWorkVisible(true);
     setTextToSpeech(homeWork.textToSpeech || "");
+    // Tải danh sách câu hỏi
+    try {
+      const questions = await questionService.getQuestionsByHomeworkId(homeWork.id);
+      setQuestionList(questions);
+    } catch (error) {
+      message.error("Lỗi khi tải danh sách câu hỏi: " + error.message);
+      setQuestionList([]);
+    }
   };
   useEffect(() => {
     const fetchVocabulary = async () => {
@@ -1796,6 +1807,22 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
             formDataForVocabulary
           );
         }
+        // Lưu danh sách câu hỏi mới
+        if (questionList.length > 0) {
+          const newQuestions = questionList.filter((q) => q.isNew);
+          for (const question of newQuestions) {
+            const questionData = {
+              text: question.text,
+              imageUrl: question.imageUrl,
+              teacherId: question.teacher.id,
+              classId: question.class.id,
+              homeworkId: homeworkData.id,
+              isDelete: question.isDelete,
+            };
+            await questionService.createQuestion(questionData);
+          }
+        }
+
         setHomeworks(
           homeworks?.map((homeWork) =>
             homeWork.id === editingHomeWork.id ? { ...homeWork, ...HomeWorkdata } : homeWork
@@ -1812,6 +1839,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       setCurrentLink("");
       setHtmlContentHomework("");
       setSwapHtmlHomeworkMode(false);
+      setQuestionList([]);
     } catch (err) {
       message.error("Please check your input and try again" + err);
     } finally {
@@ -2903,6 +2931,16 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 selectedHomeWorkId={selectedHomeWorkId}
                 audioId={"audio-player-update"}
                 selectedClass={selectedClass}
+              />
+            </Form.Item>
+            <Form.Item label="Câu hỏi cho bài tập">
+              <QuestionCreateComponent
+                teacherId={teacher?.id}
+                classID={selectedClass}
+                teachers={[teacher]}
+                classes={classes}
+                questionList={questionList}
+                setQuestionList={setQuestionList}
               />
             </Form.Item>
             {/* <Form.Item label="Văn bản thành giọng nói">

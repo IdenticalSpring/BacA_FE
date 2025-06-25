@@ -175,13 +175,24 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
       return;
     }
 
+    console.log(
+      "Suggesting answer for questionId:",
+      questionId,
+      "currentQuestion:",
+      currentQuestion
+    );
+
     try {
       setSubmitting((prev) => ({ ...prev, [questionId]: true }));
       const questionText = htmlToText(currentQuestion.text);
-      const imageUrls = currentQuestion.imageUrls || []; // Giả sử question có trường imageUrls
+      // Lấy imageUrl đầu tiên nếu có, hoặc để trống
+      const imageUrl =
+        Array.isArray(currentQuestion.imageUrl) && currentQuestion.imageUrl.length > 0
+          ? currentQuestion.imageUrl[0]
+          : "";
       const suggestedAnswer = await answerQuestionService.suggestAnswerQuestion(
         questionText,
-        imageUrls
+        imageUrl
       );
       console.log("Suggested answer:", suggestedAnswer);
 
