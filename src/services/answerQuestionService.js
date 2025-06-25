@@ -112,17 +112,27 @@ class StudentQuestionAnswerService {
       );
     }
   }
-  async suggestAnswerQuestion(question, imageUrls = []) {
+  async suggestAnswerQuestion(question, imageUrl) {
+    if (!question && !imageUrl) {
+      throw new Error("At least one of question or imageUrl must be provided.");
+    }
     try {
       const response = await axios.post(
         `${API_BASE_URL}/chatbot/analyze`,
-        { question, imageUrls },
-        { headers: { "Content-Type": "application/json" } }
+        { question: question || null, imageUrl: imageUrl || null },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
       );
-      return response.data.response; // Trả về nội dung đã cải thiện
+      return response.data.response;
     } catch (error) {
-      console.error("Error enhancing lesson plan:", error);
-      throw new Error("Failed to enhance lesson plan. Please try again!");
+      console.error("Error suggesting answer:", error);
+      throw new Error(
+        `Failed to suggest answer: ${error.response?.data?.message || error.message}`
+      );
     }
   }
 

@@ -175,26 +175,15 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
       return;
     }
 
-    console.log(
-      "Suggesting answer for questionId:",
-      questionId,
-      "currentQuestion:",
-      currentQuestion
-    );
-
     try {
       setSubmitting((prev) => ({ ...prev, [questionId]: true }));
       const questionText = htmlToText(currentQuestion.text);
-      // Lấy imageUrl đầu tiên nếu có, hoặc để trống
-      const imageUrl =
-        Array.isArray(currentQuestion.imageUrl) && currentQuestion.imageUrl.length > 0
-          ? currentQuestion.imageUrl[0]
-          : "";
+      const imageUrl = currentQuestion.imageUrl || null;
+
       const suggestedAnswer = await answerQuestionService.suggestAnswerQuestion(
         questionText,
         imageUrl
       );
-      console.log("Suggested answer:", suggestedAnswer);
 
       // Tạo câu trả lời mới với gợi ý
       const answerData = {
@@ -204,6 +193,8 @@ const AnswerQuestionComponent = ({ homeworkId, studentId }) => {
         text: suggestedAnswer,
         homeWorkId: homeworkId,
       };
+
+      console.log("Sending answerData to API:", answerData);
       const createdAnswer = await answerQuestionService.createStudentQuestionAnswer(answerData);
       console.log("Created answer from suggestion:", createdAnswer);
 
