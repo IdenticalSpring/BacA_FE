@@ -55,6 +55,9 @@ class CustomImageBlot extends BlockEmbed {
     node.setAttribute("src", value);
     node.setAttribute("class", "ql-image");
     node.style.cursor = "zoom-in";
+    node.addEventListener("click", () => {
+      window.open(value, "_blank"); // Mở ảnh trong tab mới
+    });
     return node;
   }
   static value(node) {
@@ -151,26 +154,30 @@ const QuestionCreateComponent = ({
 
       try {
         const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/avatar",
-          formData
+          process.env.REACT_APP_API_BASE_URL + "/files/upload",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
         );
-        if (response.status === 201 && quillRef.current) {
+        if (response.status === 200 && response.data.url && quillRef.current) {
           const editor = quillRef.current.getEditor();
           if (!editor) return;
-          const range = editor.getSelection(true);
-          editor.insertEmbed(range?.index ?? editor.getLength(), "image", response.data.url);
+          const range = editor.getSelection(true) || { index: editor.getLength() };
+          editor.insertEmbed(range.index, "image", response.data.url);
           setTimeout(() => {
             const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
             imgs.forEach((img) => {
               img.classList.add("ql-image");
             });
           }, 0);
+          message.success("Đã upload ảnh thành công");
         } else {
-          message.error("Upload failed. Try again!");
+          message.error("Upload ảnh thất bại. Vui lòng thử lại!");
         }
       } catch (error) {
-        console.error("Error uploading image:", error);
-        message.error("Upload error. Please try again!");
+        console.error("Lỗi khi upload ảnh:", error);
+        message.error("Lỗi upload ảnh: " + (error.response?.data?.message || error.message));
       }
     };
   }, []);
@@ -197,20 +204,25 @@ const QuestionCreateComponent = ({
 
         try {
           const response = await axios.post(
-            process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-            formData
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
           );
-          if (response.status === 201) {
-            const audioUrl = response?.data?.url;
-            editor.insertEmbed(currentIndex, "audio", audioUrl, "user");
+          if (response.status === 200 && response.data.url) {
+            editor.insertEmbed(currentIndex, "audio", response.data.url, "user");
             currentIndex++;
             editor.setSelection(currentIndex);
+            message.success(`Đã upload audio ${file.name} thành công`);
           } else {
-            message.error(`Upload failed for ${file.name}. Try again!`);
+            message.error(`Upload audio ${file.name} thất bại. Vui lòng thử lại!`);
           }
         } catch (error) {
-          console.error(`Error uploading audio ${file.name}:`, error);
-          message.error(`Upload error for ${file.name}. Please try again!`);
+          console.error(`Lỗi khi upload audio ${file.name}:`, error);
+          message.error(
+            `Lỗi upload audio ${file.name}: ` + (error.response?.data?.message || error.message)
+          );
         }
       }
     };
@@ -222,8 +234,17 @@ const QuestionCreateComponent = ({
       return;
     }
     if (info.file.status === "done") {
-      setImageUrl(info.file.response.url);
+      if (info.file.response?.url) {
+        setImageUrl(info.file.response.url);
+        setImageLoading(false);
+        message.success("Đã upload ảnh thành công");
+      } else {
+        setImageLoading(false);
+        message.error("Upload ảnh thất bại: Không nhận được URL từ server");
+      }
+    } else if (info.file.status === "error") {
       setImageLoading(false);
+      message.error("Lỗi upload ảnh: " + (info.file.error?.message || "Không xác định"));
     }
   };
 
@@ -252,7 +273,7 @@ const QuestionCreateComponent = ({
         const newQuestion = {
           id: Date.now(),
           text: quillContent,
-          imageUrl: imageUrl,
+          imageUrl: imageUrl, // Đảm bảo imageUrl từ Upload component
           teacher:
             teachers.length > 0
               ? teachers.find((t) => t.id === Number(values.teacherID)) || {
@@ -283,7 +304,7 @@ const QuestionCreateComponent = ({
         }
         setHtmlContent("");
         setSwapHtmlMode(false);
-        setImageUrl("");
+        setImageUrl(""); // Reset imageUrl
         setImageLoading(false);
       })
       .catch((errorInfo) => {
@@ -373,12 +394,13 @@ const QuestionCreateComponent = ({
           `}</style>
           <Form.Item>
             <Upload
-              name="avatar"
+              name="file"
               listType="picture-card"
               className="avatar-uploader"
-              showUploadList={false}
-              action={process.env.REACT_APP_API_BASE_URL + "/upload/avatar"}
+              showUploadList={true}
+              action={process.env.REACT_APP_API_BASE_URL + "/files/upload"}
               onChange={handleImageUpload}
+              multiple
             >
               {imageUrl ? (
                 <img src={imageUrl} alt="question" style={{ width: "100%" }} />
