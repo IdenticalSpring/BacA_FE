@@ -563,11 +563,18 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       setImageLoading(true);
       return;
     }
-    console.log(info);
     if (info.file.status === "done") {
-      // In a real app, you would use the response from your server
-      setImageUrl(info.file.response.url);
+      if (info.file.response?.url) {
+        setImageUrl(info.file.response.url);
+        setImageLoading(false);
+        message.success("Đã upload ảnh thành công");
+      } else {
+        setImageLoading(false);
+        message.error("Upload ảnh thất bại: Không nhận được URL từ server");
+      }
+    } else if (info.file.status === "error") {
       setImageLoading(false);
+      message.error("Lỗi upload ảnh: " + (info.file.error?.message || "Không xác định"));
     }
   };
 
@@ -1782,11 +1789,11 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               `}</style>
               <Form.Item>
                 <Upload
-                  name="avatar"
+                  name="file"
                   listType="picture-card"
                   // className="avatar-uploader"
                   showUploadList={false}
-                  action={process.env.REACT_APP_API_BASE_URL + "/upload/avatar"}
+                  action={process.env.REACT_APP_API_BASE_URL + "/files/upload"}
                   onChange={handleImageUpload}
                   // style={{ width: 10, height: 10 }}
                 >

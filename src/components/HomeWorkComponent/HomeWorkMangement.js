@@ -76,9 +76,14 @@ class AudioBlot extends BlockEmbed {
     const node = super.create();
     node.setAttribute("src", url);
     node.setAttribute("controls", true);
+    node.style.width = "100%";
+    node.style.margin = "10px 0";
+    node.onerror = () => {
+      console.error("Audio failed to load:", url);
+      message.error(`Không thể tải audio: ${url}`);
+    };
     return node;
   }
-
   static value(node) {
     return node.getAttribute("src");
   }
@@ -89,7 +94,6 @@ AudioBlot.tagName = "audio";
 class CustomVideo extends BlockEmbed {
   static blotName = "video";
   static tagName = "iframe";
-
   static create(value) {
     const node = super.create();
     const src = typeof value === "string" ? value : value.src;
@@ -105,7 +109,6 @@ class CustomVideo extends BlockEmbed {
     }
     return node;
   }
-
   static value(node) {
     return {
       src: node.getAttribute("src"),
@@ -118,15 +121,22 @@ class CustomVideo extends BlockEmbed {
 class CustomImageBlot extends BlockEmbed {
   static blotName = "image";
   static tagName = "img";
-
   static create(value) {
     const node = super.create();
     node.setAttribute("src", value);
     node.setAttribute("class", "ql-image");
+    node.style.maxWidth = "100%";
+    node.style.margin = "10px 0";
     node.style.cursor = "zoom-in";
+    node.onerror = () => {
+      console.error("Image failed to load:", value);
+      message.error(`Không thể tải ảnh: ${value}`);
+    };
+    node.addEventListener("click", () => {
+      window.open(value, "_blank");
+    });
     return node;
   }
-
   static value(node) {
     return node.getAttribute("src");
   }
@@ -570,87 +580,152 @@ export default function HomeWorkManagement({
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
+    input.setAttribute("multiple", "true");
     input.click();
 
     input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
+      const files = Array.from(input.files);
+      if (!files.length) {
+        message.error("Vui lòng chọn ít nhất một file ảnh");
+        return;
+      }
 
-      const formData = new FormData();
-      formData.append("file", file);
+      const editor = quillRef.current?.getEditor();
+      if (!editor) {
+        console.error("Editor not found");
+        message.error("Không tìm thấy editor ReactQuill");
+        return;
+      }
+      let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current?.getEditor();
-          if (!editor) return;
-          const range = editor.getSelection(true);
-          editor.insertEmbed(range?.index ?? editor.getLength(), "image", response.data.url);
-          setTimeout(() => {
-            const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
-            imgs.forEach((img) => {
-              img.classList.add("ql-image");
-            });
-          }, 0);
-        } else {
-          message.error("Upload failed. Try again!");
+        try {
+          console.log("Uploading image:", file.name);
+          const response = await axios.post(
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
+          console.log("Image upload response:", response.data);
+
+          if (response.status === 201 && response.data.url) {
+            const imageUrl = response.data.url;
+            editor.insertEmbed(currentIndex, "image", imageUrl, "user");
+            setTimeout(() => {
+              const imgs = editor.root.querySelectorAll(`img[src="${imageUrl}"]`);
+              if (imgs.length === 0) {
+                console.error("Image not inserted into editor:", imageUrl);
+                message.error(`Không thể chèn ảnh ${file.name} vào editor`);
+              } else {
+                imgs.forEach((img) => {
+                  img.classList.add("ql-image");
+                  img.style.maxWidth = "100%";
+                  img.onerror = () => {
+                    console.error("Image failed to load:", imageUrl);
+                    message.error(`Không thể tải ảnh: ${imageUrl}`);
+                  };
+                });
+                message.success(`Đã chèn ảnh ${file.name} thành công`);
+              }
+            }, 0);
+            currentIndex++;
+            editor.setSelection(currentIndex);
+          } else {
+            message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
+          }
+        } catch (error) {
+          console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+          message.error(
+            `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+          );
         }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        message.error("Upload error. Please try again!");
       }
     };
-  }, []);
+  }, [quillRef]);
 
   const audioHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "audio/*");
+    input.setAttribute("multiple", "true");
     input.click();
 
     input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
+      const files = Array.from(input.files);
+      if (!files.length) {
+        message.error("Vui lòng chọn ít nhất một file audio");
+        return;
+      }
 
-      const formData = new FormData();
-      formData.append("file", file);
+      const editor = quillRef.current?.getEditor();
+      if (!editor) {
+        console.error("Editor not found");
+        message.error("Không tìm thấy editor ReactQuill");
+        return;
+      }
+      let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
-      try {
-        const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-          formData
-        );
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-        if (response.status === 201 && quillRef.current) {
-          const editor = quillRef.current?.getEditor();
-          if (!editor) return;
-          const range = editor.getSelection(true);
-          editor.insertEmbed(
-            range?.index ?? editor.getLength(),
-            "audio",
-            response.data.url,
-            "user"
+        try {
+          console.log("Uploading audio:", file.name);
+          const response = await axios.post(
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
           );
-          editor.setSelection(range?.index ?? editor.getLength() + 1);
-        } else {
-          message.error("Upload failed. Try again!");
+          console.log("Audio upload response:", response.data);
+
+          if (response.status === 201 && response.data.url) {
+            const audioUrl = response.data.url;
+            editor.insertEmbed(currentIndex, "audio", audioUrl, "user");
+            setTimeout(() => {
+              const audios = editor.root.querySelectorAll(`audio[src="${audioUrl}"]`);
+              if (audios.length === 0) {
+                console.error("Audio not inserted into editor:", audioUrl);
+                message.error(`Không thể chèn audio ${file.name} vào editor`);
+              } else {
+                audios.forEach((audio) => {
+                  audio.setAttribute("controls", true);
+                  audio.style.width = "100%";
+                  audio.onerror = () => {
+                    console.error("Audio failed to load:", audioUrl);
+                    message.error(`Không thể tải audio: ${audioUrl}`);
+                  };
+                });
+                message.success(`Đã chèn audio ${file.name} thành công`);
+              }
+            }, 0);
+            currentIndex++;
+            editor.setSelection(currentIndex);
+          } else {
+            message.error(`Upload audio ${file.name} thất bại: Không nhận được URL từ server`);
+          }
+        } catch (error) {
+          console.error(`Lỗi khi upload audio ${file.name}:`, error);
+          message.error(
+            `Lỗi upload audio ${file.name}: ${error.response?.data?.message || error.message}`
+          );
         }
-      } catch (error) {
-        console.error("Error uploading audio:", error);
-        message.error("Upload error. Please try again!");
       }
     };
-  }, []);
+  }, [quillRef]);
 
   const modules = {
     toolbar: {
       container: toolbar,
       handlers: {
         image: imageHandler,
+        audio: audioHandler,
         undo: undoHandler,
         redo: redoHandler,
       },
@@ -882,6 +957,21 @@ export default function HomeWorkManagement({
         ]}
         width={"90%"}
       >
+        <style>{`
+          .ql-container {
+            min-height: 250px;
+          }
+          .ql-editor img.ql-image {
+            max-width: 100%;
+            margin: 10px 0;
+            display: block;
+          }
+          .ql-editor audio {
+            width: 100%;
+            margin: 10px 0;
+            display: block;
+          }
+        `}</style>
         <Form
           form={form}
           layout="vertical"
