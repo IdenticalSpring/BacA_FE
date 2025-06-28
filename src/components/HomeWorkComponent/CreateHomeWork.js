@@ -1048,7 +1048,7 @@ export default function CreateHomeWork({
                 audioId={"audio-player-create"}
               />
             </Form.Item>
-            <Form.Item name="Questions">
+            {/* <Form.Item name="Questions">
               <QuestionCreateComponent
                 teacherId={teacherId}
                 classID={classID}
@@ -1058,7 +1058,7 @@ export default function CreateHomeWork({
                 questionList={questionList}
                 setQuestionList={setQuestionList}
               />
-            </Form.Item>
+            </Form.Item> */}
             {/* <div style={{ marginBottom: "16px" }}>
             <audio controls style={{ width: "100%" }}>
               <source

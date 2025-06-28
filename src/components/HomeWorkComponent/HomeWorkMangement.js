@@ -1071,7 +1071,7 @@ export default function HomeWorkManagement({
               selectedClass={selectedClass}
             />
           </Form.Item>
-          <Form.Item label="Câu hỏi">
+          {/* <Form.Item label="Câu hỏi">
             <QuestionCreateComponent
               teacherId={teacherId}
               classID={classID}
@@ -1080,7 +1080,7 @@ export default function HomeWorkManagement({
               questionList={questionList}
               setQuestionList={setQuestionList}
             />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item label="Link game bài tập">
             <Input.Group compact>
               <Input

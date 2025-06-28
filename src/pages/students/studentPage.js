@@ -845,11 +845,11 @@ const StudentPage = () => {
                     {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
                   </Button> */}
                 </div>
-                {/* <VocabularyStudyComponent
+                <VocabularyStudyComponent
                   selectedHomeWorkId={hw.id}
                   isMobile={isMobile}
                   studentId={studentId}
-                /> */}
+                />
               </Card>
             )}
           />
@@ -911,7 +911,7 @@ const StudentPage = () => {
           studentId={studentId}
         />
       </Card>
-      {homework[0]?.id && (
+      {/* {homework[0]?.id && (
         <Card
           style={{
             borderRadius: 12,
@@ -937,7 +937,7 @@ const StudentPage = () => {
           </Title>
           <AnswerQuestionComponent homeworkId={homework[0]?.id} studentId={studentId} />
         </Card>
-      )}
+      )} */}
     </div>
   );
 
@@ -1157,7 +1157,7 @@ const StudentPage = () => {
               >
                 {screens.xs ? "" : "Bài Tập"}
               </Button>
-              <Button
+              {/* <Button
                 type={activeTab === "vocabulary" ? "primary" : "link"}
                 icon={<BookOutlined />}
                 onClick={() => handleTabClick("vocabulary")}
@@ -1171,7 +1171,7 @@ const StudentPage = () => {
                 }}
               >
                 {screens.xs ? "" : "Từ Vựng"}
-              </Button>
+              </Button> */}
               <Button
                 type={activeTab === "scores" ? "primary" : "link"}
                 icon={<TrophyOutlined />}

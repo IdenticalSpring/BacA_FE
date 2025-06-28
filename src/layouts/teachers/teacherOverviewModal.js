@@ -2933,7 +2933,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 selectedClass={selectedClass}
               />
             </Form.Item>
-            <Form.Item label="Câu hỏi cho bài tập">
+            {/* <Form.Item label="Câu hỏi cho bài tập">
               <QuestionCreateComponent
                 teacherId={teacher?.id}
                 classID={selectedClass}
@@ -2942,7 +2942,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 questionList={questionList}
                 setQuestionList={setQuestionList}
               />
-            </Form.Item>
+            </Form.Item> */}
             {/* <Form.Item label="Văn bản thành giọng nói">
               <TextArea
                 value={textToSpeech}
