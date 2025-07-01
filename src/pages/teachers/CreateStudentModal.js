@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Modal, Form, Input, Select, Button, Upload, message, Typography } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 import studentService from "services/studentService";
 import levelService from "services/levelService";
@@ -14,7 +14,8 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState([]);
   const [levels, setLevels] = useState([]);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
 
   useEffect(() => {
     const fetchLevels = async () => {
@@ -30,34 +31,42 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
   }, []);
 
   const handleUpload = async ({ file, onSuccess, onError }) => {
+    setImageLoading(true);
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/upload/cloudinary`,
-        formData
+        `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
-      if (response.status === 201) {
+      if (response.status === 201 && response.data.url) {
         onSuccess(response.data.url);
-        setPreviewUrl(response.data.url);
+        setImageUrl(response.data.url);
+        setImageLoading(false);
+        message.success("Đã upload ảnh thành công");
       } else {
+        setImageLoading(false);
         onError(new Error("Upload failed"));
-        message.error("Upload failed. Try again!");
+        message.error("Upload ảnh thất bại: Không nhận được URL từ server");
       }
     } catch (error) {
       console.error("Upload error:", error);
+      setImageLoading(false);
       onError(error);
-      message.error("Upload error. Please try again!");
+      message.error(`Lỗi upload ảnh: ${error.response?.data?.message || error.message}`);
     }
   };
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
     if (newFileList.length > 0 && newFileList[0].status === "done") {
-      setPreviewUrl(newFileList[0].response || newFileList[0].url);
+      setImageUrl(newFileList[0].response || newFileList[0].url);
     } else {
-      setPreviewUrl("");
+      setImageUrl("");
     }
   };
 
@@ -71,11 +80,9 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("level", values.level);
-      // formData.append("phone", values.phone || "");
       formData.append("username", values.username);
       formData.append("password", values.password);
       formData.append("startDate", values.startDate);
-      // formData.append("note", values.note || "");
       formData.append("classID", classID);
 
       if (fileList.length > 0 && fileList[0].status === "done" && fileList[0].response) {
@@ -86,8 +93,9 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
       message.success("Student created successfully!");
       form.resetFields();
       setFileList([]);
-      setPreviewUrl("");
-      if (refreshStudents) await refreshStudents(); // Refresh student list
+      setImageUrl("");
+      setImageLoading(false);
+      if (refreshStudents) await refreshStudents();
       onClose();
     } catch (error) {
       console.error("Create student failed:", error);
@@ -100,7 +108,8 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
   const handleCancel = () => {
     form.resetFields();
     setFileList([]);
-    setPreviewUrl("");
+    setImageUrl("");
+    setImageLoading(false);
     onClose();
   };
 
@@ -121,11 +130,9 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
         initialValues={{
           name: "",
           level: "",
-          // phone: "",
           username: "",
           password: "",
           startDate: "",
-          // note: "",
         }}
       >
         <Form.Item
@@ -149,10 +156,6 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
             ))}
           </Select>
         </Form.Item>
-
-        {/* <Form.Item name="phone" label="Phone">
-          <Input placeholder="Enter phone number" />
-        </Form.Item> */}
 
         <Form.Item
           name="username"
@@ -178,38 +181,33 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
           <Input type="date" />
         </Form.Item>
 
-        {/* <Form.Item name="note" label="Note">
-          <Input.TextArea rows={3} placeholder="Enter any notes" />
-        </Form.Item> */}
-
         <Form.Item label="Avatar">
+          <style>{`
+            .ant-upload-select {
+              width: 90px !important;
+              height: 90px !important;
+            }
+          `}</style>
           <Upload
+            name="file"
+            listType="picture-card"
+            className="avatar-uploader"
+            showUploadList={true}
             customRequest={handleUpload}
             fileList={fileList}
             onChange={handleChange}
             accept="image/*"
-            listType="picture"
             maxCount={1}
           >
-            <Button
-              icon={<UploadOutlined />}
-              style={{ borderColor: colors.midGreen, color: colors.midGreen }}
-            >
-              Upload Avatar
-            </Button>
+            {imageUrl ? (
+              <img src={imageUrl} alt="avatar" style={{ width: "100%" }} />
+            ) : (
+              <div>
+                {imageLoading ? <LoadingOutlined /> : <PlusOutlined />}
+                <div style={{ marginTop: 8 }}>Tải lên</div>
+              </div>
+            )}
           </Upload>
-          {previewUrl && (
-            <img
-              src={previewUrl}
-              alt="Avatar preview"
-              style={{
-                maxWidth: "100%",
-                maxHeight: "150px",
-                marginTop: "10px",
-                borderRadius: "8px",
-              }}
-            />
-          )}
         </Form.Item>
 
         <Form.Item>

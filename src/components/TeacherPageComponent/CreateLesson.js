@@ -386,16 +386,22 @@ export default function CreateLesson({
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
-    input.setAttribute("multiple", "true"); // Allow multiple image selection
+    input.setAttribute("multiple", "true");
     input.click();
 
     input.onchange = async () => {
       const files = Array.from(input.files);
-      if (!files.length) return;
+      if (!files.length) {
+        message.error("Vui lòng chọn ít nhất một file ảnh");
+        return;
+      }
 
       const editor = quillRefDescription.current?.getEditor();
-      if (!editor) return;
-
+      if (!editor) {
+        console.error("Editor not found");
+        message.error("Không tìm thấy editor ReactQuill");
+        return;
+      }
       let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
       for (const file of files) {
@@ -403,26 +409,46 @@ export default function CreateLesson({
         formData.append("file", file);
 
         try {
+          console.log("Uploading image:", file.name);
           const response = await axios.post(
-            process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-            formData
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
           );
+          console.log("Image upload response:", response.data);
 
-          if (response.status === 201) {
-            editor.insertEmbed(currentIndex, "image", response.data.url);
-            currentIndex++; // Increment index for the next image
+          if (response.status === 201 && response.data.url) {
+            const imageUrl = response.data.url;
+            editor.insertEmbed(currentIndex, "image", imageUrl, "user");
             setTimeout(() => {
-              const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
-              imgs.forEach((img) => {
-                img.classList.add("ql-image");
-              });
+              const imgs = editor.root.querySelectorAll(`img[src="${imageUrl}"]`);
+              if (imgs.length === 0) {
+                console.error("Image not inserted into editor:", imageUrl);
+                message.error(`Không thể chèn ảnh ${file.name} vào editor`);
+              } else {
+                imgs.forEach((img) => {
+                  img.classList.add("ql-image");
+                  img.style.maxWidth = "100%";
+                  img.onerror = () => {
+                    console.error("Image failed to load:", imageUrl);
+                    message.error(`Không thể tải ảnh: ${imageUrl}`);
+                  };
+                });
+                message.success(`Đã chèn ảnh ${file.name} thành công`);
+              }
             }, 0);
+            currentIndex++;
+            editor.setSelection(currentIndex);
           } else {
-            message.error(`Upload failed for ${file.name}. Try again!`);
+            message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
           }
         } catch (error) {
-          console.error(`Error uploading image ${file.name}:`, error);
-          message.error(`Upload error for ${file.name}. Please try again!`);
+          console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+          message.error(
+            `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+          );
         }
       }
     };
@@ -500,16 +526,22 @@ export default function CreateLesson({
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
-    input.setAttribute("multiple", "true"); // Allow multiple image selection
+    input.setAttribute("multiple", "true");
     input.click();
 
     input.onchange = async () => {
       const files = Array.from(input.files);
-      if (!files.length) return;
+      if (!files.length) {
+        message.error("Vui lòng chọn ít nhất một file ảnh");
+        return;
+      }
 
       const editor = quillRefLessonPlan.current?.getEditor();
-      if (!editor) return;
-
+      if (!editor) {
+        console.error("Editor not found");
+        message.error("Không tìm thấy editor ReactQuill");
+        return;
+      }
       let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
       for (const file of files) {
@@ -517,26 +549,46 @@ export default function CreateLesson({
         formData.append("file", file);
 
         try {
+          console.log("Uploading image:", file.name);
           const response = await axios.post(
-            process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-            formData
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
           );
+          console.log("Image upload response:", response.data);
 
-          if (response.status === 201) {
-            editor.insertEmbed(currentIndex, "image", response.data.url);
-            currentIndex++; // Increment index for the next image
+          if (response.status === 201 && response.data.url) {
+            const imageUrl = response.data.url;
+            editor.insertEmbed(currentIndex, "image", imageUrl, "user");
             setTimeout(() => {
-              const imgs = editor.root.querySelectorAll(`img[src="${response.data.url}"]`);
-              imgs.forEach((img) => {
-                img.classList.add("ql-image");
-              });
+              const imgs = editor.root.querySelectorAll(`img[src="${imageUrl}"]`);
+              if (imgs.length === 0) {
+                console.error("Image not inserted into editor:", imageUrl);
+                message.error(`Không thể chèn ảnh ${file.name} vào editor`);
+              } else {
+                imgs.forEach((img) => {
+                  img.classList.add("ql-image");
+                  img.style.maxWidth = "100%";
+                  img.onerror = () => {
+                    console.error("Image failed to load:", imageUrl);
+                    message.error(`Không thể tải ảnh: ${imageUrl}`);
+                  };
+                });
+                message.success(`Đã chèn ảnh ${file.name} thành công`);
+              }
             }, 0);
+            currentIndex++;
+            editor.setSelection(currentIndex);
           } else {
-            message.error(`Upload failed for ${file.name}. Try again!`);
+            message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
           }
         } catch (error) {
-          console.error(`Error uploading image ${file.name}:`, error);
-          message.error(`Upload error for ${file.name}. Please try again!`);
+          console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+          message.error(
+            `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+          );
         }
       }
     };
@@ -583,16 +635,22 @@ export default function CreateLesson({
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "audio/*");
-    input.setAttribute("multiple", "true"); // Allow multiple audio selection
+    input.setAttribute("multiple", "true");
     input.click();
 
     input.onchange = async () => {
       const files = Array.from(input.files);
-      if (!files.length) return;
+      if (!files.length) {
+        message.error("Vui lòng chọn ít nhất một file audio");
+        return;
+      }
 
       const editor = quillRefDescription.current?.getEditor();
-      if (!editor) return;
-
+      if (!editor) {
+        console.error("Editor not found");
+        message.error("Không tìm thấy editor ReactQuill");
+        return;
+      }
       let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
       for (const file of files) {
@@ -600,22 +658,46 @@ export default function CreateLesson({
         formData.append("file", file);
 
         try {
+          console.log("Uploading audio:", file.name);
           const response = await axios.post(
-            process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
-            formData
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
           );
+          console.log("Audio upload response:", response.data);
 
-          if (response.status === 201) {
-            const audioUrl = response?.data?.url;
+          if (response.status === 201 && response.data.url) {
+            const audioUrl = response.data.url;
             editor.insertEmbed(currentIndex, "audio", audioUrl, "user");
-            currentIndex++; // Increment index for the next audio
-            editor.setSelection(currentIndex); // Move cursor
+            setTimeout(() => {
+              const audios = editor.root.querySelectorAll(`audio[src="${audioUrl}"]`);
+              if (audios.length === 0) {
+                console.error("Audio not inserted into editor:", audioUrl);
+                message.error(`Không thể chèn audio ${file.name} vào editor`);
+              } else {
+                audios.forEach((audio) => {
+                  audio.setAttribute("controls", true);
+                  audio.style.width = "100%";
+                  audio.onerror = () => {
+                    console.error("Audio failed to load:", audioUrl);
+                    message.error(`Không thể tải audio: ${audioUrl}`);
+                  };
+                });
+                message.success(`Đã chèn audio ${file.name} thành công`);
+              }
+            }, 0);
+            currentIndex++;
+            editor.setSelection(currentIndex);
           } else {
-            message.error(`Upload failed for ${file.name}. Try again!`);
+            message.error(`Upload audio ${file.name} thất bại: Không nhận được URL từ server`);
           }
         } catch (error) {
-          console.error(`Error uploading audio ${file.name}:`, error);
-          message.error(`Upload error for ${file.name}. Please try again!`);
+          console.error(`Lỗi khi upload audio ${file.name}:`, error);
+          message.error(
+            `Lỗi upload audio ${file.name}: ${error.response?.data?.message || error.message}`
+          );
         }
       }
     };

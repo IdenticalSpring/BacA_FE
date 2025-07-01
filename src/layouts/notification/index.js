@@ -283,43 +283,73 @@ export default function CreateNotificationByAdmin() {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
+    input.setAttribute("multiple", "true");
     input.click();
 
     input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
+      const files = Array.from(input.files);
+      if (!files.length) {
+        message.error("Vui lòng chọn ít nhất một file ảnh");
+        return;
+      }
 
-      new Compressor(file, {
-        quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-        maxWidth: 350, // Resize ảnh về max chiều ngang là 800px
-        maxHeight: 350,
-        success(compressedFile) {
-          const formData = new FormData();
-          formData.append("file", compressedFile);
+      const editor = quillRef.current?.getEditor();
+      if (!editor) {
+        console.error("Editor not found");
+        message.error("Không tìm thấy editor ReactQuill");
+        return;
+      }
+      let currentIndex = editor.getSelection(true)?.index ?? editor.getLength();
 
-          axios
-            .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-            .then((response) => {
-              if (response.status === 201 && quillRef.current) {
-                const editor = quillRef.current?.getEditor();
-                const range = editor.getSelection(true);
-                editor.insertEmbed(range.index, "image", response.data.url);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          console.log("Uploading image:", file.name);
+          const response = await axios.post(
+            process.env.REACT_APP_API_BASE_URL + "/files/upload",
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
+          console.log("Image upload response:", response.data);
+
+          if (response.status === 201 && response.data.url) {
+            const imageUrl = response.data.url;
+            editor.insertEmbed(currentIndex, "image", imageUrl, "user");
+            setTimeout(() => {
+              const imgs = editor.root.querySelectorAll(`img[src="${imageUrl}"]`);
+              if (imgs.length === 0) {
+                console.error("Image not inserted into editor:", imageUrl);
+                message.error(`Không thể chèn ảnh ${file.name} vào editor`);
               } else {
-                message.error("Upload failed. Try again!");
+                imgs.forEach((img) => {
+                  img.classList.add("ql-image");
+                  img.style.maxWidth = "100%";
+                  img.onerror = () => {
+                    console.error("Image failed to load:", imageUrl);
+                    message.error(`Không thể tải ảnh: ${imageUrl}`);
+                  };
+                });
+                message.success(`Đã chèn ảnh ${file.name} thành công`);
               }
-            })
-            .catch((err) => {
-              console.error("Upload error:", err);
-              message.error("Upload error. Please try again!");
-            });
-        },
-        error(err) {
-          console.error("Compression error:", err);
-          message.error("Image compression failed!");
-        },
-      });
+            }, 0);
+            currentIndex++;
+            editor.setSelection(currentIndex);
+          } else {
+            message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
+          }
+        } catch (error) {
+          console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+          message.error(
+            `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+          );
+        }
+      }
     };
-  }, []);
+  }, [quillRef]);
 
   const modules = {
     toolbar: {
