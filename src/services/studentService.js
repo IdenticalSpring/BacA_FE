@@ -16,6 +16,7 @@ const studentService = {
       throw error.response?.data?.message || "Error fetching student list";
     }
   },
+
   getStudentById: async (id) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/students/${id}`, {
@@ -28,6 +29,7 @@ const studentService = {
       throw error.response?.data?.message || "Error fetching student";
     }
   },
+
   getStudentByIdAndLogin: async (id) => {
     try {
       const response = await axios.post(
@@ -46,10 +48,11 @@ const studentService = {
       sessionStorage.setItem("role", decoded.role);
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error fetching student";
+      throw error.response?.data?.message || "Error logging in student";
     }
   },
-  getAllStudentsbyClass: async (classID) => {
+
+  getAllStudentsByClass: async (classID) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/students/class/${classID}`, {
         headers: {
@@ -58,10 +61,11 @@ const studentService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error fetching student list";
+      throw error.response?.data?.message || "Error fetching students by class";
     }
   },
-  countAllStudentOfCall: async (classId) => {
+
+  countAllStudentOfClass: async (classId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/students/classCount/${classId}`, {
         headers: {
@@ -70,47 +74,38 @@ const studentService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Error fetching student list";
+      throw error.response?.data?.message || "Error counting students in class";
     }
   },
-  createStudentWithFile: async (formData) => {
+
+  createStudent: async (studentData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/students`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/students`, studentData, {
         headers: {
           "ngrok-skip-browser-warning": "true",
-          // Note: Don't use formData.getHeaders() in browser code
+          "Content-Type": "application/json",
         },
       });
-
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Error creating student";
     }
   },
-  editStudent: async (id, studentData, file) => {
+
+  editStudent: async (id, studentData) => {
     try {
-      const formData = new FormData();
+      console.log("Sending student data for edit:", studentData); // Log payload for debugging
 
-      // Append student data to formData
-      Object.keys(studentData).forEach((key) => {
-        formData.append(key, studentData[key]);
-      });
-
-      // Append file to formData if provided
-      if (file) {
-        formData.append("file", file);
-      }
-
-      const response = await axios.put(`${API_BASE_URL}/students/${id}`, formData, {
+      const response = await axios.put(`${API_BASE_URL}/students/${id}`, studentData, {
         headers: {
-          "Content-Type": "multipart/form-data",
           "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json",
         },
       });
       return response.data;
     } catch (error) {
       console.error("Error updating student:", error);
-      throw error.response?.data?.message || error.message || "Error updating student";
+      throw error.response?.data?.message || "Error updating student";
     }
   },
 
@@ -144,35 +139,7 @@ const studentService = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || "Lỗi khi gửi yêu cầu xóa học sinh";
-    }
-  },
-
-  async getEvaluationStudent(id) {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/teacher-comments/student/${id}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error in evaluationStudent:", error);
-      throw error;
-    }
-  },
-
-  async getEvaluationSkillStudent(id) {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/studentskillbehaviorscores/student/${id}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error in evaluationStudent:", error);
-      throw error;
+      throw error.response?.data?.message || "Error requesting student deletion";
     }
   },
 

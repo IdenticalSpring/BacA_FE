@@ -27,25 +27,25 @@ const contentPageService = {
       throw error.response?.data?.message || "Error fetching contentpage";
     }
   },
-  //   createContentPage: async (contentpage) => {
-  //     try {
-  //       const response = await axios.post(`${API_BASE_URL}/contentpage`, contentpage, {
-  //         headers: {
-  //           "ngrok-skip-browser-warning": "true",
-  //         },
-  //       });
-  //       return response.data;
-  //     } catch (error) {
-  //       throw error.response?.data?.message || "Error creating contentpage";
-  //     }
-  //   },
-
-  editContentPage: async (id, formData) => {
+  createContentPage: async (contentpage) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/contentpage/${id}`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/contentpage`, contentpage, {
         headers: {
+          "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
-          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error creating contentpage";
+    }
+  },
+  editContentPage: async (id, contentpage) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/contentpage/${id}`, contentpage, {
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
       });
       return response.data;
@@ -53,15 +53,15 @@ const contentPageService = {
       throw error.response?.data?.message || "Error updating contentpage";
     }
   },
-  editTestimonialImages: async (id, formData) => {
+  editTestimonialImages: async (id, contentpage) => {
     try {
       const response = await axios.put(
         `${API_BASE_URL}/contentpage/${id}/testimonial-images`,
-        formData,
+        contentpage,
         {
           headers: {
+            "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "true",
-            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -70,7 +70,6 @@ const contentPageService = {
       throw error.response?.data?.message || "Error updating testimonial images";
     }
   },
-
   deleteContentPage: async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/contentpage/${id}`, {
@@ -84,4 +83,5 @@ const contentPageService = {
     }
   },
 };
+
 export default contentPageService;

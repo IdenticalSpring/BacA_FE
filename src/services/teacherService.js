@@ -29,53 +29,33 @@ const teacherService = {
     }
   },
 
-  createTeacher: async (teacherData, files) => {
+  // Create a new teacher
+  createTeacher: async (teacherData) => {
     try {
-      const formData = new FormData();
-      Object.keys(teacherData).forEach((key) => {
-        formData.append(key, teacherData[key]);
-      });
-
-      if (files && files.length > 0) {
-        files.forEach((file) => {
-          formData.append("files", file); // Append từng file vào key "files"
-        });
-      }
-
-      const response = await axios.post(`${API_BASE_URL}/teachers`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/teachers`, teacherData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
       });
       return response.data;
     } catch (error) {
-      console.error("Error creating teacher:", error);
-      throw error;
+      throw new Error(error.response?.data?.message || "Failed to create teacher");
     }
   },
 
-  editTeacher: async (id, teacherData, files) => {
+  // Update an existing teacher
+  editTeacher: async (id, teacherData) => {
     try {
-      const formData = new FormData();
-      Object.keys(teacherData).forEach((key) => {
-        formData.append(key, teacherData[key]);
-      });
-
-      if (files && files.length > 0) {
-        files.forEach((file) => {
-          formData.append("files", file); // Append từng file vào key "files"
-        });
-      }
-
-      const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, formData, {
+      const response = await axios.put(`${API_BASE_URL}/teachers/${id}`, teacherData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
       });
       return response.data;
     } catch (error) {
-      console.error(`Error updating teacher with ID ${id}:`, error);
-      throw error;
+      throw new Error(error.response?.data?.message || `Failed to update teacher with ID ${id}`);
     }
   },
 

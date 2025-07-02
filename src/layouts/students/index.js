@@ -6,7 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import Avatar from "@mui/material/Avatar";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility"; // Icon cho View Detail
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -29,20 +29,20 @@ import StudentOverviewModal from "./studentOverviewModal";
 import InputAdornment from "@mui/material/InputAdornment";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { message, Spin } from "antd";
+import { message } from "antd";
+import axios from "axios";
+import { AddPhotoAlternateOutlined } from "@mui/icons-material";
+
 function Students() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [levels, setLevels] = useState([]);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
-    // { Header: "Year of Birth", accessor: "yearOfBirth", width: "10%" },
     { Header: "Level", accessor: "level", width: "15%" },
     { Header: "Class", accessor: "note", width: "15%" },
-    // { Header: "Phone", accessor: "phone", width: "15%" },
     { Header: "Avatar", accessor: "avatar", width: "10%" },
     { Header: "Start Date", accessor: "startDate", width: "10%" },
-    // { Header: "End Date", accessor: "endDate", width: "10%" },
     { Header: "Actions", accessor: "actions", width: "10%" },
   ]);
   const [rows, setRows] = useState([]);
@@ -50,7 +50,7 @@ function Students() {
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
-  const [detailOpen, setDetailOpen] = useState(false); // State cho modal chi tiết
+  const [detailOpen, setDetailOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -60,13 +60,12 @@ function Students() {
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
-    // yearOfBirth: "",
-    // phone: "",
     classID: "",
     imgUrl: "",
     startDate: "",
     endDate: "",
-    // note: "",
+    username: "",
+    password: "",
   });
   const [searchName, setSearchName] = useState("");
   const [searchSchedule, setSearchSchedule] = useState("");
@@ -83,13 +82,13 @@ function Students() {
       }
     };
     fetchLevels();
-  }, []); // Chỉ fetch levels một lần khi mount
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        await fetchStudents(); // Fetch students khi levels thay đổi
+        await fetchStudents();
         await fetchClassSchedules();
       } catch (error) {
         console.error("Failed to fetch data", error);
@@ -100,23 +99,16 @@ function Students() {
     };
 
     if (levels.length > 0) {
-      // Chỉ fetch khi levels đã có dữ liệu
       fetchData();
     }
   }, [levels]);
 
   const handleClassScheduleChange = (event) => {
     const selectedClassId = event.target.value;
-
-    // Lọc ra tất cả các schedule có cùng classID
     const matchingSchedules = classSchedules.filter(
       (schedule) => schedule.class.id === selectedClassId
     );
-
-    // Cập nhật state cho schedules của class được chọn
     setSelectedClassSchedules(matchingSchedules);
-
-    // Lưu classID vào studentData
     setStudentData((prevData) => ({
       ...prevData,
       classID: selectedClassId,
@@ -125,7 +117,6 @@ function Students() {
 
   const renderClassScheduleLabel = (classSchedule) => {
     const { class: classInfo } = classSchedule;
-
     return (
       <Box sx={{ display: "flex", flexDirection: "column" }}>
         <Typography sx={{ fontWeight: "bold", color: colors.midGreen }}>
@@ -148,16 +139,12 @@ function Students() {
     try {
       const data = await studentService.getAllStudents();
       const formattedRows = data.map((student) => {
-        // Tìm level tương ứng từ levels dựa trên student.level (ID)
         const levelObj = levels.find((level) => level.id === student.level);
-        const levelName = levelObj ? levelObj.name : "N/A"; // Nếu không tìm thấy, hiển thị "N/A"
-
+        const levelName = levelObj ? levelObj.name : "N/A";
         return {
           id: student.id,
           name: student.name,
-          level: levelName, // Hiển thị tên thay vì ID
-          // yearOfBirth: student.yearOfBirth,
-          // phone: student.phone,
+          level: levelName,
           avatar: (
             <Box display="flex" justifyContent="center">
               <Avatar
@@ -177,7 +164,7 @@ function Students() {
           startDate: student.startDate,
           endDate: student.endDate,
           note: student.class?.name,
-          rawLevel: student.level, // Giữ lại ID gốc nếu cần dùng sau này
+          rawLevel: student.level,
           actions: (
             <>
               <IconButton
@@ -213,22 +200,8 @@ function Students() {
       setLoading(false);
     }
   };
+
   const dayNames = ["", "CN", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
-
-  const formatSchedule = (student) => {
-    let scheduleInfo = "";
-    if (student.class && student.class?.name) {
-      scheduleInfo += `Class: ${student.class?.name}`;
-    }
-    if (student.schedule) {
-      const { startTime, endTime, dayOfWeek } = student.schedule;
-
-      const dayName = dayNames[dayOfWeek] || "";
-      if (scheduleInfo) scheduleInfo += "\n";
-      scheduleInfo += `${dayName}: ${startTime?.substring(0, 5)} - ${endTime?.substring(0, 5)}`;
-    }
-    return scheduleInfo || "N/A";
-  };
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
@@ -245,16 +218,16 @@ function Students() {
       name: student.name,
       username: student.username || "",
       password: student.password || "",
-      // yearOfBirth: student.yearOfBirth,
-      // phone: student.phone,
-      imgUrl: student.imgUrl,
-      classID: student.class?.id,
-      level: +student.level,
-      startDate: student.startDate,
-      endDate: student.endDate,
-      // note: student.note,
+      classID: student.class?.id || "",
+      level: student.rawLevel || "",
+      imgUrl: student.imgUrl || "",
+      startDate: student.startDate || "",
+      endDate: student.endDate || "",
     });
     setPreviewImage(student.imgUrl);
+    setSelectedClassSchedules(
+      classSchedules.filter((schedule) => schedule.class.id === student.class?.id)
+    );
     setOpen(true);
   };
 
@@ -263,8 +236,9 @@ function Students() {
       try {
         await studentService.deleteStudent(id);
         setRows(rows.filter((row) => row.id !== id));
+        message.success("Student deleted successfully");
       } catch (err) {
-        alert("Error deleting student!");
+        message.error("Error deleting student: " + err.message);
         console.error(err);
       }
     }
@@ -277,45 +251,85 @@ function Students() {
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setUploadingImage(true);
-      try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviewImage(reader.result);
-        };
-        reader.readAsDataURL(file);
-        setStudentData((prev) => ({ ...prev, file }));
-      } catch (error) {
-        console.error("Error uploading image:", error);
-      } finally {
+    if (!file) {
+      message.error("Vui lòng chọn một file ảnh");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    // Create URL preview for image
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setPreviewImage(fileReader.result);
+    };
+    fileReader.readAsDataURL(file);
+
+    // Upload image to server
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      console.log("Uploading image:", file.name);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      console.log("Image upload response:", response.data);
+
+      if (response.status === 201 && response.data.url) {
+        setStudentData((prevData) => ({
+          ...prevData,
+          imgUrl: response.data.url,
+        }));
         setUploadingImage(false);
+        message.success(`Đã upload ảnh ${file.name} thành công`);
+      } else {
+        setUploadingImage(false);
+        message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
       }
+    } catch (error) {
+      console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+      setUploadingImage(false);
+      message.error(
+        `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+      );
     }
   };
 
   const handleSave = async () => {
     try {
       setLoadingEdit(true);
+      // Validate required fields
+      if (
+        !studentData.name ||
+        !studentData.username ||
+        !studentData.password ||
+        !studentData.level
+      ) {
+        message.error("Vui lòng điền đầy đủ các trường bắt buộc: Name, Username, Password, Level");
+        return;
+      }
+
       const dataToSubmit = {
         name: studentData.name,
         username: studentData.username,
         password: studentData.password,
-        // yearOfBirth: studentData.yearOfBirth,
         classID: studentData.classID,
-        // phone: studentData.phone,
         level: studentData.level,
         startDate: studentData.startDate,
         endDate: studentData.endDate,
-        // note: studentData.note,
+        imgUrl: studentData.imgUrl,
       };
 
       if (editMode && selectedStudent) {
-        const updatedStudent = await studentService.editStudent(
-          selectedStudent.id,
-          dataToSubmit,
-          studentData.file
-        );
+        const updatedStudent = await studentService.editStudent(selectedStudent.id, dataToSubmit);
         console.log("Updated student:", updatedStudent);
 
         setRows(
@@ -325,8 +339,6 @@ function Students() {
                   ...row,
                   name: updatedStudent.name,
                   level: levels.find((lv) => lv.id === +updatedStudent.level)?.name || "N/A",
-                  // yearOfBirth: updatedStudent.yearOfBirth,
-                  // phone: updatedStudent.phone,
                   avatar: (
                     <Box display="flex" justifyContent="center">
                       <Avatar
@@ -345,7 +357,7 @@ function Students() {
                   imgUrl: updatedStudent.imgUrl,
                   startDate: updatedStudent.startDate,
                   endDate: updatedStudent.endDate,
-                  // note: updatedStudent.class?.name,
+                  note: updatedStudent.class?.name,
                   rawLevel: updatedStudent.level,
                   actions: (
                     <>
@@ -382,22 +394,21 @@ function Students() {
       setStudentData({
         name: "",
         level: "",
-        // yearOfBirth: "",
-        // phone: "",
         classID: "",
         imgUrl: "",
         startDate: "",
         endDate: "",
-        // note: "",
+        username: "",
+        password: "",
       });
       setPreviewImage(null);
       setEditMode(false);
       setSelectedStudent(null);
-      message.success("Saving succcess");
+      setSelectedClassSchedules([]);
+      message.success("Student saved successfully");
     } catch (error) {
-      console.error("Error saving student:", error);
-      // alert("Error saving student!");
-      message.error("Error saving student! " + error);
+      console.error("Error saving student:", error.response?.data || error.message);
+      message.error(`Error saving student: ${error.message || "Server error"}`);
     } finally {
       setLoadingEdit(false);
     }
@@ -487,7 +498,6 @@ function Students() {
       </MDBox>
       <Footer />
 
-      {/* Dialog chỉnh sửa/thêm mới */}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle sx={{ backgroundColor: colors.deepGreen, color: colors.white }}>
           {editMode ? "Edit Student" : "Add Student"}
@@ -522,139 +532,68 @@ function Students() {
               </MenuItem>
             ))}
           </TextField>
-          {/* <TextField
-            fullWidth
-            margin="normal"
-            type="date"
-            label="Year of birth"
-            InputLabelProps={{ shrink: true }}
-            value={studentData.yearOfBirth}
-            onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
-          /> */}
-          {/* <TextField
-            label="Phone"
-            fullWidth
-            margin="normal"
-            value={studentData.phone}
-            onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
-          /> */}
-          <Box sx={{ mt: 3, mb: 1 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Student Avatar
-            </Typography>
-            {previewImage && (
-              <Box display="flex" justifyContent="center" mb={2}>
-                <Avatar
-                  src={previewImage}
-                  alt={studentData.name}
-                  sx={{
-                    width: 100,
-                    height: 100,
-                    border: `1px solid ${colors.lightGrey}`,
-                  }}
-                >
-                  {studentData.name ? studentData.name.charAt(0) : ""}
-                </Avatar>
-              </Box>
-            )}
+          <Box
+            sx={{
+              mt: 2,
+              mb: 2,
+              border: "1px dashed #ccc",
+              borderRadius: "8px",
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => fileInputRef.current.click()}
+          >
             <input
               type="file"
               accept="image/*"
-              style={{ display: "none" }}
               ref={fileInputRef}
+              style={{ display: "none" }}
               onChange={handleFileChange}
             />
-            <Box
+            {previewImage ? (
+              <Box sx={{ mb: 2, textAlign: "center" }}>
+                <img
+                  src={previewImage}
+                  alt="Avatar preview"
+                  style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
+                />
+              </Box>
+            ) : (
+              <AddPhotoAlternateOutlined sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+            )}
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              {uploadingImage ? "Đang tải ảnh..." : "Click to upload avatar"}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 2,
+                color: colors.midGreen,
+                borderColor: colors.midGreen,
+                "&:hover": {
+                  borderColor: colors.darkGreen,
+                  backgroundColor: "rgba(0, 128, 0, 0.04)",
+                },
               }}
             >
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<CloudUploadIcon />}
-                onClick={() => fileInputRef.current.click()}
-                disabled={uploadingImage}
-                sx={{
-                  borderColor: colors.midGreen,
-                  color: colors.darkGreen,
-                  "&:hover": {
-                    borderColor: colors.highlightGreen,
-                    backgroundColor: "rgba(0, 128, 0, 0.04)",
-                  },
-                }}
-              >
-                {uploadingImage ? "Uploading..." : "Upload Image"}
-                {uploadingImage && <CircularProgress size={24} sx={{ ml: 1 }} />}
-              </Button>
-            </Box>
+              Upload Photo
+            </Button>
           </Box>
-          {/* Dropdown có hẳn schedule */}
-          {/* <TextField
-            select
-            label="Class Schedule"
-            fullWidth
-            margin="normal"
-            value={studentData.classID}
-            onChange={(e) => {
-              const selectedClassSchedule = classSchedules.find((cs) => cs.id === e.target.value);
-              setStudentData({
-                ...studentData,
-                classID: selectedClassSchedule ? selectedClassSchedule.class.id : "",
-              });
-            }}
-            renderValue={(selectedValue) => {
-              const selectedClass = classSchedules.find((cs) => cs.id === selectedValue);
-              return selectedClass ? formatSchedule(selectedClass) : "Chọn lớp học";
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: colors.inputBorder },
-                "&:hover fieldset": { borderColor: colors.midGreen },
-                "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
-                // Đảm bảo chiều cao không bị thu hẹp
-                height: "44px", // Chiều cao tiêu chuẩn của TextField
-              },
-              "& .MuiInputLabel-root": { color: colors.darkGray },
-              "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
-              "& .MuiSelect-select": {
-                height: "100%", // Đảm bảo nội dung select đầy đủ chiều cao
-                display: "flex",
-                alignItems: "center",
-              },
-            }}
-          >
-            {classSchedules.map((classSchedule) => (
-              <MenuItem
-                key={classSchedule.id}
-                value={classSchedule.id}
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  padding: "10px",
-                }}
-              >
-                {formatSchedule(classSchedule)}
-              </MenuItem>
-            ))}
-          </TextField> */}
           <TextField
             sx={{
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: colors.inputBorder },
                 "&:hover fieldset": { borderColor: colors.midGreen },
                 "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
-                // Đảm bảo chiều cao không bị thu hẹp
-                height: "44px", // Chiều cao tiêu chuẩn của TextField
+                height: "44px",
               },
               "& .MuiInputLabel-root": { color: colors.darkGray },
               "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
               "& .MuiSelect-select": {
-                height: "100%", // Đảm bảo nội dung select đầy đủ chiều cao
+                height: "100%",
                 display: "flex",
                 alignItems: "center",
               },
@@ -674,7 +613,6 @@ function Students() {
                 : "Select Class Schedule";
             }}
           >
-            {/* Tạo dropdown từ các class duy nhất */}
             {Array.from(new Set(classSchedules.map((schedule) => schedule.class.id))).map(
               (uniqueClassId) => {
                 const classSchedule = classSchedules.find(
@@ -688,8 +626,6 @@ function Students() {
               }
             )}
           </TextField>
-
-          {/* Hiển thị tất cả các schedule của class đã chọn */}
           {selectedClassSchedules.length > 0 && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="h6" sx={{ color: colors.midGreen, mb: 1 }}>
@@ -716,7 +652,6 @@ function Students() {
               ))}
             </Box>
           )}
-
           <TextField
             label="User name"
             fullWidth
@@ -728,12 +663,9 @@ function Students() {
             label="Password"
             fullWidth
             margin="normal"
-            // Toggle type between "text" and "password"
             type={showPassword ? "text" : "password"}
-            // type={"text"}
             value={studentData.password}
             onChange={(e) => setStudentData({ ...studentData, password: e.target.value })}
-            // Add an adornment with an icon button
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -766,13 +698,6 @@ function Students() {
             value={studentData.endDate}
             onChange={(e) => setStudentData({ ...studentData, endDate: e.target.value })}
           />
-          <TextField
-            label="Note"
-            fullWidth
-            margin="normal"
-            value={studentData.note}
-            onChange={(e) => setStudentData({ ...studentData, note: e.target.value })}
-          />
         </DialogContent>
         <DialogActions>
           <Button
@@ -790,13 +715,12 @@ function Students() {
               "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
             }}
           >
-            {loadingEdit && <Spin style={{ marginRight: "5px" }} />}
+            {loadingEdit && <CircularProgress size={24} sx={{ mr: 1 }} />}
             {editMode ? "Save" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Modal chi tiết */}
       <StudentOverviewModal
         open={detailOpen}
         onClose={() => setDetailOpen(false)}

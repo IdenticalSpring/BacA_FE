@@ -20,8 +20,8 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import classService from "services/classService";
 import levelService from "services/levelService";
-
-// Thêm id vào mỗi level
+import axios from "axios";
+import { message } from "antd";
 
 function CreateStudent() {
   const navigate = useNavigate();
@@ -31,19 +31,15 @@ function CreateStudent() {
   const [classSchedules, setClassSchedules] = useState([]);
   const [selectedClassSchedules, setSelectedClassSchedules] = useState([]);
   const [levels, setLevels] = useState([]);
+  const [imageLoading, setImageLoading] = useState(false);
   const [studentData, setStudentData] = useState({
     name: "",
     level: "",
-    // yearOfBirth: "",
-    // phone: "",
     imgUrl: "",
     username: "",
     password: "",
     startDate: "",
-    // endDate: "",
-    // note: "",
     classID: "",
-    // schedule: "",
   });
 
   useEffect(() => {
@@ -67,6 +63,7 @@ function CreateStudent() {
     fetchClassSchedules();
     fetchLevels();
   }, []);
+
   const dayNames = {
     1: "Chủ Nhật",
     2: "Thứ Hai",
@@ -106,42 +103,70 @@ function CreateStudent() {
       classID: selectedClassId,
     }));
   };
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
 
-      // Tạo URL preview cho hình ảnh
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        setPreviewUrl(fileReader.result);
-      };
-      fileReader.readAsDataURL(file);
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      message.error("Vui lòng chọn một file ảnh");
+      return;
+    }
+
+    setSelectedFile(file);
+    setImageLoading(true);
+
+    // Tạo URL preview cho hình ảnh
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setPreviewUrl(fileReader.result);
+    };
+    fileReader.readAsDataURL(file);
+
+    // Upload ảnh lên server
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      console.log("Uploading image:", file.name);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      console.log("Image upload response:", response.data);
+
+      if (response.status === 201 && response.data.url) {
+        setStudentData((prevData) => ({
+          ...prevData,
+          imgUrl: response.data.url,
+        }));
+        setImageLoading(false);
+        message.success(`Đã upload ảnh ${file.name} thành công`);
+      } else {
+        setImageLoading(false);
+        message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
+      }
+    } catch (error) {
+      console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+      setImageLoading(false);
+      message.error(
+        `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+      );
     }
   };
 
   const handleSave = async () => {
     try {
-      // Tạo đối tượng FormData để gửi cả dữ liệu và file
-      const formData = new FormData();
-
-      // Thêm tất cả dữ liệu sinh viên vào formData
-      Object.keys(studentData).forEach((key) => {
-        if (key !== "imgUrl") {
-          formData.append(key, studentData[key]);
-        }
-      });
-
-      // Thêm file hình ảnh vào formData nếu có
-      if (selectedFile) {
-        formData.append("file", selectedFile);
-      }
-
-      // Gọi service để tạo sinh viên với FormData
-      await studentService.createStudentWithFile(formData);
+      // Gọi service để tạo sinh viên với JSON data
+      await studentService.createStudent(studentData);
+      message.success("Tạo sinh viên thành công");
       navigate("/students");
     } catch (err) {
-      alert("Create student failed " + err);
+      message.error("Tạo sinh viên thất bại: " + err.message);
       console.error(err);
     }
   };
@@ -198,22 +223,6 @@ function CreateStudent() {
                   </MenuItem>
                 ))}
               </TextField>
-              {/* <TextField
-                fullWidth
-                margin="normal"
-                type="date"
-                label="Year of birth"
-                InputLabelProps={{ shrink: true }}
-                value={studentData.yearOfBirth}
-                onChange={(e) => setStudentData({ ...studentData, yearOfBirth: e.target.value })}
-              /> */}
-              {/* <TextField
-                label="Phone"
-                fullWidth
-                margin="normal"
-                value={studentData.phone}
-                onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
-              /> */}
 
               {/* Phần tải file Avatar */}
               <Box
@@ -251,7 +260,11 @@ function CreateStudent() {
                 )}
 
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {selectedFile ? selectedFile.name : "Click to upload avatar"}
+                  {imageLoading
+                    ? "Đang tải ảnh..."
+                    : selectedFile
+                    ? selectedFile.name
+                    : "Click to upload avatar"}
                 </Typography>
 
                 <Button
@@ -277,13 +290,12 @@ function CreateStudent() {
                     "& fieldset": { borderColor: colors.inputBorder },
                     "&:hover fieldset": { borderColor: colors.midGreen },
                     "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
-                    // Đảm bảo chiều cao không bị thu hẹp
-                    height: "44px", // Chiều cao tiêu chuẩn của TextField
+                    height: "44px",
                   },
                   "& .MuiInputLabel-root": { color: colors.darkGray },
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                   "& .MuiSelect-select": {
-                    height: "100%", // Đảm bảo nội dung select đầy đủ chiều cao
+                    height: "100%",
                     display: "flex",
                     alignItems: "center",
                   },
@@ -303,7 +315,6 @@ function CreateStudent() {
                     : "Select Class Schedule";
                 }}
               >
-                {/* Tạo dropdown từ các class duy nhất */}
                 {Array.from(new Set(classSchedules.map((schedule) => schedule.class.id))).map(
                   (uniqueClassId) => {
                     const classSchedule = classSchedules.find(
@@ -318,7 +329,6 @@ function CreateStudent() {
                 )}
               </TextField>
 
-              {/* Hiển thị tất cả các schedule của class đã chọn */}
               {selectedClassSchedules.length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="h6" sx={{ color: colors.midGreen, mb: 1 }}>
@@ -372,22 +382,6 @@ function CreateStudent() {
                 value={studentData.startDate}
                 onChange={(e) => setStudentData({ ...studentData, startDate: e.target.value })}
               />
-              {/* <TextField
-                fullWidth
-                margin="normal"
-                type="date"
-                label="End Date"
-                InputLabelProps={{ shrink: true }}
-                value={studentData.endDate}
-                onChange={(e) => setStudentData({ ...studentData, endDate: e.target.value })}
-              /> */}
-              {/* <TextField
-                label="Note"
-                fullWidth
-                margin="normal"
-                value={studentData.note}
-                onChange={(e) => setStudentData({ ...studentData, note: e.target.value })}
-              /> */}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="text"

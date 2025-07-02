@@ -1,40 +1,113 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, TextField, Button, Grid } from "@mui/material";
+import { Card, TextField, Button, Grid, Box, Typography } from "@mui/material";
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import teacherService from "services/teacherService";
 import { colors } from "assets/theme/color";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import axios from "axios";
+import { message } from "antd";
 
 function CreateTeacher() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const [imageLoading, setImageLoading] = useState(false);
   const [teacherData, setTeacherData] = useState({
     name: "",
     username: "",
     password: "",
     startDate: "",
     linkDrive: "",
-    // endDate: "",
+    fileUrl: "",
+    isDelete: false,
   });
-  const [files, setFiles] = useState([]); // Thay đổi từ file thành files để lưu mảng
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files)); // Chuyển danh sách files thành mảng
+  const handleFileChange = async (event) => {
+    const files = Array.from(event.target.files);
+    if (!files.length) {
+      message.error("Vui lòng chọn ít nhất một file");
+      return;
+    }
+
+    setSelectedFiles(files);
+    setImageLoading(true);
+
+    // Tạo URL preview cho các file ảnh
+    const urls = files.map((file) => {
+      if (file.type.startsWith("image/")) {
+        return URL.createObjectURL(file);
+      }
+      return null;
+    });
+    setPreviewUrls(urls);
+
+    // Upload các file lên server
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    try {
+      console.log(
+        "Uploading files:",
+        files.map((f) => f.name)
+      );
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/files/upload-multiple`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      console.log("Files upload response:", response.data);
+
+      if (response.status === 201 && Array.isArray(response.data)) {
+        // Lấy các URL từ mảng các file object
+        const fileUrls = response.data.map((file) => file.url).join(",");
+        setTeacherData((prevData) => ({
+          ...prevData,
+          fileUrl: fileUrls,
+        }));
+        setImageLoading(false);
+        message.success(`Đã upload ${files.length} file thành công`);
+      } else {
+        setImageLoading(false);
+        message.error("Upload file thất bại: Không nhận được danh sách URL từ server");
+      }
+    } catch (error) {
+      console.error("Lỗi khi upload file:", error);
+      setImageLoading(false);
+      message.error(`Lỗi upload file: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   const handleSave = async () => {
     try {
-      // Gửi teacherData và mảng files lên server
-      await teacherService.createTeacher(teacherData, files);
-      navigate("/teachers"); // Quay lại danh sách giáo viên
+      // Gọi service để tạo giáo viên với teacherData
+      await teacherService.createTeacher(teacherData);
+      message.success("Tạo giáo viên thành công");
+      navigate("/teachers");
     } catch (err) {
-      alert("Create teacher failed");
+      message.error("Tạo giáo viên thất bại: " + err.message);
       console.error(err);
     }
   };
+
+  // Cleanup preview URLs để tránh memory leak
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, [previewUrls]);
 
   return (
     <DashboardLayout>
@@ -88,15 +161,6 @@ function CreateTeacher() {
                 value={teacherData.startDate}
                 onChange={(e) => setTeacherData({ ...teacherData, startDate: e.target.value })}
               />
-              {/* <TextField
-                fullWidth
-                margin="normal"
-                type="date"
-                label="End Date"
-                InputLabelProps={{ shrink: true }}
-                value={teacherData.endDate}
-                onChange={(e) => setTeacherData({ ...teacherData, endDate: e.target.value })}
-              /> */}
               <TextField
                 label="Link Drive"
                 fullWidth
@@ -104,20 +168,74 @@ function CreateTeacher() {
                 value={teacherData.linkDrive}
                 onChange={(e) => setTeacherData({ ...teacherData, linkDrive: e.target.value })}
               />
-              {/* Trường upload file với hỗ trợ nhiều file */}
-              <TextField
-                fullWidth
-                margin="normal"
-                type="file"
-                label="Upload Files"
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ accept: "image/*, .pdf", multiple: true }} // Thêm multiple để chọn nhiều file
-                onChange={handleFileChange}
-              />
+              {/* Phần tải file */}
+              <Box
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: "8px",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
+                }}
+                onClick={() => fileInputRef.current.click()}
+              >
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                  multiple
+                />
+                {previewUrls.length > 0 ? (
+                  <Box
+                    sx={{ mb: 2, textAlign: "center", display: "flex", flexWrap: "wrap", gap: 1 }}
+                  >
+                    {previewUrls.map(
+                      (url, index) =>
+                        url && (
+                          <img
+                            key={index}
+                            src={url}
+                            alt={`Preview ${index}`}
+                            style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
+                          />
+                        )
+                    )}
+                  </Box>
+                ) : (
+                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                )}
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {imageLoading
+                    ? "Đang tải file..."
+                    : selectedFiles.length > 0
+                    ? `${selectedFiles.length} file đã chọn`
+                    : "Click để upload file"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    color: colors.midGreen,
+                    borderColor: colors.midGreen,
+                    "&:hover": {
+                      borderColor: colors.darkGreen,
+                      backgroundColor: "rgba(0, 128, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Upload Files
+                </Button>
+              </Box>
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="text"
-                  sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+                  sx={{ color: colors.midGreen, "&:hover": { color: colors.darkGreen } }}
                   onClick={() => navigate("/teachers")}
                 >
                   Cancel
@@ -127,7 +245,7 @@ function CreateTeacher() {
                   sx={{
                     backgroundColor: colors.midGreen,
                     color: colors.white,
-                    " &:hover": { backgroundColor: colors.highlightGreen },
+                    "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
                   }}
                   onClick={handleSave}
                 >

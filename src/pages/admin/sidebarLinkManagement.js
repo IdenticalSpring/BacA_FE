@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
@@ -15,6 +15,8 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -24,9 +26,14 @@ import DataTable from "examples/Tables/DataTable";
 import sidebarLinkService from "services/sidebarLinkService";
 import { colors } from "assets/theme/color";
 import { useNavigate } from "react-router-dom";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import axios from "axios";
+import { message } from "antd";
 
 function SidebarLinkManagement() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
     { Header: "Type", accessor: "type", width: "20%" },
@@ -44,9 +51,11 @@ function SidebarLinkManagement() {
     name: "",
     type: "",
     link: "",
+    imgUrl: "",
   });
-  const [file, setFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -76,7 +85,7 @@ function SidebarLinkManagement() {
             <IconButton
               sx={{
                 color: colors.midGreen,
-                " &:hover": { backgroundColor: colors.highlightGreen },
+                "&:hover": { backgroundColor: colors.highlightGreen },
               }}
               onClick={() => handleEdit(sidebar)}
             >
@@ -103,9 +112,10 @@ function SidebarLinkManagement() {
       name: sidebar.name,
       type: sidebar.type,
       link: sidebar.link,
+      imgUrl: sidebar.imgUrl || "",
     });
-    setFile(null);
-    setImagePreview(sidebar.imgUrl || null); // Đồng bộ với imgUrl
+    setSelectedFile(null);
+    setPreviewUrl(sidebar.imgUrl || "");
     setOpen(true);
   };
 
@@ -114,24 +124,66 @@ function SidebarLinkManagement() {
       try {
         await sidebarLinkService.deleteSidebar(id);
         await fetchSidebarLinks();
+        message.success("Xóa sidebar link thành công");
       } catch (err) {
-        alert("Delete failed");
+        message.error("Xóa sidebar link thất bại: " + err.message);
         console.error(err);
       }
     }
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-    if (selectedFile) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(selectedFile);
-    } else {
-      setImagePreview(null);
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      message.error("Vui lòng chọn một file ảnh");
+      return;
+    }
+
+    setSelectedFile(file);
+    setImageLoading(true);
+
+    // Tạo URL preview cho hình ảnh
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setPreviewUrl(fileReader.result);
+    };
+    fileReader.readAsDataURL(file);
+
+    // Upload ảnh lên server
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      console.log("Uploading image:", file.name);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      console.log("Image upload response:", response.data);
+
+      if (response.status === 201 && response.data.url) {
+        setSidebarData((prevData) => ({
+          ...prevData,
+          imgUrl: response.data.url,
+        }));
+        setImageLoading(false);
+        message.success(`Đã upload ảnh ${file.name} thành công`);
+      } else {
+        setImageLoading(false);
+        message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
+      }
+    } catch (error) {
+      console.error(`Lỗi khi upload ảnh ${file.name}:`, error);
+      setImageLoading(false);
+      message.error(
+        `Lỗi upload ảnh ${file.name}: ${error.response?.data?.message || error.message}`
+      );
     }
   };
 
@@ -140,8 +192,7 @@ function SidebarLinkManagement() {
       if (editMode) {
         const updatedSidebar = await sidebarLinkService.updateSidebar(
           selectedSidebar.id,
-          sidebarData,
-          file
+          sidebarData
         );
         setRows(
           rows.map((row) =>
@@ -155,7 +206,7 @@ function SidebarLinkManagement() {
                       {updatedSidebar.link}
                     </a>
                   ),
-                  image: updatedSidebar.imgUrl ? ( // Sử dụng imgUrl thay vì img
+                  image: updatedSidebar.imgUrl ? (
                     <img
                       src={updatedSidebar.imgUrl}
                       alt={updatedSidebar.name}
@@ -168,14 +219,15 @@ function SidebarLinkManagement() {
               : row
           )
         );
+        message.success("Chỉnh sửa sidebar link thành công");
       }
       setOpen(false);
-      setSidebarData({ name: "", type: "", link: "" });
-      setFile(null);
-      setImagePreview(null);
+      setSidebarData({ name: "", type: "", link: "", imgUrl: "" });
+      setSelectedFile(null);
+      setPreviewUrl("");
       setEditMode(false);
     } catch (err) {
-      alert("Lỗi khi chỉnh sửa sidebar link!");
+      message.error("Chỉnh sửa sidebar link thất bại: " + err.message);
       console.error(err);
     }
   };
@@ -212,7 +264,7 @@ function SidebarLinkManagement() {
                   sx={{
                     backgroundColor: colors.midGreen,
                     color: colors.white,
-                    " &:hover": { backgroundColor: colors.highlightGreen },
+                    "&:hover": { backgroundColor: colors.highlightGreen },
                   }}
                   onClick={() => navigate("/linkManagement/create")}
                 >
@@ -296,32 +348,83 @@ function SidebarLinkManagement() {
             value={sidebarData.link}
             onChange={(e) => setSidebarData({ ...sidebarData, link: e.target.value })}
           />
-          <TextField
-            fullWidth
-            margin="normal"
-            type="file"
-            label="Upload Image"
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ accept: "image/*" }}
-            onChange={handleFileChange}
-          />
-          {imagePreview && (
-            <MDBox mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              mb: 2,
+              border: "1px dashed #ccc",
+              borderRadius: "8px",
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => fileInputRef.current.click()}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+            {previewUrl ? (
+              <Box sx={{ mb: 2, textAlign: "center" }}>
+                <img
+                  src={previewUrl}
+                  alt="Avatar preview"
+                  style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
+                />
+              </Box>
+            ) : (
+              <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+            )}
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              {imageLoading
+                ? "Đang tải ảnh..."
+                : selectedFile
+                ? selectedFile.name
+                : editMode && sidebarData.imgUrl
+                ? "Click để thay đổi ảnh"
+                : "Click để upload ảnh"}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              sx={{
+                color: colors.midGreen,
+                borderColor: colors.midGreen,
+                "&:hover": {
+                  borderColor: colors.darkGreen,
+                  backgroundColor: "rgba(0, 128, 0, 0.04)",
+                },
+              }}
+            >
+              Upload Image
+            </Button>
+          </Box>
+          {/* {editMode && sidebarData.imgUrl && !selectedFile && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                Ảnh hiện tại:
+              </Typography>
               <img
-                src={imagePreview}
-                alt="Preview"
-                style={{ maxWidth: "100%", maxHeight: "200px" }}
+                src={sidebarData.imgUrl}
+                alt="Current image"
+                style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
               />
-            </MDBox>
-          )}
+            </Box>
+          )} */}
         </DialogContent>
         <DialogActions>
           <Button
             onClick={() => {
               setOpen(false);
-              setImagePreview(null);
+              setSelectedFile(null);
+              setPreviewUrl("");
             }}
-            sx={{ color: colors.midGreen, " &:hover": { color: colors.darkGreen } }}
+            sx={{ color: colors.midGreen, "&:hover": { color: colors.darkGreen } }}
           >
             Cancel
           </Button>
@@ -330,7 +433,7 @@ function SidebarLinkManagement() {
             sx={{
               backgroundColor: colors.midGreen,
               color: colors.white,
-              " &:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
+              "&:hover": { backgroundColor: colors.highlightGreen, color: colors.white },
             }}
           >
             Save

@@ -11,7 +11,9 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import { useState, useEffect } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { useState, useEffect, useRef } from "react";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
@@ -22,6 +24,10 @@ import DataTable from "examples/Tables/DataTable";
 import Tooltip from "@mui/material/Tooltip";
 import { colors } from "assets/theme/color";
 import contentPageService from "services/contentpageService";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import axios from "axios";
+import { message } from "antd";
 
 function ContentPageManagement() {
   const [contentPages, setContentPages] = useState([]);
@@ -41,12 +47,23 @@ function ContentPageManagement() {
   const [img2File, setImg2File] = useState(null);
   const [img1Preview, setImg1Preview] = useState(null);
   const [img2Preview, setImg2Preview] = useState(null);
+  const [img1Loading, setImg1Loading] = useState(false);
+  const [img2Loading, setImg2Loading] = useState(false);
   const [testimonialsFirstImgFile, setTestimonialsFirstImgFile] = useState(null);
   const [testimonialsSecondImgFile, setTestimonialsSecondImgFile] = useState(null);
   const [testimonialsThirdImgFile, setTestimonialsThirdImgFile] = useState(null);
   const [testimonialsFirstImgPreview, setTestimonialsFirstImgPreview] = useState(null);
   const [testimonialsSecondImgPreview, setTestimonialsSecondImgPreview] = useState(null);
   const [testimonialsThirdImgPreview, setTestimonialsThirdImgPreview] = useState(null);
+  const [testimonialsFirstImgLoading, setTestimonialsFirstImgLoading] = useState(false);
+  const [testimonialsSecondImgLoading, setTestimonialsSecondImgLoading] = useState(false);
+  const [testimonialsThirdImgLoading, setTestimonialsThirdImgLoading] = useState(false);
+
+  const img1InputRef = useRef(null);
+  const img2InputRef = useRef(null);
+  const testimonialsFirstImgInputRef = useRef(null);
+  const testimonialsSecondImgInputRef = useRef(null);
+  const testimonialsThirdImgInputRef = useRef(null);
 
   useEffect(() => {
     fetchContentPages();
@@ -105,7 +122,7 @@ function ContentPageManagement() {
                 sx={{
                   color: colors.white,
                   backgroundColor: colors.deepGreen,
-                  " &:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
+                  "&:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
                 }}
                 onClick={() => handleEditClick(page)}
               >
@@ -135,7 +152,7 @@ function ContentPageManagement() {
                 sx={{
                   color: colors.white,
                   backgroundColor: colors.deepGreen,
-                  " &:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
+                  "&:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
                 }}
                 onClick={() => handleEditClick(page)}
               >
@@ -192,7 +209,7 @@ function ContentPageManagement() {
                 sx={{
                   color: colors.white,
                   backgroundColor: colors.deepGreen,
-                  " &:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
+                  "&:hover": { color: colors.paleGreen, backgroundColor: colors.deepGreen },
                 }}
                 onClick={() => handleEditClick(page)}
               >
@@ -212,14 +229,21 @@ function ContentPageManagement() {
   const validateEditForm = () => {
     const newErrors = {
       editHomepageMainTitle:
-        tabValue === 0 && (!currentEditItem || !currentEditItem.homepageMainTitle.trim()),
+        tabValue === 0 && (!currentEditItem || !currentEditItem.homepageMainTitle?.trim()),
     };
     setErrors({ ...errors, ...newErrors });
     return !Object.values(newErrors).some(Boolean);
   };
 
   const handleEditClick = (page) => {
-    setCurrentEditItem({ ...page });
+    setCurrentEditItem({
+      ...page,
+      img1: page.img1 || "",
+      img2: page.img2 || "",
+      testimonialsFirstImgUrl: page.testimonialsFirstImgUrl || "",
+      testimonialsSecondImgUrl: page.testimonialsSecondImgUrl || "",
+      testimonialsThirdImgUrl: page.testimonialsThirdImgUrl || "",
+    });
     setImg1File(null);
     setImg2File(null);
     setImg1Preview(page.img1 || null);
@@ -230,68 +254,89 @@ function ContentPageManagement() {
     setTestimonialsFirstImgPreview(page.testimonialsFirstImgUrl || null);
     setTestimonialsSecondImgPreview(page.testimonialsSecondImgUrl || null);
     setTestimonialsThirdImgPreview(page.testimonialsThirdImgUrl || null);
+    setImg1Loading(false);
+    setImg2Loading(false);
+    setTestimonialsFirstImgLoading(false);
+    setTestimonialsSecondImgLoading(false);
+    setTestimonialsThirdImgLoading(false);
     setEditDialogOpen(true);
+  };
+
+  const uploadFile = async (file) => {
+    if (!file) return null;
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      if (response.status === 201 && response.data.url) {
+        return response.data.url;
+      } else {
+        throw new Error("Không nhận được URL từ server");
+      }
+    } catch (error) {
+      throw new Error(`Lỗi upload file: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   const handleEditSave = async () => {
     if (tabValue === 0 && !validateEditForm()) return;
 
+    setLoading(true);
     try {
+      // Upload images and get URLs
+      const img1Url = img1File ? await uploadFile(img1File) : currentEditItem.img1;
+      const img2Url = img2File ? await uploadFile(img2File) : currentEditItem.img2;
+      const testimonialsFirstImgUrl = testimonialsFirstImgFile
+        ? await uploadFile(testimonialsFirstImgFile)
+        : currentEditItem.testimonialsFirstImgUrl;
+      const testimonialsSecondImgUrl = testimonialsSecondImgFile
+        ? await uploadFile(testimonialsSecondImgFile)
+        : currentEditItem.testimonialsSecondImgUrl;
+      const testimonialsThirdImgUrl = testimonialsThirdImgFile
+        ? await uploadFile(testimonialsThirdImgFile)
+        : currentEditItem.testimonialsThirdImgUrl;
+
+      // Prepare updated content page data
+      const updatedContentPage = {
+        ...currentEditItem,
+        img1: img1Url || "",
+        img2: img2Url || "",
+        testimonialsFirstImgUrl: testimonialsFirstImgUrl || "",
+        testimonialsSecondImgUrl: testimonialsSecondImgUrl || "",
+        testimonialsThirdImgUrl: testimonialsThirdImgUrl || "",
+      };
+
+      // Update content page (all tabs)
+      await contentPageService.editContentPage(currentEditItem.id, updatedContentPage);
+
+      // If tabValue === 0, also update testimonial images
       if (tabValue === 0) {
-        // Handle testimonial images and content
-        const testimonialFormData = new FormData();
-        Object.keys(currentEditItem).forEach((key) => {
-          if (
-            key !== "id" &&
-            key !== "img1" &&
-            key !== "img2" &&
-            key !== "testimonialsFirstImgUrl" &&
-            key !== "testimonialsSecondImgUrl" &&
-            key !== "testimonialsThirdImgUrl"
-          ) {
-            testimonialFormData.append(key, currentEditItem[key] || "");
-          }
-        });
-        if (testimonialsFirstImgFile) testimonialFormData.append("files", testimonialsFirstImgFile);
-        if (testimonialsSecondImgFile)
-          testimonialFormData.append("files", testimonialsSecondImgFile);
-        if (testimonialsThirdImgFile) testimonialFormData.append("files", testimonialsThirdImgFile);
-
-        await contentPageService.editTestimonialImages(currentEditItem.id, testimonialFormData);
-
-        // Handle img1 and img2 if they exist
-        if (img1File || img2File) {
-          const imageFormData = new FormData();
-          Object.keys(currentEditItem).forEach((key) => {
-            if (
-              key !== "id" &&
-              key !== "testimonialsFirstImgUrl" &&
-              key !== "testimonialsSecondImgUrl" &&
-              key !== "testimonialsThirdImgUrl"
-            ) {
-              imageFormData.append(key, currentEditItem[key] || "");
-            }
-          });
-          if (img1File) imageFormData.append("files", img1File);
-          if (img2File) imageFormData.append("files", img2File);
-
-          await contentPageService.editContentPage(currentEditItem.id, imageFormData);
-        }
-      } else {
-        // Handle other tabs (Information and Prompts)
-        const formData = new FormData();
-        Object.keys(currentEditItem).forEach((key) => {
-          if (key !== "id") {
-            formData.append(key, currentEditItem[key] || "");
-          }
-        });
-        if (img1File) formData.append("files", img1File);
-        if (img2File) formData.append("files", img2File);
-
-        await contentPageService.editContentPage(currentEditItem.id, formData);
+        const testimonialData = {
+          testimonialsFirstImgUrl: testimonialsFirstImgUrl || "",
+          testimonialsSecondImgUrl: testimonialsSecondImgUrl || "",
+          testimonialsThirdImgUrl: testimonialsThirdImgUrl || "",
+          testimonialsMainTitle: currentEditItem.testimonialsMainTitle || "",
+          testimonialsMainDescription: currentEditItem.testimonialsMainDescription || "",
+          testimonialsFirstTitle: currentEditItem.testimonialsFirstTitle || "",
+          testimonialsFirstDescription: currentEditItem.testimonialsFristDescription || "",
+          testimonialsSecondTitle: currentEditItem.testimonialsSecondTitle || "",
+          testimonialsSecondDescription: currentEditItem.testimonialsSecondDescription || "",
+          testimonialsThirdTitle: currentEditItem.testimonialsThirdTitle || "",
+          testimonialsThirdDescription: currentEditItem.testimonialsThirdDescription || "",
+        };
+        await contentPageService.editTestimonialImages(currentEditItem.id, testimonialData);
       }
 
-      fetchContentPages();
+      await fetchContentPages();
       setEditDialogOpen(false);
       setCurrentEditItem(null);
       setImg1File(null);
@@ -304,6 +349,11 @@ function ContentPageManagement() {
       setTestimonialsFirstImgPreview(null);
       setTestimonialsSecondImgPreview(null);
       setTestimonialsThirdImgPreview(null);
+      setImg1Loading(false);
+      setImg2Loading(false);
+      setTestimonialsFirstImgLoading(false);
+      setTestimonialsSecondImgLoading(false);
+      setTestimonialsThirdImgLoading(false);
       setNotification({
         open: true,
         message: "Content updated successfully",
@@ -315,6 +365,8 @@ function ContentPageManagement() {
         message: error.toString(),
         severity: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -327,45 +379,66 @@ function ContentPageManagement() {
     setTabValue(newValue);
   };
 
-  const handleImg1Change = (e) => {
+  const handleImageChange = async (e, setFile, setPreview, setLoading, inputRef, field) => {
     const file = e.target.files[0];
-    if (file) {
-      setImg1File(file);
-      setImg1Preview(URL.createObjectURL(file));
+    if (!file) {
+      message.error("Vui lòng chọn một file ảnh");
+      return;
+    }
+
+    setFile(file);
+    setLoading(true);
+
+    // Generate preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload file
+    try {
+      const url = await uploadFile(file);
+      setCurrentEditItem((prev) => ({ ...prev, [field]: url }));
+      setLoading(false);
+      message.success(`Đã upload ảnh ${file.name} thành công`);
+    } catch (error) {
+      setLoading(false);
+      message.error(error.message);
     }
   };
 
-  const handleImg2Change = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImg2File(file);
-      setImg2Preview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleTestimonialsFirstImgChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setTestimonialsFirstImgFile(file);
-      setTestimonialsFirstImgPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleTestimonialsSecondImgChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setTestimonialsSecondImgFile(file);
-      setTestimonialsSecondImgPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleTestimonialsThirdImgChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setTestimonialsThirdImgFile(file);
-      setTestimonialsThirdImgPreview(URL.createObjectURL(file));
-    }
-  };
+  const handleImg1Change = (e) =>
+    handleImageChange(e, setImg1File, setImg1Preview, setImg1Loading, img1InputRef, "img1");
+  const handleImg2Change = (e) =>
+    handleImageChange(e, setImg2File, setImg2Preview, setImg2Loading, img2InputRef, "img2");
+  const handleTestimonialsFirstImgChange = (e) =>
+    handleImageChange(
+      e,
+      setTestimonialsFirstImgFile,
+      setTestimonialsFirstImgPreview,
+      setTestimonialsFirstImgLoading,
+      testimonialsFirstImgInputRef,
+      "testimonialsFirstImgUrl"
+    );
+  const handleTestimonialsSecondImgChange = (e) =>
+    handleImageChange(
+      e,
+      setTestimonialsSecondImgFile,
+      setTestimonialsSecondImgPreview,
+      setTestimonialsSecondImgLoading,
+      testimonialsSecondImgInputRef,
+      "testimonialsSecondImgUrl"
+    );
+  const handleTestimonialsThirdImgChange = (e) =>
+    handleImageChange(
+      e,
+      setTestimonialsThirdImgFile,
+      setTestimonialsThirdImgPreview,
+      setTestimonialsThirdImgLoading,
+      testimonialsThirdImgInputRef,
+      "testimonialsThirdImgUrl"
+    );
 
   return (
     <DashboardLayout>
@@ -1103,38 +1176,74 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
-                Testimonials First Image Preview
-              </MDTypography>
-              {testimonialsFirstImgPreview ? (
-                <img
-                  src={testimonialsFirstImgPreview}
-                  alt="Testimonials First Image Preview"
-                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
-                />
-              ) : (
-                <MDTypography variant="caption" color="textSecondary">
-                  No image selected
-                </MDTypography>
-              )}
-              <Button
-                variant="contained"
-                component="label"
+              <Box
                 sx={{
-                  margin: "8px 0",
-                  backgroundColor: colors.deepGreen,
-                  color: colors.white,
-                  "&:hover": { backgroundColor: colors.midGreen },
+                  mt: 2,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: "8px",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
                 }}
+                onClick={() => testimonialsFirstImgInputRef.current.click()}
               >
-                Upload Testimonials First Image
                 <input
                   type="file"
                   accept="image/*"
-                  hidden
+                  ref={testimonialsFirstImgInputRef}
+                  style={{ display: "none" }}
                   onChange={handleTestimonialsFirstImgChange}
                 />
-              </Button>
+                {testimonialsFirstImgPreview ? (
+                  <Box sx={{ mb: 2, textAlign: "center" }}>
+                    <img
+                      src={testimonialsFirstImgPreview}
+                      alt="Testimonials First Image Preview"
+                      style={{ maxWidth: "200px", maxHeight: "200px", borderRadius: "8px" }}
+                    />
+                  </Box>
+                ) : (
+                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                )}
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {testimonialsFirstImgLoading
+                    ? "Đang tải ảnh..."
+                    : testimonialsFirstImgFile
+                    ? testimonialsFirstImgFile.name
+                    : currentEditItem?.testimonialsFirstImgUrl
+                    ? "Click để thay đổi ảnh"
+                    : "Click để upload ảnh"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    color: colors.midGreen,
+                    borderColor: colors.midGreen,
+                    "&:hover": {
+                      borderColor: colors.darkGreen,
+                      backgroundColor: "rgba(0, 128, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Upload Testimonials First Image
+                </Button>
+              </Box>
+              {currentEditItem?.testimonialsFirstImgUrl && !testimonialsFirstImgFile && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                    Ảnh hiện tại:
+                  </Typography>
+                  <img
+                    src={currentEditItem.testimonialsFirstImgUrl}
+                    alt="Current Testimonials First Image"
+                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
+                  />
+                </Box>
+              )}
               <TextField
                 margin="dense"
                 label="Testimonials Second Title"
@@ -1181,38 +1290,74 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
-                Testimonials Second Image Preview
-              </MDTypography>
-              {testimonialsSecondImgPreview ? (
-                <img
-                  src={testimonialsSecondImgPreview}
-                  alt="Testimonials Second Image Preview"
-                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
-                />
-              ) : (
-                <MDTypography variant="caption" color="textSecondary">
-                  No image selected
-                </MDTypography>
-              )}
-              <Button
-                variant="contained"
-                component="label"
+              <Box
                 sx={{
-                  margin: "8px 0",
-                  backgroundColor: colors.deepGreen,
-                  color: colors.white,
-                  "&:hover": { backgroundColor: colors.midGreen },
+                  mt: 2,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: "8px",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
                 }}
+                onClick={() => testimonialsSecondImgInputRef.current.click()}
               >
-                Upload Testimonials Second Image
                 <input
                   type="file"
                   accept="image/*"
-                  hidden
+                  ref={testimonialsSecondImgInputRef}
+                  style={{ display: "none" }}
                   onChange={handleTestimonialsSecondImgChange}
                 />
-              </Button>
+                {testimonialsSecondImgPreview ? (
+                  <Box sx={{ mb: 2, textAlign: "center" }}>
+                    <img
+                      src={testimonialsSecondImgPreview}
+                      alt="Testimonials Second Image Preview"
+                      style={{ maxWidth: "200px", maxHeight: "200px", borderRadius: "8px" }}
+                    />
+                  </Box>
+                ) : (
+                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                )}
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {testimonialsSecondImgLoading
+                    ? "Đang tải ảnh..."
+                    : testimonialsSecondImgFile
+                    ? testimonialsSecondImgFile.name
+                    : currentEditItem?.testimonialsSecondImgUrl
+                    ? "Click để thay đổi ảnh"
+                    : "Click để upload ảnh"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    color: colors.midGreen,
+                    borderColor: colors.midGreen,
+                    "&:hover": {
+                      borderColor: colors.darkGreen,
+                      backgroundColor: "rgba(0, 128, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Upload Testimonials Second Image
+                </Button>
+              </Box>
+              {currentEditItem?.testimonialsSecondImgUrl && !testimonialsSecondImgFile && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                    Ảnh hiện tại:
+                  </Typography>
+                  <img
+                    src={currentEditItem.testimonialsSecondImgUrl}
+                    alt="Current Testimonials Second Image"
+                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
+                  />
+                </Box>
+              )}
               <TextField
                 margin="dense"
                 label="Testimonials Third Title"
@@ -1256,38 +1401,74 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
-                Testimonials Third Image Preview
-              </MDTypography>
-              {testimonialsThirdImgPreview ? (
-                <img
-                  src={testimonialsThirdImgPreview}
-                  alt="Testimonials Third Image Preview"
-                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
-                />
-              ) : (
-                <MDTypography variant="caption" color="textSecondary">
-                  No image selected
-                </MDTypography>
-              )}
-              <Button
-                variant="contained"
-                component="label"
+              <Box
                 sx={{
-                  margin: "8px 0",
-                  backgroundColor: colors.deepGreen,
-                  color: colors.white,
-                  "&:hover": { backgroundColor: colors.midGreen },
+                  mt: 2,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: "8px",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
                 }}
+                onClick={() => testimonialsThirdImgInputRef.current.click()}
               >
-                Upload Testimonials Third Image
                 <input
                   type="file"
                   accept="image/*"
-                  hidden
+                  ref={testimonialsThirdImgInputRef}
+                  style={{ display: "none" }}
                   onChange={handleTestimonialsThirdImgChange}
                 />
-              </Button>
+                {testimonialsThirdImgPreview ? (
+                  <Box sx={{ mb: 2, textAlign: "center" }}>
+                    <img
+                      src={testimonialsThirdImgPreview}
+                      alt="Testimonials Third Image Preview"
+                      style={{ maxWidth: "200px", maxHeight: "200px", borderRadius: "8px" }}
+                    />
+                  </Box>
+                ) : (
+                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                )}
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {testimonialsThirdImgLoading
+                    ? "Đang tải ảnh..."
+                    : testimonialsThirdImgFile
+                    ? testimonialsThirdImgFile.name
+                    : currentEditItem?.testimonialsThirdImgUrl
+                    ? "Click để thay đổi ảnh"
+                    : "Click để upload ảnh"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    color: colors.midGreen,
+                    borderColor: colors.midGreen,
+                    "&:hover": {
+                      borderColor: colors.darkGreen,
+                      backgroundColor: "rgba(0, 128, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Upload Testimonials Third Image
+                </Button>
+              </Box>
+              {currentEditItem?.testimonialsThirdImgUrl && !testimonialsThirdImgFile && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                    Ảnh hiện tại:
+                  </Typography>
+                  <img
+                    src={currentEditItem.testimonialsThirdImgUrl}
+                    alt="Current Testimonials Third Image"
+                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
+                  />
+                </Box>
+              )}
             </>
           ) : tabValue === 1 ? (
             <>
@@ -1491,7 +1672,6 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-
               <TextField
                 margin="dense"
                 label="Link for Teacher Sign Up"
@@ -1511,86 +1691,145 @@ function ContentPageManagement() {
                   "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
                 }}
               />
-
-              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
-                Image 1 Preview
-              </MDTypography>
-              {img1Preview ? (
-                <img
-                  src={img1Preview}
-                  alt="Image 1 Preview"
-                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
-                />
-              ) : (
-                <MDTypography variant="caption" color="textSecondary">
-                  No image selected
-                </MDTypography>
-              )}
-              <Button
-                variant="contained"
-                component="label"
+              <Box
                 sx={{
-                  margin: "8px 0",
-                  backgroundColor: colors.deepGreen,
-                  color: colors.white,
-                  "&:hover": { backgroundColor: colors.midGreen },
+                  mt: 2,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: "8px",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
                 }}
+                onClick={() => img1InputRef.current.click()}
               >
-                Upload Image 1
-                <input type="file" accept="image/*" hidden onChange={handleImg1Change} />
-              </Button>
-              <MDTypography variant="body2" sx={{ marginTop: "8px" }}>
-                Image 2 Preview
-              </MDTypography>
-              {img2Preview ? (
-                <img
-                  src={img2Preview}
-                  alt="Image 2 Preview"
-                  style={{ maxWidth: "200px", maxHeight: "200px", margin: "8px 0" }}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={img1InputRef}
+                  style={{ display: "none" }}
+                  onChange={handleImg1Change}
                 />
-              ) : (
-                <MDTypography variant="caption" color="textSecondary">
-                  No image selected
-                </MDTypography>
+                {img1Preview ? (
+                  <Box sx={{ mb: 2, textAlign: "center" }}>
+                    <img
+                      src={img1Preview}
+                      alt="Image 1 Preview"
+                      style={{ maxWidth: "200px", maxHeight: "200px", borderRadius: "8px" }}
+                    />
+                  </Box>
+                ) : (
+                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                )}
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {img1Loading
+                    ? "Đang tải ảnh..."
+                    : img1File
+                    ? img1File.name
+                    : currentEditItem?.img1
+                    ? "Click để thay đổi ảnh"
+                    : "Click để upload ảnh"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    color: colors.midGreen,
+                    borderColor: colors.midGreen,
+                    "&:hover": {
+                      borderColor: colors.darkGreen,
+                      backgroundColor: "rgba(0, 128, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Upload Image 1
+                </Button>
+              </Box>
+              {currentEditItem?.img1 && !img1File && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                    Ảnh hiện tại:
+                  </Typography>
+                  <img
+                    src={currentEditItem.img1}
+                    alt="Current Image 1"
+                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
+                  />
+                </Box>
               )}
-              <Button
-                variant="contained"
-                component="label"
+              <Box
                 sx={{
-                  margin: "8px 0",
-                  backgroundColor: colors.deepGreen,
-                  color: colors.white,
-                  "&:hover": { backgroundColor: colors.midGreen },
+                  mt: 2,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  borderRadius: "8px",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
                 }}
+                onClick={() => img2InputRef.current.click()}
               >
-                Upload Image 2
-                <input type="file" accept="image/*" hidden onChange={handleImg2Change} />
-              </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={img2InputRef}
+                  style={{ display: "none" }}
+                  onChange={handleImg2Change}
+                />
+                {img2Preview ? (
+                  <Box sx={{ mb: 2, textAlign: "center" }}>
+                    <img
+                      src={img2Preview}
+                      alt="Image 2 Preview"
+                      style={{ maxWidth: "200px", maxHeight: "200px", borderRadius: "8px" }}
+                    />
+                  </Box>
+                ) : (
+                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                )}
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {img2Loading
+                    ? "Đang tải ảnh..."
+                    : img2File
+                    ? img2File.name
+                    : currentEditItem?.img2
+                    ? "Click để thay đổi ảnh"
+                    : "Click để upload ảnh"}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{
+                    color: colors.midGreen,
+                    borderColor: colors.midGreen,
+                    "&:hover": {
+                      borderColor: colors.darkGreen,
+                      backgroundColor: "rgba(0, 128, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Upload Image 2
+                </Button>
+              </Box>
+              {currentEditItem?.img2 && !img2File && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                    Ảnh hiện tại:
+                  </Typography>
+                  <img
+                    src={currentEditItem.img2}
+                    alt="Current Image 2"
+                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px" }}
+                  />
+                </Box>
+              )}
             </>
           ) : (
             <>
-              {/* <TextField
-                autoFocus
-                margin="dense"
-                label="Prompt Description"
-                type="text"
-                fullWidth
-                multiline
-                rows={4}
-                value={currentEditItem?.promptDescription || ""}
-                onChange={(e) =>
-                  setCurrentEditItem({ ...currentEditItem, promptDescription: e.target.value })
-                }
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": { borderColor: colors.inputBorder },
-                    "&:hover fieldset": { borderColor: colors.midGreen },
-                    "&.Mui-focused fieldset": { borderColor: colors.inputFocus },
-                  },
-                  "& .MuiInputLabel-root": { color: colors.darkGray },
-                  "& .MuiInputLabel-root.Mui-focused": { color: colors.inputFocus },
-                }}
-              /> */}
               <TextField
                 margin="dense"
                 label="PlaceHolder Lesson Plan"

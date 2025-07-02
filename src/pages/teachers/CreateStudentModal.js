@@ -40,7 +40,10 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
         `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
         }
       );
       if (response.status === 201 && response.data.url) {
@@ -75,21 +78,22 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
     try {
       if (!classID) {
         message.error("No class selected. Please select a class.");
+        setLoading(false);
         return;
       }
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("level", values.level);
-      formData.append("username", values.username);
-      formData.append("password", values.password);
-      formData.append("startDate", values.startDate);
-      formData.append("classID", classID);
 
-      if (fileList.length > 0 && fileList[0].status === "done" && fileList[0].response) {
-        formData.append("imgUrl", fileList[0].response);
-      }
+      // Prepare JSON data
+      const studentData = {
+        name: values.name,
+        level: values.level,
+        username: values.username,
+        password: values.password,
+        startDate: values.startDate,
+        classID: classID,
+        imgUrl: imageUrl || "", // Use the uploaded image URL or empty string
+      };
 
-      await studentService.createStudentWithFile(formData);
+      await studentService.createStudent(studentData);
       message.success("Student created successfully!");
       form.resetFields();
       setFileList([]);
