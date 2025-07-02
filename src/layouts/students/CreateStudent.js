@@ -162,7 +162,7 @@ function CreateStudent() {
   const handleSave = async () => {
     try {
       // Gọi service để tạo sinh viên với JSON data
-      await studentService.createStudent(studentData);
+      await studentService.createStudentWithFile(studentData);
       message.success("Tạo sinh viên thành công");
       navigate("/students");
     } catch (err) {
