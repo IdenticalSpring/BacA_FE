@@ -93,7 +93,7 @@ const CreateStudentModal = ({ visible, onClose, classID, isMobile, refreshStuden
         imgUrl: imageUrl || "", // Use the uploaded image URL or empty string
       };
 
-      await studentService.createStudent(studentData);
+      await studentService.createStudentWithFile(studentData);
       message.success("Student created successfully!");
       form.resetFields();
       setFileList([]);
