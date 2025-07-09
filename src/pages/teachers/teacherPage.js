@@ -311,289 +311,74 @@ const TeacherPage = () => {
   }, []);
   console.log(homeworkModal);
   useEffect(() => {
-    // console.log(quillRefLessonCreate);
     const handlePaste = (e) => {
-      const editorA = quillRefLessonCreate.current?.getEditor()?.root;
-      const editorB = quillRefLessonUpdate.current?.getEditor()?.root;
-      const editorC = quillRefLessonPlanCreate.current?.getEditor()?.root;
+      const editorA = quillRefHomeWorkCreate.current?.getEditor()?.root;
+      const editorB = quillRefHomeWorkUpdate.current?.getEditor()?.root;
 
       const isEditorA = editorA?.contains(document.activeElement);
       const isEditorB = editorB?.contains(document.activeElement);
-      const isEditorC = editorC?.contains(document.activeElement);
-      const isLessonPlanCreate =
-        document.activeElement.parentElement.parentElement.id === "lessonPlanCreate";
-      const isLessonPlanUpdate =
-        document.activeElement.parentElement.parentElement.id === "lessonPlanUpdate";
-      const isLessonDescriptionCreate =
-        document.activeElement.parentElement.parentElement.id === "lessonDescriptionCreate";
-      const isLessonDescriptionUpdate =
-        document.activeElement.parentElement.parentElement.id === "lessonDescriptionUpdate";
-      // console.log(isLessonPlan);
+      const isHomeworkDescriptionCreate =
+        document.activeElement.parentElement.parentElement.id === "HomeworkDescriptionCreate";
+      const isHomeworkDescriptionUpdate =
+        document.activeElement.parentElement.parentElement.id === "HomeworkDescriptionUpdate";
 
-      // console.log("Editor A:", quillRefLessonCreate.current?.getEditor().hasFocus(), isEditorA);
-      // console.log("Editor B:", editorB);
-      // console.log(editingLesson);
+      let quill;
+      if (!editingHomeWork && isHomeworkDescriptionCreate && isEditorA) {
+        quill = quillRefHomeWorkCreate.current?.getEditor();
+      } else if (editingHomeWork && isHomeworkDescriptionUpdate && isEditorB) {
+        quill = quillRefHomeWorkUpdate.current?.getEditor();
+      }
 
-      if (!editingLesson) {
-        if (isLessonPlanCreate) {
-          const quill = quillRefLessonPlanCreate.current?.getEditor();
-          if (!quill) return;
+      if (!quill) return;
 
-          const handlePaste = (e) => {
-            const clipboardData = e.clipboardData;
-            const items = clipboardData?.items;
-            // console.log(quill.getLength());
+      const clipboardData = e.clipboardData;
+      const items = clipboardData?.items;
 
-            if (!items) return;
+      if (!items) return;
 
-            for (const item of items) {
-              if (item?.type?.indexOf("image") !== -1) {
-                e.preventDefault(); // chặn mặc định Quill xử lý
+      for (const item of items) {
+        if (item?.type?.indexOf("image") !== -1) {
+          e.preventDefault(); // Ngăn xử lý mặc định của Quill
 
-                const file = item.getAsFile();
+          const file = item.getAsFile();
 
-                if (!file) return;
+          if (!file) return;
 
-                // 👇 Resize trước khi upload như trong imageHandler
-                // new Compressor(file, {
-                //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                //   maxHeight: 800,
-                //   success(compressedFile) {
-                const formData = new FormData();
-                formData.append("file", file);
+          const formData = new FormData();
+          formData.append("file", file);
 
-                axios
-                  .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                  .then((response) => {
-                    if (response.status === 201) {
-                      if (!quill) return;
-                      const range = quill.getSelection(true);
-                      quill.insertEmbed(
-                        range?.index ?? quill.getLength(),
-                        "image",
-                        response.data.url
-                      );
-                      setTimeout(() => {
-                        const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                        imgs.forEach((img) => {
-                          img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
-                        });
-                      }, 100);
-                    } else {
-                      message.error("Upload failed. Try again!");
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Upload error:", err);
-                    message.error("Upload error. Please try again!");
+          axios
+            .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            })
+            .then((response) => {
+              if (response.status === 201 && response.data.url) {
+                const range = quill.getSelection(true) || { index: quill.getLength() };
+                quill.insertEmbed(range.index, "image", response.data.url, "user");
+                setTimeout(() => {
+                  const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                  imgs.forEach((img) => {
+                    img.classList.add("ql-image");
+                    img.style.maxWidth = "100%";
+                    img.onerror = () => {
+                      console.error("Image failed to load:", response.data.url);
+                      message.error(`Không thể tải ảnh: ${response.data.url}`);
+                    };
                   });
-                //   },
-                //   error(err) {
-                //     console.error("Compression error:", err);
-                //     message.error("Image compression failed!");
-                //   },
-                // });
-
-                break; // chỉ xử lý ảnh đầu tiên
+                  message.success(`Đã chèn ảnh ${file.name} thành công`);
+                }, 100);
+              } else {
+                message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
               }
-            }
-          };
-          handlePaste(e);
-        } else if (isLessonDescriptionCreate) {
-          const quill = quillRefLessonCreate.current?.getEditor();
-          if (!quill) return;
+            })
+            .catch((err) => {
+              console.error("Upload error:", err);
+              message.error(
+                `Lỗi upload ảnh ${file.name}: ${err.response?.data?.message || err.message}`
+              );
+            });
 
-          const handlePaste = (e) => {
-            const clipboardData = e.clipboardData;
-            const items = clipboardData?.items;
-
-            if (!items) return;
-
-            for (const item of items) {
-              if (item?.type?.indexOf("image") !== -1) {
-                e.preventDefault(); // chặn mặc định Quill xử lý
-
-                const file = item.getAsFile();
-
-                if (!file) return;
-
-                // 👇 Resize trước khi upload như trong imageHandler
-                // new Compressor(file, {
-                //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                //   maxHeight: 800,
-                //   success(compressedFile) {
-                const formData = new FormData();
-                formData.append("file", file);
-
-                axios
-                  .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                  .then((response) => {
-                    if (response.status === 201) {
-                      if (!quill) return;
-                      const range = quill.getSelection(true);
-                      quill.insertEmbed(
-                        range?.index ?? quill.getLength(),
-                        "image",
-                        response.data.url
-                      );
-                      setTimeout(() => {
-                        const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                        imgs.forEach((img) => {
-                          img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
-                        });
-                      }, 100);
-                    } else {
-                      message.error("Upload failed. Try again!");
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Upload error:", err);
-                    message.error("Upload error. Please try again!");
-                  });
-                //   },
-                //   error(err) {
-                //     console.error("Compression error:", err);
-                //     message.error("Image compression failed!");
-                //   },
-                // });
-
-                break; // chỉ xử lý ảnh đầu tiên
-              }
-            }
-          };
-          handlePaste(e);
-        }
-      } else if (editingLesson && assignmentModal) {
-        if (isLessonPlanUpdate) {
-          const quill = quillRefLessonPlanUpdate.current?.getEditor();
-          if (!quill) return;
-
-          const handlePaste = (e) => {
-            const clipboardData = e.clipboardData;
-            const items = clipboardData?.items;
-
-            if (!items) return;
-
-            for (const item of items) {
-              if (item?.type?.indexOf("image") !== -1) {
-                e.preventDefault(); // chặn mặc định Quill xử lý
-
-                const file = item.getAsFile();
-
-                if (!file) return;
-
-                // 👇 Resize trước khi upload như trong imageHandler
-                // new Compressor(file, {
-                //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                //   maxHeight: 800,
-                //   success(compressedFile) {
-                const formData = new FormData();
-                formData.append("file", file);
-
-                axios
-                  .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                  .then((response) => {
-                    if (response.status === 201) {
-                      if (!quill) return;
-                      const range = quill.getSelection(true);
-                      quill.insertEmbed(
-                        range?.index ?? quill.getLength(),
-                        "image",
-                        response.data.url
-                      );
-                      setTimeout(() => {
-                        const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                        imgs.forEach((img) => {
-                          img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
-                        });
-                      }, 100);
-                    } else {
-                      message.error("Upload failed. Try again!");
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Upload error:", err);
-                    message.error("Upload error. Please try again!");
-                  });
-                //   },
-                //   error(err) {
-                //     console.error("Compression error:", err);
-                //     message.error("Image compression failed!");
-                //   },
-                // });
-
-                break; // chỉ xử lý ảnh đầu tiên
-              }
-            }
-          };
-          handlePaste(e);
-        } else if (isLessonDescriptionUpdate) {
-          const quill = quillRefLessonUpdate.current?.getEditor();
-          if (!quill) return;
-
-          const handlePaste = (e) => {
-            const clipboardData = e.clipboardData;
-            const items = clipboardData?.items;
-
-            if (!items) return;
-
-            for (const item of items) {
-              if (item?.type?.indexOf("image") !== -1) {
-                e.preventDefault(); // chặn mặc định Quill xử lý
-
-                const file = item.getAsFile();
-
-                if (!file) return;
-
-                // 👇 Resize trước khi upload như trong imageHandler
-                // new Compressor(file, {
-                //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-                //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-                //   maxHeight: 800,
-                //   success(compressedFile) {
-                const formData = new FormData();
-                formData.append("file", file);
-
-                axios
-                  .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                  .then((response) => {
-                    if (response.status === 201) {
-                      if (!quill) return;
-                      const range = quill.getSelection(true);
-                      quill.insertEmbed(
-                        range?.index ?? quill.getLength(),
-                        "image",
-                        response.data.url
-                      );
-                      setTimeout(() => {
-                        const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                        imgs.forEach((img) => {
-                          img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
-                        });
-                      }, 100);
-                    } else {
-                      message.error("Upload failed. Try again!");
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Upload error:", err);
-                    message.error("Upload error. Please try again!");
-                  });
-                //   },
-                //   error(err) {
-                //     console.error("Compression error:", err);
-                //     message.error("Image compression failed!");
-                //   },
-                // });
-
-                break; // chỉ xử lý ảnh đầu tiên
-              }
-            }
-          };
-          handlePaste(e);
+          break; // Chỉ xử lý ảnh đầu tiên
         }
       }
     };
@@ -601,7 +386,7 @@ const TeacherPage = () => {
     return () => {
       document.removeEventListener("paste", handlePaste);
     };
-  }, [quillRefLessonCreate, quillRefLessonUpdate, editingLesson]);
+  }, [quillRefHomeWorkCreate, quillRefHomeWorkUpdate, editingHomeWork]);
 
   const handleDeleteStudents = async () => {
     if (selectedStudents.length === 0) {
@@ -677,152 +462,75 @@ const TeacherPage = () => {
     //   }
   });
   useEffect(() => {
-    // console.log(quillRefLessonCreate);
     const handlePaste = (e) => {
       const editorA = quillRefHomeWorkCreate.current?.getEditor()?.root;
       const editorB = quillRefHomeWorkUpdate.current?.getEditor()?.root;
 
       const isEditorA = editorA?.contains(document.activeElement);
       const isEditorB = editorB?.contains(document.activeElement);
-      // console.log("Editor A:", quillRefHomeWorkCreate.current?.getEditor().hasFocus(), isEditorA);
-      // console.log(editorA, editorB);
-      // console.log(editingHomeWork);
       const isHomeworkDescriptionCreate =
         document.activeElement.parentElement.parentElement.id === "HomeworkDescriptionCreate";
       const isHomeworkDescriptionUpdate =
         document.activeElement.parentElement.parentElement.id === "HomeworkDescriptionUpdate";
-      if (!editingHomeWork && isHomeworkDescriptionCreate) {
-        const quill = quillRefHomeWorkCreate.current?.getEditor();
-        if (!quill) return;
 
-        const handlePaste = (e) => {
-          const clipboardData = e.clipboardData;
-          const items = clipboardData?.items;
+      let quill;
+      if (!editingHomeWork && isHomeworkDescriptionCreate && isEditorA) {
+        quill = quillRefHomeWorkCreate.current?.getEditor();
+      } else if (editingHomeWork && isHomeworkDescriptionUpdate && isEditorB) {
+        quill = quillRefHomeWorkUpdate.current?.getEditor();
+      }
 
-          if (!items) return;
+      if (!quill) return;
 
-          for (const item of items) {
-            if (item?.type?.indexOf("image") !== -1) {
-              e.preventDefault(); // chặn mặc định Quill xử lý
+      const clipboardData = e.clipboardData;
+      const items = clipboardData?.items;
 
-              const file = item.getAsFile();
+      if (!items) return;
 
-              if (!file) return;
+      for (const item of items) {
+        if (item?.type?.indexOf("image") !== -1) {
+          e.preventDefault(); // Ngăn xử lý mặc định của Quill
 
-              // 👇 Resize trước khi upload như trong imageHandler
-              // new Compressor(file, {
-              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-              //   maxHeight: 800,
-              //   success(compressedFile) {
-              const formData = new FormData();
-              formData.append("file", file);
+          const file = item.getAsFile();
 
-              axios
-                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                .then((response) => {
-                  if (response.status === 201) {
-                    if (!quill) return;
-                    const range = quill.getSelection(true);
-                    quill.insertEmbed(
-                      range?.index ?? quill.getLength(),
-                      "image",
-                      response.data.url
-                    );
-                    setTimeout(() => {
-                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                      // console.log("IMG:", imgs);
+          if (!file) return;
 
-                      imgs.forEach((img) => {
-                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
-                      });
-                    }, 100);
-                  } else {
-                    message.error("Upload failed. Try again!");
-                  }
-                })
-                .catch((err) => {
-                  console.error("Upload error:", err);
-                  message.error("Upload error. Please try again!");
-                });
-              //   },
-              //   error(err) {
-              //     console.error("Compression error:", err);
-              //     message.error("Image compression failed!");
-              //   },
-              // });
+          const formData = new FormData();
+          formData.append("file", file);
 
-              break; // chỉ xử lý ảnh đầu tiên
-            }
-          }
-        };
-        handlePaste(e);
-      } else if (editingHomeWork && isHomeworkDescriptionUpdate) {
-        const quill = quillRefHomeWorkUpdate.current?.getEditor();
-        if (!quill) return;
+          axios
+            .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            })
+            .then((response) => {
+              if (response.status === 201 && response.data.url) {
+                const range = quill.getSelection(true) || { index: quill.getLength() };
+                quill.insertEmbed(range.index, "image", response.data.url, "user");
+                setTimeout(() => {
+                  const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
+                  imgs.forEach((img) => {
+                    img.classList.add("ql-image");
+                    img.style.maxWidth = "100%";
+                    img.onerror = () => {
+                      console.error("Image failed to load:", response.data.url);
+                      message.error(`Không thể tải ảnh: ${response.data.url}`);
+                    };
+                  });
+                  message.success(`Đã chèn ảnh ${file.name} thành công`);
+                }, 100);
+              } else {
+                message.error(`Upload ảnh ${file.name} thất bại: Không nhận được URL từ server`);
+              }
+            })
+            .catch((err) => {
+              console.error("Upload error:", err);
+              message.error(
+                `Lỗi upload ảnh ${file.name}: ${err.response?.data?.message || err.message}`
+              );
+            });
 
-        const handlePaste = (e) => {
-          const clipboardData = e.clipboardData;
-          const items = clipboardData?.items;
-
-          if (!items) return;
-
-          for (const item of items) {
-            if (item?.type?.indexOf("image") !== -1) {
-              e.preventDefault(); // chặn mặc định Quill xử lý
-
-              const file = item.getAsFile();
-
-              if (!file) return;
-
-              // 👇 Resize trước khi upload như trong imageHandler
-              // new Compressor(file, {
-              //   quality: 1, // Giảm dung lượng, 1 là giữ nguyên
-              //   maxWidth: 800, // Resize ảnh về max chiều ngang là 800px
-              //   maxHeight: 800,
-              //   success(compressedFile) {
-              const formData = new FormData();
-              formData.append("file", file);
-
-              axios
-                .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
-                .then((response) => {
-                  if (response.status === 201) {
-                    if (!quill) return;
-                    const range = quill.getSelection(true);
-                    quill.insertEmbed(
-                      range?.index ?? quill.getLength(),
-                      "image",
-                      response.data.url
-                    );
-                    setTimeout(() => {
-                      const imgs = quill.root.querySelectorAll(`img[src="${response.data.url}"]`);
-                      // console.log(imgs);
-
-                      imgs.forEach((img) => {
-                        img.classList.add("ql-image"); // ví dụ: "rounded-lg", "centered-img"
-                      });
-                    }, 100);
-                  } else {
-                    message.error("Upload failed. Try again!");
-                  }
-                })
-                .catch((err) => {
-                  console.error("Upload error:", err);
-                  message.error("Upload error. Please try again!");
-                });
-              //   },
-              //   error(err) {
-              //     console.error("Compression error:", err);
-              //     message.error("Image compression failed!");
-              //   },
-              // });
-
-              break; // chỉ xử lý ảnh đầu tiên
-            }
-          }
-        };
-        handlePaste(e);
+          break; // Chỉ xử lý ảnh đầu tiên
+        }
       }
     };
     document.addEventListener("paste", handlePaste);
