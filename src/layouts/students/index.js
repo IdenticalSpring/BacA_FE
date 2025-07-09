@@ -311,7 +311,8 @@ function Students() {
         !studentData.name ||
         !studentData.username ||
         !studentData.password ||
-        !studentData.level
+        !studentData.level ||
+        !studentData.classID
       ) {
         message.error("Vui lòng điền đầy đủ các trường bắt buộc: Name, Username, Password, Level");
         return;
@@ -389,7 +390,7 @@ function Students() {
           )
         );
       }
-
+      await fetchStudents();
       setOpen(false);
       setStudentData({
         name: "",

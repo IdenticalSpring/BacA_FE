@@ -87,23 +87,11 @@ const studentService = {
       throw error.response?.data?.message || "Error creating student";
     }
   },
-  editStudent: async (id, studentData, file) => {
+  editStudent: async (id, studentData) => {
     try {
-      const formData = new FormData();
-
-      // Append student data to formData
-      Object.keys(studentData).forEach((key) => {
-        formData.append(key, studentData[key]);
-      });
-
-      // Append file to formData if provided
-      if (file) {
-        formData.append("file", file);
-      }
-
-      const response = await axios.put(`${API_BASE_URL}/students/${id}`, formData, {
+      const response = await axios.put(`${API_BASE_URL}/students/${id}`, studentData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
       });
