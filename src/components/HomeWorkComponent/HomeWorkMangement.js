@@ -294,6 +294,81 @@ export default function HomeWorkManagement({
     }
   }, [modalUpdateHomeWorkVisible, editingHomeWork, quillRef]);
 
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const handlePaste = async (e) => {
+      const clipboardData = e.clipboardData || window.clipboardData;
+      const items = clipboardData?.items;
+
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault(); // Ngăn Quill xử lý mặc định
+
+          const file = item.getAsFile();
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          try {
+            console.log("Uploading pasted image:", file.name);
+            const response = await axios.post(
+              process.env.REACT_APP_API_BASE_URL + "/files/upload",
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+              }
+            );
+
+            if (response.status === 201 && response.data.url) {
+              const imageUrl = response.data.url;
+              const editor = quillRef.current?.getEditor();
+              if (!editor) return;
+
+              const range = editor.getSelection(true) || { index: editor.getLength() };
+              editor.insertEmbed(range.index, "image", imageUrl, "user");
+
+              setTimeout(() => {
+                const imgs = editor.root.querySelectorAll(`img[src="${imageUrl}"]`);
+                if (imgs.length === 0) {
+                  console.error("Image not inserted into editor:", imageUrl);
+                  message.error(`Không thể chèn ảnh vào editor`);
+                } else {
+                  imgs.forEach((img) => {
+                    img.classList.add("ql-image");
+                    img.style.maxWidth = "100%";
+                    img.onerror = () => {
+                      console.error("Image failed to load:", imageUrl);
+                      message.error(`Không thể tải ảnh: ${imageUrl}`);
+                    };
+                  });
+                  message.success(`Đã chèn ảnh từ clipboard thành công`);
+                }
+              }, 0);
+            } else {
+              message.error(`Upload ảnh thất bại: Không nhận được URL từ server`);
+            }
+          } catch (error) {
+            console.error(`Lỗi khi upload ảnh từ clipboard:`, error);
+            message.error(`Lỗi upload ảnh: ${error.response?.data?.message || error.message}`);
+          }
+          break; // Chỉ xử lý ảnh đầu tiên
+        }
+      }
+    };
+
+    const editor = quill?.root;
+    editor?.addEventListener("paste", handlePaste);
+
+    return () => {
+      editor?.removeEventListener("paste", handlePaste);
+    };
+  }, [quillRef, editingHomeWork]);
+
   const handleConvertToSpeech = async () => {
     if (!textToSpeech) {
       return;
