@@ -64,6 +64,7 @@ import contentPageService from "services/contentpageService";
 import { Close } from "@mui/icons-material";
 import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
 import AnswerQuestionComponent from "components/QuestionComponent/AnswerQuestionComponet";
+import ChatComponent from "components/ChatComponent/ChatComponent";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -143,12 +144,36 @@ const StudentPage = () => {
   const [previewSrc, setPreviewSrc] = useState("");
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
+  const [isChatDrawerVisible, setIsChatDrawerVisible] = useState(false);
+  const [classData, setClassData] = useState(null);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
   useEffect(() => {
     if (isMobile) {
       setSidebarVisible(true);
     }
   }, [isMobile]);
+
+  useEffect(() => {
+    const fetchStudentAndClassInfo = async () => {
+      try {
+        // Bước 1: Lấy thông tin cơ bản của học sinh
+        const studentInfo = await studentService.getStudentById(studentId);
+        setStudent(studentInfo);
+
+        // Bước 2: Nếu có classId, lấy thông tin chi tiết của lớp đó
+        if (studentInfo && studentInfo.class && studentInfo.class.id) {
+          const detailedClassInfo = await classService.getClassById(studentInfo.class.id);
+          setClassData(detailedClassInfo); // Lưu vào state mới
+        }
+      } catch (error) {
+        console.error("Error fetching student or class info:", error);
+      }
+    };
+
+    fetchStudentAndClassInfo();
+  }, [studentId]);
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(homeworkZaloLink).then(() => {
       setCopySuccess(true);
@@ -1187,6 +1212,25 @@ const StudentPage = () => {
               >
                 {screens.xs ? "" : "Điểm Thi"}
               </Button>
+              <Button
+                type={isChatDrawerVisible ? "primary" : "link"}
+                icon={
+                  <Badge dot={unreadMessagesCount > 0}>
+                    <MessageOutlined />
+                  </Badge>
+                }
+                onClick={() => setIsChatDrawerVisible(true)}
+                style={{
+                  backgroundColor: isChatDrawerVisible ? colors.deepGreen : "transparent",
+                  borderColor: isChatDrawerVisible ? colors.deepGreen : colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
+                }}
+              >
+                {screens.xs ? "" : "Trò chuyện"}
+              </Button>
             </Space>
             {/* Social Buttons */}
             <div
@@ -1486,6 +1530,45 @@ const StudentPage = () => {
           }}
         ></img>
       </Modal>
+      <Drawer
+        title="Trò chuyện với Giáo viên"
+        placement="right"
+        onClose={() => setIsChatDrawerVisible(false)}
+        open={isChatDrawerVisible}
+        width={isMobile ? "100vw" : 840}
+        bodyStyle={{ padding: 0 }}
+        // destroyOnClose={true} // Rất quan trọng để re-mount và fetch lại tin nhắn mới
+      >
+        {/* {isChatDrawerVisible && classData?.teacher ? (
+          <ChatComponent
+            currentUser={{ id: studentId, role: "student" }}
+            // Dùng state classData đã được fetch đầy đủ
+            classInfo={classData}
+            teacherOfClass={classData.teacher}
+            isMobile={isMobile}
+            onUnreadCountChange={setUnreadMessagesCount}
+          /> */}
+        {classData?.teacher ? ( // Gỡ bỏ `isChatDrawerVisible &&`
+          <ChatComponent
+            currentUser={{ id: studentId, role: "student" }}
+            classInfo={classData}
+            teacherOfClass={classData.teacher}
+            isMobile={isMobile}
+            onUnreadCountChange={setUnreadMessagesCount} // <-- Thêm prop này
+          />
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Empty description="Không thể tải cuộc trò chuyện." />
+          </div>
+        )}
+      </Drawer>
     </Layout>
   );
 };

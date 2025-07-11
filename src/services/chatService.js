@@ -35,6 +35,20 @@ const chatService = {
       throw error.response?.data || error.message;
     }
   },
+  markMessagesAsRead: async (classId, partnerId, readerRole) => {
+    try {
+      const payload = {
+        classId,
+        readerId: partnerId, // BE mong đợi readerId, chính là partnerId
+        readerRole,
+      };
+      const response = await axios.post(`${API_BASE_URL}/chat/read-messages`, payload);
+      return response.data;
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 export default chatService;

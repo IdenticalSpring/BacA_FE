@@ -77,6 +77,11 @@ import TeacherFeedbackModal from "./teacherFeedbackModal";
 import contentPageService from "services/contentpageService";
 import CreateStudentModal from "./CreateStudentModal";
 import Compressor from "compressorjs";
+import ChatComponent from "components/ChatComponent/ChatComponent";
+
+// START: IMPORT CHAT COMPONENT
+// END: IMPORT CHAT COMPONENT
+
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -135,6 +140,10 @@ const getTimeElapsed = (createdAt) => {
 };
 // Main TeacherPage Component
 const TeacherPage = () => {
+  // START: ADD STATE FOR CHAT DRAWER
+  const [isChatDrawerVisible, setIsChatDrawerVisible] = useState(false);
+  // END: ADD STATE FOR CHAT DRAWER
+
   const [isAttendanceMode, setIsAttendanceMode] = useState(false);
   const [isAttendanceGuideVisible, setIsAttendanceGuideVisible] = useState(false);
   const [isEditStudentModalVisible, setIsEditStudentModalVisible] = useState(false);
@@ -197,6 +206,9 @@ const TeacherPage = () => {
   const teacherId = userId.userId;
   const userName = userId.username || "Teacher";
   const navigate = useNavigate();
+
+  // ... (tất cả các hàm và useEffect hiện tại của bạn giữ nguyên)
+  // ... (đoạn code dài của bạn ở đây)
 
   const studentContextMenu = (student) => (
     <Menu>
@@ -2689,6 +2701,48 @@ const TeacherPage = () => {
           isMobile={isMobile}
         />
       </Modal>
+
+      {/* START: ADD CHAT BUBBLE AND DRAWER */}
+      {selectedClass && (
+        <Button
+          type="primary"
+          shape="circle"
+          icon={<MessageOutlined style={{ fontSize: "24px" }} />}
+          size="large"
+          onClick={() => setIsChatDrawerVisible(true)}
+          style={{
+            position: "fixed",
+            right: 40,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 1000,
+            boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.12)",
+            width: 60,
+            height: 60,
+            backgroundColor: colors.deepGreen,
+            borderColor: colors.deepGreen,
+          }}
+        />
+      )}
+
+      <Drawer
+        title="Trò chuyện"
+        placement="right"
+        onClose={() => setIsChatDrawerVisible(false)}
+        open={isChatDrawerVisible}
+        width={isMobile ? "100vw" : 840} // Sử dụng isMobile ở đây
+        bodyStyle={{ padding: 0 }}
+        destroyOnClose={true}
+      >
+        {isChatDrawerVisible && (
+          <ChatComponent
+            currentUser={{ id: teacherId, role: "teacher" }}
+            classInfo={classData}
+            studentsInClass={students}
+            isMobile={isMobile} // VÀ TRUYỀN isMobile VÀO ĐÂY
+          />
+        )}
+      </Drawer>
     </Layout>
   );
 };
