@@ -28,6 +28,7 @@ import {
   MoreOutlined,
   PictureOutlined,
   SoundOutlined,
+  CameraOutlined, // Icon máy ảnh
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import chatService from "services/chatService";
@@ -39,31 +40,10 @@ const { Sider, Content } = Layout;
 const { Text, Title } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
 
-// --- Helpers ---
+// --- Helpers & Sub-components ---
 const createLocalTimestamp = () => new Date().toISOString();
 
-const formatMessageTime = (dateString) => {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone,
-  });
-};
-
-const formatSiderTime = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const today = new Date();
-  if (date.toLocaleDateString("vi-VN") === today.toLocaleDateString("vi-VN")) {
-    return date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-  }
-  return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
-};
-
-// --- Sub-components ---
-
-const PlayAudioButton = ({ audioUrl }) => {
+const PlayAudioButton = React.memo(({ audioUrl }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(new Audio(audioUrl));
 
@@ -99,8 +79,63 @@ const PlayAudioButton = ({ audioUrl }) => {
       />
     </Tooltip>
   );
-};
+});
 PlayAudioButton.propTypes = { audioUrl: PropTypes.string.isRequired };
+PlayAudioButton.displayName = "PlayAudioButton";
+
+const MessageBubble = React.memo(({ chat, isMyMessage }) => {
+  const bubbleStyle = {
+    backgroundColor: isMyMessage ? colors.deepGreen : colors.white,
+    color: isMyMessage ? colors.white : colors.darkGray,
+    padding: "8px 12px",
+    borderRadius: "18px",
+    border: `1px solid ${isMyMessage ? colors.deepGreen : colors.gray}`,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.07)",
+    maxWidth: "100%",
+  };
+
+  if (chat.isRevoked) {
+    return (
+      <Card bodyStyle={bubbleStyle} bordered={false} className="message-card">
+        <Text italic disabled>
+          Tin nhắn đã bị thu hồi
+        </Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Card bodyStyle={bubbleStyle} bordered={false} className="message-card">
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+        {chat.imageUrl && (
+          <Image
+            src={chat.imageUrl}
+            style={{
+              width: "100%",
+              maxWidth: "250px",
+              borderRadius: "8px",
+              marginBottom: chat.message || chat.audioUrl ? "8px" : "0px",
+            }}
+            preview={{ mask: "Xem ảnh" }}
+          />
+        )}
+        {(chat.message || chat.audioUrl) && (
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", lineHeight: 1.4 }}>
+            {chat.message && (
+              <Text style={{ color: "inherit", whiteSpace: "pre-wrap" }}>{chat.message}</Text>
+            )}
+            {chat.audioUrl && <PlayAudioButton audioUrl={chat.audioUrl} />}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+});
+MessageBubble.propTypes = {
+  chat: PropTypes.object.isRequired,
+  isMyMessage: PropTypes.bool.isRequired,
+};
+MessageBubble.displayName = "MessageBubble";
 
 const MessageList = React.memo(({ chats, currentUserRole, onRevokeMessage, chatPartner }) => {
   let lastDate = null;
@@ -115,40 +150,14 @@ const MessageList = React.memo(({ chats, currentUserRole, onRevokeMessage, chatP
   return (
     <div style={{ padding: "0 8px" }}>
       {chats.map((chat) => {
+        const isMyMessage = chat.senderRole === currentUserRole;
+        const canRevoke = isMyMessage && !chat.isRevoked;
+
         const currentDateString = new Date(chat.createdAt).toLocaleDateString("vi-VN", {
           timeZone,
         });
         const showDateDivider = currentDateString !== lastDate;
         lastDate = currentDateString;
-
-        const isMyMessage = chat.senderRole === currentUserRole;
-
-        const messageContent = (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-            {chat.imageUrl && (
-              <Image
-                src={chat.imageUrl}
-                style={{
-                  width: "100%",
-                  maxWidth: "250px",
-                  borderRadius: "8px",
-                  marginBottom: chat.message || chat.audioUrl ? "8px" : "0px",
-                }}
-                preview={{ mask: "Xem ảnh" }}
-              />
-            )}
-            <div
-              style={{ display: "flex", alignItems: "center", flexWrap: "wrap", lineHeight: 1.4 }}
-            >
-              {chat.message && (
-                <Text style={{ color: "inherit", whiteSpace: "pre-wrap" }}>{chat.message}</Text>
-              )}
-              {chat.audioUrl && <PlayAudioButton audioUrl={chat.audioUrl} />}
-            </div>
-          </div>
-        );
-
-        const canRevoke = isMyMessage && !chat.isRevoked;
 
         return (
           <React.Fragment key={chat.id}>
@@ -170,52 +179,30 @@ const MessageList = React.memo(({ chats, currentUserRole, onRevokeMessage, chatP
                 justifyContent: isMyMessage ? "flex-end" : "flex-start",
                 marginBottom: "12px",
                 alignItems: "flex-end",
+                gap: "8px",
               }}
             >
-              {!isMyMessage && (
-                <Avatar
-                  src={chatPartner?.imgUrl}
-                  icon={<UserOutlined />}
-                  style={{ marginRight: 8, marginBottom: 15 }}
-                />
-              )}
+              {!isMyMessage && <Avatar src={chatPartner?.imgUrl} icon={<UserOutlined />} />}
+
               <div
                 style={{
+                  maxWidth: "75%",
                   display: "flex",
                   alignItems: "center",
                   flexDirection: isMyMessage ? "row-reverse" : "row",
                 }}
               >
-                <Card
-                  bodyStyle={{ padding: "8px 12px" }}
-                  style={{
-                    maxWidth: "75%",
-                    backgroundColor: isMyMessage ? colors.deepGreen : colors.white,
-                    color: isMyMessage ? colors.white : colors.darkGray,
-                    borderRadius: "18px",
-                    border: "none",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                  }}
-                  className="message-card"
-                >
-                  {chat.isRevoked ? (
-                    <Text italic disabled>
-                      Tin nhắn đã bị thu hồi
-                    </Text>
-                  ) : (
-                    messageContent
-                  )}
-                </Card>
                 {canRevoke && (
                   <Dropdown overlay={<RevokeMenu chatId={chat.id} />} trigger={["click"]}>
                     <Button
                       type="text"
                       shape="circle"
                       icon={<MoreOutlined />}
-                      style={{ margin: "0 4px", color: colors.darkGray }}
+                      style={{ color: colors.darkGray }}
                     />
                   </Dropdown>
                 )}
+                <MessageBubble chat={chat} isMyMessage={isMyMessage} />
               </div>
             </div>
           </React.Fragment>
@@ -234,11 +221,9 @@ MessageList.displayName = "MessageList";
 
 const StudentListSider = React.memo(({ students, selectedStudent, onSelectStudent }) => {
   const getLastMessagePreview = (msg) => {
-    if (!msg) return "Bắt đầu cuộc trò chuyện";
+    if (!msg) return "Bắt đầu cuộc Chit Chat";
     if (msg.isRevoked) return <Text italic>Tin nhắn đã thu hồi</Text>;
-
     let previewText = msg.isMyLastMessage ? "Bạn: " : "";
-
     if (msg.text) {
       previewText += msg.text;
     } else if (msg.imageUrl) {
@@ -246,14 +231,12 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
     } else if (msg.audioUrl) {
       previewText += "[Ghi âm]";
     }
-
     const icon =
       !msg.text && msg.imageUrl ? (
         <PictureOutlined style={{ marginRight: 4 }} />
       ) : !msg.text && msg.audioUrl ? (
         <SoundOutlined style={{ marginRight: 4 }} />
       ) : null;
-
     return (
       <>
         {icon}
@@ -261,12 +244,11 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
       </>
     );
   };
-
   return (
     <Layout style={{ height: "100%", backgroundColor: colors.white }}>
       <header style={{ padding: "16px", borderBottom: `1px solid ${colors.gray}` }}>
         <Title level={4} style={{ margin: 0, color: colors.darkGreen }}>
-          Trò chuyện
+          Chit Chat
         </Title>
       </header>
       <Content style={{ overflowY: "auto", height: "100%" }}>
@@ -355,7 +337,7 @@ const ChatInterface = React.memo(
     onRevokeMessage,
   }) => {
     return (
-      <Layout style={{ height: "100%", backgroundColor: colors.white }}>
+      <Layout style={{ height: "100%", backgroundColor: "#f5f5f5" }}>
         <header
           style={{
             padding: "12px 16px",
@@ -375,10 +357,7 @@ const ChatInterface = React.memo(
             {chatPartner.name}
           </Title>
         </header>
-        <Content
-          ref={chatContentRef}
-          style={{ padding: "16px", overflowY: "auto", backgroundColor: "#f5f5f5" }}
-        >
+        <Content ref={chatContentRef} style={{ padding: "16px", overflowY: "auto" }}>
           {loading && (
             <div style={{ textAlign: "center", padding: "20px" }}>
               <Spin />
@@ -399,8 +378,8 @@ const ChatInterface = React.memo(
           }}
         >
           {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 10 }} />}
-          <div style={{ textAlign: "center", marginBottom: 8 }}>
-            <Text type="secondary" style={{ height: "22px", fontStyle: "italic" }}>
+          <div style={{ textAlign: "center", marginBottom: 8, minHeight: "22px" }}>
+            <Text type="secondary" style={{ fontStyle: "italic" }}>
               {liveTranscript ||
                 (isRecording ? "Đang nghe..." : "Nhấn nút để ghi âm hoặc chọn ảnh")}
             </Text>
@@ -418,9 +397,14 @@ const ChatInterface = React.memo(
               disabled={isRecording}
             >
               <Button
-                icon={<FileImageOutlined style={{ fontSize: 22 }} />}
+                icon={<CameraOutlined style={{ fontSize: 22 }} />}
                 shape="circle"
-                style={{ width: 50, height: 50 }}
+                style={{
+                  width: 50,
+                  height: 50,
+                  border: "2px solid #1890ff",
+                  color: "#1890ff",
+                }}
               />
             </Upload>
             <Button
@@ -438,7 +422,15 @@ const ChatInterface = React.memo(
             />
           </div>
         </footer>
-        <style>{`@keyframes pulse {0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 79, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }}`}</style>
+        <style>{`
+          @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 79, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }
+          }
+          .message-row.my-message .message-card { border-bottom-right-radius: 4px; }
+          .message-row.their-message .message-card { border-bottom-left-radius: 4px; }
+        `}</style>
       </Layout>
     );
   }
@@ -478,17 +470,21 @@ const ChatComponent = ({
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const [liveTranscript, setLiveTranscript] = useState("");
+
+  // *** FIX 1: Tạo một ref để lưu trữ giá trị mới nhất của liveTranscript ***
   const liveTranscriptRef = useRef("");
 
   const { listen, listening, stop, supported } = useSpeechRecognition({
-    onResult: (result) => setLiveTranscript(result),
+    onResult: (result) => {
+      setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
+    },
   });
 
+  // *** FIX 2: Luôn cập nhật ref mỗi khi state thay đổi ***
   useEffect(() => {
     liveTranscriptRef.current = liveTranscript;
   }, [liveTranscript]);
 
-  // Gửi số lượng tin nhắn chưa đọc ra component cha
   useEffect(() => {
     if (currentUser.role === "student" && onUnreadCountChange) {
       const unreadCount = allChatsInClass.filter(
@@ -520,7 +516,6 @@ const ChatComponent = ({
     async (partner) => {
       if (!partner || !classInfo || !currentUser) return;
       const partnerRole = currentUser.role === "teacher" ? "student" : "teacher";
-
       const unreadMessagesExist = allChatsInClass.some(
         (chat) =>
           chat.senderRole === partnerRole &&
@@ -529,7 +524,6 @@ const ChatComponent = ({
             ? chat.student?.id === partner.id
             : chat.teacher?.id === partner.id)
       );
-
       if (unreadMessagesExist) {
         setAllChatsInClass((prev) =>
           prev.map((chat) =>
@@ -556,7 +550,6 @@ const ChatComponent = ({
     async (data) => {
       const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
       if (!chatPartner || !classInfo) return;
-
       setError(null);
       const chatData = {
         classId: classInfo.id,
@@ -583,7 +576,7 @@ const ChatComponent = ({
     student: { id: currentUser.role === "student" ? currentUser.id : chatPartner.id },
     teacher: { id: currentUser.role === "teacher" ? currentUser.id : chatPartner.id },
     senderRole: currentUser.role,
-    isRead: true, // Tin nhắn của mình gửi đi luôn là đã đọc
+    isRead: true,
     ...data,
   });
 
@@ -643,11 +636,16 @@ const ChatComponent = ({
         audioChunksRef.current = [];
         mediaRecorderRef.current.ondataavailable = (event) =>
           audioChunksRef.current.push(event.data);
+
+        // *** FIX 3: Sử dụng giá trị từ ref trong closure của onstop ***
         mediaRecorderRef.current.onstop = async () => {
           const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
           if (!chatPartner) return;
           const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+
+          // Lấy giá trị MỚI NHẤT từ ref, không phải từ state cũ
           const finalTranscript = liveTranscriptRef.current.trim();
+
           const tempId = Date.now();
           const tempAudioUrl = URL.createObjectURL(audioBlob);
           const optimisticChat = createOptimisticChat(chatPartner, {
@@ -673,10 +671,11 @@ const ChatComponent = ({
           }
           stream.getTracks().forEach((track) => track.stop());
         };
+
         mediaRecorderRef.current.start();
-        listen({ lang: "en-US" });
+        listen({ lang: "en-AU", interimResults: false });
         setIsRecording(true);
-        setLiveTranscript("");
+        setLiveTranscript(""); // Reset state để bắt đầu phiên mới
       } catch (err) {
         message.error("Không thể truy cập micro. Vui lòng cấp quyền.");
       }
@@ -794,16 +793,15 @@ const ChatComponent = ({
           height: "100%",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: colors.gray,
+          backgroundColor: "#f5f5f5",
         }}
       >
         <Empty
-          description="Chọn một học sinh để bắt đầu trò chuyện"
+          description="Chọn một học sinh để bắt đầu Chit Chat"
           image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       </div>
     );
-
     if (isMobile) {
       if (mobileView === "list") {
         return (
@@ -814,9 +812,8 @@ const ChatComponent = ({
           />
         );
       }
-      return mainContent; // mobileView === 'chat'
+      return mainContent;
     }
-
     return (
       <Layout style={{ height: "100vh" }}>
         <Sider width={320} theme="light" style={{ borderRight: `1px solid ${colors.gray}` }}>
@@ -855,7 +852,7 @@ const ChatComponent = ({
           isMobile={isMobile}
           loading={loading}
           error={error}
-          onGoBack={null} // Student doesn't need to go back
+          onGoBack={null}
           chatContentRef={chatContentRef}
           isRecording={isRecording}
           onToggleRecord={handleToggleRecord}
@@ -868,17 +865,11 @@ const ChatComponent = ({
   }
 
   return (
-    <>
-      <style>{`
-        .message-row.my-message .message-card { border-bottom-right-radius: 4px; }
-        .message-row.their-message .message-card { border-bottom-left-radius: 4px; }
-      `}</style>
-      <div
-        style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}
-      >
-        <Spin size="large" />
-      </div>
-    </>
+    <div
+      style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}
+    >
+      <Spin size="large" />
+    </div>
   );
 };
 
@@ -887,26 +878,19 @@ ChatComponent.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     role: PropTypes.string.isRequired,
   }).isRequired,
-  classInfo: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    name: PropTypes.string,
-  }),
+  classInfo: PropTypes.shape({ id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]) }),
   studentsInClass: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       name: PropTypes.string.isRequired,
-      imgUrl: PropTypes.string,
     })
   ),
   teacherOfClass: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    name: PropTypes.string.isRequired,
-    imgUrl: PropTypes.string,
   }),
   isMobile: PropTypes.bool.isRequired,
   onUnreadCountChange: PropTypes.func,
 };
-
 ChatComponent.defaultProps = {
   studentsInClass: [],
   teacherOfClass: null,

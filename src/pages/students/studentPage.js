@@ -556,90 +556,10 @@ const StudentPage = () => {
                     </Text>
                   </div>
                 </div>
-                {/* <ConvertTTS audioTag={"audio-player-lesson"} /> */}
-                {/* <Collapse
-                  defaultActiveKey={[]} // Mặc định thu gọn
-                  bordered={false}
-                  style={{ marginBottom: 16 }}
-                >
-                  <Panel header="Xem mô tả" key="1">
-                    
-                  </Panel>
-                </Collapse> */}
                 <div
                   style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{ __html: lesson.description || " " }}
                 />
-                {/* {(lesson.linkYoutube || lesson.linkSpeech) && ( */}
-                {/* <div
-                    style={{
-                      backgroundColor: colors.paleGreen,
-                      padding: 12,
-                      borderRadius: 8,
-                      marginBottom: 16,
-                    }}
-                  > */}
-                {/* {lesson.linkYoutube && (
-                      <iframe
-                        width="100%"
-                        height="315"
-                        src={lesson.linkYoutube.replace("watch?v=", "embed/")}
-                        title="Lesson Video"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    )} */}
-                {/* {lesson.linkYoutube && lesson.linkYoutube.trim() && (
-                      <div>
-                        <Text
-                          strong
-                          style={{ color: colors.deepGreen, display: "block", marginBottom: 8 }}
-                        >
-                          Video bài học:
-                        </Text>
-                        {lesson.linkYoutube.split(",").map((link, index) => {
-                          const trimmed = link.trim();
-                          if (!trimmed) return null;
-                          return (
-                            <iframe
-                              key={`youtube-${lesson.id}-${index}`}
-                              width="100%"
-                              height={isMobile ? "315" : "500"}
-                              src={trimmed.replace("watch?v=", "embed/")}
-                              title={`Lesson Video ${index + 1}`}
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              style={{ marginBottom: 16 }}
-                            />
-                          );
-                        })}
-                      </div>
-                    )} */}
-                {/* {lesson.linkSpeech && (
-                      <audio controls style={{ width: "100%", marginTop: 16 }}>
-                        <source
-                          src={lesson.linkSpeech.replace("/video/upload/", "/raw/upload/")}
-                          type="audio/mpeg"
-                        />
-                        Trình duyệt của bạn không hỗ trợ phát audio.
-                      </audio>
-                    )} */}
-                {/* </div> */}
-                {/* )} */}
-                {/* Thêm nút Luyện tập */}
-                {/* {lesson.linkGame && (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      type="primary"
-                      onClick={() => handlePractice(lesson.linkGame)}
-                      style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-                    >
-                      Luyện tập
-                    </Button>
-                  </div>
-                )} */}
               </Card>
             )}
           />
@@ -706,109 +626,12 @@ const StudentPage = () => {
                     </Text>
                   </div>
                 </div>
-                {/* <ConvertTTS audioTag={"audio-player-homework"} /> */}
-                {/* <Collapse
-                  defaultActiveKey={[]} // Mặc định thu gọn
-                  bordered={false}
-                  style={{ marginBottom: 16 }}
-                >
-                  <Panel header="Xem mô tả" key="1">
-                    
-                  </Panel>
-                </Collapse> */}
                 <div
                   style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{
                     __html: hw.description || "Chưa có mô tả cho bài tập này.",
                   }}
                 />
-                {/* {hw.linkSpeech || hw.linkYoutube && (
-                  <div
-                    style={{
-                      marginBottom: 16,
-                      backgroundColor: colors.paleGreen,
-                      padding: 16,
-                      borderRadius: 8,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                      <SoundOutlined style={{ marginRight: 8, color: colors.deepGreen }} />
-                      <Text strong style={{ color: colors.deepGreen }}>
-                        Audio bài tập:
-                      </Text>
-                    </div>
-                    <audio controls style={{ width: "100%", marginTop: hw.linkYoutube ? 16 : 0 }}>
-                      <source src={hw.linkSpeech} type="audio/mpeg" />
-                      Trình duyệt của bạn không hỗ trợ phát audio.
-                    </audio>
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                      <Button
-                        type="link"
-                        icon={<LinkOutlined />}
-                        href={hw.linkSpeech}
-                        target="_blank"
-                        style={{ color: colors.deepGreen, padding: 0 }}
-                      >
-                        Tải xuống audio
-                      </Button>
-                    </div>
-                  </div>
-                )} */}
-                {/* {(hw.linkYoutube || hw.linkSpeech) && (
-                  <div
-                    style={{
-                      backgroundColor: colors.paleGreen,
-                      padding: 12,
-                      borderRadius: 8,
-                      marginBottom: 16,
-                    }}
-                  > */}
-                {/* {hw.linkYoutube && hw.linkYoutube.trim() && (
-                      <div>
-                        <Text
-                          strong
-                          style={{ color: colors.deepGreen, display: "block", marginBottom: 8 }}
-                        >
-                          Video bài tập:
-                        </Text>
-                        {hw.linkYoutube.split(",").map((link, index) => {
-                          const trimmed = link.trim();
-                          if (!trimmed) return null; // Bỏ qua link rỗng
-                          return (
-                            <iframe
-                              key={`youtube-${hw.id}-${index}`}
-                              width="100%"
-                              height={isMobile ? "315" : "500"}
-                              src={trimmed.replace("watch?v=", "embed/")}
-                              title={`Homework Video ${index + 1}`}
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              style={{ marginBottom: 16 }}
-                            />
-                          );
-                        })}
-                      </div>
-                    )} */}
-                {/* {hw.linkSpeech && (
-                      <div style={{ marginTop: hw.linkYoutube ? 16 : 0 }}>
-                        <Text
-                          strong
-                          style={{ color: colors.deepGreen, display: "block", marginBottom: 8 }}
-                        >
-                          Audio bài tập:
-                        </Text>
-                        <audio controls style={{ width: "100%" }}>
-                          <source
-                            src={hw.linkSpeech.replace("/video/upload/", "/raw/upload/")}
-                            type="audio/mpeg"
-                          />
-                          Trình duyệt của bạn không hỗ trợ phát audio.
-                        </audio>
-                      </div>
-                    )} */}
-                {/* </div> */}
-                {/* )} */}
                 <div
                   style={{
                     display: "flex",
@@ -817,26 +640,6 @@ const StudentPage = () => {
                     flexDirection: isMobile ? "column" : "row",
                   }}
                 >
-                  {/* Render multiple practice buttons if linkGame contains multiple links */}
-                  {/* {hw.linkGame &&
-                    hw.linkGame.split(",").map((link, index) => {
-                      const trimmed = link.trim();
-                      const platform = getPlatformName(trimmed);
-                      return (
-                        <Button
-                          key={`practice-${hw.id}-${index}`}
-                          type="primary"
-                          onClick={() => handlePractice(trimmed)}
-                          style={{
-                            backgroundColor: colors.deepGreen,
-                            borderColor: colors.deepGreen,
-                          }}
-                        >
-                          Luyện tập bằng {platform}
-                        </Button>
-                      );
-                    })} */}
-
                   {hw.linkGame &&
                     hw.linkGame.split(",").map((link, index) => {
                       const trimmed = link.trim();
@@ -854,21 +657,6 @@ const StudentPage = () => {
                         </Button>
                       );
                     })}
-                  {/* Nút Nộp bài */}
-                  {/* <Button
-                    type="primary"
-                    onClick={() => {
-                      handleSubmitHomework(hw.id);
-                      // handlePractice(hw.linkGame);
-                      // setHomeworkZaloLink(hw.linkZalo);
-                    }}
-                    style={{
-                      backgroundColor: colors.deepGreen,
-                      borderColor: colors.deepGreen,
-                    }}
-                  >
-                    {hw.status === "Đã nộp" ? "Nộp lại" : "Nộp bài"}
-                  </Button> */}
                 </div>
                 <VocabularyStudyComponent
                   selectedHomeWorkId={hw.id}
@@ -936,33 +724,6 @@ const StudentPage = () => {
           studentId={studentId}
         />
       </Card>
-      {/* {homework[0]?.id && (
-        <Card
-          style={{
-            borderRadius: 12,
-            boxShadow: `0 2px 8px ${colors.softShadow}`,
-            backgroundColor: colors.white,
-            marginBottom: 20,
-            padding: isMobile ? "10px" : "20px",
-          }}
-        >
-          <Title
-            level={3}
-            style={{
-              color: colors.darkGreen,
-              marginBottom: 20,
-              display: "flex",
-              alignItems: "center",
-              fontFamily: "'Roboto', sans-serif",
-              fontSize: isMobile ? 18 : 24,
-            }}
-          >
-            <ReadOutlined style={{ marginRight: 8, fontSize: isMobile ? 20 : 24 }} />
-            Câu Hỏi
-          </Title>
-          <AnswerQuestionComponent homeworkId={homework[0]?.id} studentId={studentId} />
-        </Card>
-      )} */}
     </div>
   );
 
@@ -971,19 +732,19 @@ const StudentPage = () => {
       <style>
         {`
       .responsive-iframe {
-  width: 100%;
-  height: 315px;
-}
-.ql-image{
-  max-width: 100%;
-  height: auto;
-  text-align: center;
-}
-@media screen and (min-width: 990px) {
-  .responsive-iframe {
-    height: 500px;
-  }
-}`}
+        width: 100%;
+        height: 315px;
+      }
+      .ql-image{
+        max-width: 100%;
+        height: auto;
+        text-align: center;
+      }
+      @media screen and (min-width: 990px) {
+        .responsive-iframe {
+          height: 500px;
+        }
+      }`}
       </style>
       {!isMobile && (
         <div style={{ width: "260px", height: "100%", position: "fixed" }}>
@@ -1142,6 +903,7 @@ const StudentPage = () => {
               boxShadow: `0 -2px 8px ${colors.softShadow}`,
             }}
           >
+            {/* START: XÓA NÚT CHAT CŨ */}
             <Space
               size={screens.xs ? 4 : screens.sm ? 8 : "large"}
               style={{
@@ -1182,21 +944,6 @@ const StudentPage = () => {
               >
                 {screens.xs ? "" : "Bài Tập"}
               </Button>
-              {/* <Button
-                type={activeTab === "vocabulary" ? "primary" : "link"}
-                icon={<BookOutlined />}
-                onClick={() => handleTabClick("vocabulary")}
-                style={{
-                  backgroundColor: activeTab === "vocabulary" ? colors.deepGreen : "transparent",
-                  borderColor: activeTab === "vocabulary" ? colors.deepGreen : colors.borderGreen,
-                  fontSize: screens.xs ? "12px" : "14px",
-                  padding: screens.xs ? "0 8px" : "0 16px",
-                  height: screens.xs ? 32 : 40,
-                  minWidth: screens.xs ? 60 : 100,
-                }}
-              >
-                {screens.xs ? "" : "Từ Vựng"}
-              </Button> */}
               <Button
                 type={activeTab === "scores" ? "primary" : "link"}
                 icon={<TrophyOutlined />}
@@ -1212,26 +959,10 @@ const StudentPage = () => {
               >
                 {screens.xs ? "" : "Điểm Thi"}
               </Button>
-              <Button
-                type={isChatDrawerVisible ? "primary" : "link"}
-                icon={
-                  <Badge dot={unreadMessagesCount > 0}>
-                    <MessageOutlined />
-                  </Badge>
-                }
-                onClick={() => setIsChatDrawerVisible(true)}
-                style={{
-                  backgroundColor: isChatDrawerVisible ? colors.deepGreen : "transparent",
-                  borderColor: isChatDrawerVisible ? colors.deepGreen : colors.borderGreen,
-                  fontSize: screens.xs ? "12px" : "14px",
-                  padding: screens.xs ? "0 8px" : "0 16px",
-                  height: screens.xs ? 32 : 40,
-                  minWidth: screens.xs ? 60 : 100,
-                }}
-              >
-                {screens.xs ? "" : "Trò chuyện"}
-              </Button>
+              {/* NÚT TRÒ CHUYỆN ĐÃ ĐƯỢC XÓA KHỎI ĐÂY */}
             </Space>
+            {/* END: XÓA NÚT CHAT CŨ */}
+
             {/* Social Buttons */}
             <div
               style={{
@@ -1249,19 +980,7 @@ const StudentPage = () => {
                 style={{
                   width: "50px",
                   height: "50px",
-                  // background: socialHover.facebook
-                  //   ? "linear-gradient(145deg, #166FE5, #1877F2)"
-                  //   : "linear-gradient(145deg, #1877F2, #166FE5)",
                   background: "transparent",
-                  // borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "24px",
-                  // boxShadow: socialHover.facebook
-                  //   ? "0 6px 15px rgba(24, 119, 242, 0.4)"
-                  //   : "0 4px 10px rgba(24, 119, 242, 0.3)",
                   cursor: "pointer",
                   transition: "all 0.3s ease",
                   transform: socialHover.facebook
@@ -1277,34 +996,17 @@ const StudentPage = () => {
                   <img
                     src={contentData.img1}
                     alt="Image 1"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                      // borderRadius: "50%", // Giữ hình tròn
-                    }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
-                  <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
+                  <span style={{ color: "white", fontSize: "24px" }}>?</span>
                 )}
               </div>
               <div
                 style={{
                   width: "50px",
                   height: "50px",
-                  // background: socialHover.zalo
-                  //   ? "linear-gradient(145deg, #0077EE, #0088FF)"
-                  //   : "linear-gradient(145deg, #0088FF, #0077EE)",
                   background: "transparent",
-                  // borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "24px",
-                  // boxShadow: socialHover.zalo
-                  //   ? "0 6px 15px rgba(0, 136, 255, 0.4)"
-                  //   : "0 4px 10px rgba(0, 136, 255, 0.3)",
                   cursor: "pointer",
                   transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
                   transition: "all 0.3s ease",
@@ -1318,35 +1020,74 @@ const StudentPage = () => {
                   <img
                     src={contentData.img2}
                     alt="Image 2"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                      // borderRadius: "50%", // Giữ hình tròn
-                    }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
-                  <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
+                  <span style={{ color: "white", fontSize: "24px" }}>?</span>
                 )}
               </div>
-              <style>
-                {`
-                  @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                  }
-        
-                  @keyframes float {
-                    0% { transform: translateY(0); }
-                    50% { transform: translateY(-20px); }
-                    100% { transform: translateY(0); }
-                  }
-                `}
-              </style>
             </div>
           </div>
         )}
       </Layout>
+
+      {/* START: THÊM BONG BÓNG CHAT VÀ DRAWER */}
+      {classData && (
+        <Button
+          type="primary"
+          shape="circle"
+          size="large"
+          onClick={() => setIsChatDrawerVisible(true)}
+          style={{
+            position: "fixed",
+            right: 40,
+            top: "20%", // THAY ĐỔI: Chuyển từ 'bottom' sang 'top'
+            transform: "translateY(-50%)", // THÊM: Căn giữa theo chiều dọc
+            zIndex: 1000,
+            boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.12)",
+            width: 60,
+            height: 60,
+            backgroundColor: colors.deepGreen,
+            borderColor: colors.deepGreen,
+          }}
+        >
+          <Badge count={unreadMessagesCount} size="small" offset={[0, -5]}>
+            <MessageOutlined style={{ fontSize: "24px", color: "white" }} />
+          </Badge>
+        </Button>
+      )}
+
+      <Drawer
+        title="Chit Chat"
+        placement="right"
+        onClose={() => setIsChatDrawerVisible(false)}
+        open={isChatDrawerVisible}
+        width={isMobile ? "100vw" : 840}
+        bodyStyle={{ padding: 0 }}
+        destroyOnClose={true} // Rất quan trọng để re-mount và fetch lại tin nhắn mới
+      >
+        {isChatDrawerVisible && classData?.teacher ? (
+          <ChatComponent
+            currentUser={{ id: studentId, role: "student" }}
+            classInfo={classData}
+            teacherOfClass={classData.teacher}
+            isMobile={isMobile}
+            onUnreadCountChange={setUnreadMessagesCount}
+          />
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Empty description="Không thể tải cuộc trò chuyện." />
+          </div>
+        )}
+      </Drawer>
+      {/* END: THÊM BONG BÓNG CHAT VÀ DRAWER */}
 
       <Modal
         open={openNotification}
@@ -1449,14 +1190,12 @@ const StudentPage = () => {
           <p>Đang tải nội dung...</p>
         )}
       </Modal>
-      {/* Thêm StudentProfileModal */}
       <ProfileModal
         open={profileModalVisible}
         onClose={() => setProfileModalVisible(false)}
         student={student}
         onStudentUpdated={handleStudentUpdated}
       />
-      {/* Thêm StudentFeedbackModal */}
       <StudentFeedbackModal
         visible={feedbackModalVisible}
         onClose={() => setFeedbackModalVisible(false)}
@@ -1467,7 +1206,7 @@ const StudentPage = () => {
         open={isModalWordWallVisible}
         onCancel={handleModalWordWallClose}
         footer={null}
-        width={600} // Điều chỉnh chiều rộng Modal
+        width={600}
       >
         {wordwallEmbed ? (
           <div
@@ -1478,30 +1217,6 @@ const StudentPage = () => {
           <p>Đang tải nội dung...</p>
         )}
       </Modal>
-      {/* <div
-        style={{
-          position: "fixed",
-          bottom: "5%",
-          right: "5%",
-          width: "90%",
-          height: "90%",
-          zIndex: 100000000000,
-          borderRadius: "12px",
-        }}
-      >
-        <div
-          style={{
-            position: "fixed",
-            bottom: "90.5%",
-            left: "93%",
-            zIndex: 100000000000,
-            cursor: "pointer",
-          }}
-        >
-          <CloseCircleFilled style={{ fontSize: "20px", color: "white" }} />
-        </div>
-        <img src={previewSrc} style={{ width: "100%", height: "100%", borderRadius: "12px" }}></img>
-      </div> */}
       <Modal
         open={previewVisible}
         onCancel={() => setPreviewVisible(false)}
@@ -1513,62 +1228,15 @@ const StudentPage = () => {
         <img
           src={previewSrc}
           style={{
-            // position: "absolute",
-            // top: "50%",
-            // left: "50%",
-            // transform: "translate(-50%, -50%)",
             transform: "translateX(-1%)",
             width: "102%",
-            // height: isMobile ? "auto" : "102%",
-            // height: "100%",
             borderRadius: "12px",
             maxWidth: "102%",
-            // maxHeight: "102%",
             objectFit: "contain",
-            borderRadius: "12px",
             margin: "0 auto",
           }}
         ></img>
       </Modal>
-      <Drawer
-        title="Trò chuyện với Giáo viên"
-        placement="right"
-        onClose={() => setIsChatDrawerVisible(false)}
-        open={isChatDrawerVisible}
-        width={isMobile ? "100vw" : 840}
-        bodyStyle={{ padding: 0 }}
-        // destroyOnClose={true} // Rất quan trọng để re-mount và fetch lại tin nhắn mới
-      >
-        {/* {isChatDrawerVisible && classData?.teacher ? (
-          <ChatComponent
-            currentUser={{ id: studentId, role: "student" }}
-            // Dùng state classData đã được fetch đầy đủ
-            classInfo={classData}
-            teacherOfClass={classData.teacher}
-            isMobile={isMobile}
-            onUnreadCountChange={setUnreadMessagesCount}
-          /> */}
-        {classData?.teacher ? ( // Gỡ bỏ `isChatDrawerVisible &&`
-          <ChatComponent
-            currentUser={{ id: studentId, role: "student" }}
-            classInfo={classData}
-            teacherOfClass={classData.teacher}
-            isMobile={isMobile}
-            onUnreadCountChange={setUnreadMessagesCount} // <-- Thêm prop này
-          />
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100%",
-            }}
-          >
-            <Empty description="Không thể tải cuộc trò chuyện." />
-          </div>
-        )}
-      </Drawer>
     </Layout>
   );
 };

@@ -2726,7 +2726,7 @@ const TeacherPage = () => {
       )}
 
       <Drawer
-        title="Trò chuyện"
+        title="Chit Chat"
         placement="right"
         onClose={() => setIsChatDrawerVisible(false)}
         open={isChatDrawerVisible}
