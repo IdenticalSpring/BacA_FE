@@ -78,6 +78,7 @@ import contentPageService from "services/contentpageService";
 import CreateStudentModal from "./CreateStudentModal";
 import Compressor from "compressorjs";
 import ChatComponent from "components/ChatComponent/ChatComponent";
+import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
 
 // START: IMPORT CHAT COMPONENT
 // END: IMPORT CHAT COMPONENT
@@ -190,6 +191,8 @@ const TeacherPage = () => {
   const [openDetailModal, setOpenDetailModal] = useState(false); // State mới cho modal chi tiết
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
+
+  const [isGroupChatDrawerVisible, setIsGroupChatDrawerVisible] = useState(false);
 
   const [socialHover, setSocialHover] = useState({
     facebook: false,
@@ -2703,7 +2706,7 @@ const TeacherPage = () => {
       </Modal>
 
       {/* START: ADD CHAT BUBBLE AND DRAWER */}
-      {selectedClass && (
+      {/* {selectedClass && (
         <Button
           type="primary"
           shape="circle"
@@ -2742,7 +2745,57 @@ const TeacherPage = () => {
             isMobile={isMobile} // VÀ TRUYỀN isMobile VÀO ĐÂY
           />
         )}
-      </Drawer>
+      </Drawer> */}
+
+      {/* START: ADD GROUP CHAT BUBBLE AND DRAWER */}
+      {selectedClass && (
+        <>
+          {/* Nút bấm nổi để mở chat nhóm */}
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<MessageOutlined style={{ fontSize: "24px" }} />}
+            size="large"
+            onClick={() => setIsGroupChatDrawerVisible(true)}
+            style={{
+              position: "fixed",
+              right: 40,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 1000,
+              boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.12)",
+              width: 60,
+              height: 60,
+              backgroundColor: colors.deepGreen,
+              borderColor: colors.deepGreen,
+            }}
+            title="Mở chat nhóm"
+          />
+
+          {/* Drawer chứa component chat nhóm */}
+          <Drawer
+            title={
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <MessageOutlined />
+                <span>Chit Chat: {classData?.name}</span>
+              </div>
+            }
+            placement="right"
+            onClose={() => setIsGroupChatDrawerVisible(false)}
+            open={isGroupChatDrawerVisible}
+            width={isMobile ? "100vw" : 500} // Chat nhóm có thể nhỏ hơn chat 1-1
+            bodyStyle={{ padding: 0, display: "flex", flexDirection: "column" }}
+            destroyOnClose={true} // Rất quan trọng để re-mount component và khởi tạo lại socket
+          >
+            {isGroupChatDrawerVisible && classData && (
+              <ChatGroupComponent
+                currentUser={{ id: teacherId, role: "teacher" }}
+                classInfo={classData}
+              />
+            )}
+          </Drawer>
+        </>
+      )}
     </Layout>
   );
 };
