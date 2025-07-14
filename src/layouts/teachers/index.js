@@ -33,10 +33,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Teachers() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
     { Header: "Start Date", accessor: "startDate", width: "20%" },
-    // { Header: "End Date", accessor: "endDate", width: "20%" },
+    { Header: "Avatar", accessor: "imageUrl", width: "20%" },
     { Header: "Actions", accessor: "actions", width: "10%" },
   ]);
   const [rows, setRows] = useState([]);
@@ -52,11 +53,14 @@ function Teachers() {
     startDate: "",
     linkDrive: "",
     fileUrl: "",
+    imageUrl: "",
     isDelete: false,
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [imageLoading, setImageLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [openOverview, setOpenOverview] = useState(false);
   const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
@@ -86,8 +90,9 @@ function Teachers() {
       previewUrls.forEach((url) => {
         if (url) URL.revokeObjectURL(url);
       });
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
-  }, [previewUrls]);
+  }, [previewUrls, avatarPreview]);
 
   const fetchTeachers = async () => {
     try {
@@ -97,6 +102,15 @@ function Teachers() {
         name: teacher.name,
         startDate: teacher.startDate,
         linkDrive: teacher.linkDrive,
+        imageUrl: teacher.imageUrl ? (
+          <img
+            src={teacher.imageUrl}
+            alt={`${teacher.name}'s avatar`}
+            style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+          />
+        ) : (
+          "No avatar"
+        ),
         fileUrl: teacher.fileUrl
           ? teacher.fileUrl.split(",").map((url, index) => (
               <div key={index}>
@@ -148,10 +162,12 @@ function Teachers() {
       startDate: teacher.startDate,
       linkDrive: teacher.linkDrive || "",
       fileUrl: teacher.fileUrl || "",
+      imageUrl: teacher.imageUrl || "",
       isDelete: teacher.isDelete || false,
     });
     setSelectedFiles([]);
     setPreviewUrls([]);
+    setAvatarPreview(teacher.imageUrl || null);
     setOpen(true);
   };
 
@@ -227,6 +243,52 @@ function Teachers() {
     }
   };
 
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      message.error("Vui lòng chọn một file ảnh");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      message.error("Vui lòng chọn file ảnh hợp lệ");
+      return;
+    }
+
+    setAvatarLoading(true);
+    setAvatarPreview(URL.createObjectURL(file));
+
+    // Upload file ảnh avatar
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/files/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      console.log("Avatar upload response:", response.data);
+
+      if (response.status === 201 && response.data.url) {
+        setTeacherData((prevData) => ({
+          ...prevData,
+          imageUrl: response.data.url,
+        }));
+        setAvatarLoading(false);
+        message.success("Upload avatar thành công");
+      } else {
+        setAvatarLoading(false);
+        message.error("Upload avatar thất bại: Không nhận được URL từ server");
+      }
+    } catch (error) {
+      console.error("Lỗi khi upload avatar:", error);
+      setAvatarLoading(false);
+      message.error(`Lỗi upload avatar: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (editMode) {
@@ -237,6 +299,15 @@ function Teachers() {
               ? {
                   ...row,
                   ...teacherData,
+                  imageUrl: teacherData.imageUrl ? (
+                    <img
+                      src={teacherData.imageUrl}
+                      alt={`${teacherData.name}'s avatar`}
+                      style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+                    />
+                  ) : (
+                    "No avatar"
+                  ),
                   fileUrl: teacherData.fileUrl
                     ? teacherData.fileUrl.split(",").map((url, index) => (
                         <div key={index}>
@@ -260,6 +331,15 @@ function Teachers() {
             name: createdTeacher.name,
             startDate: createdTeacher.startDate,
             linkDrive: createdTeacher.linkDrive,
+            imageUrl: createdTeacher.imageUrl ? (
+              <img
+                src={createdTeacher.imageUrl}
+                alt={`${createdTeacher.name}'s avatar`}
+                style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+              />
+            ) : (
+              "No avatar"
+            ),
             fileUrl: createdTeacher.fileUrl
               ? createdTeacher.fileUrl.split(",").map((url, index) => (
                   <div key={index}>
@@ -304,10 +384,12 @@ function Teachers() {
         startDate: "",
         linkDrive: "",
         fileUrl: "",
+        imageUrl: "",
         isDelete: false,
       });
       setSelectedFiles([]);
       setPreviewUrls([]);
+      setAvatarPreview(null);
       setEditMode(false);
     } catch (err) {
       message.error(
@@ -444,6 +526,74 @@ function Teachers() {
             value={teacherData.linkDrive}
             onChange={(e) => setTeacherData({ ...teacherData, linkDrive: e.target.value })}
           />
+          {/* Phần tải avatar */}
+          <Box
+            sx={{
+              mt: 2,
+              mb: 2,
+              border: "1px dashed #ccc",
+              borderRadius: "8px",
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => avatarInputRef.current.click()}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              ref={avatarInputRef}
+              style={{ display: "none" }}
+              onChange={handleAvatarChange}
+            />
+            {avatarPreview ? (
+              <Box sx={{ mb: 2, textAlign: "center" }}>
+                <img
+                  src={avatarPreview}
+                  alt="Avatar Preview"
+                  style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "50%" }}
+                />
+              </Box>
+            ) : (
+              <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+            )}
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              {avatarLoading
+                ? "Đang tải avatar..."
+                : teacherData.imageUrl && editMode
+                ? "Click để thay đổi avatar"
+                : "Click để upload avatar"}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              sx={{
+                color: colors.midGreen,
+                borderColor: colors.midGreen,
+                "&:hover": {
+                  borderColor: colors.darkGreen,
+                  backgroundColor: "rgba(0, 128, 0, 0.04)",
+                },
+              }}
+            >
+              Upload Avatar
+            </Button>
+          </Box>
+          {editMode && teacherData.imageUrl && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ color: colors.midGreen }}>
+                Avatar hiện tại:
+              </Typography>
+              <img
+                src={teacherData.imageUrl}
+                alt="Current Avatar"
+                style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "50%" }}
+              />
+            </Box>
+          )}
+          {/* Phần tải file khác */}
           <Box
             sx={{
               mt: 2,
