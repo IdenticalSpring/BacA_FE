@@ -38,6 +38,7 @@ import {
   MessageOutlined,
   CloseCircleFilled,
   ReadOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import Toolbox from "./toolbox";
@@ -65,6 +66,7 @@ import { Close } from "@mui/icons-material";
 import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
 import AnswerQuestionComponent from "components/QuestionComponent/AnswerQuestionComponet";
 import ChatComponent from "components/ChatComponent/ChatComponent";
+import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -147,6 +149,7 @@ const StudentPage = () => {
   const [isChatDrawerVisible, setIsChatDrawerVisible] = useState(false);
   const [classData, setClassData] = useState(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [isGroupChatDrawerVisible, setIsGroupChatDrawerVisible] = useState(false);
 
   useEffect(() => {
     if (isMobile) {
@@ -1032,7 +1035,7 @@ const StudentPage = () => {
       </Layout>
 
       {/* START: THÊM BONG BÓNG CHAT VÀ DRAWER */}
-      {classData && (
+      {/* {classData && (
         <Button
           type="primary"
           shape="circle"
@@ -1086,9 +1089,54 @@ const StudentPage = () => {
             <Empty description="Không thể tải cuộc trò chuyện." />
           </div>
         )}
-      </Drawer>
+      </Drawer> */}
       {/* END: THÊM BONG BÓNG CHAT VÀ DRAWER */}
 
+      {/* START: THÊM DRAWER VÀ NÚT BẤM CHO CHAT NHÓM */}
+      {classData && (
+        <>
+          {/* Nút bấm nổi cho chat nhóm (Vị trí: top 50%) */}
+          <Button
+            type="primary"
+            shape="circle"
+            size="large"
+            onClick={() => setIsGroupChatDrawerVisible(true)}
+            style={{
+              position: "fixed",
+              right: 40,
+              top: "50%", // Vị trí mới để phân biệt
+              transform: "translateY(-50%)",
+              zIndex: 1000,
+              boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.12)",
+              width: 60,
+              height: 60,
+              backgroundColor: colors.deepGreen, // Màu khác để phân biệt
+              borderColor: colors.deepGreen,
+            }}
+            title="Mở chat nhóm"
+          >
+            <MessageOutlined style={{ fontSize: "24px", color: "white" }} />
+          </Button>
+
+          {/* Drawer chứa component chat nhóm */}
+          <Drawer
+            title={`Chit Chat: ${classData?.name}`}
+            placement="right"
+            onClose={() => setIsGroupChatDrawerVisible(false)}
+            open={isGroupChatDrawerVisible}
+            width={isMobile ? "100vw" : 500}
+            bodyStyle={{ padding: 0, display: "flex", flexDirection: "column" }}
+            destroyOnClose={true} // Rất quan trọng!
+          >
+            {isGroupChatDrawerVisible && (
+              <ChatGroupComponent
+                currentUser={{ id: studentId, role: "student" }}
+                classInfo={classData}
+              />
+            )}
+          </Drawer>
+        </>
+      )}
       <Modal
         open={openNotification}
         onCancel={() => setOpenNotification(false)}

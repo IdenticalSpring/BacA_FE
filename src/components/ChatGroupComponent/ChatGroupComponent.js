@@ -126,7 +126,7 @@ MessageBubble.displayName = "MessageBubble";
 
 // --- Component Chính ---
 
-const ChatGroupComponent = ({ currentUser, classInfo }) => {
+const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -167,6 +167,16 @@ const ChatGroupComponent = ({ currentUser, classInfo }) => {
     });
     newSocket.on("newMessage", (newMessage) => {
       setMessages((prev) => [...prev.filter((m) => m.tempId !== newMessage.tempId), newMessage]);
+      // Kiểm tra xem tin nhắn này có phải của người khác không
+      const isFromAnotherUser =
+        newMessage.senderType !== currentUser.role ||
+        (newMessage.senderStudent?.id !== currentUser.id &&
+          newMessage.senderTeacher?.id !== currentUser.id);
+
+      // Nếu là của người khác và prop onNewMessage tồn tại, hãy gọi nó
+      if (isFromAnotherUser && onNewMessage) {
+        onNewMessage();
+      }
     });
     newSocket.on("messageRecalled", (data) => {
       setMessages((prev) => prev.filter((msg) => msg.id !== data.messageId));
@@ -175,7 +185,7 @@ const ChatGroupComponent = ({ currentUser, classInfo }) => {
     newSocket.on("disconnect", () => console.log("Group Chat: Disconnected from WebSocket"));
 
     return () => newSocket.disconnect();
-  }, [classInfo]);
+  }, [classInfo, currentUser.role, currentUser.id, onNewMessage]);
 
   // --- Fetch Initial Messages ---
   useEffect(() => {
@@ -456,6 +466,11 @@ ChatGroupComponent.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     name: PropTypes.string.isRequired,
   }).isRequired,
+  onNewMessage: PropTypes.func,
+};
+
+ChatGroupComponent.defaultProps = {
+  onNewMessage: () => {},
 };
 
 export default ChatGroupComponent;
