@@ -126,14 +126,10 @@ MessageBubble.displayName = "MessageBubble";
 
 // --- Component Chính ---
 
-const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
-  const [socket, setSocket] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
+const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessages, loading }) => {
   const [error, setError] = useState(null);
   const chatContentRef = useRef(null);
 
-  // State cho chức năng ghi âm và nhận dạng giọng nói
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -150,69 +146,12 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
     liveTranscriptRef.current = liveTranscript;
   }, [liveTranscript]);
 
-  // --- WebSocket Connection ---
-  useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (!token || !classInfo?.id) return;
-
-    // SỬA LỖI: Dùng đúng biến môi trường API_BASE_URL
-    const newSocket = io(process.env.REACT_APP_API_BASE_URL, {
-      extraHeaders: { Authorization: `Bearer ${token}` },
-    });
-    setSocket(newSocket);
-
-    newSocket.on("connect", () => {
-      console.log("Group Chat: Connected to WebSocket");
-      newSocket.emit("joinRoom", { classId: String(classInfo.id) });
-    });
-    newSocket.on("newMessage", (newMessage) => {
-      setMessages((prev) => [...prev.filter((m) => m.tempId !== newMessage.tempId), newMessage]);
-      // Kiểm tra xem tin nhắn này có phải của người khác không
-      const isFromAnotherUser =
-        newMessage.senderType !== currentUser.role ||
-        (newMessage.senderStudent?.id !== currentUser.id &&
-          newMessage.senderTeacher?.id !== currentUser.id);
-
-      // Nếu là của người khác và prop onNewMessage tồn tại, hãy gọi nó
-      if (isFromAnotherUser && onNewMessage) {
-        onNewMessage();
-      }
-    });
-    newSocket.on("messageRecalled", (data) => {
-      setMessages((prev) => prev.filter((msg) => msg.id !== data.messageId));
-      message.info("Một tin nhắn đã được thu hồi.");
-    });
-    newSocket.on("disconnect", () => console.log("Group Chat: Disconnected from WebSocket"));
-
-    return () => newSocket.disconnect();
-  }, [classInfo, currentUser.role, currentUser.id, onNewMessage]);
-
-  // --- Fetch Initial Messages ---
-  useEffect(() => {
-    if (!classInfo?.id) return;
-    const fetchMessages = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const history = await messageService.getMessagesForClass(classInfo.id);
-        setMessages(history);
-      } catch (err) {
-        setError("Không thể tải lịch sử tin nhắn.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMessages();
-  }, [classInfo]);
-
-  // --- Scroll to Bottom ---
   useEffect(() => {
     if (chatContentRef.current) {
       chatContentRef.current.scrollTop = chatContentRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // --- Logic gửi tin nhắn (Được nâng cấp) ---
   const handleSendMessage = useCallback(
     (data) => {
       if (!socket) return;
@@ -223,16 +162,15 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
   );
 
   const createOptimisticMessage = (data) => ({
-    id: data.tempId, // Dùng tempId làm key tạm thời
+    id: data.tempId,
     ...data,
     createdAt: new Date().toISOString(),
     senderType: currentUser.role,
-    // Thêm thông tin người gửi để hiển thị avatar và tên ngay lập tức
     ...(currentUser.role === "teacher"
       ? { senderTeacher: { id: currentUser.id, name: "Bạn" } }
       : {}),
     ...(currentUser.role === "student"
-      ? { senderStudent: { id: currentUser.id, name: "Bạn" } }
+      ? { senderStudent: { id: currentUser.id, name: "Bạn", imgUrl: currentUser.imgUrl } }
       : {}),
   });
 
@@ -246,14 +184,14 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
 
       try {
         const uploadedImageUrl = await fileService.upload(file, `group-chat-${tempId}`);
-        URL.revokeObjectURL(tempImageUrl); // Giải phóng bộ nhớ
+        URL.revokeObjectURL(tempImageUrl);
         handleSendMessage({ tempId, imageUrl: uploadedImageUrl });
       } catch (uploadError) {
         message.error("Gửi ảnh thất bại!");
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
       }
     },
-    [handleSendMessage, currentUser]
+    [handleSendMessage, currentUser, setMessages]
   );
 
   const handleToggleRecord = useCallback(async () => {
@@ -278,7 +216,6 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
           const finalTranscript = liveTranscriptRef.current.trim();
           const tempId = Date.now();
           const tempAudioUrl = URL.createObjectURL(audioBlob);
-
           const optimisticMessage = createOptimisticMessage({
             tempId,
             content: finalTranscript,
@@ -308,14 +245,22 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
         message.error("Không thể truy cập micro. Vui lòng cấp quyền.");
       }
     }
-  }, [isRecording, listening, supported, listen, stop, handleSendMessage, currentUser]);
+  }, [
+    isRecording,
+    listening,
+    stop,
+    listen,
+    supported,
+    handleSendMessage,
+    currentUser,
+    setMessages,
+  ]);
 
   const handleRevokeMessage = (messageId) => {
     if (!socket) return;
     socket.emit("recallMessage", { messageId, classId: classInfo.id });
   };
 
-  // --- Render Logic ---
   if (loading)
     return (
       <div
@@ -342,7 +287,7 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
               msg.senderType === currentUser.role &&
               (msg.senderStudent?.id === currentUser.id ||
                 msg.senderTeacher?.id === currentUser.id);
-            const canRevoke = isMyMessage && !msg.tempId; // Chỉ thu hồi tin nhắn đã có id từ server
+            const canRevoke = isMyMessage && !msg.tempId;
             const showDateDivider =
               index === 0 ||
               new Date(msg.createdAt).toDateString() !==
@@ -458,19 +403,12 @@ const ChatGroupComponent = ({ currentUser, classInfo, onNewMessage }) => {
 };
 
 ChatGroupComponent.propTypes = {
-  currentUser: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    role: PropTypes.oneOf(["student", "teacher", "admin"]).isRequired,
-  }).isRequired,
-  classInfo: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    name: PropTypes.string.isRequired,
-  }).isRequired,
-  onNewMessage: PropTypes.func,
-};
-
-ChatGroupComponent.defaultProps = {
-  onNewMessage: () => {},
+  currentUser: PropTypes.object.isRequired,
+  classInfo: PropTypes.object.isRequired,
+  socket: PropTypes.object,
+  messages: PropTypes.array.isRequired,
+  setMessages: PropTypes.func.isRequired,
+  loading: PropTypes.bool.isRequired,
 };
 
 export default ChatGroupComponent;

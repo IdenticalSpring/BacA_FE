@@ -79,6 +79,8 @@ import CreateStudentModal from "./CreateStudentModal";
 import Compressor from "compressorjs";
 import ChatComponent from "components/ChatComponent/ChatComponent";
 import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
+import { io } from "socket.io-client"; // Thêm import này
+import messageService from "services/messageService";
 
 // START: IMPORT CHAT COMPONENT
 // END: IMPORT CHAT COMPONENT
@@ -192,6 +194,10 @@ const TeacherPage = () => {
   // Use Ant Design's Grid breakpoints
   const screens = useBreakpoint();
 
+  const [groupSocket, setGroupSocket] = useState(null);
+  const [groupMessages, setGroupMessages] = useState([]);
+  const [isGroupChatLoading, setIsGroupChatLoading] = useState(true);
+  const [hasNewGroupMessage, setHasNewGroupMessage] = useState(false);
   const [isGroupChatDrawerVisible, setIsGroupChatDrawerVisible] = useState(false);
 
   const [socialHover, setSocialHover] = useState({
@@ -1178,6 +1184,71 @@ const TeacherPage = () => {
       fetchLessonByScheduleAndLessonByLevel();
     }
   }, [selectedClass, loadingCreateHomeWork, loadingCreateLesson]);
+
+  useEffect(() => {
+    // Reset khi không có lớp nào được chọn
+    if (!selectedClass) {
+      groupSocket?.disconnect();
+      setGroupSocket(null);
+      setGroupMessages([]);
+      setHasNewGroupMessage(false);
+      return;
+    }
+
+    const token = sessionStorage.getItem("token");
+    if (!token) return;
+
+    // 1. Lấy lịch sử tin nhắn
+    const fetchHistory = async () => {
+      setIsGroupChatLoading(true);
+      try {
+        const history = await messageService.getMessagesForClass(selectedClass);
+        setGroupMessages(history);
+      } catch (err) {
+        console.error("Failed to fetch group chat history:", err);
+      } finally {
+        setIsGroupChatLoading(false);
+      }
+    };
+    fetchHistory();
+
+    // 2. Thiết lập kết nối WebSocket
+    const newSocket = io(process.env.REACT_APP_API_BASE_URL, {
+      extraHeaders: { Authorization: `Bearer ${token}` },
+    });
+    setGroupSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      newSocket.emit("joinRoom", { classId: String(selectedClass) });
+    });
+
+    newSocket.on("newMessage", (newMessage) => {
+      setGroupMessages((prev) => [
+        ...prev.filter((m) => m.tempId !== newMessage.tempId),
+        newMessage,
+      ]);
+
+      const isFromAnotherUser =
+        newMessage.senderType !== "teacher" || newMessage.senderTeacher?.id !== teacherId;
+      if (isFromAnotherUser && !isGroupChatDrawerVisible) {
+        setHasNewGroupMessage(true);
+      }
+    });
+
+    newSocket.on("messageRecalled", (data) => {
+      setGroupMessages((prev) => prev.filter((msg) => msg.id !== data.messageId));
+    });
+
+    // 3. Cleanup khi component unmount hoặc selectedClass thay đổi
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [selectedClass, teacherId, isGroupChatDrawerVisible]);
+
+  const openGroupChatDrawer = () => {
+    setHasNewGroupMessage(false);
+    setIsGroupChatDrawerVisible(true);
+  };
 
   useEffect(() => {
     if (selectedClass) {
@@ -2750,47 +2821,48 @@ const TeacherPage = () => {
       {/* START: ADD GROUP CHAT BUBBLE AND DRAWER */}
       {selectedClass && (
         <>
-          {/* Nút bấm nổi để mở chat nhóm */}
+          {/* Nút bấm nổi cho chat nhóm */}
           <Button
             type="primary"
             shape="circle"
-            icon={<MessageOutlined style={{ fontSize: "24px" }} />}
             size="large"
-            onClick={() => setIsGroupChatDrawerVisible(true)}
+            onClick={openGroupChatDrawer}
             style={{
               position: "fixed",
               right: 40,
-              top: "50%",
+              top: "50%", // Vị trí cho chat nhóm
               transform: "translateY(-50%)",
               zIndex: 1000,
-              boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.12)",
               width: 60,
               height: 60,
               backgroundColor: colors.deepGreen,
               borderColor: colors.deepGreen,
             }}
             title="Mở chat nhóm"
-          />
+          >
+            <Badge dot={hasNewGroupMessage}>
+              <MessageOutlined style={{ fontSize: "24px", color: "white" }} />
+            </Badge>
+          </Button>
 
-          {/* Drawer chứa component chat nhóm */}
+          {/* Drawer cho chat nhóm */}
           <Drawer
-            title={
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <MessageOutlined />
-                <span>Chit Chat: {classData?.name}</span>
-              </div>
-            }
+            title={`Chit Chat: ${classData?.name}`}
             placement="right"
             onClose={() => setIsGroupChatDrawerVisible(false)}
             open={isGroupChatDrawerVisible}
-            width={isMobile ? "100vw" : 500} // Chat nhóm có thể nhỏ hơn chat 1-1
+            width={isMobile ? "100vw" : 500}
             bodyStyle={{ padding: 0, display: "flex", flexDirection: "column" }}
-            destroyOnClose={true} // Rất quan trọng để re-mount component và khởi tạo lại socket
+            destroyOnClose={false} // Không hủy component để giữ kết nối
           >
-            {isGroupChatDrawerVisible && classData && (
+            {isGroupChatDrawerVisible && (
               <ChatGroupComponent
-                currentUser={{ id: teacherId, role: "teacher" }}
+                currentUser={{ ...teacherData, role: "teacher" }}
                 classInfo={classData}
+                socket={groupSocket}
+                messages={groupMessages}
+                setMessages={setGroupMessages}
+                loading={isGroupChatLoading}
               />
             )}
           </Drawer>
