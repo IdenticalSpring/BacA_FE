@@ -25,6 +25,7 @@ import {
   PauseCircleOutlined,
   CameraOutlined,
   AudioOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { io } from "socket.io-client";
@@ -135,6 +136,7 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
   const audioChunksRef = useRef([]);
   const [liveTranscript, setLiveTranscript] = useState("");
   const liveTranscriptRef = useRef("");
+  const [isSending, setIsSending] = useState(false);
 
   const { listen, listening, stop, supported } = useSpeechRecognition({
     onResult: (result) => {
@@ -174,24 +176,42 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
       : {}),
   });
 
+  // const handleImageUpload = useCallback(
+  //   async (file) => {
+  //     if (!file) return;
+  //     const tempId = Date.now();
+  //     const tempImageUrl = URL.createObjectURL(file);
+  //     const optimisticMessage = createOptimisticMessage({ tempId, imageUrl: tempImageUrl });
+  //     setMessages((prev) => [...prev, optimisticMessage]);
+
+  //     try {
+  //       const uploadedImageUrl = await fileService.upload(file, `group-chat-${tempId}`);
+  //       URL.revokeObjectURL(tempImageUrl);
+  //       handleSendMessage({ tempId, imageUrl: uploadedImageUrl });
+  //     } catch (uploadError) {
+  //       message.error("Gửi ảnh thất bại!");
+  //       setMessages((prev) => prev.filter((m) => m.id !== tempId));
+  //     }
+  //   },
+  //   [handleSendMessage, currentUser, setMessages]
+  // );
+
   const handleImageUpload = useCallback(
     async (file) => {
       if (!file) return;
-      const tempId = Date.now();
-      const tempImageUrl = URL.createObjectURL(file);
-      const optimisticMessage = createOptimisticMessage({ tempId, imageUrl: tempImageUrl });
-      setMessages((prev) => [...prev, optimisticMessage]);
-
+      setIsSending(true); // Bắt đầu gửi
+      message.loading({ content: "Đang gửi ảnh...", key: "sending" });
       try {
-        const uploadedImageUrl = await fileService.upload(file, `group-chat-${tempId}`);
-        URL.revokeObjectURL(tempImageUrl);
-        handleSendMessage({ tempId, imageUrl: uploadedImageUrl });
+        const uploadedImageUrl = await fileService.upload(file, `group-chat-${Date.now()}`);
+        handleSendMessage({ imageUrl: uploadedImageUrl });
+        message.success({ content: "Gửi thành công!", key: "sending", duration: 2 });
       } catch (uploadError) {
-        message.error("Gửi ảnh thất bại!");
-        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        message.error({ content: "Gửi ảnh thất bại!", key: "sending", duration: 2 });
+      } finally {
+        setIsSending(false); // Kết thúc gửi
       }
     },
-    [handleSendMessage, currentUser, setMessages]
+    [handleSendMessage]
   );
 
   const handleToggleRecord = useCallback(async () => {
@@ -212,29 +232,25 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
           audioChunksRef.current.push(event.data);
 
         mediaRecorderRef.current.onstop = async () => {
+          setIsSending(true); // Bắt đầu gửi
+          message.loading({ content: "Đang xử lý & gửi ghi âm...", key: "sending" });
+
           const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
           const finalTranscript = liveTranscriptRef.current.trim();
-          const tempId = Date.now();
-          const tempAudioUrl = URL.createObjectURL(audioBlob);
-          const optimisticMessage = createOptimisticMessage({
-            tempId,
-            content: finalTranscript,
-            audioUrl: tempAudioUrl,
-          });
-          setMessages((prev) => [...prev, optimisticMessage]);
 
           try {
             const uploadedAudioUrl = await fileService.upload(
               audioBlob,
-              `group-audio-${tempId}.webm`
+              `group-audio-${Date.now()}.webm`
             );
-            URL.revokeObjectURL(tempAudioUrl);
-            handleSendMessage({ tempId, content: finalTranscript, audioUrl: uploadedAudioUrl });
+            handleSendMessage({ content: finalTranscript, audioUrl: uploadedAudioUrl });
+            message.success({ content: "Gửi thành công!", key: "sending", duration: 2 });
           } catch (uploadError) {
-            message.error("Gửi ghi âm thất bại!");
-            setMessages((prev) => prev.filter((m) => m.id !== tempId));
+            message.error({ content: "Gửi ghi âm thất bại!", key: "sending", duration: 2 });
+          } finally {
+            setIsSending(false); // Kết thúc gửi
+            stream.getTracks().forEach((track) => track.stop());
           }
-          stream.getTracks().forEach((track) => track.stop());
         };
 
         mediaRecorderRef.current.start();
@@ -350,6 +366,29 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
         ) : (
           <Empty description="Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!" />
         )}
+        {isSending && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              opacity: 0.6,
+              marginBottom: "12px",
+            }}
+          >
+            <Card
+              bodyStyle={{
+                padding: "8px 12px",
+                borderRadius: "18px",
+                backgroundColor: colors.deepGreen,
+              }}
+            >
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 16, color: "white" }} spin />} />
+              <Text style={{ color: "white", marginLeft: 8, fontStyle: "italic" }}>
+                Đang gửi...
+              </Text>
+            </Card>
+          </div>
+        )}
       </Content>
 
       <Footer
@@ -367,6 +406,7 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
         <div
           style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px" }}
         >
+          {/* **BƯỚC 4: VÔ HIỆU HÓA NÚT BẤM KHI ĐANG GỬI** */}
           <Upload
             accept="image/*"
             showUploadList={false}
@@ -374,19 +414,20 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
               handleImageUpload(file);
               return false;
             }}
-            disabled={isRecording}
+            disabled={isRecording || isSending}
           >
             <Button
               icon={<CameraOutlined style={{ fontSize: 22 }} />}
               shape="circle"
               style={{ width: 50, height: 50, border: "2px solid #1890ff", color: "#1890ff" }}
+              disabled={isRecording || isSending}
             />
           </Upload>
           <Button
             type="primary"
             shape="circle"
             danger={isRecording}
-            icon={<AudioOutlined style={{ fontSize: 24 }} />}
+            icon={isSending ? <LoadingOutlined /> : <AudioOutlined style={{ fontSize: 24 }} />}
             onClick={handleToggleRecord}
             style={{
               width: 60,
@@ -394,6 +435,7 @@ const ChatGroupComponent = ({ currentUser, classInfo, socket, messages, setMessa
               animation: isRecording ? "pulse 1.5s infinite" : "none",
               boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             }}
+            disabled={isSending} // Vô hiệu hóa nút ghi âm khi đang gửi
           />
         </div>
         <style>{`@keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 79, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); } }`}</style>

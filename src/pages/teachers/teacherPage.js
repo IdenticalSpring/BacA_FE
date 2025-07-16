@@ -2861,7 +2861,7 @@ const TeacherPage = () => {
                 classInfo={classData}
                 socket={groupSocket}
                 messages={groupMessages}
-                setMessages={setGroupMessages}
+                // setMessages={setGroupMessages}
                 loading={isGroupChatLoading}
               />
             )}

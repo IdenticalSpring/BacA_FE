@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Input, Button, Upload, message, Spin } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import PropTypes from "prop-types"; // Import PropTypes
+import PropTypes from "prop-types";
 import studentService from "services/studentService";
-import { colors } from "./teacherPage"; // Import bảng màu từ TeacherPage.js
+import fileService from "services/fileService"; // Import fileService
+import { colors } from "./teacherPage";
 
 const EditStudentModal = ({ visible, onClose, student, classID, isMobile, refreshStudents }) => {
   const [form] = Form.useForm();
@@ -48,21 +49,27 @@ const EditStudentModal = ({ visible, onClose, student, classID, isMobile, refres
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
+      let imgUrl = student.imgUrl; // Giữ URL hiện tại nếu không có file mới
+      const file =
+        fileList.length > 0 && fileList[0].originFileObj ? fileList[0].originFileObj : null;
+
+      // Nếu có file mới, upload file và lấy URL
+      if (file) {
+        imgUrl = await fileService.upload(file, `student-${student.id}-avatar`);
+      }
+
       const studentData = {
         name: values.name,
         username: values.username,
         password: values.password,
         classId: classID,
+        imgUrl: imgUrl || undefined, // Thêm imgUrl vào studentData, undefined nếu không có
       };
-
-      // Lấy file từ fileList
-      const file =
-        fileList.length > 0 && fileList[0].originFileObj ? fileList[0].originFileObj : null;
 
       await studentService.editStudent(student.id, studentData, file);
       message.success("Cập nhật học sinh thành công");
-      refreshStudents(); // Làm mới danh sách học sinh
-      onClose(); // Đóng modal
+      refreshStudents();
+      onClose();
     } catch (error) {
       message.error(error.message || "Không thể cập nhật học sinh");
     } finally {
@@ -108,16 +115,7 @@ const EditStudentModal = ({ visible, onClose, student, classID, isMobile, refres
               }}
             />
           </Form.Item>
-          <Form.Item
-            name="password"
-            label="Password"
-            // rules={[
-            //   {
-            //     pattern: /^[0-9]{10,}$/,
-            //     message: "Vui lòng nhập password hợp lệ",
-            //   },
-            // ]}
-          >
+          <Form.Item name="password" label="Password">
             <Input
               placeholder="Nhập password học sinh"
               style={{
