@@ -16,6 +16,8 @@ import {
   Avatar,
   Select,
   Empty,
+  Row,
+  Col,
 } from "antd";
 import {
   AudioOutlined,
@@ -345,19 +347,6 @@ const VocabularyCreateComponent = ({
           });
       },
     });
-    // if (
-    //   vocabularyList.find((item) => item.id === id) &&
-    //   !vocabularyList.find((item) => item.id === id).isNew
-    // ) {
-    //   vocabularyService
-    //     .deletevocabulary(id)
-    //     .then(() => {})
-    //     .catch((error) => {
-    //       message.error("Xóa từ vựng thất bại " + error);
-    //     });
-    // }
-    // setVocabularyList(vocabularyList.filter((item) => item.id !== id));
-    // message.success("Xóa từ vựng thành công");
   };
 
   // Update textToSpeech when the word field changes
@@ -366,27 +355,6 @@ const VocabularyCreateComponent = ({
     form.setFieldsValue({ word: e.target.value });
   };
 
-  // Update form when speech is recognized
-  // useEffect(() => {
-  //   if (speechResults.length > 0) {
-  //     const lastResult = speechResults[speechResults.length - 1].transcript;
-  //     setTextToSpeech(textToSpeech + lastResult);
-  //     form.setFieldsValue({ word: textToSpeech + lastResult });
-  //   }
-  // }, [speechResults, form]);
-  // useEffect(() => {
-  //   let timeout;
-
-  //   timeout = setTimeout(() => {
-  //     if (!isRecording && isManualRecording) {
-  //       console.log("⏳ Mic tắt do hệ thống → khởi động lại", isRecording, isManualRecording);
-  //       startSpeechToText();
-  //       setTextToSpeech(textToSpeech + " ");
-  //       form.setFieldsValue({ word: textToSpeech + " " });
-  //     }
-  //   }, 500); // Delay nhẹ để tránh race condition
-  //   return () => clearTimeout(timeout);
-  // }, [isRecording, isManualRecording]);
   const colors = {
     deepGreen: "#389e0d",
     inputBorder: "#d9d9d9",
@@ -403,8 +371,6 @@ const VocabularyCreateComponent = ({
     if (listening) {
       stop();
       setIsManualRecording(false);
-      // const lastResult = speechResults[speechResults.length - 1]?.transcript || "";
-      // form.setFieldsValue({ meaning: lastResult });
     } else {
       listen({ lang: "en-AU", interimResults: false });
       setIsManualRecording(true);
@@ -412,7 +378,6 @@ const VocabularyCreateComponent = ({
       form.setFieldsValue({ word: "" });
     }
   };
-  // console.log(groupedByStudent[1][0].student);
 
   return (
     <div style={{ maxWidth: "100%", margin: "0 auto" }}>
@@ -421,8 +386,6 @@ const VocabularyCreateComponent = ({
         style={{ width: "100%", marginBottom: "20px" }}
       >
         <Form form={form} layout="vertical">
-          {/* <Divider orientation="left">Giọng nói thành văn bản</Divider> */}
-
           <Form.Item>
             <Card
               style={{
@@ -468,11 +431,7 @@ const VocabularyCreateComponent = ({
               </Space>
             </Card>
           </Form.Item>
-          <Form.Item
-            name="word"
-            label="Từ/Câu hỏi"
-            // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
-          >
+          <Form.Item name="word" label="Từ/Câu hỏi">
             <Input
               placeholder="Nhập từ/câu hỏi"
               value={textToSpeech}
@@ -480,14 +439,6 @@ const VocabularyCreateComponent = ({
               style={{ borderRadius: "6px" }}
             />
           </Form.Item>
-
-          {/* <Form.Item
-            name="meaning"
-            label="Ý nghĩa"
-            rules={[{ required: true, message: "Vui lòng nhập ý nghĩa" }]}
-          >
-            <TextArea rows={3} placeholder="Nhập ý nghĩa của từ" style={{ borderRadius: "6px" }} />
-          </Form.Item> */}
 
           <Divider orientation="left">Hình ảnh</Divider>
           <style>{`
@@ -518,29 +469,6 @@ const VocabularyCreateComponent = ({
 
           <Divider orientation="left">Âm thanh</Divider>
 
-          {/* <Form.Item label="Văn bản thành giọng nói">
-            <TextArea
-              value={textToSpeech}
-              onChange={(e) => setTextToSpeech(e.target.value)}
-              rows={2}
-              placeholder="Nhập văn bản để chuyển thành giọng nói"
-              style={{
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-          </Form.Item> */}
-
-          {/* <Form.Item>
-            <Radio.Group
-              options={voices?.map((item) => {
-                return { label: item?.split("_")[1], value: item };
-              })}
-              onChange={onChangeGender}
-              value={gender}
-              // optionType="button"
-            />
-          </Form.Item> */}
           <style>{`
             .ant-select-dropdown{
             z-index: 10000000000 !important;
@@ -601,135 +529,106 @@ const VocabularyCreateComponent = ({
 
       {vocabularyList?.length > 0 && (
         <Card title={<Title level={3}>Danh sách từ vựng</Title>}>
-          <List
-            style={{ maxHeight: "40vh", overflowY: "auto" }}
-            itemLayout="horizontal"
-            dataSource={vocabularyList?.filter((item) => !item?.student)}
-            renderItem={(item) => (
-              <List.Item
-                key={item?.id}
-                actions={[
-                  <Button
-                    key={item?.id}
-                    icon={<DeleteOutlined />}
-                    danger
-                    onClick={() => {
-                      setDeleteForStudentFlag(false);
-                      handleDeleteVocabulary(item?.id);
-                    }}
-                  >
-                    Xóa
-                  </Button>,
-                ]}
-              >
-                {/* <List.Item.Meta
-                  key={item.id}
-                  avatar={
-                    item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.word} width={48} height={48} />
-                    )
-                  }
-                  title={
-                    <Text key={item.id} strong>
-                      {item.word || item.textToSpeech}
-                    </Text>
-                  }
-                  // description={item.meaning}
-                />
-                {item.audioUrl && (
-                  <audio controls style={{ height: "30px" }}>
-                    <source src={item.audioUrl} type="audio/mp3" />
-                  </audio>
-                )} */}
-                <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
-                  <Avatar
-                    shape="square"
-                    style={{
-                      width: isMobile ? "50px" : "5vw",
-                      height: isMobile ? "50px" : "5vw",
-                      margin: "10px",
-                    }}
-                    icon={
-                      <ImageOutlined
-                        style={{
-                          width: isMobile ? "50px" : "5vw",
-                          height: isMobile ? "50px" : "5vw",
-                        }}
-                      />
-                    }
-                    src={item && item?.imageUrl}
-                  />
-                  <Text
-                    key={item?.id}
-                    style={{ width: "70%", fontSize: isMobile ? "16px" : "24px" }}
-                    strong
-                  >
-                    {item?.word || item?.textToSpeech}
-                  </Text>
-                  {item?.audioUrl && (
-                    <audio
-                      controls
+          {/* Layout ngang cho danh sách từ vựng */}
+          <div style={{ maxHeight: "40vh", overflowY: "auto", padding: "10px 0" }}>
+            <Row gutter={[16, 16]}>
+              {vocabularyList
+                ?.filter((item) => !item?.student)
+                .map((item) => (
+                  <Col key={item?.id} xs={24} sm={12} md={8} lg={6} xl={4}>
+                    <Card
+                      hoverable
                       style={{
-                        height: "50px",
-                        margin: "10px 0",
-                        marginRight: "10px",
-                        width: "100%",
+                        borderRadius: "12px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
                       }}
+                      bodyStyle={{
+                        padding: "12px",
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                      }}
+                      cover={
+                        item?.imageUrl ? (
+                          <div style={{ height: "120px", overflow: "hidden" }}>
+                            <img
+                              src={item?.imageUrl}
+                              alt={item?.word}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              height: "120px",
+                              backgroundColor: "#f5f5f5",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <ImageOutlined style={{ fontSize: "40px", color: "#bfbfbf" }} />
+                          </div>
+                        )
+                      }
+                      actions={[
+                        <Button
+                          key="delete"
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => {
+                            setDeleteForStudentFlag(false);
+                            handleDeleteVocabulary(item?.id);
+                          }}
+                          size="small"
+                        >
+                          Xóa
+                        </Button>,
+                      ]}
                     >
-                      <source src={item?.audioUrl} type="audio/mp3" />
-                    </audio>
-                  )}
-                </div>
-              </List.Item>
-            )}
-          />
-          {/* <List
-            style={{ maxHeight: "40vh", overflowY: "auto" }}
-            itemLayout="horizontal"
-            dataSource={Object.entries(groupedByStudent)}
-            renderItem={(item, index) => {
-              // console.log(item[1][0]);
-              return (
-                <List.Item
-                  key={index}
-                  actions={[
-                    <Button
-                      key={index}
-                      icon={<DeleteOutlined />}
-                      danger
-                      onClick={() => handleDeleteVocabulary(item.id)}
-                    >
-                      Xóa
-                    </Button>,
-                  ]}
-                >
-                  <List.Item.Meta
-                    key={index}
-                    avatar={
-                      item[1] &&
-                      item[1][0]?.student?.imgUrl && (
-                        <img
-                          src={item[1] && item[1][0]?.student?.imgUrl}
-                          alt={item[1] && item[1][0]?.student?.name}
-                          width={48}
-                          height={48}
-                        />
-                      )
-                    }
-                    title={
-                      <Text key={index} strong>
-                        {item[1] && item[1][0]?.student?.name}
-                      </Text>
-                    }
-                    // description={item.meaning}
-                  />
-                </List.Item>
-              );
-            }}
-          /> */}
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                        <Text
+                          strong
+                          style={{
+                            fontSize: "14px",
+                            marginBottom: "8px",
+                            textAlign: "center",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {item?.word || item?.textToSpeech}
+                        </Text>
+
+                        {item?.audioUrl && (
+                          <div style={{ marginTop: "auto", paddingTop: "8px" }}>
+                            <audio
+                              controls
+                              style={{
+                                width: "100%",
+                                height: "32px",
+                              }}
+                            >
+                              <source src={item?.audioUrl} type="audio/mp3" />
+                            </audio>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  </Col>
+                ))}
+            </Row>
+          </div>
+
           <Divider />
           <Title level={3}>Danh sách các bạn học sinh đã tạo từ vựng và trả lời câu hỏi</Title>
-          {/* <Divider /> */}
           <div
             style={{
               width: "100%",
@@ -738,7 +637,6 @@ const VocabularyCreateComponent = ({
             }}
           >
             {students?.map((item, index) => {
-              // console.log(item[0]?.student?.id);
               return (
                 <div
                   key={index}
@@ -747,8 +645,6 @@ const VocabularyCreateComponent = ({
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    // padding: "10px",
-                    // border: "1px solid gray",
                     flexWrap: "wrap",
                   }}
                 >
@@ -762,7 +658,6 @@ const VocabularyCreateComponent = ({
                   <div style={{ width: "60%" }}>{item && item?.name}</div>
                   <Button
                     onClick={() => {
-                      // setSelectedStudentId(item[0]?.student?.id || 0);
                       setOpenDetailVocabularies(true);
                       setDeleteForStudentFlag(true);
                       if (item) {
@@ -781,6 +676,7 @@ const VocabularyCreateComponent = ({
           </div>
         </Card>
       )}
+
       <style>
         {`
         .ant-modal-wrap{
@@ -813,7 +709,6 @@ const VocabularyCreateComponent = ({
         width={"85%"}
         style={{ zIndex: "10000000000" }}
       >
-        {/* <Card title={<Title level={3}>Danh sách từ vựng</Title>}> */}
         {isLoadingStudentVocabularies ? (
           <div
             style={{
@@ -831,66 +726,98 @@ const VocabularyCreateComponent = ({
             {selectedStudentVocabularies?.length > 0 && (
               <>
                 <h3>{"Danh sách từ vựng của bạn " + selectedStudentName}</h3>
-                <List
-                  style={{ maxHeight: "70vh", overflowY: "auto" }}
-                  itemLayout="horizontal"
-                  dataSource={selectedStudentVocabularies || []}
-                  renderItem={(item) => (
-                    <List.Item
-                      key={item?.id}
-                      actions={[
-                        <Button
-                          key={item?.id}
-                          icon={<DeleteOutlined />}
-                          danger
-                          onClick={() => handleDeleteVocabulary(item?.id)}
-                        >
-                          Xóa
-                        </Button>,
-                      ]}
-                    >
-                      <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
-                        <Avatar
-                          shape="square"
+                {/* Layout ngang cho từ vựng học sinh trong modal */}
+                <div style={{ maxHeight: "35vh", overflowY: "auto", padding: "10px 0" }}>
+                  <Row gutter={[16, 16]}>
+                    {selectedStudentVocabularies.map((item) => (
+                      <Col key={item?.id} xs={24} sm={12} md={8} lg={6} xl={4}>
+                        <Card
+                          hoverable
                           style={{
-                            width: isMobile ? "50px" : "5vw",
-                            height: isMobile ? "50px" : "5vw",
-                            margin: "10px",
+                            borderRadius: "12px",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
                           }}
-                          icon={
-                            <ImageOutlined
-                              style={{
-                                width: isMobile ? "50px" : "5vw",
-                                height: isMobile ? "50px" : "5vw",
-                              }}
-                            />
+                          bodyStyle={{
+                            padding: "12px",
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                          }}
+                          cover={
+                            item?.imageUrl ? (
+                              <div style={{ height: "120px", overflow: "hidden" }}>
+                                <img
+                                  src={item?.imageUrl}
+                                  alt={item?.word}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  height: "120px",
+                                  backgroundColor: "#f5f5f5",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <ImageOutlined style={{ fontSize: "40px", color: "#bfbfbf" }} />
+                              </div>
+                            )
                           }
-                          src={item && item?.imageUrl}
-                        />
-                        <Text
-                          key={item?.id}
-                          style={{ width: "70%", fontSize: isMobile ? "16px" : "24px" }}
-                          strong
+                          actions={[
+                            <Button
+                              key="delete"
+                              type="text"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleDeleteVocabulary(item?.id)}
+                              size="small"
+                            >
+                              Xóa
+                            </Button>,
+                          ]}
                         >
-                          {item?.word || item?.textToSpeech}
-                        </Text>
-                        {item?.audioUrl && (
-                          <audio
-                            controls
-                            style={{
-                              height: "50px",
-                              margin: "10px 0",
-                              marginRight: "10px",
-                              width: "100%",
-                            }}
-                          >
-                            <source src={item?.audioUrl} type="audio/mp3" />
-                          </audio>
-                        )}
-                      </div>
-                    </List.Item>
-                  )}
-                />
+                          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                            <Text
+                              strong
+                              style={{
+                                fontSize: "14px",
+                                marginBottom: "8px",
+                                textAlign: "center",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {item?.word || item?.textToSpeech}
+                            </Text>
+
+                            {item?.audioUrl && (
+                              <div style={{ marginTop: "auto", paddingTop: "8px" }}>
+                                <audio
+                                  controls
+                                  style={{
+                                    width: "100%",
+                                    height: "32px",
+                                  }}
+                                >
+                                  <source src={item?.audioUrl} type="audio/mp3" />
+                                </audio>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
               </>
             )}
           </>
@@ -899,7 +826,7 @@ const VocabularyCreateComponent = ({
           <>
             <h3>{"Danh sách câu trả lời của bạn " + selectedStudentName}</h3>
             <List
-              style={{ maxHeight: "70vh", overflowY: "auto", padding: "10px" }}
+              style={{ maxHeight: "35vh", overflowY: "auto", padding: "10px" }}
               itemLayout="horizontal"
               dataSource={studentVocabularies || []}
               renderItem={(item) => (
@@ -939,12 +866,6 @@ const VocabularyCreateComponent = ({
                         Câu trả lời: {item?.text}
                       </Text>
                     </div>
-                    {/* Uncomment if you want audio */}
-                    {/* {item?.audioUrl && (
-          <audio controls style={{ width: isMobile ? 100 : 150 }}>
-            <source src={item?.audioUrl} type="audio/mp3" />
-          </audio>
-        )} */}
                   </Card>
                 </List.Item>
               )}
@@ -965,7 +886,6 @@ const VocabularyCreateComponent = ({
             <Empty style={{ width: "100%" }}></Empty>
           </div>
         )}
-        {/* </Card> */}
       </Modal>
     </div>
   );
