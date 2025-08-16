@@ -75,6 +75,22 @@ const TableScoreTest = ({ onError }) => {
     fetchFilterOptions();
   }, []);
 
+  const calculateAvgScore = (scores) => {
+    // Lấy tất cả các giá trị điểm từ object scores
+    const validScores = Object.values(scores).filter(
+      (score) => score !== undefined && score !== null && !isNaN(parseFloat(score))
+    );
+
+    // Nếu không có điểm hợp lệ, trả về "-"
+    if (validScores.length === 0) {
+      return "-";
+    }
+
+    // Tính tổng và trung bình, làm tròn đến 2 chữ số thập phân
+    const sum = validScores.reduce((acc, score) => acc + parseFloat(score), 0);
+    return (sum / validScores.length).toFixed(2);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -157,7 +173,7 @@ const TableScoreTest = ({ onError }) => {
               className: classMap[schedule.classID] || "Unknown",
               teacherName: teacherMap[schedule.teacherID] || "Unknown",
               skillScores: detail.scores || {},
-              avgScore: detail.avgScore || "-",
+              avgScore: calculateAvgScore(detail.scores || {}),
             };
           });
 
