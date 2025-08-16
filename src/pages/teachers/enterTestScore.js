@@ -15,6 +15,7 @@ import {
   Col,
   Space,
   Breadcrumb,
+  Alert,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -123,6 +124,7 @@ const EnterTestScore = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editScoreData, setEditScoreData] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [isEntryFormDisabled, setIsEntryFormDisabled] = useState(false);
 
   const token = sessionStorage.getItem("token");
   const decoded = token ? jwtDecode(token) : null;
@@ -140,6 +142,20 @@ const EnterTestScore = () => {
       navigate(-1);
     }
   }, [classId]);
+
+  useEffect(() => {
+    if (!selectedClassTest) {
+      setIsEntryFormDisabled(false);
+      return;
+    }
+
+    // Kiểm tra xem có bản ghi điểm nào đã tồn tại cho lịch thi đang chọn không
+    const scoresExistForThisTest = previousScores.some(
+      (score) => score.testScheduleID === selectedClassTest
+    );
+
+    setIsEntryFormDisabled(scoresExistForThisTest);
+  }, [selectedClassTest, previousScores]);
 
   const fetchClassTestSchedules = async () => {
     try {
@@ -192,6 +208,9 @@ const EnterTestScore = () => {
           const assessment = assessmentData.find((a) => a.id === score.assessmentID);
           const detail = detailsData.find((d) => d.studentScoreID === score.studentScoreID);
 
+          // Tính toán lại avgScore một cách chủ động
+          const currentAvgScore = detail && detail.scores ? calculateAvgScore(detail.scores) : "-";
+
           return {
             key: score.studentScoreID,
             studentScoreID: score.studentScoreID,
@@ -202,7 +221,7 @@ const EnterTestScore = () => {
             assessmentName: assessment ? assessment.name : "Unknown",
             assessmentID: score.assessmentID,
             scores: detail ? detail.scores : {},
-            avgScore: detail ? detail.avgScore : "-",
+            avgScore: currentAvgScore,
             teacherComment: score.teacherComment || "-",
           };
         });
@@ -471,6 +490,16 @@ const EnterTestScore = () => {
         >
           <Spin spinning={loading}>
             <Row gutter={[24, 24]}>
+              {isEntryFormDisabled && selectedClassTest && (
+                <Col xs={24} style={{ marginTop: 16 }}>
+                  <Alert
+                    message="Scores Already Entered"
+                    description="Scores for this test schedule have already been submitted. To modify them, please use the 'Edit' button in the 'Previous Test Scores' table below."
+                    type="info"
+                    showIcon
+                  />
+                </Col>
+              )}
               <Col xs={24} md={12}>
                 <Form.Item label="Select Test Schedule">
                   <Select
@@ -499,7 +528,6 @@ const EnterTestScore = () => {
                     <Select
                       mode="multiple"
                       placeholder="Select students"
-                      წ
                       value={selectedStudents}
                       onChange={(value) => {
                         setSelectedStudents(value);
@@ -507,7 +535,7 @@ const EnterTestScore = () => {
                         form.resetFields();
                       }}
                       style={{ width: "100%" }}
-                      disabled={!selectedClassTest}
+                      disabled={!selectedClassTest || isEntryFormDisabled}
                     >
                       {students.map((student) => (
                         <Option key={student.id} value={student.id}>
@@ -518,7 +546,7 @@ const EnterTestScore = () => {
                     <Button
                       type="link"
                       onClick={handleSelectAllStudents}
-                      disabled={!selectedClassTest || students.length === 0}
+                      disabled={!selectedClassTest || students.length === 0 || isEntryFormDisabled}
                       style={{ padding: 0, color: colors.deepGreen }}
                     >
                       Select All Students
@@ -528,7 +556,7 @@ const EnterTestScore = () => {
               </Col>
             </Row>
 
-            {selectedStudents.length > 0 && (
+            {selectedStudents.length > 0 && !isEntryFormDisabled && (
               <>
                 <Divider style={{ borderColor: colors.paleGreen }} />
                 <Form.Item label="Select Test Skills">
