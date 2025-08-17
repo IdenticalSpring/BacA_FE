@@ -16,6 +16,7 @@ import {
   Space,
   Breadcrumb,
   Alert,
+  message,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -131,6 +132,8 @@ const EnterTestScore = () => {
   const teacherId = decoded?.userId;
   const classId = location.state?.classId;
 
+  const [studentsWithScores, setStudentsWithScores] = useState([]);
+
   useEffect(() => {
     if (classId) {
       fetchInitialData();
@@ -143,19 +146,46 @@ const EnterTestScore = () => {
     }
   }, [classId]);
 
+  // useEffect(() => {
+  //   if (!selectedClassTest) {
+  //     setIsEntryFormDisabled(false);
+  //     return;
+  //   }
+
+  //   // Kiểm tra xem có bản ghi điểm nào đã tồn tại cho lịch thi đang chọn không
+  //   const scoresExistForThisTest = previousScores.some(
+  //     (score) => score.testScheduleID === selectedClassTest
+  //   );
+
+  //   setIsEntryFormDisabled(scoresExistForThisTest);
+  // }, [selectedClassTest, previousScores]);
+
   useEffect(() => {
     if (!selectedClassTest) {
       setIsEntryFormDisabled(false);
+      setStudentsWithScores([]); // Reset khi không có lịch thi nào được chọn
       return;
     }
 
-    // Kiểm tra xem có bản ghi điểm nào đã tồn tại cho lịch thi đang chọn không
-    const scoresExistForThisTest = previousScores.some(
-      (score) => score.testScheduleID === selectedClassTest
+    // Lọc ra những học sinh đã có điểm cho lịch thi này
+    const studentIdsWithScores = previousScores
+      .filter((score) => score.testScheduleID === selectedClassTest)
+      .map((score) => score.studentID);
+
+    setStudentsWithScores(studentIdsWithScores); // <-- CẬP NHẬT STATE
+
+    // Kiểm tra xem tất cả học sinh đã có điểm chưa
+    // (Chúng ta sẽ dùng studentIdsWithScores để kiểm tra điều này sau)
+    const allSelectedStudentsHaveScores = selectedStudents.every((id) =>
+      studentIdsWithScores.includes(id)
     );
 
-    setIsEntryFormDisabled(scoresExistForThisTest);
-  }, [selectedClassTest, previousScores]);
+    // Nếu tất cả học sinh trong lớp đã có điểm thì disable toàn bộ form
+    const allStudentsInClassHaveScores = students.every((student) =>
+      studentIdsWithScores.includes(student.id)
+    );
+    setIsEntryFormDisabled(allStudentsInClassHaveScores && students.length > 0);
+  }, [selectedClassTest, previousScores, students, selectedStudents]); // Thêm dependencies
 
   const fetchClassTestSchedules = async () => {
     try {
@@ -267,6 +297,31 @@ const EnterTestScore = () => {
     try {
       setLoading(true);
       setError("");
+
+      const studentsAlreadyScored = selectedStudents.filter((id) =>
+        studentsWithScores.includes(id)
+      );
+
+      if (studentsAlreadyScored.length > 0) {
+        const studentNames = studentsAlreadyScored
+          .map((id) => students.find((s) => s.id === id)?.name)
+          .join(", ");
+        notification.error({
+          message: "Submission Blocked",
+          description: `The following students already have scores for this test schedule: ${studentNames}. Please edit their scores in the table below.`,
+        });
+        setLoading(false);
+        return; // Dừng hàm ngay lập tức
+      }
+
+      if (selectedStudents.length === 0) {
+        notification.warning({
+          message: "No Students Selected",
+          description: "Please select at least one student without a score to submit.",
+        });
+        setLoading(false);
+        return;
+      }
       const promises = selectedStudents.map(async (studentId) => {
         const scoreData = {
           studentID: studentId,
@@ -341,11 +396,38 @@ const EnterTestScore = () => {
     navigate(-1);
   };
 
+  // const handleSelectAllStudents = () => {
+  //   const allStudentIds = students.map((student) => student.id);
+  //   setSelectedStudents(allStudentIds);
+  //   setSelectedTestSkills([]);
+  //   form.resetFields();
+  // };
+
   const handleSelectAllStudents = () => {
-    const allStudentIds = students.map((student) => student.id);
-    setSelectedStudents(allStudentIds);
-    setSelectedTestSkills([]);
+    if (students.length === 0) {
+      message.info("No students in this class to select.");
+      return;
+    }
+
+    // Lọc ra ID của những học sinh CHƯA có điểm cho lịch thi này
+    const availableStudentIds = students
+      .map((student) => student.id) // Lấy tất cả ID học sinh trong lớp
+      .filter((id) => !studentsWithScores.includes(id)); // Loại bỏ những ID đã có trong danh sách `studentsWithScores`
+
+    if (availableStudentIds.length === 0) {
+      message.info("All students in this class already have scores for this test schedule.");
+    } else {
+      message.success(`Selected ${availableStudentIds.length} available student(s).`);
+    }
+
+    // Cập nhật state `selectedStudents` chỉ với những học sinh hợp lệ
+    setSelectedStudents(availableStudentIds);
+
     form.resetFields();
+
+    // Bạn có thể quyết định có reset các field khác hay không.
+    // Thường thì không cần reset `selectedTestSkills` nếu người dùng đã chọn.
+    // form.resetFields(['scores']); // Có thể chỉ reset các field điểm nếu muốn
   };
 
   const handleEditScore = (record) => {
@@ -538,7 +620,11 @@ const EnterTestScore = () => {
                       disabled={!selectedClassTest || isEntryFormDisabled}
                     >
                       {students.map((student) => (
-                        <Option key={student.id} value={student.id}>
+                        <Option
+                          key={student.id}
+                          value={student.id}
+                          disabled={studentsWithScores.includes(student.id)}
+                        >
                           {student.name}
                         </Option>
                       ))}
