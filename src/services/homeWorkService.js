@@ -26,6 +26,22 @@ const homeWorkService = {
       throw error.response?.data?.message || "Error fetching homeworks";
     }
   },
+
+  reassignTeacherForHomeWorks: async (reassignData) => {
+    // reassignData sẽ có dạng { oldTeacherId, newTeacherId }
+    try {
+      const response = await axios.put(`${API_BASE_URL}/homeworks/reassign-teacher`, reassignData, {
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data; // Trả về { message, updatedCount }
+    } catch (error) {
+      throw error.response?.data?.message || "Error reassigning homeworks";
+    }
+  },
+
   getHomeWorkByLevelAndTeacherId: async (levelAndTeacherId) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/homeworks/level`, levelAndTeacherId, {

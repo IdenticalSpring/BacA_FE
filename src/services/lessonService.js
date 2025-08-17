@@ -90,6 +90,22 @@ const lessonService = {
     }
   },
 
+  // 👇 THÊM HÀM MỚI VÀO ĐÂY
+  reassignTeacherForLessons: async (reassignData) => {
+    // reassignData sẽ có dạng { oldTeacherId, newTeacherId }
+    try {
+      const response = await axios.put(`${API_BASE_URL}/lessons/reassign-teacher`, reassignData, {
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data; // Trả về { message, updatedCount }
+    } catch (error) {
+      throw error.response?.data?.message || "Error reassigning lessons";
+    }
+  },
+
   editLesson: async (id, lessonData) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/lessons/${id}`, lessonData, {

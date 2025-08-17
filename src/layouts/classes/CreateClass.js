@@ -45,6 +45,8 @@ import dayjs from "dayjs";
 import classScheduleService from "services/classScheduleService";
 import CheckinManagement from "pages/admin/checkinManagement";
 import moment from "moment";
+import lessonService from "services/lessonService";
+import homeWorkService from "services/homeWorkService";
 
 function generateAccessId() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -150,6 +152,8 @@ function CreateClass() {
   ];
   const [filterLevel, setFilterLevel] = useState("");
   const [filterClass, setFilterClass] = useState("");
+
+  const [originalTeacherId, setOriginalTeacherId] = useState(null);
 
   useEffect(() => {
     if (rawClasses.length > 0 && levels.length > 0) {
@@ -524,6 +528,7 @@ function CreateClass() {
     setSelectedClass(cls);
     const schedulesData = await lessonByScheduleService.getSchedulesByClass(cls.id);
     setSelectedSchedule(schedulesData);
+    setOriginalTeacherId(cls.teacher?.id || null);
     setClassDataForUpdate({
       id: cls.id,
       name: cls.name,
@@ -629,80 +634,213 @@ function CreateClass() {
     }
   };
 
+  // const handleUpdateClass = async () => {
+  //   setLoadingUpdateClass(true);
+  //   try {
+  //     const payload = {
+  //       name: classDataForUpdate.name,
+  //       level: classDataForUpdate.level,
+  //       teacherID: classDataForUpdate.teacherID,
+  //     };
+  //     const classEntity = await classService.editClass(selectedClass.id, payload);
+  //     if (selectedSchedulesForUpdate?.length > 0) {
+  //       const dataForLessonBySchedule = {
+  //         lessons: getDatesForSelectedSchedules(selectedSchedulesForUpdate, classEntity),
+  //       };
+  //       await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
+  //       const classScheduleDatas = [];
+  //       selectedSchedulesForUpdate.forEach((schedule) => {
+  //         const classScheduleData = {
+  //           classID: classEntity.id,
+  //           scheduleID: schedule.scheduleId,
+  //         };
+  //         classScheduleDatas.push(classScheduleData);
+  //       });
+  //       await classScheduleService.createClassSchedule(classScheduleDatas);
+  //     }
+
+  //     setClassRows(
+  //       classRows.map((row) => {
+  //         return row.id === classEntity.id
+  //           ? {
+  //               ...row,
+  //               actions: (
+  //                 <>
+  //                   <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
+  //                     <EditIcon />
+  //                   </IconButton>
+  //                   <IconButton color="secondary" onClick={() => handleDeleteClass(classEntity.id)}>
+  //                     <DeleteIcon />
+  //                   </IconButton>
+  //                   <IconButton
+  //                     color="info"
+  //                     onClick={() => {
+  //                       setSelectedClassId(classEntity.id);
+  //                       setOpenCheckinDialog(true);
+  //                     }}
+  //                   >
+  //                     <VisibilityIcon />
+  //                   </IconButton>
+  //                 </>
+  //               ),
+  //               ...payload,
+  //               teacher: classEntity.teacher?.name || "N/A",
+  //               level: levels.find((lv) => lv.id === classEntity.level)?.name || "N/A",
+  //             }
+  //           : row;
+  //       })
+  //     );
+  //     setSelectedSchedule([]);
+  //     setSelectedSchedulesForUpdate([]);
+  //     setOpenEditClass(false);
+  //     setClassDataForUpdate({
+  //       id: "",
+  //       name: "",
+  //       level: "",
+  //       teacherID: "",
+  //       scheduleId: "",
+  //     });
+  //     message.success("Update class success!");
+  //   } catch (err) {
+  //     message.error("Update class failed!" + err);
+  //   } finally {
+  //     setLoadingUpdateClass(false);
+  //   }
+  // };
   const handleUpdateClass = async () => {
     setLoadingUpdateClass(true);
     try {
-      const payload = {
-        name: classDataForUpdate.name,
-        level: classDataForUpdate.level,
-        teacherID: classDataForUpdate.teacherID,
-      };
-      const classEntity = await classService.editClass(selectedClass.id, payload);
-      if (selectedSchedulesForUpdate?.length > 0) {
-        const dataForLessonBySchedule = {
-          lessons: getDatesForSelectedSchedules(selectedSchedulesForUpdate, classEntity),
-        };
-        await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
-        const classScheduleDatas = [];
-        selectedSchedulesForUpdate.forEach((schedule) => {
-          const classScheduleData = {
-            classID: classEntity.id,
-            scheduleID: schedule.scheduleId,
-          };
-          classScheduleDatas.push(classScheduleData);
-        });
-        await classScheduleService.createClassSchedule(classScheduleDatas);
-      }
+      const newTeacherId = classDataForUpdate.teacherID;
+      const oldTeacherId = originalTeacherId; // Lấy teacherId gốc đã lưu
 
-      setClassRows(
-        classRows.map((row) => {
-          return row.id === classEntity.id
-            ? {
-                ...row,
-                actions: (
-                  <>
-                    <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton color="secondary" onClick={() => handleDeleteClass(classEntity.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                    <IconButton
-                      color="info"
-                      onClick={() => {
-                        setSelectedClassId(classEntity.id);
-                        setOpenCheckinDialog(true);
-                      }}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                  </>
-                ),
-                ...payload,
-                teacher: classEntity.teacher?.name || "N/A",
-                level: levels.find((lv) => lv.id === classEntity.level)?.name || "N/A",
-              }
-            : row;
-        })
-      );
-      setSelectedSchedule([]);
-      setSelectedSchedulesForUpdate([]);
-      setOpenEditClass(false);
-      setClassDataForUpdate({
-        id: "",
-        name: "",
-        level: "",
-        teacherID: "",
-        scheduleId: "",
-      });
-      message.success("Update class success!");
+      // Hàm thực hiện logic cập nhật lớp học và reset state
+      const updateClassAndFinalize = async () => {
+        try {
+          const payload = {
+            name: classDataForUpdate.name,
+            level: classDataForUpdate.level,
+            teacherID: newTeacherId, // Dùng newTeacherId
+          };
+          const classEntity = await classService.editClass(selectedClass.id, payload);
+
+          if (selectedSchedulesForUpdate?.length > 0) {
+            const dataForLessonBySchedule = {
+              lessons: getDatesForSelectedSchedules(selectedSchedulesForUpdate, classEntity),
+            };
+            await lessonByScheduleService.createLessonBySchedule(dataForLessonBySchedule);
+            const classScheduleDatas = selectedSchedulesForUpdate.map((schedule) => ({
+              classID: classEntity.id,
+              scheduleID: schedule.scheduleId,
+            }));
+            await classScheduleService.createClassSchedule(classScheduleDatas);
+          }
+
+          // Cập nhật lại classRows trong bảng
+          setClassRows(
+            classRows.map((row) =>
+              row.id === classEntity.id
+                ? {
+                    ...row,
+                    actions: (
+                      <>
+                        <IconButton color="primary" onClick={() => handleEdit(classEntity)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="secondary"
+                          onClick={() => handleDeleteClass(classEntity.id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                        <IconButton
+                          color="info"
+                          onClick={() => {
+                            setSelectedClassId(classEntity.id);
+                            setOpenCheckinDialog(true);
+                          }}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </>
+                    ),
+                    name: classEntity.name,
+                    teacher: classEntity.teacher?.name || "N/A",
+                    level: levels.find((lv) => lv.id === classEntity.level)?.name || "N/A",
+                  }
+                : row
+            )
+          );
+
+          // Reset state
+          setSelectedSchedule([]);
+          setSelectedSchedulesForUpdate([]);
+          setOpenEditClass(false);
+          setOriginalTeacherId(null);
+          setClassDataForUpdate({
+            id: "",
+            name: "",
+            level: "",
+            teacherID: "",
+            scheduleId: "",
+          });
+          message.success("Update class success!");
+        } catch (updateError) {
+          message.error("Update class failed! " + updateError);
+        } finally {
+          setLoadingUpdateClass(false); // Luôn tắt loading ở đây
+        }
+      };
+
+      // Kiểm tra xem giáo viên có thay đổi không
+      if (oldTeacherId && newTeacherId && oldTeacherId !== newTeacherId) {
+        Modal.confirm({
+          title: "Xác nhận thay đổi giáo viên?",
+          // Cập nhật lại nội dung cho rõ ràng hơn
+          content: `Bạn có muốn chuyển tất cả BÀI HỌC và BÀI TẬP từ giáo viên cũ sang giáo viên mới không?`,
+          okText: "Có, chuyển tất cả",
+          cancelText: "Không, chỉ đổi giáo viên lớp",
+          onOk: async () => {
+            try {
+              // 👇 THỰC HIỆN CẢ HAI TÁC VỤ CÙNG LÚC
+              const reassignLessonsPromise = lessonService.reassignTeacherForLessons({
+                oldTeacherId: oldTeacherId,
+                newTeacherId: newTeacherId,
+              });
+              const reassignHomeWorksPromise = homeWorkService.reassignTeacherForHomeWorks({
+                oldTeacherId: oldTeacherId,
+                newTeacherId: newTeacherId,
+              });
+
+              // Đợi cả hai tác vụ hoàn thành
+              const [lessonsResult, homeWorksResult] = await Promise.all([
+                reassignLessonsPromise,
+                reassignHomeWorksPromise,
+              ]);
+
+              // Hiển thị thông báo tổng hợp
+              message.success(
+                `Đã chuyển ${lessonsResult.updatedCount} bài học và ${homeWorksResult.updatedCount} bài tập thành công!`
+              );
+
+              // Tiếp tục cập nhật lớp
+              await updateClassAndFinalize();
+            } catch (reassignError) {
+              message.error("Lỗi khi chuyển dữ liệu: " + reassignError);
+              setLoadingUpdateClass(false);
+            }
+          },
+          onCancel: () => {
+            updateClassAndFinalize();
+          },
+        });
+      } else {
+        await updateClassAndFinalize();
+      }
     } catch (err) {
-      message.error("Update class failed!" + err);
-    } finally {
+      message.error("Lỗi không xác định: " + err);
       setLoadingUpdateClass(false);
     }
   };
-
   const handleAddScheduleForCreate = () => {
     if (!classDataForCreate.scheduleId) return;
     const selectedSchedule = schedules.find((sch) => sch.id === classDataForCreate.scheduleId);
