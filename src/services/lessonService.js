@@ -80,6 +80,7 @@ const lessonService = {
     try {
       const response = await axios.post(`${API_BASE_URL}/lessons`, lessonData, {
         headers: {
+          "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
       });
@@ -93,6 +94,7 @@ const lessonService = {
     try {
       const response = await axios.put(`${API_BASE_URL}/lessons/${id}`, lessonData, {
         headers: {
+          "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
       });

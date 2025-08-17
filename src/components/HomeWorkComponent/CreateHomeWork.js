@@ -530,36 +530,55 @@ export default function CreateHomeWork({
       // }
 
       const homeworkData = await homeWorkService.createHomeWork(formData);
+      // if (vocabularyList.length > 0) {
+      //   const formDataForVocabulary = new FormData();
+      //   const vocabularies = [];
+      //   const mp3Files = [];
+      //   vocabularyList.forEach((item) => {
+      //     if (item?.isNew) {
+      //       const vocabulary = {
+      //         textToSpeech: item.word,
+      //         imageUrl: item.imageUrl,
+      //         homeworkId: homeworkData.id,
+      //       };
+      //       vocabularies.push(vocabulary);
+      //       // mp3Files.push(mp3File);
+      //       // mp3Files.push(mp3File);
+      //       let fileToAppend;
+      //       if (item?.audioFile) {
+      //         fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
+      //       } else {
+      //         // 👇 Tạo file rỗng nếu không có audio
+      //         const emptyBlob = new Blob([], { type: "audio/mp3" });
+      //         fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
+      //       }
+      //       formDataForVocabulary.append("mp3Files", fileToAppend);
+      //     }
+      //   });
+      //   formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
+      //   // formDataForVocabulary.append("mp3Files", mp3Files);
+      //   const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
+      //     formDataForVocabulary
+      //   );
+      // }
+
+      // =================== PHẦN THAY ĐỔI LỚN ===================
       if (vocabularyList.length > 0) {
-        const formDataForVocabulary = new FormData();
-        const vocabularies = [];
-        const mp3Files = [];
-        vocabularyList.forEach((item) => {
-          if (item?.isNew) {
-            const vocabulary = {
-              textToSpeech: item.word,
-              imageUrl: item.imageUrl,
-              homeworkId: homeworkData.id,
-            };
-            vocabularies.push(vocabulary);
-            // mp3Files.push(mp3File);
-            // mp3Files.push(mp3File);
-            let fileToAppend;
-            if (item?.audioFile) {
-              fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
-            } else {
-              // 👇 Tạo file rỗng nếu không có audio
-              const emptyBlob = new Blob([], { type: "audio/mp3" });
-              fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
-            }
-            formDataForVocabulary.append("mp3Files", fileToAppend);
-          }
-        });
-        formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
-        // formDataForVocabulary.append("mp3Files", mp3Files);
-        const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
-          formDataForVocabulary
-        );
+        // Lọc ra các từ vựng mới cần tạo
+        const newVocabularies = vocabularyList
+          .filter((item) => item.isNew)
+          .map((item) => ({
+            textToSpeech: item.word,
+            imageUrl: item.imageUrl || null,
+            audioUrl: item.audioUrl || null, // <-- GỬI URL TRỰC TIẾP
+            homeworkId: homeworkData.id,
+          }));
+
+        if (newVocabularies.length > 0) {
+          // Gọi service bulkCreateVocabulary với dữ liệu JSON
+          // Backend của bạn cần được cập nhật để nhận một mảng JSON như thế này
+          await vocabularyService.bulkCreateVocabulary(newVocabularies);
+        }
       }
 
       // Xử lý câu hỏi (gọi createQuestion từng cái)

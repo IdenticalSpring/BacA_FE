@@ -34,6 +34,7 @@ import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import Compressor from "compressorjs";
 import SpeechToTextComponent from "./SpeechToTextComponent";
+import fileService from "services/fileService";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -181,6 +182,8 @@ export default function CreateLesson({
   const [htmlLessonPlanContent, setHtmlLessonPlanContent] = useState("");
   const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
   const [voices, setVoices] = useState(null);
+  const [linkSpeech, setLinkSpeech] = useState("");
+
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -953,6 +956,7 @@ export default function CreateLesson({
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
+      formData.append("linkSpeech", linkSpeech);
       formData.append(
         "description",
         quillRefDescription.current?.getEditor()?.root.innerHTML || ""
@@ -960,9 +964,9 @@ export default function CreateLesson({
       formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || ""); // Lấy nội dung từ lessonPlan
       formData.append("teacherId", teacherId);
 
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
 
       const lessonData = await lessonService.createLesson(formData);
       // console.log(lessons, lessonData);
@@ -1130,15 +1134,38 @@ export default function CreateLesson({
       }
 
       let audioBlob = base64ToBlob(base64String, "audio/mp3");
-      setMp3file(audioBlob);
+      setMp3file(audioBlob); // Vẫn giữ lại để có thể dùng cho việc khác nếu cần
 
+      // Tạo URL tạm thời để phát ngay lập tức cho người dùng nghe thử
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
+
+      // =================== PHẦN THÊM MỚI ===================
+
+      // BƯỚC 1: Tạo đối tượng File từ Blob để upload
+      // Cần có tên file, chúng ta có thể tạo một tên file ngẫu nhiên hoặc dựa trên thời gian
+      const fileName = `tts_audio_${Date.now()}.mp3`;
+      const audioFile = new File([audioBlob], fileName, { type: "audio/mp3" });
+
+      // BƯỚC 2: Gọi fileService để tải file lên server
+      // `fileService.upload` là một hàm async, nên chúng ta dùng await
+      const uploadedUrl = await fileService.upload(audioFile, fileName);
+
+      // BƯỚC 3: Lưu URL nhận được vào state linkSpeech
+      if (uploadedUrl) {
+        setLinkSpeech(uploadedUrl);
+        console.log("Uploaded Speech URL:", uploadedUrl); // Kiểm tra trên console
+        message.success("Âm thanh đã được tạo và tải lên thành công!");
+      } else {
+        throw new Error("Không nhận được URL sau khi tải lên.");
+      }
+      // ======================================================
     } catch (error) {
-      console.error("Lỗi chuyển văn bản thành giọng nói:", error);
-      message.error("Lỗi chuyển văn bản thành giọng nói. Vui lòng thử lại!");
+      console.error("Lỗi trong quá trình chuyển đổi hoặc tải lên âm thanh:", error);
+      message.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại!");
+    } finally {
+      setLoadingTTSLesson(false); // Di chuyển xuống finally để đảm bảo luôn được gọi
     }
-    setLoadingTTSLesson(false);
   };
 
   useEffect(() => {

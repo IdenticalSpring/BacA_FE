@@ -183,6 +183,7 @@ export default function LessonMangement({
   const [searchText, setSearchText] = useState("");
   const [dataSearch, setDataSearch] = useState([]);
   const [voices, setVoices] = useState(null);
+  const [linkSpeech, setLinkSpeech] = useState("");
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -224,12 +225,13 @@ export default function LessonMangement({
     form.setFieldsValue({
       name: lesson.name,
       linkGame: lesson.linkGame,
-      linkSpeech: lesson.linkSpeech,
+      // linkSpeech: lesson.linkSpeech,
     });
     // Khởi tạo youtubeLinks từ linkYoutube
     const links = lesson.linkYoutube ? lesson.linkYoutube.split(", ").filter(Boolean) : [];
     setYoutubeLinks(links);
-    setMp3Url(lesson.linkSpeech);
+    setLinkSpeech(lesson.linkSpeech || "");
+    setMp3Url(lesson.linkSpeech || "");
     setModalUpdateLessonVisible(true);
     setTextToSpeech(lesson.textToSpeech || "");
   };
@@ -323,6 +325,24 @@ export default function LessonMangement({
       setMp3file(audioBlob);
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
+
+      // =================== PHẦN THÊM MỚI ===================
+      // Tạo File từ Blob để upload
+      const fileName = `tts_audio_updated_${Date.now()}.mp3`;
+      const audioFile = new File([audioBlob], fileName, { type: "audio/mp3" });
+
+      // Gọi fileService để upload
+      const uploadedUrl = await fileService.upload(audioFile, fileName);
+
+      // Lưu URL nhận được vào state
+      if (uploadedUrl) {
+        setLinkSpeech(uploadedUrl); // <-- CẬP NHẬT URL MỚI VÀO STATE
+        console.log("Updated Speech URL:", uploadedUrl);
+        message.success("Âm thanh mới đã được tạo và tải lên!");
+      } else {
+        throw new Error("Không nhận được URL sau khi tải lên.");
+      }
+      // ======================================================
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
@@ -353,13 +373,15 @@ export default function LessonMangement({
       formData.append("linkYoutube", linkYoutube);
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
+      formData.append("linkSpeech", linkSpeech);
+
       formData.append("textToSpeech", textToSpeech);
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
       formData.append("teacherId", teacherId);
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
       if (editingLesson) {
         const lessonEntity = await lessonService.editLesson(editingLesson.id, formData);
         setLessons(
@@ -386,6 +408,7 @@ export default function LessonMangement({
       setEditYoutubeIndex(null);
       setHtmlContent("");
       setSwapHtmlMode(false);
+      setLinkSpeech("");
     } catch (err) {
       message.error("Please check your input and try again");
     } finally {
@@ -407,12 +430,14 @@ export default function LessonMangement({
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
+      formData.append("linkSpeech", linkSpeech);
+
       formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
       formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
       formData.append("teacherId", teacherId);
-      if (mp3file) {
-        formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
-      }
+      // if (mp3file) {
+      //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
+      // }
       if (editingLesson) {
         const lessonEntity = await lessonService.editLesson(editingLesson.id, formData);
         setLessons(
@@ -1207,6 +1232,7 @@ export default function LessonMangement({
               setCurrentYoutubeLink("");
               setEditYoutubeIndex(null);
               setTextToSpeech("");
+              setLinkSpeech("");
             }}
           >
             Hủy

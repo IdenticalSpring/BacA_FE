@@ -40,6 +40,7 @@ import { ImageOutlined } from "@mui/icons-material";
 import { useSpeechRecognition } from "react-speech-kit";
 import studentService from "services/studentService";
 import student_vocabularyService from "services/student_vocabulary";
+import fileService from "services/fileService";
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
@@ -70,6 +71,7 @@ const VocabularyCreateComponent = ({
   const [students, setStudents] = useState([]);
   const [studentVocabularies, setStudentVocabularies] = useState([]);
   const [voices, setVoices] = useState(null);
+  const [audioUrlUploaded, setAudioUrlUploaded] = useState("");
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -215,6 +217,21 @@ const VocabularyCreateComponent = ({
 
       let audioUrl = URL.createObjectURL(audioBlob);
       setMp3Url(audioUrl);
+
+      // =================== PHẦN THÊM MỚI ===================
+      const fileName = `vocab_tts_${Date.now()}.mp3`;
+      const audioFile = new File([audioBlob], fileName, { type: "audio/mp3" });
+
+      // Gọi fileService để upload
+      const uploadedUrl = await fileService.upload(audioFile, fileName);
+
+      if (uploadedUrl) {
+        setAudioUrlUploaded(uploadedUrl); // <-- LƯU URL ĐÃ UPLOAD
+        message.success("Âm thanh đã được tạo và tải lên!");
+      } else {
+        throw new Error("Không nhận được URL sau khi tải lên.");
+      }
+      // ======================================================
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
     }
@@ -288,7 +305,7 @@ const VocabularyCreateComponent = ({
           word: values.word,
           // meaning: values.meaning,
           imageUrl: imageUrl || undefined,
-          audioUrl: mp3Url || null,
+          audioUrl: audioUrlUploaded,
           audioFile: mp3file || null,
           isNew: true,
         };
