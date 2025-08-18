@@ -637,12 +637,12 @@ const StudentPage = () => {
                       paddingTop: "16px",
                     }}
                   >
-                    <Text
+                    {/* <Text
                       strong
                       style={{ color: colors.darkGreen, display: "block", marginBottom: "8px" }}
                     >
                       <SoundOutlined /> Nghe lại bài học:
-                    </Text>
+                    </Text> */}
                     <audio
                       controls
                       src={lesson.linkSpeech}
