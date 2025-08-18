@@ -627,6 +627,38 @@ const StudentPage = () => {
                   style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{ __html: lesson.description || " " }}
                 />
+                {/* =================== PHẦN THÊM MỚI =================== */}
+                {/* Kiểm tra nếu có linkSpeech thì mới hiển thị trình phát audio */}
+                {lesson.linkSpeech && (
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      borderTop: `1px solid ${colors.borderGreen}`,
+                      paddingTop: "16px",
+                    }}
+                  >
+                    <Text
+                      strong
+                      style={{ color: colors.darkGreen, display: "block", marginBottom: "8px" }}
+                    >
+                      <SoundOutlined /> Nghe lại bài học:
+                    </Text>
+                    <audio
+                      controls
+                      src={lesson.linkSpeech}
+                      style={{ width: "100%" }}
+                      onError={(e) => {
+                        // Xử lý khi audio không tải được
+                        console.error("Audio failed to load:", lesson.linkSpeech);
+                        e.target.style.display = "none"; // Ẩn trình phát audio nếu có lỗi
+                        // Bạn có thể hiển thị một thông báo lỗi ở đây nếu muốn
+                      }}
+                    >
+                      Trình duyệt của bạn không hỗ trợ phát âm thanh.
+                    </audio>
+                  </div>
+                )}
+                {/* ====================================================== */}
               </Card>
             )}
           />
