@@ -712,6 +712,7 @@ function CreateClass() {
     try {
       const newTeacherId = classDataForUpdate.teacherID;
       const oldTeacherId = originalTeacherId; // Lấy teacherId gốc đã lưu
+      const classId = selectedClass.id;
 
       // Hàm thực hiện logic cập nhật lớp học và reset state
       const updateClassAndFinalize = async () => {
@@ -795,34 +796,59 @@ function CreateClass() {
       if (oldTeacherId && newTeacherId && oldTeacherId !== newTeacherId) {
         Modal.confirm({
           title: "Xác nhận thay đổi giáo viên?",
-          // Cập nhật lại nội dung cho rõ ràng hơn
-          content: `Bạn có muốn chuyển tất cả BÀI HỌC và BÀI TẬP từ giáo viên cũ sang giáo viên mới không?`,
-          okText: "Có, chuyển tất cả",
+          content: `Bạn có muốn chuyển các bài học và bài tập của lớp này từ giáo viên cũ sang giáo viên mới không?`,
+          okText: "Có, chuyển dữ liệu",
           cancelText: "Không, chỉ đổi giáo viên lớp",
           onOk: async () => {
             try {
-              // 👇 THỰC HIỆN CẢ HAI TÁC VỤ CÙNG LÚC
-              const reassignLessonsPromise = lessonService.reassignTeacherForLessons({
-                oldTeacherId: oldTeacherId,
-                newTeacherId: newTeacherId,
-              });
-              const reassignHomeWorksPromise = homeWorkService.reassignTeacherForHomeWorks({
-                oldTeacherId: oldTeacherId,
-                newTeacherId: newTeacherId,
-              });
-
-              // Đợi cả hai tác vụ hoàn thành
-              const [lessonsResult, homeWorksResult] = await Promise.all([
-                reassignLessonsPromise,
-                reassignHomeWorksPromise,
-              ]);
-
-              // Hiển thị thông báo tổng hợp
-              message.success(
-                `Đã chuyển ${lessonsResult.updatedCount} bài học và ${homeWorksResult.updatedCount} bài tập thành công!`
+              // BƯỚC 1: LẤY TẤT CẢ LỊCH HỌC CỦA LỚP
+              const schedulesOfClass = await lessonByScheduleService.getAllLessonBySchedulesOfClass(
+                classId
               );
 
-              // Tiếp tục cập nhật lớp
+              // BƯỚC 2: THU THẬP VÀ LỌC RA CÁC ID DUY NHẤT
+              // Dùng Set để tự động loại bỏ các ID trùng lặp
+              const uniqueLessonIds = [
+                ...new Set(
+                  schedulesOfClass.map((schedule) => schedule.lessonID).filter((id) => id != null) // Lọc bỏ các giá trị null hoặc undefined
+                ),
+              ];
+
+              const uniqueHomeWorkIds = [
+                ...new Set(
+                  schedulesOfClass.map((schedule) => schedule.homeWorkId).filter((id) => id != null)
+                ),
+              ];
+
+              // BƯỚC 3: GỌI API REASSIGN VỚI DANH SÁCH ID
+              const promises = [];
+
+              if (uniqueLessonIds.length > 0) {
+                promises.push(
+                  lessonService.reassignTeacherForLessons({
+                    newTeacherId: newTeacherId,
+                    lessonIds: uniqueLessonIds,
+                  })
+                );
+              }
+
+              if (uniqueHomeWorkIds.length > 0) {
+                promises.push(
+                  homeWorkService.reassignTeacherForHomeWorks({
+                    newTeacherId: newTeacherId,
+                    homeWorkIds: uniqueHomeWorkIds,
+                  })
+                );
+              }
+
+              if (promises.length > 0) {
+                await Promise.all(promises);
+                message.success("Đã chuyển dữ liệu bài học và bài tập của lớp thành công!");
+              } else {
+                message.info("Lớp này chưa có bài học/bài tập nào để chuyển.");
+              }
+
+              // BƯỚC 4: TIẾP TỤC CẬP NHẬT LỚP
               await updateClassAndFinalize();
             } catch (reassignError) {
               message.error("Lỗi khi chuyển dữ liệu: " + reassignError);
