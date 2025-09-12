@@ -12,6 +12,7 @@ import {
   Tag,
   Table,
   Typography,
+  Tooltip,
 } from "antd";
 import {
   SaveOutlined,
@@ -35,6 +36,7 @@ import user_notificationService from "services/user_notificationService";
 import Compressor from "compressorjs";
 import SpeechToTextComponent from "./SpeechToTextComponent";
 import fileService from "services/fileService";
+import { Calendar } from "lucide-react";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -157,6 +159,8 @@ export default function CreateLesson({
   quillRefDescription,
   quillRefLessonPlan,
   placeholderLessonPlan,
+  onUpdateSchedule,
+  loadingUpdateSchedule,
 }) {
   const [form] = Form.useForm();
   // const quillRefDescription = useRef(null); // Ref cho description
@@ -1582,6 +1586,24 @@ export default function CreateLesson({
 
       {isMobile && (
         <>
+          <Tooltip title="Cập nhật lịch thêm 6 tháng">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loadingUpdateSchedule}
+              disabled={loadingUpdateSchedule}
+              icon={<Calendar size={16} />}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                boxShadow: "0 2px 0 " + colors.softShadow,
+              }}
+              onClick={onUpdateSchedule}
+            >
+              Cập nhật lịch
+            </Button>
+          </Tooltip>
           <Button
             type="primary"
             htmlType="submit"
@@ -1636,6 +1658,24 @@ export default function CreateLesson({
       <div style={{ display: "flex", justifyContent: "right", width: "100%", gap: "10px" }}>
         {!isMobile && (
           <>
+            <Tooltip title="Cập nhật lịch thêm 6 tháng">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loadingUpdateSchedule}
+                disabled={loadingUpdateSchedule}
+                icon={<Calendar size={16} />}
+                style={{
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  boxShadow: "0 2px 0 " + colors.softShadow,
+                }}
+                onClick={onUpdateSchedule}
+              >
+                Cập nhật lịch
+              </Button>
+            </Tooltip>
             <Button
               type="primary"
               htmlType="submit"
@@ -1762,4 +1802,6 @@ CreateLesson.propTypes = {
   quillRefDescription: PropTypes.object.isRequired,
   quillRefLessonPlan: PropTypes.object.isRequired,
   placeholderLessonPlan: PropTypes.string.isRequired,
+  onUpdateSchedule: PropTypes.func.isRequired,
+  loadingUpdateSchedule: PropTypes.bool.isRequired,
 };

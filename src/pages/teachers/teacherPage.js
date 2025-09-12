@@ -81,6 +81,7 @@ import ChatComponent from "components/ChatComponent/ChatComponent";
 import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
 import { io } from "socket.io-client"; // Thêm import này
 import messageService from "services/messageService";
+import classScheduleService from "services/classScheduleService";
 
 // START: IMPORT CHAT COMPONENT
 // END: IMPORT CHAT COMPONENT
@@ -270,6 +271,9 @@ const TeacherPage = () => {
   const quillRefHomeWorkUpdate = useRef(null);
   const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
   const [isLessonCreate, setIsLessonCreate] = useState(false);
+  const [selectedSchedules, setSelectedSchedules] = useState(null);
+  const [loadingUpdateSchedule, setLoadingUpdateSchedule] = useState(false);
+
   const toolbar = [
     [{ font: [] }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -1348,6 +1352,93 @@ const TeacherPage = () => {
   const showComingSoon = () => {
     message.info("Coming soon!");
   };
+
+  const getDatesForSelectedSchedules = () => {
+    const resultDates = [];
+    let currentDate = new Date(
+      lessonByScheduleData?.[(lessonByScheduleData?.length ?? 0) - 1].date
+    );
+    const endDate = new Date(lessonByScheduleData?.[(lessonByScheduleData?.length ?? 0) - 1].date);
+    endDate.setMonth(endDate.getMonth() + 6);
+
+    while (currentDate <= endDate) {
+      selectedSchedules.forEach((schedule) => {
+        if (currentDate.getDay() === schedule.dayOfWeek - 1) {
+          resultDates.push({
+            classID: selectedClass,
+            scheduleID: schedule.id,
+            lessonID: null,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            date: currentDate.toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }),
+          });
+        }
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return resultDates;
+  };
+
+  const onUpdateSchedule = async () => {
+    try {
+      setLoadingUpdateSchedule(true);
+
+      const dateString = lessonByScheduleData?.[(lessonByScheduleData?.length ?? 0) - 1].date;
+      const inputDate = new Date(dateString);
+      const today = new Date();
+
+      const monthDiff =
+        (inputDate.getFullYear() - today.getFullYear()) * 12 +
+        (inputDate.getMonth() - today.getMonth());
+
+      if (selectedSchedules.length > 0 && monthDiff < 3) {
+        const dataForLessonBySchedule = {
+          lessons: getDatesForSelectedSchedules(),
+        };
+        const lessonBySchedulesRes = await lessonByScheduleService.createLessonBySchedule(
+          dataForLessonBySchedule
+        );
+        const classScheduleDatas = [];
+        selectedSchedules.forEach((schedule) => {
+          const classScheduleData = {
+            classID: selectedClass,
+            scheduleID: schedule.id,
+          };
+          classScheduleDatas.push(classScheduleData);
+        });
+        await classScheduleService.createClassSchedule(classScheduleDatas);
+
+        const lessonByScheduleDataUpdated = [...lessonByScheduleData, ...lessonBySchedulesRes];
+
+        setLessonByScheduleData(lessonByScheduleDataUpdated);
+
+        message.success("Cập nhật lịch thành công!");
+      } else {
+        message.warning("Last schedule must be at least 3 months from now");
+      }
+    } catch (e) {
+      message.error("something went wrong!" + e);
+    } finally {
+      setLoadingUpdateSchedule(false);
+    }
+  };
+
+  useEffect(() => {
+    const getAllSchedulesOfClass = async () => {
+      try {
+        const schedules = await lessonByScheduleService.getAllSchedulesOfClass(selectedClass);
+
+        setSelectedSchedules(schedules);
+      } catch (error) {
+        message.error("schedules fetch failed");
+      }
+    };
+
+    if (selectedClass) {
+      getAllSchedulesOfClass();
+    }
+  }, [selectedClass]);
 
   const userMenu = (
     <Menu>
@@ -2485,6 +2576,8 @@ const TeacherPage = () => {
                 quillRefDescription={quillRefLessonCreate}
                 quillRefLessonPlan={quillRefLessonPlanCreate}
                 placeholderLessonPlan={placeholderLessonPlan}
+                onUpdateSchedule={onUpdateSchedule}
+                loadingUpdateSchedule={loadingUpdateSchedule}
               />
             </div>
             {/* <div
@@ -2631,6 +2724,8 @@ const TeacherPage = () => {
                 homeWorks={homeWorks}
                 setHomeWorks={setHomeWorks}
                 quillRef={quillRefHomeWorkCreate}
+                onUpdateSchedule={onUpdateSchedule}
+                loadingUpdateSchedule={loadingUpdateSchedule}
               />
             </div>
             {/* <div

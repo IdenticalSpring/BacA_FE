@@ -42,6 +42,21 @@ const lessonByScheduleService = {
       throw error.response?.data?.message || "Error fetching lesson by schedule list";
     }
   },
+  getAllSchedulesOfClass: async (classId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/lesson-by-schedule/class/schedule/${classId}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error fetching lesson by schedule list";
+    }
+  },
   getLessonByScheduleByHomeworkId: async (homeworkId) => {
     try {
       console.log(homeworkId);

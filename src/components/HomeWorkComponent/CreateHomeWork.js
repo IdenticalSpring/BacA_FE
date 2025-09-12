@@ -11,6 +11,7 @@ import {
   Space,
   Spin,
   Table,
+  Tooltip,
   Typography,
 } from "antd";
 import {
@@ -43,6 +44,7 @@ import vocabularyService from "services/vocabularyService";
 import questionService from "services/questionService";
 import QuestionCreateComponent from "./QuestionCreateComponent";
 import teacherService from "services/teacherService";
+import { Calendar } from "lucide-react";
 
 const { Title } = Typography;
 const { Text } = Typography;
@@ -162,6 +164,8 @@ export default function CreateHomeWork({
   homeWorks,
   setHomeWorks,
   quillRef,
+  onUpdateSchedule,
+  loadingUpdateSchedule,
 }) {
   const [form] = Form.useForm();
   // const quillRef = useRef(null);
@@ -1388,6 +1392,24 @@ export default function CreateHomeWork({
       </div>
       {isMobile && (
         <>
+          <Tooltip title="Cập nhật lịch thêm 6 tháng">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loadingUpdateSchedule}
+              disabled={loadingUpdateSchedule}
+              icon={<Calendar size={16} />}
+              style={{
+                borderRadius: "6px",
+                backgroundColor: colors.emerald,
+                borderColor: colors.emerald,
+                boxShadow: "0 2px 0 " + colors.softShadow,
+              }}
+              onClick={onUpdateSchedule}
+            >
+              Cập nhật lịch
+            </Button>
+          </Tooltip>
           <Button
             type="primary"
             htmlType="submit"
@@ -1446,6 +1468,24 @@ export default function CreateHomeWork({
       <div style={{ display: "flex", justifyContent: "right", width: "100%", gap: "10px" }}>
         {!isMobile && (
           <>
+            <Tooltip title="Cập nhật lịch thêm 6 tháng">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loadingUpdateSchedule}
+                disabled={loadingUpdateSchedule}
+                icon={<Calendar size={16} />}
+                style={{
+                  borderRadius: "6px",
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                  boxShadow: "0 2px 0 " + colors.softShadow,
+                }}
+                onClick={onUpdateSchedule}
+              >
+                Cập nhật lịch
+              </Button>
+            </Tooltip>
             <Button
               type="primary"
               htmlType="submit"
@@ -1614,4 +1654,6 @@ CreateHomeWork.propTypes = {
   homeWorks: PropTypes.array.isRequired,
   setHomeWorks: PropTypes.func.isRequired,
   quillRef: PropTypes.object.isRequired,
+  onUpdateSchedule: PropTypes.func.isRequired,
+  loadingUpdateSchedule: PropTypes.bool.isRequired,
 };

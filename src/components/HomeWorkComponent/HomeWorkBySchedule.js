@@ -46,7 +46,15 @@ export default function HomeWorkBySchedule({
     });
   };
   return (
-    <div style={{ width: "90%", height: "80%" }}>
+    <div
+      style={{
+        width: "90%",
+        height: "80%",
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+      }}
+    >
       {paginatedData?.length > 0 ? (
         <>
           {paginatedData.map((item, index) => {
@@ -128,11 +136,13 @@ export default function HomeWorkBySchedule({
           {/* Pagination */}
           {lessonByScheduleData.length > pageSize && (
             <Pagination
+              size="small"
               current={currentPage}
               pageSize={pageSize}
               total={lessonByScheduleData.length}
               onChange={(page) => setCurrentPage(page)}
               style={{ textAlign: "center", marginTop: 20 }}
+              showSizeChanger={false}
             />
           )}
         </>
