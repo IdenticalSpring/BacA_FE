@@ -1442,7 +1442,7 @@ export default function CreateHomeWork({
               onSubmitWithStatus(true);
             }}
           >
-            Gửi link
+            Gửi bài tập
           </Button>
         </>
       )}
@@ -1516,7 +1516,7 @@ export default function CreateHomeWork({
                 onSubmitWithStatus(true);
               }}
             >
-              Gửi link
+              Gửi bài tập
             </Button>
           </>
         )}

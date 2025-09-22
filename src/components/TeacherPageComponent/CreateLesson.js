@@ -1632,7 +1632,7 @@ export default function CreateLesson({
             }}
             onClick={() => onSubmitWithStatus(true)}
           >
-            Gửi link
+            Gửi bài học
           </Button>
         </>
       )}
@@ -1704,7 +1704,7 @@ export default function CreateLesson({
               }}
               onClick={() => onSubmitWithStatus(true)}
             >
-              Gửi link
+              Gửi bài học
             </Button>
           </>
         )}
