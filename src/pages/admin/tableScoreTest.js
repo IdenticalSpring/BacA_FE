@@ -25,7 +25,7 @@ import { colors } from "assets/theme/color";
 const TableScoreTest = ({ onError }) => {
   const [dataSource, setDataSource] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [noData, setNoData] = useState(false); // New state for no data
+  const [noData, setNoData] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -45,15 +45,17 @@ const TableScoreTest = ({ onError }) => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const studentData = await studentService.getAllStudents();
-        setStudents(studentData);
-
         const classData = await classService.getAllClasses();
         setClasses(classData);
 
         const teacherData = await teacherService.getAllTeachers();
         setTeachers(teacherData);
 
+        // Lấy toàn bộ học sinh nếu chưa chọn lớp
+        const studentData = await studentService.getAllStudents();
+        setStudents(studentData);
+
+        // Lấy toàn bộ ngày kiểm tra nếu chưa chọn lớp
         const classTestSchedules = await classTestScheduleService.getAllClassTestSchedule();
         const uniqueDates = [
           ...new Set(
@@ -66,7 +68,7 @@ const TableScoreTest = ({ onError }) => {
       } catch (error) {
         setNotification({
           open: true,
-          message: "Failed to load filter options: " + error,
+          message: "Không thể tải tùy chọn bộ lọc: " + error,
           severity: "error",
         });
       }
@@ -75,18 +77,75 @@ const TableScoreTest = ({ onError }) => {
     fetchFilterOptions();
   }, []);
 
+  useEffect(() => {
+    const fetchClassBasedFilters = async () => {
+      if (selectedClass) {
+        try {
+          // Lấy danh sách học sinh theo lớp
+          const studentData = await studentService.getAllStudentsbyClass(selectedClass);
+          setStudents(studentData);
+
+          // Lấy danh sách lịch kiểm tra theo lớp
+          const classTestSchedules = await classTestScheduleService.getAllClassTestSchedule();
+          const filteredSchedules = classTestSchedules.filter(
+            (schedule) => schedule.classID === selectedClass
+          );
+          const uniqueDates = [
+            ...new Set(
+              filteredSchedules
+                .filter((schedule) => schedule.date)
+                .map((schedule) => new Date(schedule.date).toISOString().split("T")[0])
+            ),
+          ];
+          setTestDates(uniqueDates);
+
+          // Reset các bộ lọc con khi thay đổi lớp
+          setSelectedStudent("");
+          setSelectedTestDate("");
+        } catch (error) {
+          setNotification({
+            open: true,
+            message: "Không thể tải dữ liệu học sinh hoặc ngày kiểm tra: " + error,
+            severity: "error",
+          });
+        }
+      } else {
+        // Nếu không chọn lớp, lấy toàn bộ học sinh và ngày kiểm tra
+        try {
+          const studentData = await studentService.getAllStudents();
+          setStudents(studentData);
+
+          const classTestSchedules = await classTestScheduleService.getAllClassTestSchedule();
+          const uniqueDates = [
+            ...new Set(
+              classTestSchedules
+                .filter((schedule) => schedule.date)
+                .map((schedule) => new Date(schedule.date).toISOString().split("T")[0])
+            ),
+          ];
+          setTestDates(uniqueDates);
+        } catch (error) {
+          setNotification({
+            open: true,
+            message: "Không thể tải dữ liệu học sinh hoặc ngày kiểm tra: " + error,
+            severity: "error",
+          });
+        }
+      }
+    };
+
+    fetchClassBasedFilters();
+  }, [selectedClass]);
+
   const calculateAvgScore = (scores) => {
-    // Lấy tất cả các giá trị điểm từ object scores
     const validScores = Object.values(scores).filter(
       (score) => score !== undefined && score !== null && !isNaN(parseFloat(score))
     );
 
-    // Nếu không có điểm hợp lệ, trả về "-"
     if (validScores.length === 0) {
       return "-";
     }
 
-    // Tính tổng và trung bình, làm tròn đến 2 chữ số thập phân
     const sum = validScores.reduce((acc, score) => acc + parseFloat(score), 0);
     return (sum / validScores.length).toFixed(2);
   };
@@ -94,20 +153,24 @@ const TableScoreTest = ({ onError }) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      setNoData(false); // Reset noData state before fetching
+      setNoData(false);
       try {
-        // Fetch students (filtered by class if selected)
-        let studentData = await studentService.getAllStudents();
-        if (selectedClass) {
-          studentData = await studentService.getAllStudentsbyClass(selectedClass);
-        }
+        // Lấy dữ liệu học sinh (theo lớp nếu đã chọn, nếu không thì lấy tất cả)
+        let studentData = selectedClass
+          ? await studentService.getAllStudentsbyClass(selectedClass)
+          : await studentService.getAllStudents();
 
-        // Fetch classes and teachers
+        // Lấy dữ liệu lớp và giáo viên
         const classData = await classService.getAllClasses();
         const teacherData = await teacherService.getAllTeachers();
 
-        // Fetch class test schedules (filtered by date or teacher)
+        // Lấy lịch kiểm tra (lọc theo lớp nếu đã chọn)
         let classTestSchedules = await classTestScheduleService.getAllClassTestSchedule();
+        if (selectedClass) {
+          classTestSchedules = classTestSchedules.filter(
+            (schedule) => schedule.classID === selectedClass
+          );
+        }
         if (selectedTestDate) {
           classTestSchedules = classTestSchedules.filter(
             (schedule) =>
@@ -123,12 +186,12 @@ const TableScoreTest = ({ onError }) => {
           );
         }
 
-        // Fetch score details and student scores
+        // Lấy chi tiết điểm và điểm học sinh
         const scoreDetails = await StudentScoreService.getAllStudentScoreDetailsProcessed();
         const studentIds = selectedStudent ? [selectedStudent] : studentData.map((s) => s.id);
         const studentScores = await StudentScoreService.getCombinedStudentScores(studentIds);
 
-        // Create maps for quick lookup
+        // Tạo map để tra cứu nhanh
         const studentMap = studentData.reduce((acc, student) => {
           acc[student.id] = student.name;
           return acc;
@@ -153,7 +216,7 @@ const TableScoreTest = ({ onError }) => {
           return acc;
         }, {});
 
-        // Combine data with filters applied
+        // Kết hợp dữ liệu với các bộ lọc
         const combinedData = studentScores
           .filter((score) => {
             const matchesStudent = !selectedStudent || score.studentID === selectedStudent;
@@ -168,16 +231,15 @@ const TableScoreTest = ({ onError }) => {
             const schedule = testScheduleMap[score.classTestScheduleID] || {};
             return {
               key: score.studentScoreID,
-              studentName: studentMap[score.studentID] || "Unknown",
+              studentName: studentMap[score.studentID] || "Không xác định",
               testDate: schedule.date || "-",
-              className: classMap[schedule.classID] || "Unknown",
-              teacherName: teacherMap[schedule.teacherID] || "Unknown",
+              className: classMap[schedule.classID] || "Không xác định",
+              teacherName: teacherMap[schedule.teacherID] || "Không xác định",
               skillScores: detail.scores || {},
               avgScore: calculateAvgScore(detail.scores || {}),
             };
           });
 
-        // Check if data is empty
         if (combinedData.length === 0) {
           setNoData(true);
         } else {
@@ -186,7 +248,7 @@ const TableScoreTest = ({ onError }) => {
 
         setDataSource(combinedData);
       } catch (error) {
-        const errorMessage = "Failed to load data: " + error;
+        const errorMessage = "Không thể tải dữ liệu: " + error;
         setNotification({ open: true, message: errorMessage, severity: "error" });
         if (onError) onError(errorMessage);
       } finally {
@@ -197,18 +259,15 @@ const TableScoreTest = ({ onError }) => {
     fetchData();
   }, [selectedStudent, selectedTestDate, selectedClass, selectedTeacher, onError]);
 
-  // Get unique skills
   const uniqueSkills = Array.from(
     new Set(dataSource.flatMap((item) => Object.keys(item.skillScores)))
   );
 
-  // Define table columns
   const baseColumns = [
-    { Header: "Student Name", accessor: "studentName", width: "20%" },
-    { Header: "Class Name", accessor: "className", width: "15%" },
-    // { Header: "Teacher Name", accessor: "teacherName", width: "15%" },
-    { Header: "Test Date", accessor: "testDate", width: "15%" },
-    { Header: "Average Score", accessor: "avgScore", width: "10%" },
+    { Header: "Tên Học Sinh", accessor: "studentName", width: "20%" },
+    { Header: "Tên Lớp", accessor: "className", width: "15%" },
+    { Header: "Ngày Kiểm Tra", accessor: "testDate", width: "15%" },
+    { Header: "Điểm Trung Bình", accessor: "avgScore", width: "10%" },
   ];
 
   const skillColumns = uniqueSkills.map((skill) => ({
@@ -221,7 +280,6 @@ const TableScoreTest = ({ onError }) => {
 
   const columns = [...baseColumns, ...skillColumns];
 
-  // Prepare table rows
   const rows = dataSource.map((item) => ({
     studentName: item.studentName,
     className: item.className,
@@ -251,44 +309,39 @@ const TableScoreTest = ({ onError }) => {
           sx={{ backgroundColor: colors.deepGreen }}
         >
           <MDTypography variant="h6" sx={{ color: colors.white }}>
-            Student Scores
+            Điểm Học Sinh
           </MDTypography>
         </MDBox>
         <MDBox pt={3} px={3}>
-          {/* Filter UI */}
           <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={3}>
               <FormControl fullWidth>
-                <InputLabel>Student</InputLabel>
+                <InputLabel>Lớp</InputLabel>
                 <Select
-                  value={selectedStudent}
-                  onChange={(e) => setSelectedStudent(e.target.value)}
-                  label="Student"
-                  sx={{
-                    height: "40px",
-                  }}
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  label="Lớp"
+                  sx={{ height: "40px" }}
                 >
-                  <MenuItem value="">All Students</MenuItem>
-                  {students.map((student) => (
-                    <MenuItem key={student.id} value={student.id}>
-                      {student.name}
+                  <MenuItem value="">Tất Cả Lớp</MenuItem>
+                  {classes.map((cls) => (
+                    <MenuItem key={cls.id} value={cls.id}>
+                      {cls.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={3}>
-              <FormControl fullWidth>
-                <InputLabel>Test Date</InputLabel>
+              <FormControl fullWidth disabled={!selectedClass}>
+                <InputLabel>Ngày Kiểm Tra</InputLabel>
                 <Select
                   value={selectedTestDate}
                   onChange={(e) => setSelectedTestDate(e.target.value)}
-                  label="Test Date"
-                  sx={{
-                    height: "40px",
-                  }}
+                  label="Ngày Kiểm Tra"
+                  sx={{ height: "40px" }}
                 >
-                  <MenuItem value="">All Dates</MenuItem>
+                  <MenuItem value="">Tất Cả Ngày</MenuItem>
                   {testDates.map((date) => (
                     <MenuItem key={date} value={date}>
                       {date}
@@ -298,45 +351,23 @@ const TableScoreTest = ({ onError }) => {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={3}>
-              <FormControl fullWidth>
-                <InputLabel>Class</InputLabel>
+              <FormControl fullWidth disabled={!selectedClass}>
+                <InputLabel>Học Sinh</InputLabel>
                 <Select
-                  value={selectedClass}
-                  onChange={(e) => setSelectedClass(e.target.value)}
-                  label="Class"
-                  sx={{
-                    height: "40px",
-                  }}
+                  value={selectedStudent}
+                  onChange={(e) => setSelectedStudent(e.target.value)}
+                  label="Học Sinh"
+                  sx={{ height: "40px" }}
                 >
-                  <MenuItem value="">All Classes</MenuItem>
-                  {classes.map((cls) => (
-                    <MenuItem key={cls.id} value={cls.id}>
-                      {cls.name}
+                  <MenuItem value="">Tất Cả Học Sinh</MenuItem>
+                  {students.map((student) => (
+                    <MenuItem key={student.id} value={student.id}>
+                      {student.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
-            {/* <Grid item xs={12} sm={3}>
-              <FormControl fullWidth>
-                <InputLabel>Teacher</InputLabel>
-                <Select
-                  value={selectedTeacher}
-                  onChange={(e) => setSelectedTeacher(e.target.value)}
-                  label="Teacher"
-                  sx={{
-                    height: "40px",
-                  }}
-                >
-                  <MenuItem value="">All Teachers</MenuItem>
-                  {teachers.map((teacher) => (
-                    <MenuItem key={teacher.id} value={teacher.id}>
-                      {teacher.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid> */}
           </Grid>
 
           {loading ? (
