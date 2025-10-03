@@ -6,9 +6,11 @@ import {
   LaptopOutlined,
   EditOutlined,
   CloseOutlined,
+  PlusCircleOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import sidebarLinkService from "services/sidebarLinkService";
+import CreateClassForTeacher from "./CreateClassForTeacher";
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -33,10 +35,12 @@ const Sidebar = ({
   googleDriveLink,
   isMobile,
   onClose,
+  refreshClasses,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordwallEmbed, setWordwallEmbed] = useState(null);
   const [sidebarLinks, setSidebarLinks] = useState([]);
+  const [isCreateClassModalVisible, setIsCreateClassModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchSidebarLinks = async () => {
@@ -129,6 +133,27 @@ const Sidebar = ({
         <TeamOutlined />
         <Text style={{ fontWeight: 700, color: colors.darkGreen }}>Toàn bộ lớp học</Text>
       </div>
+      <Button
+        type="primary"
+        icon={<PlusCircleOutlined />}
+        onClick={() => setIsCreateClassModalVisible(true)}
+        style={{
+          margin: "0 auto",
+          padding: "5px 0",
+          width: "80%",
+          textAlign: "start",
+          marginBottom: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "5px 3px",
+          backgroundColor: colors.deepGreen,
+          borderColor: colors.deepGreen,
+          color: colors.white,
+        }}
+      >
+        <span className="button-text">Tạo bài học</span>
+      </Button>
 
       <div
         style={{
@@ -346,6 +371,12 @@ const Sidebar = ({
           <p>Đang tải nội dung...</p>
         )}
       </Modal>
+
+      <CreateClassForTeacher
+        visible={isCreateClassModalVisible}
+        onClose={() => setIsCreateClassModalVisible(false)}
+        refreshClasses={refreshClasses}
+      />
     </>
   );
 };
@@ -364,6 +395,7 @@ Sidebar.propTypes = {
   googleDriveLink: PropTypes.string.isRequired,
   isMobile: PropTypes.bool.isRequired,
   onClose: PropTypes.func,
+  refreshClasses: PropTypes.func,
 };
 
 Sidebar.defaultProps = {

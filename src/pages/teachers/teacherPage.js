@@ -220,6 +220,15 @@ const TeacherPage = () => {
   // ... (tất cả các hàm và useEffect hiện tại của bạn giữ nguyên)
   // ... (đoạn code dài của bạn ở đây)
 
+  const refreshClasses = async () => {
+    try {
+      const data = await classService.getAllClassesByTeacher(teacherId);
+      setClasses(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách lớp học:", error);
+    }
+  };
+
   const studentContextMenu = (student) => (
     <Menu>
       <Menu.Item
@@ -1568,6 +1577,7 @@ const TeacherPage = () => {
               googleDriveLink={teacherData?.linkDrive || ""}
               isMobile={isMobile}
               onClose={onClose}
+              refreshClasses={refreshClasses}
             />
           </Drawer>
         </>
@@ -1581,6 +1591,7 @@ const TeacherPage = () => {
           setOpenHomeworkStatisticsDashboard={setOpenHomeworkStatisticsDashboard}
           googleDriveLink={teacherData?.linkDrive || ""}
           isMobile={isMobile}
+          refreshClasses={refreshClasses}
         />
       )}
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
