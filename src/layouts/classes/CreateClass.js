@@ -562,6 +562,8 @@ function CreateClass() {
   };
 
   const handleSaveClass = async () => {
+    if (loadingCreateClass) return;
+
     setLoadingCreateClass(true);
     const genAccessId = generateAccessId();
     try {
@@ -1276,6 +1278,7 @@ function CreateClass() {
               )}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
+                  disabled={loadingCreateClass}
                   variant="contained"
                   sx={{
                     backgroundColor: colors.midGreen,

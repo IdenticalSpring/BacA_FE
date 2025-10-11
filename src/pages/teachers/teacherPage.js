@@ -1391,6 +1391,10 @@ const TeacherPage = () => {
 
   const onUpdateSchedule = async () => {
     try {
+      if (loadingUpdateSchedule) {
+        return;
+      }
+
       setLoadingUpdateSchedule(true);
 
       const dateString = lessonByScheduleData?.[(lessonByScheduleData?.length ?? 0) - 1].date;
