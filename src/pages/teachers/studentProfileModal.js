@@ -18,6 +18,7 @@ import {
   DatePicker,
   Select,
   List,
+  Pagination,
 } from "antd";
 import {
   TrophyOutlined,
@@ -50,10 +51,13 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
   const [assessmentData, setAssessmentData] = useState([]);
   const [studentInfo, setStudentInfo] = useState(null);
   const [skillEvaluations, setSkillEvaluations] = useState([]);
+  const [evaluations, setEvaluations] = useState([]);
   const [testSkills, setTestSkills] = useState([]);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 3;
 
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
@@ -76,13 +80,15 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
       setError(null);
 
       try {
-        const [scoreDetails, scores, studentData, skillData, testSkillsData] = await Promise.all([
-          studentScoreService.getScoreDetailsByStudentId(student.id),
-          studentScoreService.getScorebyStudentID(student.id),
-          studentService.getStudentById(student.id),
-          studentService.getEvaluationSkillStudent(student.id),
-          testSkillService.getAllTestSkill(),
-        ]);
+        const [scoreDetails, scores, studentData, skillData, evalData, testSkillsData] =
+          await Promise.all([
+            studentScoreService.getScoreDetailsByStudentId(student.id),
+            studentScoreService.getScorebyStudentID(student.id),
+            studentService.getStudentById(student.id),
+            studentService.getEvaluationSkillStudent(student.id),
+            studentService.getEvaluationStudent(student.id),
+            testSkillService.getAllTestSkill(),
+          ]);
 
         const sortedScoreDetails = Array.isArray(scoreDetails) ? [...scoreDetails] : [scoreDetails];
         const uniqueScheduleIds = [
@@ -143,6 +149,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
         );
         setStudentInfo(studentData);
         setSkillEvaluations(skillData);
+        setEvaluations(Array.isArray(evalData) ? evalData : [evalData]);
         setTestSkills(testSkillsData);
 
         const uniqueDates = getUniqueDates(skillData);
@@ -159,6 +166,10 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
 
     fetchData();
   }, [student?.id]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDate]);
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -313,6 +324,51 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
             </Row>
           )}
         </Space>
+      </>
+    );
+  };
+
+  const renderComments = () => {
+    if (!selectedDate) return <Text>Chưa chọn ngày để hiển thị nhận xét.</Text>;
+
+    const filteredEvaluations = evaluations
+      .filter((item) => item.date === selectedDate)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    const paginatedEvaluations = filteredEvaluations.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+
+    return (
+      <>
+        {filteredEvaluations.length > 0 ? (
+          <>
+            <List
+              dataSource={paginatedEvaluations}
+              renderItem={(item) => (
+                <List.Item>
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Giáo viên: {item.teacher.name} | Ngày: {formatDate(item.date)}
+                    </Text>
+                    <Text>{item.comment}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+            {filteredEvaluations.length > pageSize && (
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={filteredEvaluations.length}
+                onChange={setCurrentPage}
+                style={{ marginTop: 16, textAlign: "center" }}
+              />
+            )}
+          </>
+        ) : (
+          <Text>Chưa có nhận xét cho ngày này.</Text>
+        )}
       </>
     );
   };
@@ -581,6 +637,11 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
           </Card>
 
           {renderSkillDetails()}
+
+          <Divider orientation="left" style={{ color: colors.darkGreen }}>
+            Nhận xét của giáo viên theo ngày
+          </Divider>
+          {renderComments()}
 
           {recentScores && (
             <Card
