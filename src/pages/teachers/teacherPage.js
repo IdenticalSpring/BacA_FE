@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Layout,
   Avatar,
@@ -8,7 +8,6 @@ import {
   Typography,
   Card,
   Modal,
-  Form,
   Input,
   Row,
   Col,
@@ -27,11 +26,6 @@ import {
 import {
   UserOutlined,
   LogoutOutlined,
-  BookOutlined,
-  FormOutlined,
-  BarChartOutlined,
-  YoutubeOutlined,
-  FacebookFilled,
   BellOutlined,
   QuestionCircleOutlined,
   ExclamationCircleOutlined,
@@ -45,7 +39,6 @@ import {
   MenuUnfoldOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
 import EditStudentModal from "./EditStudentModal";
@@ -61,31 +54,27 @@ import EvaluationModal from "./EvaluationModal";
 import { useNavigate } from "react-router-dom";
 import levelService from "services/levelService";
 import CreateLesson from "components/TeacherPageComponent/CreateLesson";
-import LessonBySchedule from "components/TeacherPageComponent/LessonBySchedule";
 import LessonMangement from "components/TeacherPageComponent/LessonMangement";
 import homeWorkService from "services/homeWorkService";
-import HomeWorkBySchedule from "components/HomeWorkComponent/HomeWorkBySchedule";
 import CreateHomeWork from "components/HomeWorkComponent/CreateHomeWork";
 import HomeWorkMangement from "components/HomeWorkComponent/HomeWorkMangement";
 import teacherService from "services/teacherService";
 import MultiStudentEvaluationModal from "./multiEvaluationModal";
 import StudentProfileModal from "./studentProfileModal";
-import NotificationSection from "components/TeacherPageComponent/NotificationComponent";
 import notificationService from "services/notificationService";
 import HomeworkStatisticsDashboard from "./HomeworkStatisticsDashboard";
 import TeacherFeedbackModal from "./teacherFeedbackModal";
 import contentPageService from "services/contentpageService";
 import CreateStudentModal from "./CreateStudentModal";
-import Compressor from "compressorjs";
 import ChatComponent from "components/ChatComponent/ChatComponent";
 import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
 import { io } from "socket.io-client"; // Thêm import này
 import messageService from "services/messageService";
 import classScheduleService from "services/classScheduleService";
-
-// START: IMPORT CHAT COMPONENT
-// END: IMPORT CHAT COMPONENT
-
+import toolbar from "utils/teacherPageToolBar";
+import quillFormats from "utils/teacherPageQuillFormat";
+import daysOfWeek from "utils/dayofWeek";
+import getTimeElapsed from "utils/getTimeElapsed";
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -114,37 +103,7 @@ export const colors = {
   borderGreen: "#A8E6C3",
 };
 
-const daysOfWeek = [
-  "Choose day of week",
-  "Chủ nhật",
-  "Thứ hai",
-  "Thứ ba",
-  "Thứ tư",
-  "Thứ năm",
-  "Thứ sáu",
-  "Thứ bảy",
-];
-// Helper function to calculate time elapsed
-const getTimeElapsed = (createdAt) => {
-  const created = new Date(createdAt);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now - created) / 1000);
-
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} sec`;
-  } else if (diffInSeconds < 3600) {
-    return `${Math.floor(diffInSeconds / 60)} min`;
-  } else if (diffInSeconds < 86400) {
-    return `${Math.floor(diffInSeconds / 3600)} hr`;
-  } else {
-    return `${Math.floor(diffInSeconds / 86400)} day${
-      Math.floor(diffInSeconds / 86400) !== 1 ? "s" : ""
-    }`;
-  }
-};
-// Main TeacherPage Component
 const TeacherPage = () => {
-  // START: ADD STATE FOR CHAT DRAWER
   const [isChatDrawerVisible, setIsChatDrawerVisible] = useState(false);
   // END: ADD STATE FOR CHAT DRAWER
 
@@ -217,8 +176,34 @@ const TeacherPage = () => {
   const userName = userId.username || "Teacher";
   const navigate = useNavigate();
 
-  // ... (tất cả các hàm và useEffect hiện tại của bạn giữ nguyên)
-  // ... (đoạn code dài của bạn ở đây)
+  //Student information
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
+  const [assignmentModal, setAssignmentModal] = useState(false);
+  const [homeworkModal, setHomeworkModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("lesson");
+  const [levels, setLevels] = useState(null);
+  const [modalUpdateHomeWorkVisible, setModalUpdateHomeWorkVisible] = useState(false);
+  const [modalUpdateLessonVisible, setModalUpdateLessonVisible] = useState(false);
+  const [editingLesson, setEditingLesson] = useState(null);
+  const [editingHomeWork, setEditingHomeWork] = useState(null);
+  const [openNotification, setOpenNotification] = useState(false);
+  const [openHomeworkStatisticsDashboard, setOpenHomeworkStatisticsDashboard] = useState(false);
+  const [isTeacherProfileModalVisible, setIsTeacherProfileModalVisible] = useState(false);
+  const [teacherData, setTeacherData] = useState(null);
+  const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
+  const [contentData, setContentData] = useState(null);
+  const [selectLanguageClick, setSelectLanguageClick] = useState(false);
+  const quillRefLessonCreate = useRef(null);
+  const quillRefLessonUpdate = useRef(null);
+  const quillRefLessonPlanCreate = useRef(null);
+  const quillRefLessonPlanUpdate = useRef(null);
+  const quillRefHomeWorkCreate = useRef(null);
+  const quillRefHomeWorkUpdate = useRef(null);
+  const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
+  const [isLessonCreate, setIsLessonCreate] = useState(false);
+  const [selectedSchedules, setSelectedSchedules] = useState(null);
+  const [loadingUpdateSchedule, setLoadingUpdateSchedule] = useState(false);
 
   const refreshClasses = async () => {
     try {
@@ -254,78 +239,7 @@ const TeacherPage = () => {
     </Menu>
   );
 
-  //Student information
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [isEvaluationModalVisible, setIsEvaluationModalVisible] = useState(false);
-  const [assignmentModal, setAssignmentModal] = useState(false);
-  const [homeworkModal, setHomeworkModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("lesson");
-  const [levels, setLevels] = useState(null);
-  const [modalUpdateHomeWorkVisible, setModalUpdateHomeWorkVisible] = useState(false);
-  const [modalUpdateLessonVisible, setModalUpdateLessonVisible] = useState(false);
-  const [editingLesson, setEditingLesson] = useState(null);
-  const [editingHomeWork, setEditingHomeWork] = useState(null);
-  const [openNotification, setOpenNotification] = useState(false);
-  const [openHomeworkStatisticsDashboard, setOpenHomeworkStatisticsDashboard] = useState(false);
-  const [isTeacherProfileModalVisible, setIsTeacherProfileModalVisible] = useState(false);
-  const [teacherData, setTeacherData] = useState(null);
-  const [homeworkZaloLink, setHomeworkZaloLink] = useState("");
-  const [contentData, setContentData] = useState(null);
-  const [selectLanguageClick, setSelectLanguageClick] = useState(false);
-  const quillRefLessonCreate = useRef(null);
-  const quillRefLessonUpdate = useRef(null);
-  const quillRefLessonPlanCreate = useRef(null);
-  const quillRefLessonPlanUpdate = useRef(null);
-  const quillRefHomeWorkCreate = useRef(null);
-  const quillRefHomeWorkUpdate = useRef(null);
-  const [placeholderLessonPlan, setPlaceholderLessonPlan] = useState("");
-  const [isLessonCreate, setIsLessonCreate] = useState(false);
-  const [selectedSchedules, setSelectedSchedules] = useState(null);
-  const [loadingUpdateSchedule, setLoadingUpdateSchedule] = useState(false);
-
-  const toolbar = [
-    [{ font: [] }],
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    [{ size: ["small", false, "large", "huge"] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    ["link", "image", "video"],
-    [{ script: "sub" }, { script: "super" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ direction: "rtl" }],
-    [{ color: [] }, { background: [] }],
-    [{ align: [] }],
-    ["clean"],
-    ["undo", "redo"],
-  ];
-
-  const quillFormats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "list",
-    "bullet",
-    "indent",
-    "link",
-    "image",
-    "color",
-    "background",
-    "align",
-    "audio",
-    "size",
-    // "code-block",
-    "font",
-    // "code",
-    "script",
-    "direction",
-    "video",
-  ];
-  // console.log(editingLesson);
   useEffect(() => {
-    // setTimeout(() => {
     const fetchPlaceholder = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/contentpage/lessonPlanPlaceholder`, {
@@ -341,7 +255,6 @@ const TeacherPage = () => {
       }
     };
     fetchPlaceholder();
-    // }, 1000); // Delay 1 giây
   }, []);
   console.log(homeworkModal);
   useEffect(() => {
@@ -1140,18 +1053,6 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
-  // const handleSelectStudent = (student) => {
-  //   setSelectedStudents((prev) => {
-  //     if (prev.some((s) => s.id === student.id)) {
-  //       // Nếu học sinh đã được chọn, xóa khỏi danh sách
-  //       return prev.filter((s) => s.id !== student.id);
-  //     } else {
-  //       // Nếu chưa được chọn, thêm vào danh sách
-  //       return [...prev, student];
-  //     }
-  //   });
-  // };
-
   // Hàm xử lý chọn từng học sinh (cập nhật để đồng bộ với allStudentsSelected)
   const handleSelectStudent = (student) => {
     setSelectedStudents((prev) => {
@@ -2214,7 +2115,6 @@ const TeacherPage = () => {
                       width: "100%",
                       height: "100%",
                       objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                      // borderRadius: "50%", // Giữ hình tròn
                     }}
                   />
                 ) : (
@@ -2225,19 +2125,12 @@ const TeacherPage = () => {
                 style={{
                   width: "50px",
                   height: "50px",
-                  // background: socialHover.zalo
-                  //   ? "linear-gradient(145deg, #0077EE, #0088FF)"
-                  //   : "linear-gradient(145deg, #0088FF, #0077EE)",
                   background: "transparent",
-                  // borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "white",
                   fontSize: "24px",
-                  // boxShadow: socialHover.zalo
-                  //   ? "0 6px 15px rgba(0, 136, 255, 0.4)"
-                  //   : "0 4px 10px rgba(0, 136, 255, 0.3)",
                   cursor: "pointer",
                   transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
                   transition: "all 0.3s ease",
@@ -2255,7 +2148,6 @@ const TeacherPage = () => {
                       width: "100%",
                       height: "100%",
                       objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                      // borderRadius: "50%", // Giữ hình tròn
                     }}
                   />
                 ) : (
@@ -2280,213 +2172,6 @@ const TeacherPage = () => {
           </div>
         )}
       </Layout>
-      {/* <Modal
-        title="Assignment Management"
-        open={assignmentModal}
-        onCancel={() => setAssignmentModal(false)}
-        footer={
-          activeTab === "homework"
-            ? [
-                <Button
-                  style={{ marginTop: "20px" }}
-                  key="close"
-                  onClick={() => setAssignmentModal(false)}
-                >
-                  Close
-                </Button>,
-                // <Button
-                //   key="submit"
-                //   type="primary"
-                //   onClick={handleSaveHomework}
-                //   style={{ backgroundColor: colors.deepGreen, borderColor: colors.deepGreen }}
-                // >
-                //   Save
-                // </Button>,
-              ]
-            : [
-                <Button
-                  style={{ marginTop: "20px" }}
-                  key="close"
-                  onClick={() => setAssignmentModal(false)}
-                >
-                  Close
-                </Button>,
-              ]
-        }
-        width={isMobile ? "95%" : "95%"}
-        centered={true}
-        className="assignment-modal"
-        style={{
-          borderRadius: "8px",
-        }}
-      >
-        <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" className="assignment-tabs">
-          <TabPane
-            tab={
-              <span>
-                <BookOutlined /> Lesson
-              </span>
-            }
-            key="lesson"
-          >
-            {loading ? (
-              <div style={{ textAlign: "center", padding: "20px" }}>
-                <Spin />
-                <div style={{ marginTop: "10px" }}>Loading...</div>
-              </div>
-            ) : error ? (
-              <Alert message="Error" description={error} type="error" showIcon />
-            ) : (
-              <div
-                style={{
-                  maxHeight: "70vh",
-                  width: "100%",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  rowGap: isMobile ? "20px" : "20px",
-                  justifyContent: "space-between",
-                  overflow: "auto",
-                }}
-              >
-                <div
-                  style={{
-                    maxHeight: "35vh",
-                    width: isMobile ? "100%" : "49%",
-                    height: "40vh",
-                  }}
-                >
-                  <CreateLesson
-                    toolbar={toolbar}
-                    quillFormats={quillFormats}
-                    levels={levels}
-                    isMobile={isMobile}
-                    loadingCreateLesson={loadingCreateLesson}
-                    setLoadingCreateLesson={setLoadingCreateLesson}
-                    teacherId={teacherId}
-                  />
-                </div>
-                <div
-                  style={{ maxHeight: "35vh", overflow: "auto", width: isMobile ? "100%" : "49%" }}
-                >
-                  <LessonBySchedule
-                    lessonByScheduleData={lessonByScheduleData}
-                    daysOfWeek={daysOfWeek}
-                    lessonsData={lessonsData}
-                    setLessonByScheduleData={setLessonByScheduleData}
-                    isMobile={isMobile}
-                  />
-                </div>
-                <div
-                  style={{
-                    maxHeight: "35vh",
-                    width: "100%",
-                    height: "35vh",
-                  }}
-                >
-                  <LessonMangement
-                    toolbar={toolbar}
-                    quillFormats={quillFormats}
-                    levels={levels}
-                    isMobile={isMobile}
-                    setModalUpdateLessonVisible={setModalUpdateLessonVisible}
-                    setEditingLesson={setEditingLesson}
-                    modalUpdateLessonVisible={modalUpdateLessonVisible}
-                    editingLesson={editingLesson}
-                    lessons={lessons}
-                    setLessons={setLessons}
-                    loading={loading}
-                    teacherId={teacherId}
-                  />
-                </div>
-              </div>
-            )}
-          </TabPane>
-          <TabPane
-            tab={
-              <span>
-                <FormOutlined /> Homework
-              </span>
-            }
-            key="homework"
-          >
-            {loading ? (
-              <div style={{ textAlign: "center", padding: "20px" }}>
-                <Spin />
-                <div style={{ marginTop: "10px" }}>Loading...</div>
-              </div>
-            ) : error ? (
-              <Alert message="Error" description={error} type="error" showIcon />
-            ) : (
-              <div
-                style={{
-                  maxHeight: "70vh",
-                  width: "100%",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  rowGap: isMobile ? "20px" : "20px",
-                  justifyContent: "space-between",
-                  overflow: "auto",
-                }}
-              >
-                <div
-                  style={{
-                    maxHeight: "35vh",
-                    width: isMobile ? "100%" : "49%",
-                    height: "40vh",
-                  }}
-                >
-                  <CreateHomeWork
-                    toolbar={toolbar}
-                    quillFormats={quillFormats}
-                    levels={levels}
-                    isMobile={isMobile}
-                    loadingCreateHomeWork={loadingCreateHomeWork}
-                    setLoadingCreateHomeWork={setLoadingCreateHomeWork}
-                    teacherId={teacherId}
-                    loadingTTS={loadingTTS}
-                    setLoadingTTS={setLoadingTTS}
-                  />
-                </div>
-                <div
-                  style={{ maxHeight: "35vh", overflow: "auto", width: isMobile ? "100%" : "49%" }}
-                >
-                  <HomeWorkBySchedule
-                    lessonByScheduleData={lessonByScheduleData}
-                    daysOfWeek={daysOfWeek}
-                    homeWorksData={homeWorksData}
-                    setLessonByScheduleData={setLessonByScheduleData}
-                    isMobile={isMobile}
-                  />
-                </div>
-                <div
-                  style={{
-                    maxHeight: "35vh",
-                    width: "100%",
-                    height: "35vh",
-                  }}
-                >
-                  <HomeWorkMangement
-                    toolbar={toolbar}
-                    quillFormats={quillFormats}
-                    levels={levels}
-                    isMobile={isMobile}
-                    setModalUpdateHomeWorkVisible={setModalUpdateHomeWorkVisible}
-                    setEditingHomeWork={setEditingHomeWork}
-                    modalUpdateHomeWorkVisible={modalUpdateHomeWorkVisible}
-                    editingHomeWork={editingHomeWork}
-                    loading={loading}
-                    homeWorks={homeWorks}
-                    setHomeWorks={setHomeWorks}
-                    loadingTTSForUpdate={loadingTTSForUpdate}
-                    setLoadingTTSForUpdate={setLoadingTTSForUpdate}
-                    teacherId={teacherId}
-                  />
-                </div>
-              </div>
-            )}
-          </TabPane>
-        </Tabs>
-      </Modal> */}
       <Modal
         title="Nội dung bài học"
         open={assignmentModal}
@@ -2595,21 +2280,6 @@ const TeacherPage = () => {
                 loadingUpdateSchedule={loadingUpdateSchedule}
               />
             </div>
-            {/* <div
-              style={{
-                maxHeight: "35vh",
-                overflow: "auto",
-                width: isMobile ? "100%" : "49%",
-              }}
-            >
-              <LessonBySchedule
-                lessonByScheduleData={lessonByScheduleData}
-                daysOfWeek={daysOfWeek}
-                lessonsData={lessonsData}
-                setLessonByScheduleData={setLessonByScheduleData}
-                isMobile={isMobile}
-              />
-            </div> */}
             <div
               style={{
                 maxHeight: "35vh",
@@ -2743,21 +2413,6 @@ const TeacherPage = () => {
                 loadingUpdateSchedule={loadingUpdateSchedule}
               />
             </div>
-            {/* <div
-              style={{
-                maxHeight: "35vh",
-                overflow: "auto",
-                width: isMobile ? "100%" : "49%",
-              }}
-            >
-              <HomeWorkBySchedule
-                lessonByScheduleData={lessonByScheduleData}
-                daysOfWeek={daysOfWeek}
-                homeWorksData={homeWorksData}
-                setLessonByScheduleData={setLessonByScheduleData}
-                isMobile={isMobile}
-              />
-            </div> */}
             <div
               style={{
                 maxHeight: "35vh",
@@ -2846,27 +2501,6 @@ const TeacherPage = () => {
           )}
         </div>
       </Modal>
-      {/* <Modal
-        open={openNotification}
-        onCancel={() => setOpenNotification(false)}
-        footer={<></>}
-        style={{
-          position: "absolute",
-          top: "50px",
-          right: isMobile ? "10px" : "100px",
-          width: isMobile ? "350px" : "400px",
-          zIndex: "10000",
-          padding: 0,
-        }}
-        title="Notification"
-      >
-        <NotificationSection
-          notifications={notifications}
-          setNotifications={setNotifications}
-          errorNotification={errorNotification}
-          loadingNotification={loadingNotification}
-        />
-      </Modal> */}
       <Modal
         open={openHomeworkStatisticsDashboard}
         onCancel={() => setOpenHomeworkStatisticsDashboard(false)}
@@ -2887,7 +2521,7 @@ const TeacherPage = () => {
       </Modal>
 
       {/* START: ADD CHAT BUBBLE AND DRAWER */}
-      {/* {selectedClass && (
+      {selectedClass && (
         <Button
           type="primary"
           shape="circle"
@@ -2926,12 +2560,10 @@ const TeacherPage = () => {
             isMobile={isMobile} // VÀ TRUYỀN isMobile VÀO ĐÂY
           />
         )}
-      </Drawer> */}
+      </Drawer>
 
-      {/* START: ADD GROUP CHAT BUBBLE AND DRAWER */}
-      {selectedClass && (
+      {/* {selectedClass && (
         <>
-          {/* Nút bấm nổi cho chat nhóm */}
           <Button
             type="primary"
             shape="circle"
@@ -2955,7 +2587,6 @@ const TeacherPage = () => {
             </Badge>
           </Button>
 
-          {/* Drawer cho chat nhóm */}
           <Drawer
             title={`Chit Chat: ${classData?.name}`}
             placement="right"
@@ -2977,7 +2608,7 @@ const TeacherPage = () => {
             )}
           </Drawer>
         </>
-      )}
+      )} */}
     </Layout>
   );
 };

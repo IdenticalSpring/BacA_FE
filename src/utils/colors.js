@@ -1,0 +1,21 @@
+export const colors = {
+  lightGreen: "#8ED1B0",
+  deepGreen: "#368A68",
+  white: "#FFFFFF",
+  gray: "#F5F5F5",
+  darkGray: "#333333",
+  accent: "#FFD166",
+  lightAccent: "#FFEDC2",
+  darkGreen: "#224922",
+  paleGreen: "#E8F5EE",
+  midGreen: "#5FAE8C",
+  errorRed: "#FF6B6B",
+  mintGreen: "#C2F0D7",
+  paleBlue: "#E6F7FF",
+  softShadow: "rgba(0, 128, 96, 0.1)",
+  emerald: "#2ECC71",
+  highlightGreen: "#43D183",
+  safeGreen: "#27AE60",
+  borderGreen: "#A8E6C3",
+};
+export default colors;
