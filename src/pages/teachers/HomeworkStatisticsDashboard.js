@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Card,
   Row,
@@ -96,6 +96,10 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   const [lessonByScheduleDiv, setLessonByScheduleDiv] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(lessonByScheduleData[0] ?? null);
   const [checkinData, setCheckinData] = useState(null);
+  const [currentWeekIndex, setCurrentWeekIndex] = useState(null);
+
+  const carouselRef = useRef();
+
   // const [countLesson, setCountLesson] = useState(0);
   // const [countHomework, setCountHomework] = useState(0);
   useMemo(() => {
@@ -210,26 +214,43 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
     fetchLessonAndHomeworkCountData();
   }, [checkinData]);
   useEffect(() => {
+    if (!lessonByScheduleData?.length) return;
+
     let lessonByScheduleDiv1 = [];
     const firstDate = new Date(lessonByScheduleData[0]?.date);
     const lastDate = new Date(firstDate);
     lastDate.setMonth(firstDate.getMonth() + 6);
-    // Xác định ngày đầu tiên của tuần chứa firstDate (Chủ Nhật hoặc Thứ Hai)
+
+    // Ngày đầu tuần đầu tiên (Chủ Nhật)
     const firstWeekStart = new Date(firstDate);
-    firstWeekStart.setDate(firstWeekStart.getDate() - firstWeekStart.getDay()); // Lùi về Chủ Nhật
+    firstWeekStart.setDate(firstWeekStart.getDate() - firstWeekStart.getDay());
 
     let currentDate = new Date(firstWeekStart);
+    let today = new Date(); // ngày hiện tại
+    let currentWeekIndex = 0;
+    let found = false;
+
     while (currentDate <= lastDate) {
-      let week = []; // Tạo một mảng chứa JSX của từng tuần
+      let week = [];
+
+      // lưu lại mốc đầu tuần để so sánh
+      const weekStart = new Date(currentDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      // kiểm tra xem "today" có nằm trong tuần này không
+      if (!found && today >= weekStart && today <= weekEnd) {
+        found = true;
+        currentWeekIndex = lessonByScheduleDiv1.length;
+      }
+
       for (let i = 0; i < 7; i++) {
         if (currentDate > lastDate) break;
 
-        // Tìm lịch trình của ngày hiện tại
         const scheduleItem = lessonByScheduleData.find(
-          (item) => new Date(item?.date || "").getTime() === currentDate.getTime()
+          (item) => new Date(item?.date || "").toDateString() === currentDate.toDateString()
         );
 
-        // Tạo UI cho ngày
         week.push(
           <Card
             key={currentDate.getTime()}
@@ -239,9 +260,8 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
               textAlign: "center",
               border: scheduleItem ? "2px solid red" : "1px solid #ccc",
               backgroundColor: scheduleItem ? "#fff5f5" : "#f5f5f5",
-              opacity: scheduleItem ? 1 : 0.5, // Giảm độ sáng
+              opacity: scheduleItem ? 1 : 0.5,
               cursor: scheduleItem ? "pointer" : "not-allowed",
-              // scale: scheduleItem && scheduleItem.id === selectedSchedule.id ? "1.05" : "1",
             }}
             onClick={() => scheduleItem && setSelectedSchedule(scheduleItem)}
           >
@@ -274,12 +294,19 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
 
         currentDate.setDate(currentDate.getDate() + 1);
       }
+
       lessonByScheduleDiv1.push(week);
     }
-    setLessonByScheduleDiv(lessonByScheduleDiv1);
-  }, [students]);
-  // console.log(lessonByScheduleDiv);
 
+    setLessonByScheduleDiv(lessonByScheduleDiv1);
+    setCurrentWeekIndex(currentWeekIndex); // lưu tuần hiện tại vào state
+  }, [students, lessonByScheduleData]);
+
+  useEffect(() => {
+    if (carouselRef.current && lessonByScheduleDiv.length > 0 && currentWeekIndex > 0) {
+      carouselRef.current.goTo(currentWeekIndex, true);
+    }
+  }, [currentWeekIndex, lessonByScheduleDiv, carouselRef]);
   // useEffect(() => {
   //   // Simulate loading data
   //   setTimeout(() => {
@@ -469,6 +496,8 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
         </Button> */}
       </div>
       <Carousel
+        initialSlide={currentWeekIndex}
+        ref={carouselRef}
         arrows
         infinite={false}
         dots={false}

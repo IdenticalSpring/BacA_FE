@@ -75,7 +75,7 @@ import toolbar from "utils/teacherPageToolBar";
 import quillFormats from "utils/teacherPageQuillFormat";
 import daysOfWeek from "utils/dayofWeek";
 import getTimeElapsed from "utils/getTimeElapsed";
-import NotificationMenu from "components/TeacherPageComponent/NotificationMenu";
+import NotificationMenu from "components/TeacherPageComponent/NotificationComponent";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
