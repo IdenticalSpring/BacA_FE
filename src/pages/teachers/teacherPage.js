@@ -75,6 +75,8 @@ import toolbar from "utils/teacherPageToolBar";
 import quillFormats from "utils/teacherPageQuillFormat";
 import daysOfWeek from "utils/dayofWeek";
 import getTimeElapsed from "utils/getTimeElapsed";
+import NotificationMenu from "components/TeacherPageComponent/NotificationMenu";
+
 const { Header } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -547,155 +549,6 @@ const TeacherPage = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
     localStorage.setItem("readNotifications", JSON.stringify(allIds));
   };
-
-  // Menu thông báo
-  const notificationMenu = (
-    <Menu
-      style={{
-        maxHeight: "500px",
-        overflowY: "auto",
-        width: "380px",
-        borderRadius: "12px",
-        boxShadow: `0 8px 32px rgba(0,0,0,0.12)`,
-        border: `1px solid ${colors.borderGreen}`,
-      }}
-    >
-      <div
-        style={{
-          padding: "16px",
-          borderBottom: `1px solid ${colors.borderGreen}`,
-          background: `linear-gradient(135deg, ${colors.deepGreen} 0%, ${colors.darkGreen} 100%)`,
-          color: colors.white,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
-          <Typography.Title level={5} style={{ color: colors.white, margin: 0 }}>
-            Thông báo
-          </Typography.Title>
-          {notifications.filter((n) => !n.isRead).length > 0 && (
-            <Tag color={colors.highlightGreen} style={{ fontWeight: 600 }}>
-              {notifications.filter((n) => !n.isRead).length} mới
-            </Tag>
-          )}
-        </div>
-        {notifications.filter((n) => !n.isRead).length > 0 && (
-          <Button
-            size="small"
-            onClick={handleMarkAllRead}
-            style={{
-              color: colors.white,
-              border: "none",
-              background: "transparent",
-              padding: "4px 0",
-            }}
-          >
-            Đánh dấu tất cả đã đọc
-          </Button>
-        )}
-      </div>
-      {loadingNotification ? (
-        <div style={{ textAlign: "center", padding: "20px" }}>
-          <Spin />
-          <div style={{ marginTop: "10px" }}>Đang tải...</div>
-        </div>
-      ) : errorNotification ? (
-        <Alert
-          message="Lỗi"
-          description={errorNotification}
-          type="error"
-          showIcon
-          style={{ margin: "8px" }}
-        />
-      ) : notifications.length > 0 ? (
-        notifications.map((notification, index) => (
-          <Menu.Item
-            key={notification.id}
-            onClick={() => handleNotificationClick(notification)}
-            style={{
-              padding: "12px 16px",
-              borderLeft: notification.isRead
-                ? "4px solid transparent"
-                : `4px solid ${colors.emerald}`,
-              backgroundColor: notification.isRead ? "transparent" : colors.paleGreen,
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-              <Avatar
-                style={{
-                  backgroundColor: notification.isRead ? colors.gray : colors.emerald,
-                  color: colors.white,
-                }}
-                icon={<BellOutlined />}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Typography.Text
-                  strong={!notification.isRead}
-                  style={{
-                    color: notification.isRead ? colors.darkGray : colors.darkGreen,
-                    display: "block",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {notification.title}
-                </Typography.Text>
-                <Typography.Text
-                  style={{
-                    color: notification.isRead ? colors.darkGray : colors.seaGreen,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {notification.detail}
-                </Typography.Text>
-                <Typography.Text
-                  style={{
-                    color: colors.darkGray,
-                    fontSize: "12px",
-                    display: "block",
-                    marginTop: "4px",
-                  }}
-                >
-                  {formatTime(notification.createdAt)}
-                </Typography.Text>
-              </div>
-              {!notification.isRead && (
-                <div
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    backgroundColor: colors.emerald,
-                    marginTop: "8px",
-                  }}
-                />
-              )}
-            </div>
-            {index < notifications.length - 1 && (
-              <Divider style={{ margin: "8px 0", borderColor: colors.borderGreen }} />
-            )}
-          </Menu.Item>
-        ))
-      ) : (
-        <div style={{ padding: "24px", textAlign: "center", color: colors.darkGray }}>
-          <BellOutlined
-            style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3, color: colors.midGreen }}
-          />
-          <Typography.Text>Không có thông báo nào</Typography.Text>
-        </div>
-      )}
-    </Menu>
-  );
 
   const fetchContentData = async () => {
     try {
@@ -1547,7 +1400,21 @@ const TeacherPage = () => {
                 {classes.find((cls) => cls.id === selectedClass)?.accessId}
               </Tag>
             )}
-            <Dropdown overlay={notificationMenu} trigger={["click"]} placement="bottomRight">
+            <Dropdown
+              trigger={["click"]}
+              placement="bottomRight"
+              overlay={
+                <NotificationMenu
+                  colors={colors}
+                  notifications={notifications}
+                  loadingNotification={loadingNotification}
+                  errorNotification={errorNotification}
+                  onClickNotification={handleNotificationClick}
+                  onMarkAllRead={handleMarkAllRead}
+                  formatTime={formatTime}
+                />
+              }
+            >
               <Button
                 type="text"
                 style={{
@@ -1580,26 +1447,6 @@ const TeacherPage = () => {
                     }}
                   />
                 </Badge>
-                {/* {notifications.filter((n) => !n.isRead).length > 0 && (
-                  <Typography.Text
-                    style={{
-                      backgroundColor: "#FFD700",
-                      color: "#D32F2F",
-                      borderRadius: "14px",
-                      padding: "3px 8px",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      marginLeft: "8px",
-                      border: "2px solid #FFFFFF",
-                      boxShadow: "0 2px 8px rgba(255, 215, 0, 0.6)",
-                      animation: "bounce 2s infinite",
-                    }}
-                  >
-                    {notifications.filter((n) => !n.isRead).length > 99
-                      ? "99+"
-                      : notifications.filter((n) => !n.isRead).length}
-                  </Typography.Text>
-                )} */}
               </Button>
             </Dropdown>
             <style>
