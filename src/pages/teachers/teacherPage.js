@@ -67,7 +67,6 @@ import TeacherFeedbackModal from "./teacherFeedbackModal";
 import contentPageService from "services/contentpageService";
 import CreateStudentModal from "./CreateStudentModal";
 import ChatComponent from "components/ChatComponent/ChatComponent";
-import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
 import { io } from "socket.io-client"; // Thêm import này
 import messageService from "services/messageService";
 import classScheduleService from "services/classScheduleService";

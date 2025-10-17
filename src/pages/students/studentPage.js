@@ -67,7 +67,6 @@ import { Close } from "@mui/icons-material";
 import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
 import AnswerQuestionComponent from "components/QuestionComponent/AnswerQuestionComponet";
 import ChatComponent from "components/ChatComponent/ChatComponent";
-import ChatGroupComponent from "components/ChatGroupComponent/ChatGroupComponent";
 import messageService from "services/messageService";
 
 const { Header, Content } = Layout;
@@ -1131,7 +1130,7 @@ const StudentPage = () => {
       </Layout>
 
       {/* START: THÊM BONG BÓNG CHAT VÀ DRAWER */}
-      {/* {classData && (
+      {classData && (
         <Button
           type="primary"
           shape="circle"
@@ -1185,13 +1184,12 @@ const StudentPage = () => {
             <Empty description="Không thể tải cuộc trò chuyện." />
           </div>
         )}
-      </Drawer> */}
+      </Drawer>
       {/* END: THÊM BONG BÓNG CHAT VÀ DRAWER */}
 
       {/* START: THÊM DRAWER VÀ NÚT BẤM CHO CHAT NHÓM */}
-      {classData && (
+      {/* {classData && (
         <>
-          {/* Nút bấm nổi cho chat nhóm */}
           <Button
             type="primary"
             shape="circle"
@@ -1215,7 +1213,6 @@ const StudentPage = () => {
             </Badge>
           </Button>
 
-          {/* Drawer cho chat nhóm */}
           <Drawer
             title={`Chit Chat: ${classData?.name}`}
             placement="right"
@@ -1223,7 +1220,7 @@ const StudentPage = () => {
             open={isGroupChatDrawerVisible}
             width={isMobile ? "100vw" : 500}
             bodyStyle={{ padding: 0, display: "flex", flexDirection: "column" }}
-            destroyOnClose={false} // Không hủy để giữ kết nối
+            destroyOnClose={false} 
           >
             {isGroupChatDrawerVisible && (
               <ChatGroupComponent
@@ -1231,13 +1228,12 @@ const StudentPage = () => {
                 classInfo={classData}
                 socket={groupSocket}
                 messages={groupMessages}
-                // setMessages={setGroupMessages}
                 loading={isGroupChatLoading}
               />
             )}
           </Drawer>
         </>
-      )}
+      )} */}
       <Modal
         open={openNotification}
         onCancel={() => setOpenNotification(false)}

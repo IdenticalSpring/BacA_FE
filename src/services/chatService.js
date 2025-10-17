@@ -1,53 +1,107 @@
 import axios from "axios";
+import { io } from "socket.io-client";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const SOCKET_URL = process.env.REACT_APP_WEBSOCKET_URL;
 
+let socket = null;
+
+// === Helper: Auth header for REST ===
+const authHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// === Socket control ===
 const chatService = {
-  // Tạo một chat mới
-  createChat: async (chatData) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/chat`, chatData);
-      return response.data;
-    } catch (error) {
-      console.error("Error creating chat:", error);
-      throw error.response?.data || error.message;
+  // ----- SOCKET METHODS -----
+  connect: () => {
+    if (socket) return socket;
+    const token = localStorage.getItem("token");
+    socket = io(SOCKET_URL, {
+      transports: ["websocket"],
+      forceNew: true,
+      extraHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    return socket;
+  },
+
+  disconnect: () => {
+    if (socket) {
+      socket.disconnect();
+      socket = null;
     }
   },
 
-  // Lấy danh sách chat theo classId
-  getChatsByClass: async (classId) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/chat/${classId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching chats by class:", error);
-      throw error.response?.data || error.message;
-    }
+  getSocket: () => socket,
+
+  on: (event, callback) => {
+    if (!socket) return;
+    socket.on(event, callback);
   },
 
-  // Thu hồi chat
-  revokeChat: async (chatId, isRevoked) => {
-    try {
-      const response = await axios.patch(`${API_BASE_URL}/chat/revoke/${chatId}`, { isRevoked });
-      return response.data;
-    } catch (error) {
-      console.error("Error revoking chat:", error);
-      throw error.response?.data || error.message;
-    }
+  off: (event, callback) => {
+    if (!socket) return;
+    socket.off(event, callback);
   },
-  markMessagesAsRead: async (classId, partnerId, readerRole) => {
-    try {
-      const payload = {
-        classId,
-        readerId: partnerId, // BE mong đợi readerId, chính là partnerId
-        readerRole,
-      };
-      const response = await axios.post(`${API_BASE_URL}/chat/read-messages`, payload);
-      return response.data;
-    } catch (error) {
-      console.error("Error marking messages as read:", error);
-      throw error.response?.data || error.message;
-    }
+
+  // ----- CHAT SOCKET ACTIONS -----
+  joinPrivateChat: (classId, studentId) => {
+    if (!socket) return;
+    socket.emit("joinPrivateChat", { classId, studentId });
+  },
+
+  sendPrivateChat: (payload) => {
+    if (!socket) return;
+    socket.emit("sendPrivateChat", payload);
+  },
+
+  revokePrivateChat: (chatId, classId, studentId) => {
+    if (!socket) return;
+    socket.emit("revokePrivateChat", { chatId, classId, studentId });
+  },
+
+  markPrivateRead: (classId, studentId, readerRole) => {
+    if (!socket) return;
+    socket.emit("markPrivateRead", { classId, studentId, readerRole });
+  },
+
+  // ----- REST METHODS -----
+  async getChatsByClass(classId) {
+    const res = await axios.get(`${API_BASE}/chat/${classId}`, {
+      headers: { ...authHeader() },
+    });
+    return res.data;
+  },
+
+  async createChat(payload) {
+    // optional REST fallback (not used if via socket)
+    const res = await axios.post(`${API_BASE}/chat`, payload, {
+      headers: { "Content-Type": "application/json", ...authHeader() },
+    });
+    return res.data;
+  },
+
+  async revokeChat(chatId, isRevoked = true) {
+    const res = await axios.patch(
+      `${API_BASE}/chat/revoke/${chatId}`,
+      { isRevoked },
+      {
+        headers: { "Content-Type": "application/json", ...authHeader() },
+      }
+    );
+    return res.data;
+  },
+
+  async markMessagesAsRead(classId, readerId, readerRole) {
+    const res = await axios.post(
+      `${API_BASE}/chat/read-messages`,
+      { classId, readerId, readerRole },
+      {
+        headers: { "Content-Type": "application/json", ...authHeader() },
+      }
+    );
+    return res.data;
   },
 };
 
