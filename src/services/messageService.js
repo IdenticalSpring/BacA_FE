@@ -31,16 +31,12 @@ const messageService = {
   sendGroupMessage: async (classId, data) => {
     try {
       const token = getAuthToken();
-      const res = await axios.post(
-        `${API_BASE_URL}/messages/class/${classId}`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await axios.post(`${API_BASE_URL}/messages/class/${classId}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       return res.data;
     } catch (err) {
       throw err.response?.data?.message || "Không thể gửi tin nhắn nhóm";

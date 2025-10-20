@@ -1198,4 +1198,46 @@ ChatComponent.defaultProps = {
   onUnreadCountChange: () => {},
 };
 
+ChatInterface.propTypes = {
+  chatPartner: PropTypes.object.isRequired,
+  chats: PropTypes.array.isRequired,
+  currentUserRole: PropTypes.string.isRequired,
+  isMobile: PropTypes.bool.isRequired,
+  loading: PropTypes.bool.isRequired,
+  error: PropTypes.string,
+  onGoBack: PropTypes.func,
+  chatContentRef: PropTypes.object.isRequired,
+  isRecording: PropTypes.bool.isRequired,
+  onToggleRecord: PropTypes.func.isRequired,
+  liveTranscript: PropTypes.string,
+  onImageUpload: PropTypes.func.isRequired,
+  onRevokeMessage: PropTypes.func.isRequired,
+  classInfo: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }),
+};
+
+ChatComponent.propTypes = {
+  currentUser: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    role: PropTypes.string.isRequired,
+  }).isRequired,
+  classInfo: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }),
+  studentsInClass: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ),
+  teacherOfClass: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    name: PropTypes.string, // Add this
+    imgUrl: PropTypes.string, // Add this
+  }),
+  isMobile: PropTypes.bool.isRequired,
+  onUnreadCountChange: PropTypes.func,
+};
+
 export default ChatComponent;

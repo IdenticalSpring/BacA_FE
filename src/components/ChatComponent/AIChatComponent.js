@@ -21,6 +21,7 @@ import {
   PoweroffOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
+import PropTypes from "prop-types";
 import { useSpeechRecognition } from "react-speech-kit";
 
 const { Content } = Layout;
@@ -375,3 +376,8 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
     </Layout>
   );
 }
+ChatTopicComponent.propTypes = {
+  userRole: PropTypes.string.isRequired,
+  classId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired, // Based on usage (classId is Number(classId))
+  teacherId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired, // Based on usage (teacherId is Number(teacherId))
+};
