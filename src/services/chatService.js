@@ -1,3 +1,4 @@
+// src/services/chatService.js
 import axios from "axios";
 import { io } from "socket.io-client";
 
@@ -14,7 +15,7 @@ const authHeader = () => {
 
 // === Socket control ===
 const chatService = {
-  // ----- SOCKET METHODS -----
+  // ----- SOCKET CORE -----
   connect: () => {
     if (socket) return socket;
     const token = localStorage.getItem("token");
@@ -45,7 +46,9 @@ const chatService = {
     socket.off(event, callback);
   },
 
-  // ----- CHAT SOCKET ACTIONS -----
+  // ============================================================
+  // 🟢 PRIVATE CHAT SOCKET EVENTS
+  // ============================================================
   joinPrivateChat: (classId, studentId) => {
     if (!socket) return;
     socket.emit("joinPrivateChat", { classId, studentId });
@@ -66,7 +69,39 @@ const chatService = {
     socket.emit("markPrivateRead", { classId, studentId, readerRole });
   },
 
-  // ----- REST METHODS -----
+  // ============================================================
+  // 🟣 GROUP CHAT SOCKET EVENTS
+  // ============================================================
+  joinGroupRoom: (classId) => {
+    if (!socket) return;
+    socket.emit("joinRoom", { classId });
+  },
+
+  sendGroupMessage: (messageData) => {
+    if (!socket) return;
+    socket.emit("sendMessage", messageData); // expects { classId, content?, imageUrl?, audioUrl? }
+  },
+
+  recallGroupMessage: (messageId, classId) => {
+    if (!socket) return;
+    socket.emit("recallMessage", { messageId, classId });
+  },
+
+  subscribeGroupMessages: (onNew, onRecalled) => {
+    if (!socket) return;
+    if (onNew) socket.on("newMessage", onNew);
+    if (onRecalled) socket.on("messageRecalled", onRecalled);
+  },
+
+  unsubscribeGroupMessages: (onNew, onRecalled) => {
+    if (!socket) return;
+    if (onNew) socket.off("newMessage", onNew);
+    if (onRecalled) socket.off("messageRecalled", onRecalled);
+  },
+
+  // ============================================================
+  // 🔵 REST METHODS (Private Chat)
+  // ============================================================
   async getChatsByClass(classId) {
     const res = await axios.get(`${API_BASE}/chat/${classId}`, {
       headers: { ...authHeader() },
@@ -75,7 +110,7 @@ const chatService = {
   },
 
   async createChat(payload) {
-    // optional REST fallback (not used if via socket)
+    // optional REST fallback
     const res = await axios.post(`${API_BASE}/chat`, payload, {
       headers: { "Content-Type": "application/json", ...authHeader() },
     });

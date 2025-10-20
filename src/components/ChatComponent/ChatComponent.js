@@ -28,14 +28,16 @@ import {
   MoreOutlined,
   PictureOutlined,
   SoundOutlined,
-  CameraOutlined, // Icon máy ảnh
+  CameraOutlined,
+  TeamOutlined, // Icon máy ảnh
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import chatService from "services/chatService";
 import fileService from "services/fileService";
 import { colors } from "pages/teachers/teacherPage";
 import { useSpeechRecognition } from "react-speech-kit";
-
+import messageService from "services/messageService";
+import AIChatComponent from "./AIChatComponent";
 const { Sider, Content } = Layout;
 const { Text, Title } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
@@ -219,105 +221,106 @@ MessageList.propTypes = {
 };
 MessageList.displayName = "MessageList";
 
-const StudentListSider = React.memo(({ students, selectedStudent, onSelectStudent }) => {
+const StudentListSider = React.memo(({ students, selectedStudent, onSelectStudent, role }) => {
   const getLastMessagePreview = (msg) => {
     if (!msg) return "Bắt đầu cuộc Chit Chat";
     if (msg.isRevoked) return <Text italic>Tin nhắn đã thu hồi</Text>;
     let previewText = msg.isMyLastMessage ? "Bạn: " : "";
-    if (msg.text) {
-      previewText += msg.text;
-    } else if (msg.imageUrl) {
-      previewText += "[Hình ảnh]";
-    } else if (msg.audioUrl) {
-      previewText += "[Ghi âm]";
-    }
-    const icon =
-      !msg.text && msg.imageUrl ? (
-        <PictureOutlined style={{ marginRight: 4 }} />
-      ) : !msg.text && msg.audioUrl ? (
-        <SoundOutlined style={{ marginRight: 4 }} />
-      ) : null;
-    return (
-      <>
-        {icon}
-        {previewText}
-      </>
-    );
+    if (msg.text) previewText += msg.text;
+    else if (msg.imageUrl) previewText += "[Hình ảnh]";
+    else if (msg.audioUrl) previewText += "[Ghi âm]";
+    return previewText;
   };
+
+  // ✅ Inject Group Chat only once
+  const hasGroup = students.some((s) => s.id === "group");
+  const listWithGroupAndAI = [
+    {
+      id: "ai",
+      name: "🤖 AI Trò chuyện",
+      imgUrl: null,
+      isAI: true,
+      lastMessage: { text: "Trò chuyện với AI hỗ trợ học tập" },
+    },
+    {
+      id: "group",
+      name: "💬 Nhóm lớp",
+      imgUrl: null,
+      isGroup: true,
+      lastMessage: { text: "Phòng chat chung của lớp" },
+    },
+    ...students,
+  ];
+
   return (
     <Layout style={{ height: "100%", backgroundColor: colors.white }}>
-      <header style={{ padding: "16px", borderBottom: `1px solid ${colors.gray}` }}>
-        <Title level={4} style={{ margin: 0, color: colors.darkGreen }}>
-          Chit Chat
-        </Title>
-      </header>
+      {/* <header
+          style={{
+            padding: 16,
+            borderBottom: `1px solid ${colors.gray}`,
+            backgroundColor: colors.white,
+          }}
+        >
+          <Title level={4} style={{ margin: 0, color: colors.deepGreen }}>
+            {role === "teacher" ? "Học sinh" : "Trò chuyện"}
+          </Title>
+        </header> */}
+
       <Content style={{ overflowY: "auto", height: "100%" }}>
-        {students.length > 0 ? (
+        {listWithGroupAndAI.length > 0 ? (
           <List
-            dataSource={students}
-            renderItem={(student) => (
+            dataSource={listWithGroupAndAI}
+            renderItem={(item) => (
               <List.Item
                 style={{
                   padding: "12px 16px",
                   cursor: "pointer",
                   backgroundColor:
-                    selectedStudent?.id === student.id ? colors.paleGreen : "transparent",
+                    selectedStudent?.id === item.id ? colors.paleGreen : "transparent",
                   borderLeft: `4px solid ${
-                    selectedStudent?.id === student.id ? colors.deepGreen : "transparent"
+                    selectedStudent?.id === item.id ? colors.deepGreen : "transparent"
                   }`,
                   transition: "all 0.2s ease-in-out",
                 }}
-                onClick={() => onSelectStudent(student)}
+                onClick={() => onSelectStudent(item)}
               >
                 <List.Item.Meta
-                  avatar={<Avatar size="large" src={student.imgUrl} icon={<UserOutlined />} />}
-                  title={
-                    <div
+                  avatar={
+                    <Avatar
+                      size="large"
+                      src={item.imgUrl}
+                      icon={item.isGroup ? <TeamOutlined /> : <UserOutlined />}
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
+                        backgroundColor: item.isGroup ? "#e6f7ff" : "#f0f0f0",
+                        border: item.isGroup ? "1px solid #91caff" : "1px solid #ccc",
                       }}
-                    >
-                      <Text strong>{student.name}</Text>
-                    </div>
+                    />
                   }
+                  title={<Text strong>{item.name}</Text>}
                   description={
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text
-                        type="secondary"
-                        ellipsis
-                        style={{ flex: 1, fontWeight: student.unreadCount > 0 ? "bold" : "normal" }}
-                      >
-                        {getLastMessagePreview(student.lastMessage)}
-                      </Text>
-                      {student.unreadCount > 0 && (
-                        <Badge count={student.unreadCount} style={{ marginLeft: 8 }} />
-                      )}
-                    </div>
+                    <Text type="secondary" style={{ fontSize: 12 }} ellipsis={{ tooltip: true }}>
+                      {getLastMessagePreview(item.lastMessage)}
+                    </Text>
                   }
                 />
               </List.Item>
             )}
           />
         ) : (
-          <Empty description="Chưa có học sinh trong lớp" style={{ marginTop: 40 }} />
+          <Empty description="Không có dữ liệu" style={{ marginTop: 40 }} />
         )}
       </Content>
     </Layout>
   );
 });
+
 StudentListSider.propTypes = {
   students: PropTypes.array.isRequired,
   selectedStudent: PropTypes.object,
   onSelectStudent: PropTypes.func.isRequired,
+  role: PropTypes.string.isRequired,
 };
+
 StudentListSider.displayName = "StudentListSider";
 
 const ChatInterface = React.memo(
@@ -470,6 +473,38 @@ const ChatComponent = ({
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const [liveTranscript, setLiveTranscript] = useState("");
+  const [groupChats, setGroupChats] = useState([]);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [groupError, setGroupError] = useState(null);
+  // ✅ connect to socket once
+  useEffect(() => {
+    const socket = chatService.connect();
+    if (!classInfo?.id) return;
+
+    // join this class's group room
+    chatService.joinGroupRoom(classInfo.id);
+
+    // subscribe to new / recalled messages
+    chatService.subscribeGroupMessages(
+      (newMsg) => {
+        setGroupChats((prev) => {
+          // avoid duplicates if same id already exists
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+      },
+      ({ messageId }) => {
+        setGroupChats((prev) =>
+          prev.map((m) => (m.id === messageId ? { ...m, isRevoked: true } : m))
+        );
+      }
+    );
+
+    return () => {
+      chatService.unsubscribeGroupMessages();
+      chatService.disconnect();
+    };
+  }, [classInfo?.id]);
 
   // *** FIX 1: Tạo một ref để lưu trữ giá trị mới nhất của liveTranscript ***
   const liveTranscriptRef = useRef("");
@@ -494,6 +529,19 @@ const ChatComponent = ({
     }
   }, [allChatsInClass, currentUser.role, onUnreadCountChange]);
 
+  const fetchGroupChats = useCallback(async () => {
+    if (!classInfo?.id) return;
+    setGroupLoading(true);
+    try {
+      const groupMessages = await messageService.getMessagesForClass(classInfo.id);
+      setGroupChats(groupMessages || []);
+    } catch (err) {
+      setGroupError(err.message || "Không thể tải tin nhắn nhóm lớp.");
+    } finally {
+      setGroupLoading(false);
+    }
+  }, [classInfo]);
+
   const fetchAllChats = useCallback(async () => {
     if (!classInfo?.id) return;
     try {
@@ -511,7 +559,11 @@ const ChatComponent = ({
     const interval = setInterval(fetchAllChats, 5000);
     return () => clearInterval(interval);
   }, [fetchAllChats]);
-
+  useEffect(() => {
+    fetchGroupChats();
+    // const interval = setInterval(fetchGroupChats, 8000);
+    // return () => clearInterval(interval);
+  }, [fetchGroupChats]);
   const handleMarkAsRead = useCallback(
     async (partner) => {
       if (!partner || !classInfo || !currentUser) return;
@@ -545,12 +597,56 @@ const ChatComponent = ({
     },
     [allChatsInClass, classInfo, currentUser]
   );
+  const handleSendGroupMessage = useCallback(
+    (data) => {
+      if (!classInfo?.id) return;
+
+      // optimistic append
+      const tempId = Date.now();
+      const optimisticMsg = {
+        id: tempId,
+        tempId,
+        classId: classInfo.id,
+        message: data.message || "",
+        imageUrl: data.imageUrl || null,
+        audioUrl: data.audioUrl || null,
+        senderRole: currentUser.role,
+        createdAt: new Date().toISOString(),
+      };
+      setGroupChats((prev) => [...prev, optimisticMsg]);
+
+      chatService.sendGroupMessage({
+        classId: classInfo.id,
+        content: data.message || "",
+        imageUrl: data.imageUrl || null,
+        audioUrl: data.audioUrl || null,
+      });
+    },
+    [classInfo, currentUser.role]
+  );
 
   const handleSendMessage = useCallback(
     async (data) => {
+      // 🟣 If this is the group chat, call messageService instead
+      if (selectedStudent?.id === "group") {
+        try {
+          const newMsg = await messageService.sendGroupMessage(classInfo.id, {
+            message: data.message || "",
+            imageUrl: data.imageUrl || null,
+            audioUrl: data.audioUrl || null,
+          });
+          setGroupChats((prev) => [...prev, newMsg]);
+        } catch (err) {
+          setGroupError(err.message || "Không thể gửi tin nhắn nhóm.");
+        }
+        return;
+      }
+
+      // 🟢 Otherwise, normal private chat
       const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
       if (!chatPartner || !classInfo) return;
       setError(null);
+
       const chatData = {
         classId: classInfo.id,
         studentId: currentUser.role === "student" ? currentUser.id : chatPartner.id,
@@ -558,6 +654,7 @@ const ChatComponent = ({
         senderRole: currentUser.role,
         ...data,
       };
+
       try {
         const newChat = await chatService.createChat(chatData);
         setAllChatsInClass((prev) => [...prev.filter((c) => c.id !== chatData.tempId), newChat]);
@@ -567,6 +664,17 @@ const ChatComponent = ({
       }
     },
     [selectedStudent, teacherOfClass, classInfo, currentUser]
+  );
+
+  // --- SEND GROUP MESSAGE ---
+
+  // --- RECALL GROUP MESSAGE ---
+  const handleRevokeGroupMessage = useCallback(
+    (messageId) => {
+      if (!classInfo?.id) return;
+      chatService.recallGroupMessage(messageId, classInfo.id);
+    },
+    [classInfo]
   );
 
   const createOptimisticChat = (chatPartner, data) => ({
@@ -602,6 +710,34 @@ const ChatComponent = ({
       }
     },
     [selectedStudent, teacherOfClass, currentUser, handleSendMessage]
+  );
+  const handleGroupImageUpload = useCallback(
+    async (file) => {
+      if (!file) return;
+      const tempId = Date.now();
+      const tempImageUrl = URL.createObjectURL(file);
+      setGroupChats((prev) => [
+        ...prev,
+        {
+          id: tempId,
+          tempId,
+          createdAt: new Date().toISOString(),
+          senderType: currentUser.role,
+          imageUrl: tempImageUrl,
+          message: "",
+          isRead: true,
+        },
+      ]);
+      try {
+        const uploadedUrl = await fileService.upload(file, `group-chat-${tempId}`);
+        URL.revokeObjectURL(tempImageUrl);
+        await handleSendGroupMessage({ imageUrl: uploadedUrl });
+      } catch {
+        message.error("Gửi ảnh nhóm thất bại!");
+        setGroupChats((prev) => prev.filter((m) => m.id !== tempId));
+      }
+    },
+    [handleSendGroupMessage, currentUser]
   );
 
   const handleRevokeMessage = useCallback(async (chatId) => {
@@ -753,7 +889,13 @@ const ChatComponent = ({
   const handleSelectStudent = useCallback(
     (student) => {
       setSelectedStudent(student);
-      handleMarkAsRead(student);
+
+      if (student?.isAI) {
+        if (isMobile) setMobileView("ai");
+        return;
+      }
+
+      if (!student.isGroup) handleMarkAsRead(student);
       if (isMobile) setMobileView("chat");
     },
     [isMobile, handleMarkAsRead]
@@ -768,24 +910,33 @@ const ChatComponent = ({
   }, [currentUser.role, teacherOfClass, handleMarkAsRead, allChatsInClass]);
 
   // --- RENDER LOGIC ---
-
   if (currentUser.role === "teacher") {
+    const isGroupChat = selectedStudent?.id === "group";
+    const chatsToDisplay = isGroupChat ? groupChats : teacherFilteredChats;
     const mainContent = selectedStudent ? (
-      <ChatInterface
-        chatPartner={selectedStudent}
-        chats={teacherFilteredChats}
-        currentUserRole={currentUser.role}
-        isMobile={isMobile}
-        loading={loading}
-        error={error}
-        onGoBack={handleGoBack}
-        chatContentRef={chatContentRef}
-        isRecording={isRecording}
-        onToggleRecord={handleToggleRecord}
-        liveTranscript={liveTranscript}
-        onImageUpload={handleImageUpload}
-        onRevokeMessage={handleRevokeMessage}
-      />
+      selectedStudent.isAI ? (
+        <AIChatComponent
+          userRole={currentUser.role}
+          classId={classInfo?.id}
+          teacherId={currentUser?.id}
+        />
+      ) : (
+        <ChatInterface
+          chatPartner={selectedStudent}
+          chats={chatsToDisplay}
+          currentUserRole={currentUser.role}
+          isMobile={isMobile}
+          loading={isGroupChat ? groupLoading : loading}
+          error={isGroupChat ? groupError : error}
+          onGoBack={handleGoBack}
+          chatContentRef={chatContentRef}
+          isRecording={isRecording}
+          onToggleRecord={handleToggleRecord}
+          liveTranscript={liveTranscript}
+          onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
+          onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
+        />
+      )
     ) : (
       <div
         style={{
@@ -843,23 +994,51 @@ const ChatComponent = ({
         </div>
       );
     }
+
+    const studentList = [
+      {
+        id: teacherOfClass.id,
+        name: teacherOfClass.name || "Giáo viên",
+        imgUrl: teacherOfClass.imgUrl || null,
+        isGroup: false,
+        lastMessage: null,
+      },
+    ];
+
+    const selectedPartner =
+      selectedStudent && selectedStudent.id
+        ? selectedStudent
+        : { id: teacherOfClass.id, name: teacherOfClass.name, isGroup: false };
+
+    const isGroupChat = selectedStudent?.id === "group";
+    const chatsToDisplay = isGroupChat ? groupChats : teacherFilteredChats;
     return (
       <Layout style={{ height: "100vh" }}>
-        <ChatInterface
-          chatPartner={teacherOfClass}
-          chats={studentFilteredChats}
-          currentUserRole={currentUser.role}
-          isMobile={isMobile}
-          loading={loading}
-          error={error}
-          onGoBack={null}
-          chatContentRef={chatContentRef}
-          isRecording={isRecording}
-          onToggleRecord={handleToggleRecord}
-          liveTranscript={liveTranscript}
-          onImageUpload={handleImageUpload}
-          onRevokeMessage={handleRevokeMessage}
-        />
+        <Sider width={280} theme="light" style={{ borderRight: `1px solid ${colors.gray}` }}>
+          <StudentListSider
+            role="student"
+            students={studentList}
+            selectedStudent={selectedStudent}
+            onSelectStudent={setSelectedStudent}
+          />
+        </Sider>
+        <Content>
+          <ChatInterface
+            chatPartner={selectedPartner}
+            chats={chatsToDisplay}
+            currentUserRole={currentUser.role}
+            isMobile={isMobile}
+            loading={isGroupChat ? groupLoading : loading}
+            error={isGroupChat ? groupError : error}
+            onGoBack={null}
+            chatContentRef={chatContentRef}
+            isRecording={isRecording}
+            onToggleRecord={handleToggleRecord}
+            liveTranscript={liveTranscript}
+            onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
+            onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
+          />
+        </Content>
       </Layout>
     );
   }

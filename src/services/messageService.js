@@ -27,6 +27,26 @@ const messageService = {
       throw error.response?.data?.message || "Không thể tải lịch sử tin nhắn";
     }
   },
+
+  sendGroupMessage: async (classId, data) => {
+    try {
+      const token = getAuthToken();
+      const res = await axios.post(
+        `${API_BASE_URL}/messages/class/${classId}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return res.data;
+    } catch (err) {
+      console.error("Error sending group message:", err);
+      throw err.response?.data?.message || "Không thể gửi tin nhắn nhóm";
+    }
+  },
 };
 
 export default messageService;
