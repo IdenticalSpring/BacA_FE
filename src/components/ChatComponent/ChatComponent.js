@@ -38,9 +38,11 @@ import { colors } from "pages/teachers/teacherPage";
 import { useSpeechRecognition } from "react-speech-kit";
 import messageService from "services/messageService";
 import AIChatComponent from "./AIChatComponent";
+import chatTopicService from "services/chatTopicService";
 const { Sider, Content } = Layout;
 const { Text, Title } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // --- Helpers & Sub-components ---
 const createLocalTimestamp = () => new Date().toISOString();
@@ -253,7 +255,7 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
   ];
 
   return (
-    <Layout style={{ height: "100%", backgroundColor: colors.white }}>
+    <Layout style={{ height: "100%", backgroundColor: colors.white, overflow: "hidden" }}>
       {/* <header
           style={{
             padding: 16,
@@ -338,7 +340,63 @@ const ChatInterface = React.memo(
     liveTranscript,
     onImageUpload,
     onRevokeMessage,
+    classInfo,
   }) => {
+    const [currentTopic, setCurrentTopic] = useState(null);
+    const [expanded, setExpanded] = useState(false);
+
+    useEffect(() => {
+      if (!classInfo?.id || currentUserRole !== "student") {
+        console.log("🚫 Skipped topic init — missing classInfo or not student:", {
+          classId: classInfo?.id,
+          currentUserRole,
+        });
+        return;
+      }
+
+      console.log("🟡 [Topic Init] Connecting socket for class", classInfo.id);
+
+      const socket = chatTopicService.connect();
+      console.log("🟢 Socket instance:", socket?.id || "(no id yet)");
+
+      chatTopicService.joinTopicRoom(classInfo.id);
+      console.log("📩 Sent joinClassTopic event:", { classId: classInfo.id });
+
+      // --- REST fetch
+      chatTopicService
+        .getLatestTopic(classInfo.id)
+        .then((topic) => {
+          console.log("📦 [REST] Latest topic response:", topic);
+          if (topic) {
+            setCurrentTopic(topic);
+          } else {
+            console.warn("⚠️ No topic found for class", classInfo.id);
+          }
+        })
+        .catch((err) => {
+          console.error("❌ [REST] Failed to load topic:", err);
+          setCurrentTopic(null);
+        });
+
+      // --- Listen for realtime updates
+      chatTopicService.onNewTopic((topic) => {
+        console.log("🆕 [SOCKET] New topic received:", topic);
+        setCurrentTopic(topic);
+      });
+
+      socket.on("connect", () => console.log("✅ Connected to topic socket:", socket.id));
+      socket.on("disconnect", (reason) =>
+        console.log("❌ Disconnected from topic socket:", reason)
+      );
+      socket.on("connect_error", (err) => console.error("💥 Socket connect error:", err.message));
+
+      return () => {
+        console.log("🧹 Cleaning up topic socket for class", classInfo.id);
+        chatTopicService.offNewTopic();
+        chatTopicService.disconnect();
+      };
+    }, [classInfo?.id, currentUserRole]);
+
     return (
       <Layout style={{ height: "100%", backgroundColor: "#f5f5f5" }}>
         <header
@@ -360,6 +418,39 @@ const ChatInterface = React.memo(
             {chatPartner.name}
           </Title>
         </header>
+        {currentUserRole === "student" && currentTopic ? (
+          <div
+            style={{
+              backgroundColor: "#f8f9fa",
+              borderBottom: `1px solid ${colors.gray}`,
+              padding: "10px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              cursor: currentTopic.imageUrl ? "pointer" : "default",
+            }}
+            onClick={() => currentTopic.imageUrl && setExpanded(true)}
+          >
+            {currentTopic.imageUrl && (
+              <img
+                src={currentTopic.imageUrl}
+                alt="topic"
+                style={{
+                  width: 60,
+                  height: 40,
+                  objectFit: "cover",
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                }}
+              />
+            )}
+            <div>
+              <Text strong>Chủ đề: {currentTopic.title}</Text>
+              <br />
+            </div>
+          </div>
+        ) : null}
+
         <Content ref={chatContentRef} style={{ padding: "16px", overflowY: "auto" }}>
           {loading && (
             <div style={{ textAlign: "center", padding: "20px" }}>
@@ -424,6 +515,31 @@ const ChatInterface = React.memo(
               }}
             />
           </div>
+          {expanded && (
+            <div
+              onClick={() => setExpanded(false)}
+              style={{
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(0,0,0,0.7)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1000,
+              }}
+            >
+              <img
+                src={currentTopic?.imageUrl}
+                alt="expanded topic"
+                style={{
+                  maxWidth: "90%",
+                  maxHeight: "80%",
+                  borderRadius: 12,
+                  boxShadow: "0 0 20px rgba(0,0,0,0.4)",
+                }}
+              />
+            </div>
+          )}
         </footer>
         <style>{`
           @keyframes pulse {
@@ -881,10 +997,13 @@ const ChatComponent = ({
     () => getFilteredChats(selectedStudent),
     [allChatsInClass, selectedStudent]
   );
-  const studentFilteredChats = useMemo(
-    () => getFilteredChats(teacherOfClass),
-    [allChatsInClass, teacherOfClass]
-  );
+  const studentFilteredChats = useMemo(() => {
+    const all = getFilteredChats(teacherOfClass);
+    // Filter out AI intro or system-like messages if needed
+    return all.filter(
+      (chat) => !(chat.senderRole === "teacher" && chat.message?.startsWith("[AI]")) // or any marker if you use one
+    );
+  }, [allChatsInClass, teacherOfClass]);
 
   const handleSelectStudent = useCallback(
     (student) => {
@@ -935,6 +1054,7 @@ const ChatComponent = ({
           liveTranscript={liveTranscript}
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
+          classInfo={classInfo}
         />
       )
     ) : (
@@ -966,7 +1086,7 @@ const ChatComponent = ({
       return mainContent;
     }
     return (
-      <Layout style={{ height: "100vh" }}>
+      <Layout style={{ height: "100vh", overflow: "hidden" }}>
         <Sider width={320} theme="light" style={{ borderRight: `1px solid ${colors.gray}` }}>
           <StudentListSider
             students={studentsWithLastMessage}
@@ -1013,7 +1133,7 @@ const ChatComponent = ({
     const isGroupChat = selectedStudent?.id === "group";
     const chatsToDisplay = isGroupChat ? groupChats : teacherFilteredChats;
     return (
-      <Layout style={{ height: "100vh" }}>
+      <Layout style={{ height: "100vh", overflow: "auto" }}>
         <Sider width={280} theme="light" style={{ borderRight: `1px solid ${colors.gray}` }}>
           <StudentListSider
             role="student"
@@ -1037,6 +1157,7 @@ const ChatComponent = ({
             liveTranscript={liveTranscript}
             onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
             onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
+            classInfo={classInfo}
           />
         </Content>
       </Layout>

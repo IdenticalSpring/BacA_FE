@@ -43,7 +43,6 @@ const messageService = {
       );
       return res.data;
     } catch (err) {
-      console.error("Error sending group message:", err);
       throw err.response?.data?.message || "Không thể gửi tin nhắn nhóm";
     }
   },

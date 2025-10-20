@@ -10,8 +10,16 @@ import {
   Card,
   Spin,
   Tooltip,
+  Modal,
+  Tag, // 🆕
 } from "antd";
-import { FileImageOutlined, AudioOutlined, StopOutlined, SendOutlined } from "@ant-design/icons";
+import {
+  FileImageOutlined,
+  AudioOutlined,
+  StopOutlined,
+  SendOutlined,
+  PoweroffOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 import { useSpeechRecognition } from "react-speech-kit";
 
@@ -30,27 +38,31 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
   const [latestTopic, setLatestTopic] = useState(null);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
-
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  const { listen, listening, stop } = useSpeechRecognition({
+  const { listen, stop } = useSpeechRecognition({
     onResult: (result) => {
       setTopic((prev) => (prev ? prev + " " : "") + result);
     },
   });
 
-  // === For Student: fetch latest topic ===
-  useEffect(() => {
-    if (userRole === "student" && classId) {
-      axios
-        .get(`${API_BASE_URL}/chat-topic/latest/${classId}`)
-        .then((res) => setLatestTopic(res.data.topic))
-        .catch(() => setLatestTopic(null));
+  // === Fetch latest topic ===
+  const fetchLatestTopic = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/chat-topic/latest/${classId}`);
+      setLatestTopic(res.data.topic);
+    } catch {
+      setLatestTopic(null);
     }
-  }, [userRole, classId]);
+  };
 
-  // === Upload a file to backend via FilesService ===
+  useEffect(() => {
+    if (classId) fetchLatestTopic();
+  }, [classId]);
+
+  // === Upload file ===
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -60,10 +72,10 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
         Authorization: `Bearer ${sessionStorage.getItem("token")}`,
       },
     });
-    return res.data.url; // your backend returns { url: '...' }
+    return res.data.url;
   };
 
-  // === Record audio from mic ===
+  // === Record audio ===
   const handleToggleRecord = async () => {
     if (recording) {
       mediaRecorderRef.current?.stop();
@@ -116,33 +128,30 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
       message.warning("Vui lòng nhập hoặc nói chủ đề!");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      // 1️⃣ Upload image if selected
       let imageUrl = null;
       if (imageFile) imageUrl = await uploadFile(imageFile);
-  
-      // 2️⃣ Prepare JSON payload
+
       const payload = {
         title: topic,
-        classId: Number(classId),     // ✅ send number directly
-        teacherId: Number(teacherId), // ✅ send number directly
+        classId: Number(classId),
+        teacherId: Number(teacherId),
         level,
         active: true,
         image: imageUrl,
         audioUrl,
       };
-  
-      // 3️⃣ Send JSON request (not FormData)
+
       const res = await axios.post(`${API_BASE_URL}/chat-topic/create`, payload, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       });
-  
+
       message.success("Tạo chủ đề thành công!");
       setTopic("");
       setImageFile(null);
@@ -156,14 +165,48 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
       setLoading(false);
     }
   };
-  
 
-  // === Image upload with preview ===
+  // === Deactivate topic ===
+  const handleDeactivateTopic = async () => {
+    try {
+      setLoading(true);
+      await axios.patch(
+        `${API_BASE_URL}/chat-topic/deactivate/${latestTopic.id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
+      message.success("Đã tắt chủ đề thành công!");
+      setConfirmVisible(false);
+      fetchLatestTopic();
+    } catch (err) {
+      console.error(err);
+      message.error("Không thể tắt chủ đề!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleImageUpload = ({ file }) => {
     setImageFile(file);
     const preview = URL.createObjectURL(file);
     setImagePreview(preview);
   };
+
+  // 🆕 Helper: render topic status
+  const renderStatusTag = (isActive) =>
+    isActive ? (
+      <Tag color="green" style={{ marginLeft: 8 }}>
+        🟢 Đang hoạt động
+      </Tag>
+    ) : (
+      <Tag color="gray" style={{ marginLeft: 8 }}>
+        ⚪ Đã tắt
+      </Tag>
+    );
 
   return (
     <Layout style={{ height: "100%", backgroundColor: "#fff" }}>
@@ -251,9 +294,28 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
 
             {latestTopic && (
               <Card
-                title="Chủ đề gần nhất"
+                title={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>Chủ đề gần nhất</span>
+                    {renderStatusTag(latestTopic.active)} {/* 🆕 status tag */}
+                  </div>
+                }
                 bordered
-                style={{ marginTop: 20, backgroundColor: "#fafafa" }}
+                style={{
+                  marginTop: 20,
+                  backgroundColor: latestTopic.active ? "#fafafa" : "#f5f5f5", // 🆕 dim if inactive
+                  opacity: latestTopic.active ? 1 : 0.7,
+                }}
+                extra={
+                  <Button
+                    danger
+                    disabled={!latestTopic.active} // 🆕 disable when inactive
+                    icon={<PoweroffOutlined />}
+                    onClick={() => setConfirmVisible(true)}
+                  >
+                    Tắt chủ đề
+                  </Button>
+                }
               >
                 <Text strong>{latestTopic.title}</Text>
                 <br />
@@ -270,6 +332,7 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
             ) : latestTopic ? (
               <Card title="Chủ đề hiện tại" bordered style={{ width: 400, margin: "0 auto" }}>
                 <Text strong>{latestTopic.title}</Text>
+                {renderStatusTag(latestTopic.active)} {/* 🆕 visible to student too */}
                 {latestTopic.imageUrl && (
                   <img
                     src={latestTopic.imageUrl}
@@ -297,6 +360,18 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
           </div>
         )}
       </Content>
+
+      <Modal
+        title="Tắt chủ đề"
+        open={confirmVisible}
+        onOk={handleDeactivateTopic}
+        onCancel={() => setConfirmVisible(false)}
+        okText="Đồng ý"
+        cancelText="Hủy"
+        confirmLoading={loading}
+      >
+        <p>Bạn có chắc chắn muốn tắt chủ đề này không?</p>
+      </Modal>
     </Layout>
   );
 }
