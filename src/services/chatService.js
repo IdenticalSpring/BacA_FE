@@ -93,13 +93,17 @@ const chatService = {
 
   revokePrivateChat: (chatId, classId, studentId) => {
     if (!socket) return console.warn("⚠️ [SOCKET] Not connected yet!");
-    console.log(`🗑️ [SOCKET] revokePrivateChat → chatId=${chatId}, classId=${classId}, studentId=${studentId}`);
+    console.log(
+      `🗑️ [SOCKET] revokePrivateChat → chatId=${chatId}, classId=${classId}, studentId=${studentId}`
+    );
     socket.emit("revokePrivateChat", { chatId, classId, studentId });
   },
 
   markPrivateRead: (classId, studentId, readerRole) => {
     if (!socket) return console.warn("⚠️ [SOCKET] Not connected yet!");
-    console.log(`📖 [SOCKET] markPrivateRead → classId=${classId}, studentId=${studentId}, role=${readerRole}`);
+    console.log(
+      `📖 [SOCKET] markPrivateRead → classId=${classId}, studentId=${studentId}, role=${readerRole}`
+    );
     socket.emit("markPrivateRead", { classId, studentId, readerRole });
   },
 
@@ -180,7 +184,9 @@ const chatService = {
   },
 
   async markMessagesAsRead(classId, readerId, readerRole) {
-    console.log(`📖 [REST] POST /chat/read-messages → classId=${classId}, readerId=${readerId}, role=${readerRole}`);
+    console.log(
+      `📖 [REST] POST /chat/read-messages → classId=${classId}, readerId=${readerId}, role=${readerRole}`
+    );
     const res = await axios.post(
       `${API_BASE}/chat/read-messages`,
       { classId, readerId, readerRole },
