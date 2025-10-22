@@ -152,7 +152,7 @@ const Sidebar = ({
           color: colors.white,
         }}
       >
-        <span className="button-text">Tạo bài học</span>
+        <span className="button-text">Tạo lớp học</span>
       </Button>
 
       <div

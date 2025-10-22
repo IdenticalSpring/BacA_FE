@@ -39,6 +39,8 @@ import { useSpeechRecognition } from "react-speech-kit";
 import messageService from "services/messageService";
 import AIChatComponent from "./AIChatComponent";
 import chatTopicService from "services/chatTopicService";
+
+
 const { Sider, Content } = Layout;
 const { Text, Title } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
@@ -1099,6 +1101,7 @@ const ChatComponent = ({
     );
   }
 
+  // --- STUDENT VIEW ---
   if (currentUser.role === "student") {
     if (!teacherOfClass) {
       return (
@@ -1132,8 +1135,45 @@ const ChatComponent = ({
 
     const isGroupChat = selectedStudent?.id === "group";
     const chatsToDisplay = isGroupChat ? groupChats : teacherFilteredChats;
+
+    // ✅ Add mobile responsive switch
+    if (isMobile) {
+      if (mobileView === "list") {
+        return (
+          <StudentListSider
+            role="student"
+            students={studentList}
+            selectedStudent={selectedStudent}
+            onSelectStudent={(student) => {
+              setSelectedStudent(student);
+              setMobileView("chat");
+            }}
+          />
+        );
+      }
+      return (
+        <ChatInterface
+          chatPartner={selectedPartner}
+          chats={chatsToDisplay}
+          currentUserRole={currentUser.role}
+          isMobile={isMobile}
+          loading={isGroupChat ? groupLoading : loading}
+          error={isGroupChat ? groupError : error}
+          onGoBack={() => setMobileView("list")}
+          chatContentRef={chatContentRef}
+          isRecording={isRecording}
+          onToggleRecord={handleToggleRecord}
+          liveTranscript={liveTranscript}
+          onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
+          onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
+          classInfo={classInfo}
+        />
+      );
+    }
+
+    // --- Desktop Layout ---
     return (
-      <Layout style={{ height: "100vh", overflow: "auto" }}>
+      <Layout style={{ height: "100vh", overflow: "hidden" }}>
         <Sider width={280} theme="light" style={{ borderRight: `1px solid ${colors.gray}` }}>
           <StudentListSider
             role="student"
