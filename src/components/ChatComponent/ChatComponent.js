@@ -39,8 +39,6 @@ import { useSpeechRecognition } from "react-speech-kit";
 import messageService from "services/messageService";
 import AIChatComponent from "./AIChatComponent";
 import chatTopicService from "services/chatTopicService";
-
-
 const { Sider, Content } = Layout;
 const { Text, Title } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
@@ -1105,14 +1103,7 @@ const ChatComponent = ({
   if (currentUser.role === "student") {
     if (!teacherOfClass) {
       return (
-        <div
-          style={{
-            display: "flex",
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
           <Empty description="Lớp học của bạn hiện chưa có giáo viên." />
         </div>
       );
@@ -1204,6 +1195,7 @@ const ChatComponent = ({
     );
   }
 
+
   return (
     <div
       style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}
@@ -1236,48 +1228,6 @@ ChatComponent.defaultProps = {
   teacherOfClass: null,
   classInfo: null,
   onUnreadCountChange: () => {},
-};
-
-ChatInterface.propTypes = {
-  chatPartner: PropTypes.object.isRequired,
-  chats: PropTypes.array.isRequired,
-  currentUserRole: PropTypes.string.isRequired,
-  isMobile: PropTypes.bool.isRequired,
-  loading: PropTypes.bool.isRequired,
-  error: PropTypes.string,
-  onGoBack: PropTypes.func,
-  chatContentRef: PropTypes.object.isRequired,
-  isRecording: PropTypes.bool.isRequired,
-  onToggleRecord: PropTypes.func.isRequired,
-  liveTranscript: PropTypes.string,
-  onImageUpload: PropTypes.func.isRequired,
-  onRevokeMessage: PropTypes.func.isRequired,
-  classInfo: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  }),
-};
-
-ChatComponent.propTypes = {
-  currentUser: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    role: PropTypes.string.isRequired,
-  }).isRequired,
-  classInfo: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  }),
-  studentsInClass: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ),
-  teacherOfClass: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    name: PropTypes.string, // Add this
-    imgUrl: PropTypes.string, // Add this
-  }),
-  isMobile: PropTypes.bool.isRequired,
-  onUnreadCountChange: PropTypes.func,
 };
 
 export default ChatComponent;
