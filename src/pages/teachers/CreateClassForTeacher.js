@@ -100,6 +100,19 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
     }
   }, [visible]);
 
+  useEffect(() => {
+    if (dayOfWeek > 0) {
+      const firstSchedule = schedules.find((sch) => sch.dayOfWeek === dayOfWeek);
+      if (firstSchedule) {
+        setScheduleId(firstSchedule.id);
+      } else {
+        setScheduleId("");
+      }
+    } else {
+      setScheduleId("");
+    }
+  }, [dayOfWeek, schedules]);
+
   const handleAddSchedule = () => {
     if (!scheduleId) return;
     const schedule = schedules.find((sch) => sch.id === scheduleId);
@@ -262,7 +275,7 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
+            {/* <TextField
               select
               label="Schedule"
               sx={{
@@ -287,7 +300,7 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
                     {daysOfWeek[schedule.dayOfWeek]} - {schedule.startTime} to {schedule.endTime}
                   </MenuItem>
                 ))}
-            </TextField>
+            </TextField> */}
             <Button
               variant="contained"
               onClick={handleAddSchedule}
@@ -299,7 +312,7 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
             >
               Add
             </Button>
-            <Button
+            {/* <Button
               variant="text"
               onClick={() => setIsCreateSchedule(true)}
               sx={{
@@ -309,7 +322,7 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
               }}
             >
               + New Schedule
-            </Button>
+            </Button> */}
           </div>
           {selectedSchedules.length > 0 && (
             <TableContainer component={Paper} sx={{ marginTop: 2 }}>
@@ -317,7 +330,7 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Day</TableCell>
-                    <TableCell>Time</TableCell>
+                    {/* <TableCell>Time</TableCell> */}
                     <TableCell>Action</TableCell>
                   </TableRow>
                 </TableHead>
@@ -325,9 +338,9 @@ const CreateClassForTeacher = ({ visible, onClose, refreshClasses }) => {
                   {selectedSchedules.map((sch) => (
                     <TableRow key={sch.scheduleId}>
                       <TableCell>{sch.day}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         {sch.startTime} - {sch.endTime}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         <IconButton onClick={() => handleRemoveSchedule(sch.scheduleId)}>
                           <DeleteIcon />
