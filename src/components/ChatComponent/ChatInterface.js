@@ -39,7 +39,9 @@ const ChatInterface = ({
       >
         {isMobile && <Button type="text" icon={<ArrowLeftOutlined />} onClick={onGoBack} />}
         <Avatar src={chatPartner?.imgUrl} icon={<UserOutlined />} />
-        <Title level={5} style={{ margin: 0 }}>{chatPartner?.name}</Title>
+        <Title level={5} style={{ margin: 0 }}>
+          {chatPartner?.name}
+        </Title>
       </header>
 
       <Content ref={chatContentRef} style={{ padding: 16, overflowY: "auto" }}>

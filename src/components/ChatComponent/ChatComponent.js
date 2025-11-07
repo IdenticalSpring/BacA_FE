@@ -588,7 +588,7 @@ const ChatComponent = ({
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const [liveTranscript, setLiveTranscript] = useState("");
+  // const [liveTranscript, setLiveTranscript] = useState("");
   const [groupChats, setGroupChats] = useState([]);
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupError, setGroupError] = useState(null);
@@ -627,14 +627,17 @@ const ChatComponent = ({
 
   const { listen, listening, stop, supported } = useSpeechRecognition({
     onResult: (result) => {
-      setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
+      // setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
+      liveTranscriptRef.current = liveTranscriptRef.current
+        ? liveTranscriptRef.current + " " + result
+        : result;
     },
   });
 
   // *** FIX 2: Luôn cập nhật ref mỗi khi state thay đổi ***
-  useEffect(() => {
-    liveTranscriptRef.current = liveTranscript;
-  }, [liveTranscript]);
+  // useEffect(() => {
+  //   liveTranscriptRef.current = liveTranscript;
+  // }, [liveTranscript]);
 
   useEffect(() => {
     if (currentUser.role === "student" && onUnreadCountChange) {
@@ -922,12 +925,13 @@ const ChatComponent = ({
             setAllChatsInClass((prev) => prev.filter((c) => c.id !== tempId));
           }
           stream.getTracks().forEach((track) => track.stop());
+          liveTranscriptRef.current = "";
         };
 
         mediaRecorderRef.current.start();
         listen({ lang: "en-AU", interimResults: false });
         setIsRecording(true);
-        setLiveTranscript(""); // Reset state để bắt đầu phiên mới
+        // setLiveTranscript(""); // Reset state để bắt đầu phiên mới
       } catch (err) {
         message.error("Không thể truy cập micro. Vui lòng cấp quyền.");
       }
@@ -1051,7 +1055,7 @@ const ChatComponent = ({
           chatContentRef={chatContentRef}
           isRecording={isRecording}
           onToggleRecord={handleToggleRecord}
-          liveTranscript={liveTranscript}
+          liveTranscript={liveTranscriptRef.current}
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
           classInfo={classInfo}
@@ -1161,7 +1165,7 @@ const ChatComponent = ({
           chatContentRef={chatContentRef}
           isRecording={isRecording}
           onToggleRecord={handleToggleRecord}
-          liveTranscript={liveTranscript}
+          liveTranscript={liveTranscriptRef.current}
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
           classInfo={classInfo}
@@ -1192,7 +1196,7 @@ const ChatComponent = ({
             chatContentRef={chatContentRef}
             isRecording={isRecording}
             onToggleRecord={handleToggleRecord}
-            liveTranscript={liveTranscript}
+            liveTranscript={liveTranscriptRef.current}
             onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
             onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
             classInfo={classInfo}
