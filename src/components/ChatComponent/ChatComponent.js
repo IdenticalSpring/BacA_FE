@@ -588,7 +588,7 @@ const ChatComponent = ({
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  // const [liveTranscript, setLiveTranscript] = useState("");
+  const [liveTranscript, setLiveTranscript] = useState("");
   const [groupChats, setGroupChats] = useState([]);
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupError, setGroupError] = useState(null);
@@ -627,7 +627,7 @@ const ChatComponent = ({
 
   const { listen, listening, stop, supported } = useSpeechRecognition({
     onResult: (result) => {
-      // setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
+      setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
       liveTranscriptRef.current = liveTranscriptRef.current
         ? liveTranscriptRef.current + " " + result
         : result;
@@ -885,20 +885,31 @@ const ChatComponent = ({
         message.error("Trình duyệt không hỗ trợ nhận dạng giọng nói.");
         return;
       }
+
+      // RESET transcript trước khi bắt đầu
+      liveTranscriptRef.current = "";
+      setLiveTranscript("");
+
       try {
+        // Bắt đầu SpeechRecognition trước (tránh xung đột mic trên Android)
+        listen({ lang: "en-AU", interimResults: false });
+
+        // Delay nhỏ để SpeechRecognition có thời gian khởi tạo/ xin quyền nếu cần
+        await new Promise((r) => setTimeout(r, 250));
+
+        // Bắt MediaRecorder (ghi âm) — nếu không cần ghi audio đồng thời có thể bỏ phần này
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
         audioChunksRef.current = [];
         mediaRecorderRef.current.ondataavailable = (event) =>
           audioChunksRef.current.push(event.data);
 
-        // *** FIX 3: Sử dụng giá trị từ ref trong closure của onstop ***
         mediaRecorderRef.current.onstop = async () => {
           const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
           if (!chatPartner) return;
           const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
 
-          // Lấy giá trị MỚI NHẤT từ ref, không phải từ state cũ
+          // Lấy transcript mới nhất từ ref
           const finalTranscript = liveTranscriptRef.current.trim();
 
           const tempId = Date.now();
@@ -926,14 +937,19 @@ const ChatComponent = ({
           }
           stream.getTracks().forEach((track) => track.stop());
           liveTranscriptRef.current = "";
+          setLiveTranscript("");
         };
 
         mediaRecorderRef.current.start();
-        listen({ lang: "en-AU", interimResults: false });
         setIsRecording(true);
-        // setLiveTranscript(""); // Reset state để bắt đầu phiên mới
       } catch (err) {
+        // Nếu getUserMedia thất bại thì dừng SpeechRecognition luôn
+        try {
+          stop();
+        } catch (e) {}
+        setIsRecording(false);
         message.error("Không thể truy cập micro. Vui lòng cấp quyền.");
+        console.error("record/start error:", err);
       }
     }
   }, [
@@ -1055,7 +1071,7 @@ const ChatComponent = ({
           chatContentRef={chatContentRef}
           isRecording={isRecording}
           onToggleRecord={handleToggleRecord}
-          liveTranscript={liveTranscriptRef.current}
+          liveTranscript={liveTranscript}
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
           classInfo={classInfo}
@@ -1165,7 +1181,7 @@ const ChatComponent = ({
           chatContentRef={chatContentRef}
           isRecording={isRecording}
           onToggleRecord={handleToggleRecord}
-          liveTranscript={liveTranscriptRef.current}
+          liveTranscript={liveTranscript}
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
           classInfo={classInfo}
@@ -1196,7 +1212,7 @@ const ChatComponent = ({
             chatContentRef={chatContentRef}
             isRecording={isRecording}
             onToggleRecord={handleToggleRecord}
-            liveTranscript={liveTranscriptRef.current}
+            liveTranscript={liveTranscript}
             onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
             onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
             classInfo={classInfo}
