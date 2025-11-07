@@ -43,10 +43,20 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  const onError = (event) => {
+    if (event.error === "not-allowed") {
+      // setBlocked(true);
+      message.error(" Oh no, it looks like your browser doesn&#39;t support Speech Recognition.");
+    }
+  };
+
   const { listen, stop } = useSpeechRecognition({
     onResult: (result) => {
+      console.log(result);
+
       setTopic((prev) => (prev ? prev + " " : "") + result);
     },
+    onError,
   });
 
   // === Fetch latest topic ===
@@ -114,7 +124,7 @@ export default function ChatTopicComponent({ userRole, classId, teacherId }) {
       };
 
       mediaRecorder.start();
-      listen({ lang: "vi-VN" });
+      listen({ lang: "en-AU", interimResults: false });
       setRecording(true);
       message.info("🎙️ Bắt đầu ghi âm...");
     } catch (err) {
