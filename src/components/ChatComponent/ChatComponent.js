@@ -876,6 +876,56 @@ const ChatComponent = ({
   }, []);
 
   const handleToggleRecord = useCallback(async () => {
+    const isAndroid = /Android/i.test(navigator.userAgent || navigator.vendor || window.opera);
+
+    if (isAndroid) {
+      // Android: only use SpeechRecognition (no MediaRecorder)
+      if (isRecording) {
+        try {
+          if (listening) stop();
+        } catch (e) {}
+        setIsRecording(false);
+
+        // send transcript as message (no audio)
+        const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
+        if (!chatPartner) return;
+
+        const finalTranscript = (liveTranscriptRef.current || "").trim();
+        const tempId = Date.now();
+        const optimisticChat = createOptimisticChat(chatPartner, {
+          tempId,
+          message: finalTranscript,
+        });
+        setAllChatsInClass((prev) => [...prev, optimisticChat]);
+
+        try {
+          await handleSendMessage({ tempId, message: finalTranscript });
+        } catch (err) {
+          message.error("Gửi thất bại!");
+          setAllChatsInClass((prev) => prev.filter((c) => c.id !== tempId));
+        } finally {
+          liveTranscriptRef.current = "";
+          setLiveTranscript("");
+        }
+      } else {
+        if (!supported) {
+          message.error("Trình duyệt không hỗ trợ nhận dạng giọng nói.");
+          return;
+        }
+        liveTranscriptRef.current = "";
+        setLiveTranscript("");
+        try {
+          listen({ lang: "en-AU", interimResults: false });
+          setIsRecording(true);
+        } catch (err) {
+          console.error("start SpeechRecognition error:", err);
+          message.error("Không thể bắt đầu nhận diện giọng nói.");
+          setIsRecording(false);
+        }
+      }
+      return;
+    }
+
     if (isRecording) {
       mediaRecorderRef.current?.stop();
       if (listening) stop();
