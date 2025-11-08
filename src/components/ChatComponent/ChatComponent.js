@@ -47,7 +47,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // --- Helpers & Sub-components ---
 const createLocalTimestamp = () => new Date().toISOString();
 
-const PlayAudioButton = React.memo(({ audioUrl }) => {
+const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(new Audio(audioUrl));
 
@@ -55,6 +55,11 @@ const PlayAudioButton = React.memo(({ audioUrl }) => {
     const audio = audioRef.current;
     const handleEnded = () => setIsPlaying(false);
     audio.addEventListener("ended", handleEnded);
+
+    if (isLastChat && !isMyMessage) {
+      audio.play().catch((error) => console.error("Audio play error:", error));
+    }
+
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.pause();
@@ -84,10 +89,14 @@ const PlayAudioButton = React.memo(({ audioUrl }) => {
     </Tooltip>
   );
 });
-PlayAudioButton.propTypes = { audioUrl: PropTypes.string.isRequired };
+PlayAudioButton.propTypes = {
+  audioUrl: PropTypes.string.isRequired,
+  isLastChat: PropTypes.bool.isRequired,
+  isMyMessage: PropTypes.bool.isRequired,
+};
 PlayAudioButton.displayName = "PlayAudioButton";
 
-const MessageBubble = React.memo(({ chat, isMyMessage }) => {
+const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
   const bubbleStyle = {
     backgroundColor: isMyMessage ? colors.deepGreen : colors.white,
     color: isMyMessage ? colors.white : colors.darkGray,
@@ -128,7 +137,13 @@ const MessageBubble = React.memo(({ chat, isMyMessage }) => {
             {chat.message && (
               <Text style={{ color: "inherit", whiteSpace: "pre-wrap" }}>{chat.message}</Text>
             )}
-            {chat.audioUrl && <PlayAudioButton audioUrl={chat.audioUrl} />}
+            {chat.audioUrl && (
+              <PlayAudioButton
+                audioUrl={chat.audioUrl}
+                isLastChat={isLastChat}
+                isMyMessage={isMyMessage}
+              />
+            )}
           </div>
         )}
       </div>
@@ -138,6 +153,7 @@ const MessageBubble = React.memo(({ chat, isMyMessage }) => {
 MessageBubble.propTypes = {
   chat: PropTypes.object.isRequired,
   isMyMessage: PropTypes.bool.isRequired,
+  isLastChat: PropTypes.bool.isRequired,
 };
 MessageBubble.displayName = "MessageBubble";
 
@@ -153,9 +169,11 @@ const MessageList = React.memo(({ chats, currentUserRole, onRevokeMessage, chatP
 
   return (
     <div style={{ padding: "0 8px" }}>
-      {chats.map((chat) => {
+      {chats.map((chat, index) => {
         const isMyMessage = chat.senderRole === currentUserRole;
         const canRevoke = isMyMessage && !chat.isRevoked;
+
+        const isLastChat = index === chats.length - 1;
 
         const currentDateString = new Date(chat.createdAt).toLocaleDateString("vi-VN", {
           timeZone,
@@ -206,7 +224,7 @@ const MessageList = React.memo(({ chats, currentUserRole, onRevokeMessage, chatP
                     />
                   </Dropdown>
                 )}
-                <MessageBubble chat={chat} isMyMessage={isMyMessage} />
+                <MessageBubble chat={chat} isMyMessage={isMyMessage} isLastChat={isLastChat} />
               </div>
             </div>
           </React.Fragment>
