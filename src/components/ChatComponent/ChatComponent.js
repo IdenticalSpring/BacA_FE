@@ -46,7 +46,32 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // --- Helpers & Sub-components ---
 const createLocalTimestamp = () => new Date().toISOString();
+const pickAudioMime = () => {
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/aac",
+    "audio/ogg",
+    "audio/mpeg", // mp3 (rarely recordable, but safe fallback label)
+  ];
+  for (const c of candidates) {
+    try {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+    } catch (_) {}
+  }
+  return ""; // browser will choose default
+};
 
+const extFromMime = (mime) => {
+  if (!mime) return "webm";
+  if (mime.includes("webm")) return "webm";
+  if (mime.includes("mp4")) return "mp4";
+  if (mime.includes("aac")) return "aac";
+  if (mime.includes("ogg")) return "ogg";
+  if (mime.includes("mpeg")) return "mp3";
+  return "webm";
+};
 const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(new Audio(audioUrl));
@@ -894,143 +919,65 @@ const ChatComponent = ({
   }, []);
 
   const handleToggleRecord = useCallback(async () => {
-    const isAndroid = /Android/i.test(navigator.userAgent || navigator.vendor || window.opera);
-
-    if (isAndroid) {
-      // Android: only use SpeechRecognition (no MediaRecorder)
-      if (isRecording) {
-        try {
-          if (listening) stop();
-        } catch (e) {}
-        setIsRecording(false);
-
-        // send transcript as message (no audio)
-        const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
-        if (!chatPartner) return;
-
-        const finalTranscript = (liveTranscriptRef.current || "").trim();
-        const tempId = Date.now();
-        const optimisticChat = createOptimisticChat(chatPartner, {
-          tempId,
-          message: finalTranscript,
-        });
-        setAllChatsInClass((prev) => [...prev, optimisticChat]);
-
-        try {
-          await handleSendMessage({ tempId, message: finalTranscript });
-        } catch (err) {
-          message.error("Gửi thất bại!");
-          setAllChatsInClass((prev) => prev.filter((c) => c.id !== tempId));
-        } finally {
-          liveTranscriptRef.current = "";
-          setLiveTranscript("");
-        }
-      } else {
-        if (!supported) {
-          message.error("Trình duyệt không hỗ trợ nhận dạng giọng nói.");
-          return;
-        }
-        liveTranscriptRef.current = "";
-        setLiveTranscript("");
-        try {
-          listen({ lang: "en-AU", interimResults: false });
-          setIsRecording(true);
-        } catch (err) {
-          console.error("start SpeechRecognition error:", err);
-          message.error("Không thể bắt đầu nhận diện giọng nói.");
-          setIsRecording(false);
-        }
-      }
+    if (isRecording) {
+      try {
+        mediaRecorderRef.current?.stop();
+      } catch (_) {}
+      setIsRecording(false);
       return;
     }
-
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      if (listening) stop();
-      setIsRecording(false);
-    } else {
-      if (!supported) {
-        message.error("Trình duyệt không hỗ trợ nhận dạng giọng nói.");
-        return;
-      }
-
-      // RESET transcript trước khi bắt đầu
-      liveTranscriptRef.current = "";
-      setLiveTranscript("");
-
-      try {
-        // Bắt đầu SpeechRecognition trước (tránh xung đột mic trên Android)
-        listen({ lang: "en-AU", interimResults: false });
-
-        // Delay nhỏ để SpeechRecognition có thời gian khởi tạo/ xin quyền nếu cần
-        await new Promise((r) => setTimeout(r, 250));
-
-        // Bắt MediaRecorder (ghi âm) — nếu không cần ghi audio đồng thời có thể bỏ phần này
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        audioChunksRef.current = [];
-        mediaRecorderRef.current.ondataavailable = (event) =>
-          audioChunksRef.current.push(event.data);
-
-        mediaRecorderRef.current.onstop = async () => {
-          const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
-          if (!chatPartner) return;
-          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-
-          // Lấy transcript mới nhất từ ref
-          const finalTranscript = liveTranscriptRef.current.trim();
-
-          const tempId = Date.now();
-          const tempAudioUrl = URL.createObjectURL(audioBlob);
-          const optimisticChat = createOptimisticChat(chatPartner, {
-            tempId,
-            message: finalTranscript,
-            audioUrl: tempAudioUrl,
-          });
-          setAllChatsInClass((prev) => [...prev, optimisticChat]);
-          try {
-            const uploadedAudioUrl = await fileService.upload(
-              audioBlob,
-              `chat-audio-${tempId}.webm`
-            );
-            URL.revokeObjectURL(tempAudioUrl);
-            await handleSendMessage({
-              tempId,
-              message: finalTranscript,
-              audioUrl: uploadedAudioUrl,
-            });
-          } catch (uploadError) {
-            message.error("Gửi thất bại!");
-            setAllChatsInClass((prev) => prev.filter((c) => c.id !== tempId));
-          }
-          stream.getTracks().forEach((track) => track.stop());
-          liveTranscriptRef.current = "";
-          setLiveTranscript("");
-        };
-
-        mediaRecorderRef.current.start();
-        setIsRecording(true);
-      } catch (err) {
-        // Nếu getUserMedia thất bại thì dừng SpeechRecognition luôn
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = pickAudioMime();
+      const ext = extFromMime(mimeType);
+      const options = mimeType ? { mimeType } : undefined;
+      const mr = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mr;
+      audioChunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      mr.onstop = async () => {
+        // partner + optimistic UI stays the same logic you already have
+        const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
+        if (!chatPartner) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        const blob = new Blob(audioChunksRef.current, {
+          type: mimeType || "audio/webm",
+        });
+        const tempId = Date.now();
+        const tempUrl = URL.createObjectURL(blob);
+        const optimisticChat = createOptimisticChat(chatPartner, {
+          tempId,
+          message: "",
+          audioUrl: tempUrl,
+        });
+        setAllChatsInClass((prev) => [...prev, optimisticChat]);
         try {
-          stop();
-        } catch (e) {}
-        setIsRecording(false);
-        message.error("Không thể truy cập micro. Vui lòng cấp quyền.");
-        console.error("record/start error:", err);
-      }
+          const uploadedUrl = await fileService.upload(blob, `chat-audio-${tempId}.${ext}`);
+          URL.revokeObjectURL(tempUrl);
+          await handleSendMessage({
+            tempId,
+            message: "",
+            audioUrl: uploadedUrl,
+          });
+        } catch (err) {
+          message.error("Gửi ghi âm thất bại!");
+          setAllChatsInClass((prev) => prev.filter((c) => c.id !== tempId));
+        } finally {
+          stream.getTracks().forEach((t) => t.stop());
+        }
+      };
+      mr.start(); // start capturing
+      setIsRecording(true);
+    } catch (err) {
+      setIsRecording(false);
+      message.error("Không thể truy cập micro. Vui lòng cấp quyền.");
+      console.error("record/start error:", err);
     }
-  }, [
-    isRecording,
-    listening,
-    supported,
-    listen,
-    stop,
-    handleSendMessage,
-    selectedStudent,
-    teacherOfClass,
-    currentUser,
-  ]);
+  }, [isRecording, selectedStudent, teacherOfClass, currentUser, handleSendMessage]);
 
   useEffect(() => {
     if (chatContentRef.current) {
