@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Avatar, Typography, Button, Modal } from "antd";
+import { Layout, Menu, Avatar, Typography, Button, Modal, Dropdown, message } from "antd";
 import {
   BookOutlined,
   TeamOutlined,
@@ -11,6 +11,8 @@ import {
 import PropTypes from "prop-types";
 import sidebarLinkService from "services/sidebarLinkService";
 import CreateClassForTeacher from "./CreateClassForTeacher";
+import { DeleteOutlined } from "@ant-design/icons";
+import notificationService from "services/notificationService";
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -41,6 +43,7 @@ const Sidebar = ({
   const [wordwallEmbed, setWordwallEmbed] = useState(null);
   const [sidebarLinks, setSidebarLinks] = useState([]);
   const [isCreateClassModalVisible, setIsCreateClassModalVisible] = useState(false);
+  const [deleteRequestedClassIds, setDeleteRequestedClassIds] = useState([]);
 
   useEffect(() => {
     const fetchSidebarLinks = async () => {
@@ -80,6 +83,53 @@ const Sidebar = ({
   const openLink = (url) => {
     window.open(url, "_blank");
   };
+  const handleRequestDeleteClass = async (classItem) => {
+    if (deleteRequestedClassIds.includes(classItem.id)) {
+      message.info("Bạn đã gửi yêu cầu xóa lớp này rồi.");
+      return;
+    }
+
+    Modal.confirm({
+      title: "Yêu cầu xóa lớp",
+      content: `Bạn có chắc muốn gửi yêu cầu admin xóa lớp "${classItem.name}"?`,
+      okText: "Gửi yêu cầu",
+      cancelText: "Hủy",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          const notificationPayload = {
+            title: `Yêu cầu xóa lớp: ${classItem.name}`,
+            general: true,
+            type: true,
+            detail: `Giáo viên ${teacherName} yêu cầu admin xóa lớp ID ${classItem.id} - ${classItem.name}.`,
+            classID: classItem.id,
+          };
+
+          await notificationService.createNotification(notificationPayload);
+
+          setDeleteRequestedClassIds((prev) => [...prev, classItem.id]);
+          message.success("Đã gửi yêu cầu xóa lớp tới admin.");
+        } catch (err) {
+          console.error(err);
+          message.error("Gửi yêu cầu xóa lớp thất bại.");
+        }
+      },
+    });
+  };
+
+  const getClassContextMenu = (classItem) => (
+    <Menu
+      onClick={({ key }) => {
+        if (key === "delete-class") {
+          handleRequestDeleteClass(classItem);
+        }
+      }}
+    >
+      <Menu.Item key="delete-class" danger icon={<DeleteOutlined />}>
+        Yêu cầu xóa lớp
+      </Menu.Item>
+    </Menu>
+  );
 
   const SidebarContent = () => (
     <>
@@ -174,40 +224,45 @@ const Sidebar = ({
             }}
           >
             {classes?.map((classItem) => (
-              <Menu.Item
+              <Dropdown
                 key={classItem.id}
-                onClick={() => handleClassSelect(classItem.id)}
-                style={{
-                  margin: "0",
-                  padding: "10px",
-                  borderRadius: "8px",
-                  color: colors.darkGreen,
-                  backgroundColor:
-                    selectedClass === classItem.id ? colors.lightGreen : "transparent",
-                }}
-                icon={
-                  <Avatar
-                    size="small"
+                overlay={getClassContextMenu(classItem)}
+                trigger={["contextMenu"]} // 👈 right-click
+              >
+                <Menu.Item
+                  onClick={() => handleClassSelect(classItem.id)} // 👈 left-click vẫn chọn lớp bình thường
+                  style={{
+                    margin: "0",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    color: colors.darkGreen,
+                    backgroundColor:
+                      selectedClass === classItem.id ? colors.lightGreen : "transparent",
+                  }}
+                  icon={
+                    <Avatar
+                      size="small"
+                      style={{
+                        backgroundColor:
+                          selectedClass === classItem.id ? colors.deepGreen : colors.midGreen,
+                        color: colors.white,
+                      }}
+                    >
+                      {classItem.name.charAt(0)}
+                    </Avatar>
+                  }
+                >
+                  <span
                     style={{
-                      backgroundColor:
-                        selectedClass === classItem.id ? colors.deepGreen : colors.midGreen,
-                      color: colors.white,
+                      fontWeight: selectedClass === classItem.id ? 600 : 400,
+                      maxWidth: "100%",
+                      textOverflow: "ellipsis",
                     }}
                   >
-                    {classItem.name.charAt(0)}
-                  </Avatar>
-                }
-              >
-                <span
-                  style={{
-                    fontWeight: selectedClass === classItem.id ? 600 : 400,
-                    maxWidth: "100%",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {classItem.name}
-                </span>
-              </Menu.Item>
+                    {classItem.name}
+                  </span>
+                </Menu.Item>
+              </Dropdown>
             ))}
           </Menu>
         ) : (

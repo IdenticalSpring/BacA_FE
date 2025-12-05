@@ -281,13 +281,6 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
   const hasGroup = students.some((s) => s.id === "group");
   const listWithGroupAndAI = [
     {
-      id: "ai",
-      name: "🤖 AI Trò chuyện",
-      imgUrl: null,
-      isAI: true,
-      lastMessage: { text: "Trò chuyện với AI hỗ trợ học tập" },
-    },
-    {
       id: "group",
       name: "💬 Nhóm lớp",
       imgUrl: null,
@@ -295,6 +288,13 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
       lastMessage: { text: "Phòng chat chung của lớp" },
     },
     ...students,
+    {
+      id: "ai",
+      name: "🤖 AI Trò chuyện",
+      imgUrl: null,
+      isAI: true,
+      lastMessage: { text: "Trò chuyện với AI hỗ trợ học tập" },
+    },
   ];
 
   return (
@@ -461,7 +461,7 @@ const ChatInterface = React.memo(
             {chatPartner.name}
           </Title>
         </header>
-        {currentUserRole === "student" && currentTopic ? (
+        {currentUserRole === "student" && currentTopic && !chatPartner?.isAI ? (
           <div
             style={{
               backgroundColor: "#f8f9fa",
@@ -668,14 +668,14 @@ const ChatComponent = ({
   // *** FIX 1: Tạo một ref để lưu trữ giá trị mới nhất của liveTranscript ***
   const liveTranscriptRef = useRef("");
 
-  const { listen, listening, stop, supported } = useSpeechRecognition({
-    onResult: (result) => {
-      setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
-      liveTranscriptRef.current = liveTranscriptRef.current
-        ? liveTranscriptRef.current + " " + result
-        : result;
-    },
-  });
+  // const { listen, listening, stop, supported } = useSpeechRecognition({
+  //   onResult: (result) => {
+  //     setLiveTranscript((prev) => (prev ? prev + " " : "") + result);
+  //     liveTranscriptRef.current = liveTranscriptRef.current
+  //       ? liveTranscriptRef.current + " " + result
+  //       : result;
+  //   },
+  // });
 
   // *** FIX 2: Luôn cập nhật ref mỗi khi state thay đổi ***
   // useEffect(() => {
@@ -808,13 +808,15 @@ const ChatComponent = ({
       const chatPartner = currentUser.role === "teacher" ? selectedStudent : teacherOfClass;
       if (!chatPartner || !classInfo) return;
       setError(null);
-
+      const isAIChat = !!chatPartner.isAI;
       const chatData = {
         classId: classInfo.id,
         studentId: currentUser.role === "student" ? currentUser.id : chatPartner.id,
         teacherId: currentUser.role === "teacher" ? currentUser.id : chatPartner.id,
         senderRole: currentUser.role,
         ...data,
+        ignoreTopic: isAIChat,
+        aiMode: isAIChat ? "free" : "topic",
       };
 
       try {

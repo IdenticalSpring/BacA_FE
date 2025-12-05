@@ -21,6 +21,7 @@ import teacherService from "services/teacherService";
 import classTestScheduleService from "services/classTestScheduleService";
 import StudentScoreService from "services/studentScoreService";
 import { colors } from "assets/theme/color";
+import Tooltip from "@mui/material/Tooltip";
 
 const TableScoreTest = ({ onError }) => {
   const [dataSource, setDataSource] = useState([]);
@@ -237,6 +238,7 @@ const TableScoreTest = ({ onError }) => {
               teacherName: teacherMap[schedule.teacherID] || "Không xác định",
               skillScores: detail.scores || {},
               avgScore: calculateAvgScore(detail.scores || {}),
+              teacherComment: score.teacherComment || "-",
             };
           });
 
@@ -268,6 +270,26 @@ const TableScoreTest = ({ onError }) => {
     { Header: "Tên Lớp", accessor: "className", width: "15%" },
     { Header: "Ngày Kiểm Tra", accessor: "testDate", width: "15%" },
     { Header: "Điểm Trung Bình", accessor: "avgScore", width: "10%" },
+    {
+      Header: "Nhận xét GV",
+      accessor: "teacherComment",
+      width: "25%",
+      Cell: (cell) => {
+        <Tooltip title={value || ""} placement="top" arrow>
+          <div
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "250px",
+              cursor: "pointer",
+            }}
+          >
+            {value}
+          </div>
+        </Tooltip>;
+      },
+    },
   ];
 
   const skillColumns = uniqueSkills.map((skill) => ({
@@ -287,6 +309,7 @@ const TableScoreTest = ({ onError }) => {
     testDate: item.testDate,
     avgScore: item.avgScore,
     skillScores: item.skillScores,
+    teacherComment: item.teacherComment || "-",
   }));
 
   const handleNotificationClose = (event, reason) => {
