@@ -13,9 +13,12 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 
   // eslint-disable-next-line react/prop-types
   if (!allowedRoles.includes(role)) {
+    console.error(
+      `❌ [PrivateRoute] Access denied - Role "${role}" not in allowed roles:`,
+      allowedRoles
+    );
     return <Navigate to="/auth/sign-in" replace />; // Trang cấm truy cập
   }
-
   return children ? children : <Outlet />;
 };
 

@@ -86,6 +86,8 @@ import EvaluationManagement from "pages/admin/evaluationManagement";
 import SidebarLinkManagement from "pages/admin/sidebarLinkManagement";
 import CreateSidebarLink from "pages/admin/createSidebarLink";
 import CheckinManagement from "pages/admin/checkinManagement";
+import ErrorBoundary from "components/ErrorBoundary";
+
 const routes = [
   {
     // type: "collapse",
@@ -254,10 +256,12 @@ const routes = [
     name: "Test Management",
     key: "testManagement",
     icon: <Icon fontSize="small">table_view</Icon>,
-    route: "/testManagement",
+    route: "/teacherpage/testManagement",
     component: (
-      <PrivateRoute allowedRoles={["admin"]}>
-        <TestManagement />
+      <PrivateRoute allowedRoles={["admin", "teacher"]}>
+        <ErrorBoundary>
+          <TestManagement />
+        </ErrorBoundary>
       </PrivateRoute>
     ),
   },

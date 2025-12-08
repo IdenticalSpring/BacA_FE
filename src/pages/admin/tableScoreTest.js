@@ -23,6 +23,26 @@ import StudentScoreService from "services/studentScoreService";
 import { colors } from "assets/theme/color";
 import Tooltip from "@mui/material/Tooltip";
 
+const CommentCell = ({ value }) => (
+  <Tooltip title={value || ""} placement="top" arrow>
+    <div
+      style={{
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        maxWidth: "250px",
+        cursor: "pointer",
+      }}
+    >
+      {value}
+    </div>
+  </Tooltip>
+);
+
+CommentCell.propTypes = {
+  value: PropTypes.string,
+};
+
 const TableScoreTest = ({ onError }) => {
   const [dataSource, setDataSource] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -274,21 +294,7 @@ const TableScoreTest = ({ onError }) => {
       Header: "Nhận xét GV",
       accessor: "teacherComment",
       width: "25%",
-      Cell: (cell) => {
-        <Tooltip title={value || ""} placement="top" arrow>
-          <div
-            style={{
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: "250px",
-              cursor: "pointer",
-            }}
-          >
-            {value}
-          </div>
-        </Tooltip>;
-      },
+      Cell: CommentCell,
     },
   ];
 

@@ -98,17 +98,14 @@ function TestManagement() {
   const handleScoreError = (message) => {
     setNotification({ open: true, message, severity: "error" });
   };
-
   // Fetch tất cả dữ liệu từ API
   const fetchData = async () => {
     setLoading(true);
     try {
-      await Promise.all([
-        fetchClasses(),
-        fetchTestTypes(),
-        fetchTestSchedules(),
-        fetchTestSkills(),
-      ]);
+      await fetchClasses();
+      await fetchTestTypes();
+      await fetchTestSchedules();
+      await fetchTestSkills();
     } catch (error) {
       setNotification({
         open: true,
@@ -146,18 +143,24 @@ function TestManagement() {
   const fetchTestSchedules = async () => {
     try {
       const data = await classTestScheduleService.getAllClassTestSchedule();
+      if (!data || !Array.isArray(data)) {
+        console.warn("⚠️ Test schedules data is invalid:", data);
+        setTestSchedules([]);
+        return [];
+      }
       const schedules = data.map((test) => ({
-        id: test.id,
-        name: test.test?.name || "Unknown Test",
-        date: new Date(test.date).toISOString().split("T")[0],
-        className: test.class?.name || "Unknown Class",
-        classID: test.classID,
-        testID: test.testID,
+        id: test?.id || null,
+        name: test?.test?.name || "Unknown Test",
+        date: test?.date ? new Date(test.date).toISOString().split("T")[0] : "N/A",
+        className: test?.class?.name || "Unknown Class",
+        classID: test?.classID || null,
+        testID: test?.testID || null,
       }));
       setTestSchedules(schedules);
       return schedules;
     } catch (error) {
       console.error("Error fetching test schedules:", error);
+      setTestSchedules([]);
       throw error;
     }
   };
@@ -225,10 +228,10 @@ function TestManagement() {
     { Header: "Actions", accessor: "actions", width: "30%" },
   ];
 
-  const testScheduleRows = testSchedules.map((test) => ({
-    name: test.name,
-    date: test.date,
-    className: test.className,
+  const testScheduleRows = (testSchedules || []).map((test) => ({
+    name: test?.name || "N/A",
+    date: test?.date || "N/A",
+    className: test?.className || "N/A",
     actions: (
       <MDBox display="flex" gap={2}>
         <MDButton
@@ -249,8 +252,8 @@ function TestManagement() {
     ),
   }));
 
-  const testTypeRows = testTypes.map((type) => ({
-    name: type.name,
+  const testTypeRows = (testTypes || []).map((type) => ({
+    name: type?.name || "N/A",
     actions: (
       <MDBox display="flex" gap={2}>
         <MDButton
@@ -272,9 +275,9 @@ function TestManagement() {
   }));
 
   const testSkillRows =
-    testSkills.length > 0
+    testSkills && testSkills.length > 0
       ? testSkills.map((testSkill) => ({
-          name: testSkill.name,
+          name: testSkill?.name || "N/A",
           actions: (
             <MDBox display="flex" gap={2}>
               <MDButton
