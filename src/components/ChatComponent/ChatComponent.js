@@ -288,13 +288,14 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
       lastMessage: { text: "Phòng chat chung của lớp" },
     },
     ...students,
-    {
-      id: "ai",
-      name: "🤖 AI Trò chuyện",
-      imgUrl: null,
-      isAI: true,
-      lastMessage: { text: "Trò chuyện với AI hỗ trợ học tập" },
-    },
+    // 🚫 AI Chatbot tab is hidden
+    // {
+    //   id: "ai",
+    //   name: "🤖 AI Trò chuyện",
+    //   imgUrl: null,
+    //   isAI: true,
+    //   lastMessage: { text: "Trò chuyện với AI hỗ trợ học tập" },
+    // },
   ];
 
   return (
