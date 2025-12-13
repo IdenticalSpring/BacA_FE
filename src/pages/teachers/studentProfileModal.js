@@ -792,7 +792,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
             />
           )}
 
-          <Divider orientation="left" style={{ color: colors.darkGreen }}>
+          {/* <Divider orientation="left" style={{ color: colors.darkGreen }}>
             Biểu đồ đánh giá
           </Divider>
           <Row gutter={isMobile ? 8 : 16}>
@@ -827,7 +827,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
                 {renderSkillsChart("0", "Tình hình học tập")}
               </Card>
             </Col>
-          </Row>
+          </Row> */}
         </>
       )}
     </Modal>

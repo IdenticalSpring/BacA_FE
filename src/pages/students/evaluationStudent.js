@@ -414,7 +414,9 @@ const EvaluationStudent = ({ studentId, colors }) => {
     );
   };
 
-  return (
+  return null;
+
+  /* return (
     <Card
       style={{ borderRadius: 12, boxShadow: `0 2px 8px ${colors.softShadow}` }}
       loading={loading}
@@ -472,7 +474,7 @@ const EvaluationStudent = ({ studentId, colors }) => {
         <Text>Chưa có đánh giá nào.</Text>
       )}
     </Card>
-  );
+  ); */
 };
 
 EvaluationStudent.propTypes = {
