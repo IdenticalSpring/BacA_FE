@@ -280,14 +280,6 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
   // ✅ Inject Group Chat only once
   const hasGroup = students.some((s) => s.id === "group");
   const listWithGroupAndAI = [
-    {
-      id: "group",
-      name: "💬 Nhóm lớp",
-      imgUrl: null,
-      isGroup: true,
-      lastMessage: { text: "Phòng chat chung của lớp" },
-    },
-    ...students,
     ...(role !== "student"
       ? [
           {
@@ -299,6 +291,14 @@ const StudentListSider = React.memo(({ students, selectedStudent, onSelectStuden
           },
         ]
       : []),
+    {
+      id: "group",
+      name: "💬 Nhóm lớp",
+      imgUrl: null,
+      isGroup: true,
+      lastMessage: { text: "Phòng chat chung của lớp" },
+    },
+    ...students,
   ];
 
   return (
