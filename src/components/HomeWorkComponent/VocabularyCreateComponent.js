@@ -303,7 +303,7 @@ const VocabularyCreateComponent = ({
         const newVocab = {
           id: Date.now(),
           word: values.word,
-          // meaning: values.meaning,
+          definition: values.definition,
           imageUrl: imageUrl || undefined,
           audioUrl: audioUrlUploaded,
           audioFile: mp3file || null,
@@ -453,6 +453,13 @@ const VocabularyCreateComponent = ({
               placeholder="Nhập từ/câu hỏi"
               value={textToSpeech}
               onChange={handleWordChange}
+              style={{ borderRadius: "6px" }}
+            />
+          </Form.Item>
+          <Form.Item name="definition" label="Định nghĩa">
+            <TextArea
+              rows={2}
+              placeholder="Nhập định nghĩa hoặc ý nghĩa của từ"
               style={{ borderRadius: "6px" }}
             />
           </Form.Item>
@@ -623,6 +630,20 @@ const VocabularyCreateComponent = ({
                         >
                           {item?.word || item?.textToSpeech}
                         </Text>
+
+                        {item?.definition && (
+                          <Text
+                            type="secondary"
+                            style={{
+                              fontSize: "12px",
+                              textAlign: "center",
+                              marginBottom: "8px",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            {item.definition}
+                          </Text>
+                        )}
 
                         {item?.audioUrl && (
                           <div style={{ marginTop: "auto", paddingTop: "8px" }}>

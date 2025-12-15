@@ -722,13 +722,11 @@ const ChatComponent = ({
 
   useEffect(() => {
     fetchAllChats();
-    const interval = setInterval(fetchAllChats, 5000);
-    return () => clearInterval(interval);
+    // Removed polling - using WebSocket for real-time updates instead
   }, [fetchAllChats]);
   useEffect(() => {
     fetchGroupChats();
-    // const interval = setInterval(fetchGroupChats, 8000);
-    // return () => clearInterval(interval);
+    // Removed polling - using WebSocket for real-time updates instead
   }, [fetchGroupChats]);
   const handleMarkAsRead = useCallback(
     async (partner) => {

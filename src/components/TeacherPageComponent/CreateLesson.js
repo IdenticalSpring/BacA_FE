@@ -882,6 +882,8 @@ export default function CreateLesson({
   };
 
   const enhanceDescription = async () => {
+    // if (!quillDescription) return; FIX BUG Không lấy được quillDescription
+    const quillDescription = quillRefDescription.current?.getEditor();
     if (!quillDescription) return;
 
     const currentContent = quillDescription.getText();
@@ -905,6 +907,8 @@ export default function CreateLesson({
 
   // CreateLesson.js
   const enhanceLessonPlan = async () => {
+    // if (!quillLessonPlan) return; FIX BUG Không lấy được quillLessonPlan
+    const quillLessonPlan = quillRefLessonPlan.current?.getEditor();
     if (!quillLessonPlan) return;
 
     const currentContent = quillLessonPlan.getText();
