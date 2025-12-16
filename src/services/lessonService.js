@@ -53,15 +53,38 @@ const lessonService = {
   },
   enhanceLessonPlan: async (lessonPlan, imageUrls = []) => {
     try {
+      console.log("📤 Sending enhance-lesson-plan request...");
+      console.log("📝 Lesson plan length:", lessonPlan?.length || 0);
+      console.log("🖼️ Images count:", imageUrls?.length || 0);
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_BASE_URL}/chatbot/enhance-lesson-plan`,
-        { lessonPlan, imageUrls }, // Gửi cả lessonPlan và imageUrls
-        { headers: { "Content-Type": "application/json" } }
+        { lessonPlan, imageUrls },
+        {
+          headers: { "Content-Type": "application/json" },
+          timeout: 65000, // 65 seconds timeout
+        }
       );
-      return response.data.response; // Trả về nội dung đã cải thiện
+
+      console.log("✅ Response received successfully");
+      return response.data.response;
     } catch (error) {
-      console.error("Error enhancing lesson plan:", error);
-      throw new Error("Failed to enhance lesson plan. Please try again!");
+      console.error("❌ Error enhancing lesson plan:", error);
+
+      // Provide more specific error messages
+      if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+        throw new Error("Request timeout. Please try with fewer images or simpler content.");
+      }
+      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+        throw new Error("Cannot connect to server. Please check if backend is running.");
+      }
+      if (error.response?.status === 500) {
+        throw new Error(error.response?.data?.message || "Server error. Please try again later.");
+      }
+
+      throw new Error(
+        error.response?.data?.message || "Failed to enhance lesson plan. Please try again!"
+      );
     }
   },
   getLessonByTeacherId: async (TeacherId) => {

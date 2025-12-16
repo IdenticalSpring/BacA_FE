@@ -22,7 +22,13 @@ ScoreCell.propTypes = {
 };
 
 const AvgScoreCell = ({ value }) => {
-  return <strong>{value}</strong>;
+  const displayValue =
+    value !== null && value !== undefined && value !== "-"
+      ? typeof value === "number"
+        ? value.toFixed(2)
+        : value
+      : "-";
+  return <strong style={{ color: colors.deepGreen }}>{displayValue}</strong>;
 };
 
 AvgScoreCell.propTypes = {
@@ -79,6 +85,25 @@ const TestScoresTab = ({ students, cardStyle, headerStyle }) => {
           const assessment = assessmentData.find((a) => a.id === score.assessmentID);
           const detail = detailsData.find((d) => d.studentScoreID === score.studentScoreID);
 
+          // Tính điểm trung bình từ các điểm kỹ năng thực tế
+          let avgScore = "-";
+          if (detail && detail.scores && typeof detail.scores === "object") {
+            const scoreValues = Object.values(detail.scores).filter(
+              (val) => val !== null && val !== undefined && val !== "-" && !isNaN(parseFloat(val))
+            );
+            if (scoreValues.length > 0) {
+              const sum = scoreValues.reduce((acc, val) => acc + parseFloat(val), 0);
+              avgScore = (sum / scoreValues.length).toFixed(2);
+            }
+          }
+
+          console.log("Student scores debug:", {
+            studentName: student ? student.name : "Unknown",
+            scores: detail ? detail.scores : {},
+            calculatedAvg: avgScore,
+            originalAvg: detail ? detail.avgScore : "-",
+          });
+
           return {
             key: score.studentScoreID,
             studentScoreID: score.studentScoreID,
@@ -88,7 +113,7 @@ const TestScoresTab = ({ students, cardStyle, headerStyle }) => {
             testScheduleName: schedule ? schedule.date : "Unknown", // Đảm bảo lấy schedule.date
             assessmentName: assessment ? assessment.name : "Unknown",
             scores: detail ? detail.scores : {},
-            avgScore: detail ? detail.avgScore : "-",
+            avgScore: avgScore,
             teacherComment: score.teacherComment || "-",
           };
         });

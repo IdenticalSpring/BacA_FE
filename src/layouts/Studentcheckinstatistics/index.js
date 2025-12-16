@@ -229,7 +229,14 @@ export default function StudentCheckinStatistics() {
         );
         const checkinData = await checkinService.getAllCheckinOfStudent(selectedStudent.id);
 
-        const formattedRows = lessonByScheduleData?.map((sch) => {
+        // Sắp xếp lessonByScheduleData theo ngày từ mới nhất đến cũ nhất
+        const sortedLessonData = lessonByScheduleData?.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
+        });
+
+        const formattedRows = sortedLessonData?.map((sch) => {
           const status =
             checkinData?.find((checkin) => checkin.lessonBySchedule.id === sch.id)?.present ??
             "pending";
@@ -242,7 +249,6 @@ export default function StudentCheckinStatistics() {
             dayOfWeek: daysOfWeek[sch.schedule.dayOfWeek] || "N/A",
             date: sch.date || "N/A",
             startTime: sch.startTime || "N/A",
-            endTime: sch.endTime || "N/A",
             endTime: sch.endTime || "N/A",
             status: status,
           };
@@ -477,7 +483,15 @@ export default function StudentCheckinStatistics() {
           },
         }}
       >
-        <DialogTitle>{"Checkin Statistic"}</DialogTitle>
+        <DialogTitle>
+          {"Checkin Statistic"}
+          {lessonBySchedulerows && lessonBySchedulerows.length > 0 && (
+            <span style={{ fontSize: "14px", color: "#368A68", marginLeft: "20px" }}>
+              (Buổi học mới nhất: <strong>{lessonBySchedulerows[0]?.date}</strong> - Tổng:{" "}
+              {lessonBySchedulerows.length} buổi)
+            </span>
+          )}
+        </DialogTitle>
         <DialogContent sx={{ height: "100%", overflowY: "auto" }}>
           {loadingLessonBySchedule ? (
             <MDTypography variant="h6" color="info" align="center">

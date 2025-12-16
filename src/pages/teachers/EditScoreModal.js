@@ -64,42 +64,57 @@ const EditScoreModal = ({
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      // Không validate fields, chỉ lấy giá trị
+      const values = form.getFieldsValue();
+
+      // Tính avgScore từ các điểm có giá trị
+      const avgScore = calculateAvgScore(values);
+
+      // Chuẩn bị dữ liệu cập nhật
       const updatedScoreData = {
         studentID: scoreData.studentID,
         classTestScheduleID: scoreData.classTestScheduleID,
-        teacherComment: values.teacherComment,
-        assessmentID: values.assessmentId,
+        teacherComment: values.teacherComment || "",
+        assessmentID: values.assessmentId || null,
       };
 
-      const avgScore = calculateAvgScore(values);
-      const scoreDetails = testSkills.map((skill) => {
-        const existingDetail = existingDetails.find((d) => d.testSkillID === skill.id);
-        return {
-          id: existingDetail?.id,
-          studentScoreID: scoreData.studentScoreID,
-          testSkillID: skill.id,
-          score: values[`score_${skill.id}`],
-          avgScore: parseFloat(avgScore),
-        };
-      });
+      console.log("Updating score with data:", updatedScoreData);
 
-      console.log(
-        "Updating score for studentScoreID:",
-        scoreData.studentScoreID,
-        "Details:",
-        scoreDetails
-      );
-
+      // Cập nhật thông tin chính của studentScore
       await studentScoreService.editScoreStudent(scoreData.studentScoreID, updatedScoreData);
 
-      const updatePromises = scoreDetails.map((detail) => {
+      // Lọc và chuẩn bị scoreDetails - chỉ xử lý những score có giá trị
+      const scoreDetailsToUpdate = testSkills
+        .map((skill) => {
+          const scoreValue = values[`score_${skill.id}`];
+          const existingDetail = existingDetails.find((d) => d.testSkillID === skill.id);
+
+          // Chỉ xử lý nếu có giá trị score
+          if (scoreValue !== undefined && scoreValue !== null && scoreValue !== "") {
+            return {
+              id: existingDetail?.id,
+              studentScoreID: scoreData.studentScoreID,
+              testSkillID: skill.id,
+              score: parseFloat(scoreValue),
+              avgScore: parseFloat(avgScore) || 0,
+            };
+          }
+          return null;
+        })
+        .filter((detail) => detail !== null);
+
+      console.log("Score details to update:", scoreDetailsToUpdate);
+
+      // Cập nhật hoặc tạo mới từng score detail
+      const updatePromises = scoreDetailsToUpdate.map((detail) => {
         if (detail.id) {
+          // Cập nhật nếu đã tồn tại
           return studentScoreService.updateScoreStudentDetails(detail.id, {
             score: detail.score,
             avgScore: detail.avgScore,
           });
         } else {
+          // Tạo mới nếu chưa tồn tại
           return studentScoreService.createScoreStudentDetails({
             studentScoreID: detail.studentScoreID,
             testSkillID: detail.testSkillID,
@@ -108,13 +123,17 @@ const EditScoreModal = ({
           });
         }
       });
+
       await Promise.all(updatePromises);
 
       notification.success({
         message: "Success",
         description: "Score updated successfully.",
+        placement: "topRight",
+        duration: 4,
       });
 
+      // Callback với dữ liệu đã cập nhật
       onOk({
         key: scoreData.studentScoreID,
         studentScoreID: scoreData.studentScoreID,
@@ -124,19 +143,24 @@ const EditScoreModal = ({
         testScheduleName: scoreData.testScheduleName,
         assessmentName: assessments.find((a) => a.id === values.assessmentId)?.name || "Unknown",
         scores: testSkills.reduce((acc, skill) => {
-          acc[skill.name] = values[`score_${skill.id}`];
+          const scoreValue = values[`score_${skill.id}`];
+          if (scoreValue !== undefined && scoreValue !== null && scoreValue !== "") {
+            acc[skill.name] = scoreValue;
+          }
           return acc;
         }, {}),
         avgScore: avgScore,
-        teacherComment: values.teacherComment,
+        teacherComment: values.teacherComment || "",
       });
     } catch (error) {
       console.error("Error updating score:", error);
       notification.error({
         message: "Error",
         description: `Failed to update score: ${
-          error.message || "Unknown error"
+          error.response?.data?.message || error.message || "Unknown error"
         }. Please try again.`,
+        placement: "topRight",
+        duration: 4,
       });
     }
   };
@@ -144,13 +168,14 @@ const EditScoreModal = ({
   const calculateAvgScore = (values) => {
     const validScores = testSkills
       .map((skill) => values[`score_${skill.id}`])
-      .filter((score) => score !== undefined && score !== null);
+      .filter((score) => score !== undefined && score !== null && score !== "")
+      .map((score) => parseFloat(score));
+
     if (validScores.length > 0) {
-      return (
-        validScores.reduce((sum, score) => sum + parseFloat(score), 0) / validScores.length
-      ).toFixed(2);
+      const sum = validScores.reduce((acc, score) => acc + score, 0);
+      return (sum / validScores.length).toFixed(2);
     }
-    return "";
+    return "0.00";
   };
 
   return (
@@ -171,8 +196,17 @@ const EditScoreModal = ({
                 name={`score_${skill.id}`}
                 label={`${skill.name} Score`}
                 rules={[
-                  // { required: true, message: `Please enter ${skill.name} score` },
-                  { type: "number", min: 0, max: 10, message: "Score must be between 0 and 10" },
+                  {
+                    validator: (_, value) => {
+                      if (value === null || value === undefined || value === "") {
+                        return Promise.resolve();
+                      }
+                      if (value < 0 || value > 10) {
+                        return Promise.reject(new Error("Score must be between 0 and 10"));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
                 ]}
               >
                 <InputNumber

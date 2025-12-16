@@ -38,6 +38,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
@@ -236,6 +237,42 @@ const TeacherPage = () => {
         }}
       >
         Edit Profile
+      </Menu.Item>
+      <Menu.Item
+        key="delete-student"
+        icon={<DeleteOutlined />}
+        onClick={() => {
+          Modal.confirm({
+            title: "Delete Student",
+            content: `Are you sure you want to delete ${student.name}?`,
+            okText: "Delete",
+            okType: "danger",
+            cancelText: "Cancel",
+            onOk: async () => {
+              try {
+                await studentService.deleteStudent(student.id);
+                notification.success({
+                  message: "Success",
+                  description: "Student deleted successfully",
+                  placement: "topRight",
+                  duration: 4,
+                });
+                await refreshStudents();
+              } catch (error) {
+                console.error("Error deleting student:", error);
+                notification.error({
+                  message: "Error",
+                  description: "Failed to delete student",
+                  placement: "topRight",
+                  duration: 4,
+                });
+              }
+            },
+          });
+        }}
+        danger
+      >
+        Delete Student
       </Menu.Item>
     </Menu>
   );
@@ -1575,20 +1612,6 @@ const TeacherPage = () => {
               >
                 {allStudentsSelected ? "Deselect All Students" : "Select All Students"}
               </Button>
-              {selectedStudents.length > 0 && (
-                <Button
-                  type="primary"
-                  danger
-                  onClick={handleDeleteStudents}
-                  disabled={isAttendanceMode}
-                  style={{
-                    backgroundColor: colors.errorRed,
-                    borderColor: colors.errorRed,
-                  }}
-                >
-                  Delete Students
-                </Button>
-              )}
             </div>
           )}
           {students?.map((student) => {

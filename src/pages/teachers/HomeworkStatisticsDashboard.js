@@ -125,7 +125,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
         const data = await checkinService.getAllCheckinOfLessonBySchedule(selectedSchedule?.id);
         setCheckinData(data);
       } catch (err) {
-        console.log(err);
+        // Error handled silently
       } finally {
         // setLoading(false);
       }
@@ -216,10 +216,16 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   useEffect(() => {
     if (!lessonByScheduleData?.length) return;
 
+    // Sắp xếp lessonByScheduleData theo ngày từ cũ đến mới
+    const sortedScheduleData = [...lessonByScheduleData].sort((a, b) => {
+      return new Date(a.date) - new Date(b.date);
+    });
+
     let lessonByScheduleDiv1 = [];
-    const firstDate = new Date(lessonByScheduleData[0]?.date);
-    const lastDate = new Date(firstDate);
-    lastDate.setMonth(firstDate.getMonth() + 6);
+    const firstDate = new Date(sortedScheduleData[0]?.date);
+    const lastDate = new Date(sortedScheduleData[sortedScheduleData.length - 1]?.date);
+    // Thêm 1 tuần sau ngày cuối để hiển thị đủ
+    lastDate.setDate(lastDate.getDate() + 7);
 
     // Ngày đầu tuần đầu tiên (Chủ Nhật)
     const firstWeekStart = new Date(firstDate);
@@ -247,7 +253,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
       for (let i = 0; i < 7; i++) {
         if (currentDate > lastDate) break;
 
-        const scheduleItem = lessonByScheduleData.find(
+        const scheduleItem = sortedScheduleData.find(
           (item) => new Date(item?.date || "").toDateString() === currentDate.toDateString()
         );
 
@@ -303,7 +309,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
   }, [students, lessonByScheduleData]);
 
   useEffect(() => {
-    if (carouselRef.current && lessonByScheduleDiv.length > 0 && currentWeekIndex > 0) {
+    if (carouselRef.current && lessonByScheduleDiv.length > 0 && currentWeekIndex >= 0) {
       carouselRef.current.goTo(currentWeekIndex, true);
     }
   }, [currentWeekIndex, lessonByScheduleDiv, carouselRef]);
