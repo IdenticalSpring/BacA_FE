@@ -17,12 +17,16 @@ import {
   Breadcrumb,
   Alert,
   message,
+  Table,
+  Tag,
 } from "antd";
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   CalculatorOutlined,
   EditOutlined,
+  DownOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -133,6 +137,7 @@ const EnterTestScore = () => {
   const classId = location.state?.classId;
 
   const [studentsWithScores, setStudentsWithScores] = useState([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
 
   useEffect(() => {
     if (classId) {
@@ -452,46 +457,48 @@ const EnterTestScore = () => {
 
   const scoreColumns = [
     {
-      Header: "Student Name",
-      accessor: "studentName",
+      title: "Student Name",
+      dataIndex: "studentName",
+      key: "studentName",
       width: "15%",
     },
     {
-      Header: "Test Schedule",
-      accessor: "testScheduleName",
+      title: "Test Schedule",
+      dataIndex: "testScheduleName",
+      key: "testScheduleName",
       width: "15%",
     },
     {
-      Header: "Assessment",
-      accessor: "assessmentName",
+      title: "Assessment",
+      dataIndex: "assessmentName",
+      key: "assessmentName",
       width: "15%",
     },
     ...testSkills.map((skill) => ({
-      Header: skill.name,
-      accessor: `scores.${skill.name}`,
+      title: skill.name,
+      dataIndex: ["scores", skill.name],
+      key: skill.name,
       width: "8%",
       align: "center",
-      Cell: ScoreCell,
+      render: (value) => value || "-",
     })),
     {
-      Header: "Average Score",
-      accessor: "avgScore",
+      title: "Average Score",
+      dataIndex: "avgScore",
+      key: "avgScore",
       width: "10%",
       align: "center",
-      Cell: AvgScoreCell,
+      render: (value) => <strong>{value}</strong>,
     },
     {
-      Header: "Teacher Comment",
-      accessor: "teacherComment",
-      width: "19%",
-      Cell: ScoreCell,
-    },
-    {
-      Header: "Actions",
-      accessor: "actions",
+      title: "Actions",
+      key: "actions",
       width: "10%",
-      Cell: ({ row }) => <ActionsCell row={{ ...row, handleEditScore }} />,
-      propTypes: actionsCellPropTypes,
+      render: (_, record) => (
+        <Button type="link" icon={<EditOutlined />} onClick={() => handleEditScore(record)}>
+          Edit
+        </Button>
+      ),
     },
   ];
 
@@ -504,6 +511,11 @@ const EnterTestScore = () => {
     console.log("Filtered scores:", result);
     return result;
   }, [previousScores, filterName, filterTestSchedule]);
+
+  // Auto expand all rows when data changes
+  useEffect(() => {
+    setExpandedRowKeys(filteredScores.map((_, index) => index));
+  }, [filteredScores]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -737,6 +749,10 @@ const EnterTestScore = () => {
                           </Col>
 
                           <Col xs={24}>
+                            <Divider style={{ margin: "12px 0 24px 0", borderColor: "#e0e0e0" }} />
+                          </Col>
+
+                          <Col xs={24}>
                             <Form.Item name={`${studentId}_teacherComment`} label="Teacher Comment">
                               <Input.TextArea rows={3} placeholder="Enter your comment here" />
                             </Form.Item>
@@ -813,22 +829,64 @@ const EnterTestScore = () => {
               sx={{ backgroundColor: "white", borderRadius: "4px", width: 200 }}
             />
           </Space>
-          <DataTable
-            table={{
-              columns: scoreColumns,
-              rows: filteredScores,
+          <Table
+            columns={scoreColumns}
+            dataSource={filteredScores.map((score, index) => ({ ...score, key: index }))}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
             }}
-            isSorted={false}
-            entriesPerPage={10}
-            showTotalEntries={false}
-            noEndBorder
+            scroll={{ x: true }}
             loading={loading}
+            locale={{
+              emptyText:
+                filteredScores.length === 0 && !loading ? (
+                  <div style={{ textAlign: "center", padding: "20px" }}>
+                    <Text type="secondary">No previous scores available.</Text>
+                  </div>
+                ) : null,
+            }}
+            expandable={{
+              expandedRowRender: (record) => (
+                <Card
+                  size="small"
+                  style={{
+                    backgroundColor: "#f9f9f9",
+                    border: `1px solid ${colors.paleGreen || "#d9f7be"}`,
+                    margin: "8px 0",
+                  }}
+                >
+                  <Row gutter={[16, 8]}>
+                    <Col xs={24}>
+                      <Text strong style={{ color: colors.darkGreen }}>
+                        Teacher Comment:
+                      </Text>{" "}
+                      <Text>{record.teacherComment || "No comment"}</Text>
+                    </Col>
+                  </Row>
+                </Card>
+              ),
+              expandedRowKeys: expandedRowKeys,
+              onExpand: (expanded, record) => {
+                const keys = expanded
+                  ? [...expandedRowKeys, record.key]
+                  : expandedRowKeys.filter((key) => key !== record.key);
+                setExpandedRowKeys(keys);
+              },
+              expandIcon: ({ expanded, onExpand, record }) =>
+                expanded ? (
+                  <DownOutlined
+                    onClick={(e) => onExpand(record, e)}
+                    style={{ color: colors.darkGreen }}
+                  />
+                ) : (
+                  <RightOutlined
+                    onClick={(e) => onExpand(record, e)}
+                    style={{ color: colors.darkGreen }}
+                  />
+                ),
+            }}
           />
-          {filteredScores.length === 0 && !loading && (
-            <div style={{ textAlign: "center", padding: "20px" }}>
-              <Text type="secondary">No previous scores available.</Text>
-            </div>
-          )}
         </Card>
 
         <EditScoreModal

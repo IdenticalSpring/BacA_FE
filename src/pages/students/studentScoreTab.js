@@ -23,6 +23,8 @@ import {
   EditOutlined,
   SoundOutlined,
   AudioOutlined,
+  DownOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -279,26 +281,6 @@ const StudentScoreTab = ({ studentId, colors }) => {
         style: { backgroundColor: colors.paleGreen || "#f6ffed" },
       }),
     })),
-    {
-      title: "Đánh giá",
-      dataIndex: "assessment",
-      key: "assessment",
-      align: "center",
-      render: (text) => text || "N/A",
-      onHeaderCell: () => ({
-        style: { backgroundColor: colors.paleGreen || "#f6ffed" },
-      }),
-    },
-    {
-      title: "Bình luận",
-      dataIndex: "comment",
-      key: "comment",
-      align: "center",
-      render: (text) => text || "Chưa có bình luận",
-      onHeaderCell: () => ({
-        style: { backgroundColor: colors.paleGreen || "#f6ffed" },
-      }),
-    },
   ];
 
   if (loading) {
@@ -462,6 +444,45 @@ const StudentScoreTab = ({ studentId, colors }) => {
               </Text>
             </div>
           )}
+
+          {/* Feedback Section */}
+          {(recentScores.assessment || recentScores.comment) && (
+            <>
+              <Divider style={{ margin: "16px 0" }}>Feedback</Divider>
+              <Card
+                size="small"
+                style={{
+                  backgroundColor: "#f9f9f9",
+                  border: `1px solid ${colors.paleGreen || "#d9f7be"}`,
+                }}
+              >
+                {recentScores.teacher && (
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Giáo viên:{" "}
+                    </Text>
+                    <Text>{recentScores.teacher}</Text>
+                  </div>
+                )}
+                {recentScores.assessment && (
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Đánh giá:{" "}
+                    </Text>
+                    <Tag color="blue">{recentScores.assessment}</Tag>
+                  </div>
+                )}
+                {recentScores.comment && (
+                  <div>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Bình luận:{" "}
+                    </Text>
+                    <Text>{recentScores.comment}</Text>
+                  </div>
+                )}
+              </Card>
+            </>
+          )}
         </Card>
       )}
 
@@ -529,6 +550,52 @@ const StudentScoreTab = ({ studentId, colors }) => {
             showSizeChanger: false,
           }}
           scroll={{ x: true }}
+          expandable={{
+            expandedRowRender: (record) => (
+              <Card
+                size="small"
+                style={{
+                  backgroundColor: "#f9f9f9",
+                  border: `1px solid ${colors.paleGreen || "#d9f7be"}`,
+                  margin: "8px 0",
+                }}
+              >
+                <Row gutter={[16, 8]}>
+                  <Col xs={24} md={8}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Giáo viên:
+                    </Text>{" "}
+                    <Text>{record.teacher || "N/A"}</Text>
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Đánh giá:
+                    </Text>{" "}
+                    <Tag color="blue">{record.assessment || "N/A"}</Tag>
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <Text strong style={{ color: colors.darkGreen }}>
+                      Bình luận:
+                    </Text>{" "}
+                    <Text>{record.comment || "Chưa có bình luận"}</Text>
+                  </Col>
+                </Row>
+              </Card>
+            ),
+            defaultExpandAllRows: true,
+            expandIcon: ({ expanded, onExpand, record }) =>
+              expanded ? (
+                <DownOutlined
+                  onClick={(e) => onExpand(record, e)}
+                  style={{ color: colors.darkGreen }}
+                />
+              ) : (
+                <RightOutlined
+                  onClick={(e) => onExpand(record, e)}
+                  style={{ color: colors.darkGreen }}
+                />
+              ),
+          }}
         />
       ) : (
         <Empty description="Chưa có dữ liệu điểm số" style={{ padding: "30px 0" }} />
