@@ -239,40 +239,15 @@ const TeacherPage = () => {
         Edit Profile
       </Menu.Item>
       <Menu.Item
-        key="delete-student"
+        key="request-delete"
         icon={<DeleteOutlined />}
-        onClick={() => {
-          Modal.confirm({
-            title: "Delete Student",
-            content: `Are you sure you want to delete ${student.name}?`,
-            okText: "Delete",
-            okType: "danger",
-            cancelText: "Cancel",
-            onOk: async () => {
-              try {
-                await studentService.deleteStudent(student.id);
-                notification.success({
-                  message: "Success",
-                  description: "Student deleted successfully",
-                  placement: "topRight",
-                  duration: 4,
-                });
-                await refreshStudents();
-              } catch (error) {
-                console.error("Error deleting student:", error);
-                notification.error({
-                  message: "Error",
-                  description: "Failed to delete student",
-                  placement: "topRight",
-                  duration: 4,
-                });
-              }
-            },
-          });
-        }}
         danger
+        onClick={() => {
+          setSelectedStudents([student]);
+          handleDeleteStudents();
+        }}
       >
-        Delete Student
+        Delete
       </Menu.Item>
     </Menu>
   );
