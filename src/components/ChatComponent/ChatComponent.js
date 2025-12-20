@@ -72,24 +72,32 @@ const extFromMime = (mime) => {
   if (mime.includes("mpeg")) return "mp3";
   return "webm";
 };
-const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
+const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage, onGetAudioRef }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(new Audio(audioUrl));
+
+  useEffect(() => {
+    if (onGetAudioRef) {
+      onGetAudioRef(audioRef);
+    }
+  }, [onGetAudioRef]);
 
   useEffect(() => {
     const audio = audioRef.current;
     const handleEnded = () => setIsPlaying(false);
     audio.addEventListener("ended", handleEnded);
 
-    if (isLastChat && !isMyMessage) {
+    // Auto-play the last chat's audio for all roles
+    if (isLastChat) {
       audio.play().catch((error) => console.error("Audio play error:", error));
+      setIsPlaying(true);
     }
 
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.pause();
     };
-  }, [audioUrl]);
+  }, [audioUrl, isLastChat]);
 
   const togglePlay = (e) => {
     e.stopPropagation();
@@ -118,10 +126,26 @@ PlayAudioButton.propTypes = {
   audioUrl: PropTypes.string.isRequired,
   isLastChat: PropTypes.bool.isRequired,
   isMyMessage: PropTypes.bool.isRequired,
+  onGetAudioRef: PropTypes.func,
 };
 PlayAudioButton.displayName = "PlayAudioButton";
 
 const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
+  const audioRef = useRef(null);
+
+  const handleBubbleClick = () => {
+    if (chat.audioUrl && audioRef.current) {
+      const audio = audioRef.current.current;
+      if (audio) {
+        if (audio.paused) {
+          audio.play().catch((error) => console.error("Audio play error:", error));
+        } else {
+          audio.pause();
+        }
+      }
+    }
+  };
+
   const bubbleStyle = {
     backgroundColor: isMyMessage ? colors.deepGreen : colors.white,
     color: isMyMessage ? colors.white : colors.darkGray,
@@ -130,6 +154,7 @@ const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
     border: `1px solid ${isMyMessage ? colors.deepGreen : colors.gray}`,
     boxShadow: "0 2px 4px rgba(0,0,0,0.07)",
     maxWidth: "100%",
+    cursor: chat.audioUrl ? "pointer" : "default",
   };
 
   if (chat.isRevoked) {
@@ -143,7 +168,12 @@ const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
   }
 
   return (
-    <Card bodyStyle={bubbleStyle} bordered={false} className="message-card">
+    <Card
+      bodyStyle={bubbleStyle}
+      bordered={false}
+      className="message-card"
+      onClick={handleBubbleClick}
+    >
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
         {chat.imageUrl && (
           <Image
@@ -167,6 +197,7 @@ const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
                 audioUrl={chat.audioUrl}
                 isLastChat={isLastChat}
                 isMyMessage={isMyMessage}
+                onGetAudioRef={(ref) => (audioRef.current = ref)}
               />
             )}
           </div>

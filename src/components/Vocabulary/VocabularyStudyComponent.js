@@ -1773,13 +1773,14 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                 />
               </Form.Item>
 
-              {/* <Form.Item
-            name="meaning"
-            label="Ý nghĩa"
-            rules={[{ required: true, message: "Vui lòng nhập ý nghĩa" }]}
-          >
-            <TextArea rows={3} placeholder="Nhập ý nghĩa của từ" style={{ borderRadius: "6px" }} />
-          </Form.Item> */}
+              <Form.Item name="definition" label="Định nghĩa">
+                <TextArea
+                  rows={2}
+                  placeholder="Nhập định nghĩa hoặc ý nghĩa của từ"
+                  style={{ borderRadius: "6px" }}
+                />
+              </Form.Item>
+
               <Divider orientation="left">Hình ảnh</Divider>
               <style>{`
                 .ant-upload-select {
