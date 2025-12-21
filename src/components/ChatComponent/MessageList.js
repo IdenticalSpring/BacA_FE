@@ -8,13 +8,56 @@ import { colors } from "pages/teachers/teacherPage";
 const { Text } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
 
-const MessageList = ({ chats, currentUserRole, chatPartner, onRevokeMessage }) => {
+const MessageList = ({ chats, currentUserRole, chatPartner, onRevokeMessage, isTyping }) => {
   let lastDate = null;
 
   const RevokeMenu = ({ chatId }) => (
     <Menu onClick={() => onRevokeMessage(chatId)}>
       <Menu.Item key="revoke">Thu hồi tin nhắn</Menu.Item>
     </Menu>
+  );
+
+  // 🔔 Typing indicator component
+  const TypingIndicator = () => (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-start",
+        marginBottom: 12,
+        alignItems: "flex-end",
+        gap: 8,
+      }}
+    >
+      <Avatar src={chatPartner?.imgUrl} icon={<UserOutlined />} />
+      <div
+        style={{
+          background: "#f0f0f0",
+          borderRadius: 18,
+          padding: "10px 16px",
+          maxWidth: "75%",
+          animation: "pulse 1.5s ease-in-out infinite",
+        }}
+      >
+        <Text type="secondary" style={{ fontSize: 14 }}>
+          <span style={{ animation: "dots 1.5s steps(3, end) infinite" }}>
+            Đang trả lời...
+          </span>
+        </Text>
+      </div>
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
+          @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+          }
+        `}
+      </style>
+    </div>
   );
 
   return (
@@ -73,6 +116,9 @@ const MessageList = ({ chats, currentUserRole, chatPartner, onRevokeMessage }) =
           </React.Fragment>
         );
       })}
+      
+      {/* 🔔 Show typing indicator if teacher/AI is typing */}
+      {isTyping && <TypingIndicator />}
     </div>
   );
 };
@@ -82,5 +128,6 @@ MessageList.propTypes = {
   currentUserRole: PropTypes.string.isRequired,
   chatPartner: PropTypes.object,
   onRevokeMessage: PropTypes.func.isRequired,
+  isTyping: PropTypes.bool, // 🔔 Add typing prop
 };
 export default React.memo(MessageList);

@@ -72,32 +72,24 @@ const extFromMime = (mime) => {
   if (mime.includes("mpeg")) return "mp3";
   return "webm";
 };
-const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage, onGetAudioRef }) => {
+const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(new Audio(audioUrl));
-
-  useEffect(() => {
-    if (onGetAudioRef) {
-      onGetAudioRef(audioRef);
-    }
-  }, [onGetAudioRef]);
 
   useEffect(() => {
     const audio = audioRef.current;
     const handleEnded = () => setIsPlaying(false);
     audio.addEventListener("ended", handleEnded);
 
-    // Auto-play the last chat's audio for all roles
-    if (isLastChat) {
+    if (isLastChat && !isMyMessage) {
       audio.play().catch((error) => console.error("Audio play error:", error));
-      setIsPlaying(true);
     }
 
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.pause();
     };
-  }, [audioUrl, isLastChat]);
+  }, [audioUrl]);
 
   const togglePlay = (e) => {
     e.stopPropagation();
@@ -126,26 +118,10 @@ PlayAudioButton.propTypes = {
   audioUrl: PropTypes.string.isRequired,
   isLastChat: PropTypes.bool.isRequired,
   isMyMessage: PropTypes.bool.isRequired,
-  onGetAudioRef: PropTypes.func,
 };
 PlayAudioButton.displayName = "PlayAudioButton";
 
 const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
-  const audioRef = useRef(null);
-
-  const handleBubbleClick = () => {
-    if (chat.audioUrl && audioRef.current) {
-      const audio = audioRef.current.current;
-      if (audio) {
-        if (audio.paused) {
-          audio.play().catch((error) => console.error("Audio play error:", error));
-        } else {
-          audio.pause();
-        }
-      }
-    }
-  };
-
   const bubbleStyle = {
     backgroundColor: isMyMessage ? colors.deepGreen : colors.white,
     color: isMyMessage ? colors.white : colors.darkGray,
@@ -154,7 +130,6 @@ const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
     border: `1px solid ${isMyMessage ? colors.deepGreen : colors.gray}`,
     boxShadow: "0 2px 4px rgba(0,0,0,0.07)",
     maxWidth: "100%",
-    cursor: chat.audioUrl ? "pointer" : "default",
   };
 
   if (chat.isRevoked) {
@@ -168,12 +143,7 @@ const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
   }
 
   return (
-    <Card
-      bodyStyle={bubbleStyle}
-      bordered={false}
-      className="message-card"
-      onClick={handleBubbleClick}
-    >
+    <Card bodyStyle={bubbleStyle} bordered={false} className="message-card">
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
         {chat.imageUrl && (
           <Image
@@ -197,7 +167,6 @@ const MessageBubble = React.memo(({ chat, isMyMessage, isLastChat }) => {
                 audioUrl={chat.audioUrl}
                 isLastChat={isLastChat}
                 isMyMessage={isMyMessage}
-                onGetAudioRef={(ref) => (audioRef.current = ref)}
               />
             )}
           </div>
@@ -213,87 +182,141 @@ MessageBubble.propTypes = {
 };
 MessageBubble.displayName = "MessageBubble";
 
-const MessageList = React.memo(({ chats, currentUserRole, onRevokeMessage, chatPartner }) => {
-  let lastDate = null;
+const MessageList = React.memo(
+  ({ chats, currentUserRole, onRevokeMessage, chatPartner, isTyping }) => {
+    let lastDate = null;
 
-  const RevokeMenu = ({ chatId }) => (
-    <Menu onClick={() => onRevokeMessage(chatId)}>
-      <Menu.Item key="revoke">Thu hồi tin nhắn</Menu.Item>
-    </Menu>
-  );
-  RevokeMenu.propTypes = { chatId: PropTypes.number.isRequired };
+    const RevokeMenu = ({ chatId }) => (
+      <Menu onClick={() => onRevokeMessage(chatId)}>
+        <Menu.Item key="revoke">Thu hồi tin nhắn</Menu.Item>
+      </Menu>
+    );
+    RevokeMenu.propTypes = { chatId: PropTypes.number.isRequired };
 
-  return (
-    <div style={{ padding: "0 8px" }}>
-      {chats.map((chat, index) => {
-        const isMyMessage = chat.senderRole === currentUserRole;
-        const canRevoke = isMyMessage && !chat.isRevoked;
-
-        const isLastChat = index === chats.length - 1;
-
-        const currentDateString = new Date(chat.createdAt).toLocaleDateString("vi-VN", {
-          timeZone,
-        });
-        const showDateDivider = currentDateString !== lastDate;
-        lastDate = currentDateString;
-
-        return (
-          <React.Fragment key={chat.id}>
-            {showDateDivider && (
-              <Divider>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {new Date(chat.createdAt).toLocaleDateString("vi-VN", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  })}
-                </Text>
-              </Divider>
-            )}
-            <div
-              className={`message-row ${isMyMessage ? "my-message" : "their-message"}`}
+    // 🔔 Typing indicator component
+    const TypingIndicator = () => (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-start",
+          marginBottom: "12px",
+          alignItems: "flex-end",
+          gap: "8px",
+        }}
+      >
+        <Avatar src={chatPartner?.imgUrl} icon={<UserOutlined />} />
+        <div
+          style={{
+            background: "#f0f0f0",
+            borderRadius: "18px",
+            padding: "10px 16px",
+            maxWidth: "75%",
+          }}
+        >
+          <Text type="secondary" style={{ fontSize: 14 }}>
+            <span
               style={{
-                display: "flex",
-                justifyContent: isMyMessage ? "flex-end" : "flex-start",
-                marginBottom: "12px",
-                alignItems: "flex-end",
-                gap: "8px",
+                display: "inline-block",
+                animation: "blink 1.4s infinite",
               }}
             >
-              {!isMyMessage && <Avatar src={chatPartner?.imgUrl} icon={<UserOutlined />} />}
+              Đang trả lời
+            </span>
+            <span style={{ animation: "dots 1.4s infinite steps(3)" }}>...</span>
+          </Text>
+        </div>
+        <style>
+          {`
+            @keyframes blink {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+            }
+            @keyframes dots {
+              0%, 20% { opacity: 0; }
+              40% { opacity: 0.5; }
+              60%, 100% { opacity: 1; }
+            }
+          `}
+        </style>
+      </div>
+    );
 
+    return (
+      <div style={{ padding: "0 8px" }}>
+        {chats.map((chat, index) => {
+          const isMyMessage = chat.senderRole === currentUserRole;
+          const canRevoke = isMyMessage && !chat.isRevoked;
+
+          const isLastChat = index === chats.length - 1;
+
+          const currentDateString = new Date(chat.createdAt).toLocaleDateString("vi-VN", {
+            timeZone,
+          });
+          const showDateDivider = currentDateString !== lastDate;
+          lastDate = currentDateString;
+
+          return (
+            <React.Fragment key={chat.id}>
+              {showDateDivider && (
+                <Divider>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {new Date(chat.createdAt).toLocaleDateString("vi-VN", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </Text>
+                </Divider>
+              )}
               <div
+                className={`message-row ${isMyMessage ? "my-message" : "their-message"}`}
                 style={{
-                  maxWidth: "75%",
                   display: "flex",
-                  alignItems: "center",
-                  flexDirection: isMyMessage ? "row-reverse" : "row",
+                  justifyContent: isMyMessage ? "flex-end" : "flex-start",
+                  marginBottom: "12px",
+                  alignItems: "flex-end",
+                  gap: "8px",
                 }}
               >
-                {canRevoke && (
-                  <Dropdown overlay={<RevokeMenu chatId={chat.id} />} trigger={["click"]}>
-                    <Button
-                      type="text"
-                      shape="circle"
-                      icon={<MoreOutlined />}
-                      style={{ color: colors.darkGray }}
-                    />
-                  </Dropdown>
-                )}
-                <MessageBubble chat={chat} isMyMessage={isMyMessage} isLastChat={isLastChat} />
+                {!isMyMessage && <Avatar src={chatPartner?.imgUrl} icon={<UserOutlined />} />}
+
+                <div
+                  style={{
+                    maxWidth: "75%",
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: isMyMessage ? "row-reverse" : "row",
+                  }}
+                >
+                  {canRevoke && (
+                    <Dropdown overlay={<RevokeMenu chatId={chat.id} />} trigger={["click"]}>
+                      <Button
+                        type="text"
+                        shape="circle"
+                        icon={<MoreOutlined />}
+                        style={{ color: colors.darkGray }}
+                      />
+                    </Dropdown>
+                  )}
+                  <MessageBubble chat={chat} isMyMessage={isMyMessage} isLastChat={isLastChat} />
+                </div>
               </div>
-            </div>
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
-});
+            </React.Fragment>
+          );
+        })}
+
+        {/* 🔔 Show typing indicator when AI is processing */}
+        {isTyping && <TypingIndicator />}
+      </div>
+    );
+  }
+);
 MessageList.propTypes = {
   chats: PropTypes.array.isRequired,
   currentUserRole: PropTypes.string.isRequired,
   onRevokeMessage: PropTypes.func.isRequired,
   chatPartner: PropTypes.object,
+  isTyping: PropTypes.bool, // 🔔 Add typing prop
 };
 MessageList.displayName = "MessageList";
 
@@ -419,6 +442,8 @@ const ChatInterface = React.memo(
     onImageUpload,
     onRevokeMessage,
     classInfo,
+    isTyping, // 🔔 Add typing prop
+    onScroll,
   }) => {
     const [currentTopic, setCurrentTopic] = useState(null);
     const [expanded, setExpanded] = useState(false);
@@ -529,7 +554,7 @@ const ChatInterface = React.memo(
           </div>
         ) : null}
 
-        <Content ref={chatContentRef} style={{ padding: "16px", overflowY: "auto" }}>
+        <Content ref={chatContentRef} onScroll={onScroll} style={{ padding: "16px", overflowY: "auto" }}>
           {loading && (
             <div style={{ textAlign: "center", padding: "20px" }}>
               <Spin />
@@ -540,6 +565,7 @@ const ChatInterface = React.memo(
             currentUserRole={currentUserRole}
             onRevokeMessage={onRevokeMessage}
             chatPartner={chatPartner}
+            isTyping={isTyping} // 🔔 Pass typing state
           />
         </Content>
         <footer
@@ -632,21 +658,6 @@ const ChatInterface = React.memo(
     );
   }
 );
-ChatInterface.propTypes = {
-  chatPartner: PropTypes.object.isRequired,
-  chats: PropTypes.array.isRequired,
-  currentUserRole: PropTypes.string.isRequired,
-  isMobile: PropTypes.bool.isRequired,
-  loading: PropTypes.bool.isRequired,
-  error: PropTypes.string,
-  onGoBack: PropTypes.func,
-  chatContentRef: PropTypes.object.isRequired,
-  isRecording: PropTypes.bool.isRequired,
-  onToggleRecord: PropTypes.func.isRequired,
-  liveTranscript: PropTypes.string,
-  onImageUpload: PropTypes.func.isRequired,
-  onRevokeMessage: PropTypes.func.isRequired,
-};
 ChatInterface.displayName = "ChatInterface";
 
 const ChatComponent = ({
@@ -670,6 +681,11 @@ const ChatComponent = ({
   const [groupChats, setGroupChats] = useState([]);
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupError, setGroupError] = useState(null);
+  const [isAIProcessing, setIsAIProcessing] = useState(false); // 💬 Simple AI loading state
+  const isUserScrolling = useRef(false);
+  const isAtBottomRef = useRef(true);
+  
+
   // ✅ connect to socket once
   useEffect(() => {
     const socket = chatService.connect();
@@ -723,8 +739,17 @@ const ChatComponent = ({
         (chat) => chat.senderRole === "teacher" && !chat.isRead
       ).length;
       onUnreadCountChange(unreadCount);
+      
+      // 💡 SIMPLE: Clear loading when AI replies
+      if (isAIProcessing && allChatsInClass.length > 0) {
+        const latestChat = allChatsInClass[allChatsInClass.length - 1];
+        if (latestChat?.senderRole === "teacher") {
+          console.log("✅ AI replied, clearing loading");
+          setIsAIProcessing(false);
+        }
+      }
     }
-  }, [allChatsInClass, currentUser.role, onUnreadCountChange]);
+  }, [allChatsInClass, currentUser.role, onUnreadCountChange, isAIProcessing]);
 
   const fetchGroupChats = useCallback(async () => {
     if (!classInfo?.id) return;
@@ -739,26 +764,61 @@ const ChatComponent = ({
     }
   }, [classInfo]);
 
-  const fetchAllChats = useCallback(async () => {
+  const fetchAllChats = useCallback(async (shouldScroll = false) => {
     if (!classInfo?.id) return;
     try {
       const chatsData = await chatService.getChatsByClass(classInfo.id);
       setAllChatsInClass(chatsData || []);
+      
+      // 👁️ Only scroll when: 1) explicitly requested, 2) user is at bottom, 3) chatContent exists
+      if (shouldScroll && !isUserScrolling.current && chatContentRef.current) {
+        setTimeout(() => {
+          chatContentRef.current?.scrollTo({
+            top: chatContentRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }, 100);
+      }
     } catch (err) {
-      setError(err.message || "Không thể tải tin nhắn.");
+      // Suppress network errors during polling to avoid UI spam
+      if (shouldScroll) {
+        setError(err.message || "Không thể tải tin nhắn.");
+      }
     } finally {
       setLoading(false);
     }
   }, [classInfo]);
 
   useEffect(() => {
-    fetchAllChats();
-    // Removed polling - using WebSocket for real-time updates instead
+    fetchAllChats(false); // Load ngay lập tức
+    const interval = setInterval(() => {
+      // Gọi false để không ép scroll nếu người dùng đang đọc tin cũ
+      fetchAllChats(false); 
+    }, 5000); // Sửa thành 5000 (5 giây)
+    
+    return () => clearInterval(interval);
   }, [fetchAllChats]);
   useEffect(() => {
     fetchGroupChats();
-    // Removed polling - using WebSocket for real-time updates instead
+    // const interval = setInterval(fetchGroupChats, 8000);
+    // return () => clearInterval(interval);
   }, [fetchGroupChats]);
+  
+  // 👁️ Detect if user is scrolling up to view old messages
+  useEffect(() => {
+    const chatContent = chatContentRef.current;
+    if (!chatContent) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = chatContent;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      isUserScrolling.current = !isAtBottom;
+    };
+
+    chatContent.addEventListener("scroll", handleScroll);
+    return () => chatContent.removeEventListener("scroll", handleScroll);
+  }, []);
+  
   const handleMarkAsRead = useCallback(
     async (partner) => {
       if (!partner || !classInfo || !currentUser) return;
@@ -842,6 +902,14 @@ const ChatComponent = ({
       if (!chatPartner || !classInfo) return;
       setError(null);
       const isAIChat = !!chatPartner.isAI;
+      
+      // 💡 SIMPLE: Show loading for students (AI will reply)
+      if (currentUser.role === "student" && !isAIChat) {
+        setIsAIProcessing(true);
+        // Auto-hide after 15 seconds
+        setTimeout(() => setIsAIProcessing(false), 15000);
+      }
+      
       const chatData = {
         classId: classInfo.id,
         studentId: currentUser.role === "student" ? currentUser.id : chatPartner.id,
@@ -855,12 +923,19 @@ const ChatComponent = ({
       try {
         const newChat = await chatService.createChat(chatData);
         setAllChatsInClass((prev) => [...prev.filter((c) => c.id !== chatData.tempId), newChat]);
+        
+        // 🚀 Fetch immediately to get AI reply faster (don't wait for 5s polling)
+        setTimeout(() => {
+          fetchAllChats(true); // Fetch WITH scroll (user just sent message)
+        }, 1000); // Wait 1s for AI to process
+        
       } catch (err) {
         setError("Gửi tin nhắn thất bại.");
         setAllChatsInClass((prev) => prev.filter((c) => c.id !== chatData.tempId));
+        setIsAIProcessing(false); // Clear loading on error
       }
     },
-    [selectedStudent, teacherOfClass, classInfo, currentUser]
+    [selectedStudent, teacherOfClass, classInfo, currentUser, fetchAllChats]
   );
 
   // --- SEND GROUP MESSAGE ---
@@ -992,7 +1067,7 @@ const ChatComponent = ({
         setAllChatsInClass((prev) => [...prev, optimisticChat]);
         try {
           const uploadedUrl = await fileService.upload(blob, `chat-audio-${tempId}.${ext}`);
-          URL.revokeObjectURL(tempUrl);
+          setTimeout(() => URL.revokeObjectURL(tempUrl), 10000);
           await handleSendMessage({
             tempId,
             message: "",
@@ -1014,11 +1089,23 @@ const ChatComponent = ({
     }
   }, [isRecording, selectedStudent, teacherOfClass, currentUser, handleSendMessage]);
 
+  // 1. Xử lý sự kiện onScroll để biết người dùng đang ở đâu
+  const handleScroll = useCallback((e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Nếu khoảng cách đến đáy < 50px thì coi như đang ở đáy
+    const isBottom = scrollHeight - scrollTop - clientHeight < 50; 
+    isAtBottomRef.current = isBottom;
+  }, []);
+
+  // 2. useEffect thông minh: Chỉ scroll xuống đáy nếu người dùng ĐANG ở đáy
   useEffect(() => {
     if (chatContentRef.current) {
-      chatContentRef.current.scrollTop = chatContentRef.current.scrollHeight;
+      // Logic: Nếu là lần đầu load, HOẶC người dùng đang ở đáy thì mới auto scroll
+      if (isAtBottomRef.current) {
+        chatContentRef.current.scrollTop = chatContentRef.current.scrollHeight;
+      }
     }
-  }, [allChatsInClass, selectedStudent]);
+  }, [allChatsInClass, selectedStudent]); // Khi có tin nhắn mới hoặc đổi học sinh
 
   const studentsWithLastMessage = useMemo(() => {
     if (currentUser.role !== "teacher" || !studentsInClass) return [];
@@ -1125,6 +1212,8 @@ const ChatComponent = ({
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
           classInfo={classInfo}
+          isTyping={false} // 🔔 Teacher view - no typing indicator needed
+          onScroll={handleScroll}
         />
       )
     ) : (
@@ -1235,6 +1324,8 @@ const ChatComponent = ({
           onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
           onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
           classInfo={classInfo}
+          isTyping={!isGroupChat && isAIProcessing}
+          onScroll={handleScroll}
         />
       );
     }
@@ -1266,6 +1357,8 @@ const ChatComponent = ({
             onImageUpload={isGroupChat ? handleGroupImageUpload : handleImageUpload}
             onRevokeMessage={isGroupChat ? handleRevokeGroupMessage : handleRevokeMessage}
             classInfo={classInfo}
+            isTyping={!isGroupChat && isAIProcessing} // 💬 Simple loading for AI
+            onScroll={handleScroll}
           />
         </Content>
       </Layout>
@@ -1281,24 +1374,6 @@ const ChatComponent = ({
   );
 };
 
-ChatComponent.propTypes = {
-  currentUser: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    role: PropTypes.string.isRequired,
-  }).isRequired,
-  classInfo: PropTypes.shape({ id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]) }),
-  studentsInClass: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ),
-  teacherOfClass: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  }),
-  isMobile: PropTypes.bool.isRequired,
-  onUnreadCountChange: PropTypes.func,
-};
 ChatComponent.defaultProps = {
   studentsInClass: [],
   teacherOfClass: null,
@@ -1323,6 +1398,8 @@ ChatInterface.propTypes = {
   classInfo: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }),
+  isTyping: PropTypes.bool,
+  onScroll: PropTypes.func
 };
 
 ChatComponent.propTypes = {
