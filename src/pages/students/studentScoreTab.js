@@ -47,6 +47,9 @@ const StudentScoreTab = ({ studentId, colors }) => {
   const [error, setError] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [testSkills, setTestSkills] = useState([]);
+  
+  // Lấy role từ sessionStorage
+  const userRole = sessionStorage.getItem("role");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -365,7 +368,10 @@ const StudentScoreTab = ({ studentId, colors }) => {
         </Row>
       </Card>
 
-      <EvaluationStudent studentId={studentId} colors={colors} />
+      {/* Chỉ hiển thị EvaluationStudent cho admin và teacher */}
+      {(userRole === "admin" || userRole === "teacher") && (
+        <EvaluationStudent studentId={studentId} colors={colors} />
+      )}
 
       <Modal
         visible={isModalVisible}

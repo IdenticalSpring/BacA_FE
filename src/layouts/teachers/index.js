@@ -6,6 +6,8 @@ import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import BlockIcon from "@mui/icons-material/Block";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -99,17 +101,47 @@ function Teachers() {
       const data = await teacherService.getAllTeachers();
       const formattedRows = data.map((teacher) => ({
         id: teacher.id,
-        name: teacher.name,
-        startDate: teacher.startDate,
+        name: (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <span style={{ opacity: teacher.isDelete ? 0.5 : 1 }}>
+              {teacher.name}
+            </span>
+            {teacher.isDelete && (
+              <Typography
+                variant="caption"
+                sx={{
+                  backgroundColor: "#ff9800",
+                  color: "white",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  fontSize: "0.7rem",
+                }}
+              >
+                Đã vô hiệu hóa
+              </Typography>
+            )}
+          </Box>
+        ),
+        startDate: (
+          <span style={{ opacity: teacher.isDelete ? 0.5 : 1 }}>
+            {teacher.startDate}
+          </span>
+        ),
         linkDrive: teacher.linkDrive,
+        isDelete: teacher.isDelete,
         imageUrl: teacher.imageUrl ? (
           <img
             src={teacher.imageUrl}
             alt={`${teacher.name}'s avatar`}
-            style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+            style={{
+              width: "50px",
+              height: "50px",
+              borderRadius: "50%",
+              opacity: teacher.isDelete ? 0.5 : 1,
+            }}
           />
         ) : (
-          "No avatar"
+          <span style={{ opacity: teacher.isDelete ? 0.5 : 1 }}>No avatar</span>
         ),
         fileUrl: teacher.fileUrl
           ? teacher.fileUrl.split(",").map((url, index) => (
@@ -137,6 +169,15 @@ function Teachers() {
               onClick={() => handleEdit(teacher)}
             >
               <EditIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                color: teacher.isDelete ? colors.midGreen : "#ff9800",
+              }}
+              onClick={() => handleToggleDisable(teacher.id, teacher.isDelete)}
+              title={teacher.isDelete ? "Kích hoạt tài khoản" : "Vô hiệu hóa tài khoản"}
+            >
+              {teacher.isDelete ? <CheckCircleIcon /> : <BlockIcon />}
             </IconButton>
             <IconButton color="error" onClick={() => handleDelete(teacher.id)}>
               <DeleteIcon />
@@ -179,6 +220,19 @@ function Teachers() {
         message.success("Xóa giáo viên thành công");
       } catch (err) {
         message.error("Xóa giáo viên thất bại: " + err.message);
+      }
+    }
+  };
+
+  const handleToggleDisable = async (id, currentStatus) => {
+    const action = currentStatus ? "kích hoạt" : "vô hiệu hóa";
+    if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản giáo viên này?`)) {
+      try {
+        const updatedTeacher = await teacherService.toggleDisableTeacher(id);
+        await fetchTeachers();
+        message.success(`${currentStatus ? "Kích hoạt" : "Vô hiệu hóa"} tài khoản thành công`);
+      } catch (err) {
+        message.error(`${action} tài khoản thất bại: ` + err.message);
       }
     }
   };
@@ -366,6 +420,15 @@ function Teachers() {
                   onClick={() => handleEdit(createdTeacher)}
                 >
                   <EditIcon />
+                </IconButton>
+                <IconButton
+                  sx={{
+                    color: createdTeacher.isDelete ? colors.midGreen : "#ff9800",
+                  }}
+                  onClick={() => handleToggleDisable(createdTeacher.id, createdTeacher.isDelete)}
+                  title={createdTeacher.isDelete ? "Kích hoạt tài khoản" : "Vô hiệu hóa tài khoản"}
+                >
+                  {createdTeacher.isDelete ? <CheckCircleIcon /> : <BlockIcon />}
                 </IconButton>
                 <IconButton color="error" onClick={() => handleDelete(createdTeacher.id)}>
                   <DeleteIcon />

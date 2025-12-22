@@ -6,42 +6,26 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Box,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
+import { Table, Button as AntButton } from "antd";
+import { DeleteOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import DataTable from "examples/Tables/DataTable";
 import studentService from "services/studentService";
 import classService from "services/classService";
 import teacherService from "services/teacherService";
 import classTestScheduleService from "services/classTestScheduleService";
 import StudentScoreService from "services/studentScoreService";
 import { colors } from "assets/theme/color";
-import Tooltip from "@mui/material/Tooltip";
-
-const CommentCell = ({ value }) => (
-  <Tooltip title={value || ""} placement="top" arrow>
-    <div
-      style={{
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        maxWidth: "250px",
-        cursor: "pointer",
-      }}
-    >
-      {value}
-    </div>
-  </Tooltip>
-);
-
-CommentCell.propTypes = {
-  value: PropTypes.string,
-};
 
 const TableScoreTest = ({ onError }) => {
   const [dataSource, setDataSource] = useState([]);
@@ -62,6 +46,11 @@ const TableScoreTest = ({ onError }) => {
   const [testDates, setTestDates] = useState([]);
   const [classes, setClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  // Delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [scoreToDelete, setScoreToDelete] = useState(null);
+  // Expanded Keys for Ant Design Table
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -250,6 +239,7 @@ const TableScoreTest = ({ onError }) => {
             const detail =
               scoreDetails.find((d) => d.studentScoreID === score.studentScoreID) || {};
             const schedule = testScheduleMap[score.classTestScheduleID] || {};
+            
             return {
               key: score.studentScoreID,
               studentName: studentMap[score.studentID] || "Không xác định",
@@ -282,41 +272,101 @@ const TableScoreTest = ({ onError }) => {
   }, [selectedStudent, selectedTestDate, selectedClass, selectedTeacher, onError]);
 
   const uniqueSkills = Array.from(
-    new Set(dataSource.flatMap((item) => Object.keys(item.skillScores)))
-  );
+    new Set(dataSource.flatMap((item) => Object.keys(item.skillScores || {})))
+  ).sort();
 
-  const baseColumns = [
-    { Header: "Tên Học Sinh", accessor: "studentName", width: "20%" },
-    { Header: "Tên Lớp", accessor: "className", width: "15%" },
-    { Header: "Ngày Kiểm Tra", accessor: "testDate", width: "15%" },
-    { Header: "Điểm Trung Bình", accessor: "avgScore", width: "10%" },
+  // Cấu hình cột cho Ant Design Table
+  const columns = [
     {
-      Header: "Nhận xét GV",
-      accessor: "teacherComment",
-      width: "25%",
-      Cell: CommentCell,
+      title: "Tên Học Sinh",
+      dataIndex: "studentName",
+      key: "studentName",
+      width: 200,
+      fixed: "left",
+      render: (text) => <MDTypography variant="caption" fontWeight="bold">{text}</MDTypography>,
+    },
+    {
+      title: "Tên Lớp",
+      dataIndex: "className",
+      key: "className",
+      width: 150,
+      render: (text) => <MDTypography variant="caption" fontWeight="medium">{text}</MDTypography>,
+    },
+    {
+      title: "Ngày Kiểm Tra",
+      dataIndex: "testDate",
+      key: "testDate",
+      width: 120,
+      render: (text) => <MDTypography variant="caption">{text}</MDTypography>,
+    },
+    // Tạo cột động cho các kỹ năng
+    ...uniqueSkills.map((skill) => ({
+      title: skill,
+      dataIndex: ["skillScores", skill],
+      key: skill,
+      width: 100,
+      align: "center",
+      render: (value) => <MDTypography variant="caption">{value || "-"}</MDTypography>,
+    })),
+    {
+      title: "Điểm TB",
+      dataIndex: "avgScore",
+      key: "avgScore",
+      width: 100,
+      align: "center",
+      fixed: "right",
+      render: (value) => <MDTypography variant="caption" fontWeight="bold">{value}</MDTypography>,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 80,
+      align: "center",
+      fixed: "right",
+      render: (_, record) => (
+        <AntButton 
+          type="text" 
+          danger 
+          icon={<DeleteOutlined />} 
+          onClick={() => handleDeleteClick(record)} 
+        />
+      ),
     },
   ];
 
-  const skillColumns = uniqueSkills.map((skill) => ({
-    Header: skill,
-    id: `skill_${skill}`,
-    accessor: "skillScores",
-    width: `${25 / Math.max(1, uniqueSkills.length)}%`,
-    Cell: ({ value }) => value[skill] || "-",
-  }));
+  const handleDeleteClick = (row) => {
+    setScoreToDelete(row);
+    setDeleteDialogOpen(true);
+  };
 
-  const columns = [...baseColumns, ...skillColumns];
+  const handleDeleteConfirm = async () => {
+    try {
+      // Call delete API here
+      await StudentScoreService.deleteScoreStudent(scoreToDelete.key);
+      
+      setNotification({
+        open: true,
+        message: "Xóa điểm thành công",
+        severity: "success",
+      });
+      
+      // Refresh data after delete
+      setDataSource(dataSource.filter(item => item.key !== scoreToDelete.key));
+      setDeleteDialogOpen(false);
+      setScoreToDelete(null);
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: "Không thể xóa điểm: " + error,
+        severity: "error",
+      });
+    }
+  };
 
-  const rows = dataSource.map((item) => ({
-    studentName: item.studentName,
-    className: item.className,
-    teacherName: item.teacherName,
-    testDate: item.testDate,
-    avgScore: item.avgScore,
-    skillScores: item.skillScores,
-    teacherComment: item.teacherComment || "-",
-  }));
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setScoreToDelete(null);
+  };
 
   const handleNotificationClose = (event, reason) => {
     if (reason === "clickaway") return;
@@ -410,20 +460,87 @@ const TableScoreTest = ({ onError }) => {
               </MDTypography>
             </MDBox>
           ) : (
-            <DataTable
-              table={{ columns, rows }}
-              isSorted={false}
-              entriesPerPage={{ defaultValue: 10, entries: [5, 10, 15, 20] }}
-              showTotalEntries={true}
-              noEndBorder
-              sx={{
-                "& .MuiTableHead-root": { backgroundColor: colors.tableHeaderBg },
-                "& .MuiTableRow-root:hover": { backgroundColor: colors.tableRowHover },
+            <Table
+              columns={columns}
+              dataSource={dataSource}
+              loading={loading}
+              rowKey="key"
+              scroll={{ x: 'max-content' }}
+              pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [5, 10, 15, 20] }}
+              expandable={{
+                expandedRowRender: (record) => (
+                  <MDBox 
+                    p={2} 
+                    sx={{ 
+                      backgroundColor: "#f9f9f9", 
+                      borderRadius: "8px", 
+                      border: `1px solid ${colors.paleGreen || "#eee"}` 
+                    }}
+                  >
+                    <MDTypography variant="h6" gutterBottom color="dark">
+                      Teacher Comment:
+                    </MDTypography>
+                    <MDTypography 
+                      variant="body2" 
+                      color="textSecondary" 
+                      sx={{ 
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word"
+                      }}
+                    >
+                      {record.teacherComment || "Không có nhận xét"}
+                    </MDTypography>
+                  </MDBox>
+                ),
+                expandedRowKeys: expandedRowKeys,
+                onExpand: (expanded, record) => {
+                  const keys = expanded
+                    ? [...expandedRowKeys, record.key]
+                    : expandedRowKeys.filter((key) => key !== record.key);
+                  setExpandedRowKeys(keys);
+                },
+                expandIcon: ({ expanded, onExpand, record }) =>
+                  expanded ? (
+                    <DownOutlined 
+                      onClick={(e) => onExpand(record, e)} 
+                      style={{ color: colors.deepGreen }} 
+                    />
+                  ) : (
+                    <RightOutlined 
+                      onClick={(e) => onExpand(record, e)} 
+                      style={{ color: colors.deepGreen }} 
+                    />
+                  ),
               }}
             />
           )}
         </MDBox>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-dialog-title"
+      >
+        <DialogTitle id="delete-dialog-title">Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <MDTypography variant="body2">
+            Bạn có chắc chắn muốn xóa điểm của học sinh{" "}
+            <strong>{scoreToDelete?.studentName}</strong> vào ngày{" "}
+            <strong>{scoreToDelete?.testDate}</strong> không?
+          </MDTypography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Hủy
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {isValidSeverity && (
         <Snackbar
           open={notification.open}

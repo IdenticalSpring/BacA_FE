@@ -71,6 +71,19 @@ const teacherService = {
       throw error.response?.data?.message || "Error deleting teacher";
     }
   },
+
+  toggleDisableTeacher: async (id) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/teachers/${id}/toggle-disable`, {}, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error toggling teacher status";
+    }
+  },
   async evaluationStudent(payload) {
     try {
       const response = await axios.post(`${API_BASE_URL}/teacher-comments`, payload, {
