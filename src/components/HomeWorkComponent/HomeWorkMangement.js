@@ -488,6 +488,8 @@ export default function HomeWorkManagement({
         if (newVocabularies.length > 0) {
           // Gửi mảng JSON đến backend
           await vocabularyService.bulkCreateVocabulary(newVocabularies);
+          // Notify other components that vocabularies have changed
+          try { window.dispatchEvent(new CustomEvent('vocabulary:changed', { detail: { homeworkId: homeWorkId } })); } catch (e) { console.warn('Failed to dispatch vocabulary:changed', e); }
         }
 
         // XỬ LÝ CẬP NHẬT TỪ VỰNG CŨ (Nếu bạn cho phép sửa)

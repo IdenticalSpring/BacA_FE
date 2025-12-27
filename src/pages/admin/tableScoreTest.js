@@ -17,7 +17,7 @@ import {
   Button,
 } from "@mui/material";
 import { Table, Button as AntButton } from "antd";
-import { DeleteOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
+import { DeleteOutlined, DownOutlined, RightOutlined, EditOutlined } from "@ant-design/icons";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import studentService from "services/studentService";
@@ -25,7 +25,10 @@ import classService from "services/classService";
 import teacherService from "services/teacherService";
 import classTestScheduleService from "services/classTestScheduleService";
 import StudentScoreService from "services/studentScoreService";
+import testSkillService from "services/testSkillService";
+import assessmentService from "services/assessmentService";
 import { colors } from "assets/theme/color";
+import EditScoreModal from "../teachers/EditScoreModal";
 
 const TableScoreTest = ({ onError }) => {
   const [dataSource, setDataSource] = useState([]);
@@ -49,6 +52,15 @@ const TableScoreTest = ({ onError }) => {
   // Delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [scoreToDelete, setScoreToDelete] = useState(null);
+  // Edit score modal
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editScoreData, setEditScoreData] = useState(null);  
+  const [editLoading, setEditLoading] = useState(false);
+  // Test skills and assessments for edit modal
+  const [testSkills, setTestSkills] = useState([]);
+  const [selectedTestSkills, setSelectedTestSkills] = useState([]);
+  const [assessments, setAssessments] = useState([]);
+  const [previousScores, setPreviousScores] = useState([]);
   // Expanded Keys for Ant Design Table
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
 
@@ -84,7 +96,21 @@ const TableScoreTest = ({ onError }) => {
       }
     };
 
+    const fetchSkillsAndAssessments = async () => {
+      try {
+        const [skills, assmts] = await Promise.all([
+          testSkillService.getAllTestSkill(),
+          assessmentService.getAllAssessments(),
+        ]);
+        setTestSkills(skills || []);
+        setAssessments(assmts || []);
+      } catch (err) {
+        setNotification({ open: true, message: "Không thể tải test skills/assessments: " + err, severity: "warning" });
+      }
+    };
+
     fetchFilterOptions();
+    fetchSkillsAndAssessments();
   }, []);
 
   useEffect(() => {
@@ -242,11 +268,16 @@ const TableScoreTest = ({ onError }) => {
             
             return {
               key: score.studentScoreID,
+              studentScoreID: score.studentScoreID,
+              studentID: score.studentID,
+              assessmentID: score.assessmentID || null,
+              classTestScheduleID: score.classTestScheduleID,
               studentName: studentMap[score.studentID] || "Không xác định",
               testDate: schedule.date || "-",
               className: classMap[schedule.classID] || "Không xác định",
               teacherName: teacherMap[schedule.teacherID] || "Không xác định",
               skillScores: detail.scores || {},
+              scores: detail.scores || {},
               avgScore: calculateAvgScore(detail.scores || {}),
               teacherComment: score.teacherComment || "-",
             };
@@ -324,12 +355,19 @@ const TableScoreTest = ({ onError }) => {
       align: "center",
       fixed: "right",
       render: (_, record) => (
-        <AntButton 
-          type="text" 
-          danger 
-          icon={<DeleteOutlined />} 
-          onClick={() => handleDeleteClick(record)} 
-        />
+        <MDBox display="flex" gap={1} justifyContent="center">
+          <AntButton
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEditClick(record)}
+          />
+          <AntButton
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteClick(record)}
+          />
+        </MDBox>
       ),
     },
   ];
@@ -366,6 +404,34 @@ const TableScoreTest = ({ onError }) => {
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setScoreToDelete(null);
+  };
+
+  const handleEditClick = (record) => {
+    setEditScoreData(record);
+    setEditModalVisible(true);
+  };
+
+  const handleEditModalOk = (updatedScore) => {
+    // Update the displayed table row with the updated score data
+    setDataSource((prev) =>
+      prev.map((item) =>
+        item.key === updatedScore.studentScoreID
+          ? {
+              ...item,
+              skillScores: updatedScore.scores || item.skillScores,
+              avgScore: calculateAvgScore(updatedScore.scores || item.skillScores),
+              teacherComment: updatedScore.teacherComment ?? item.teacherComment,
+            }
+          : item
+      )
+    );
+    setEditModalVisible(false);
+    setEditScoreData(null);
+  };
+
+  const handleEditModalCancel = () => {
+    setEditModalVisible(false);
+    setEditScoreData(null);
   };
 
   const handleNotificationClose = (event, reason) => {
@@ -540,7 +606,17 @@ const TableScoreTest = ({ onError }) => {
           </Button>
         </DialogActions>
       </Dialog>
-
+      {/* Edit Score Modal */}
+      <EditScoreModal
+                visible={editModalVisible}
+                onCancel={handleEditModalCancel}
+                onOk={handleEditModalOk}
+                scoreData={editScoreData}
+                testSkills={testSkills}
+                assessments={assessments}
+                studentName={editScoreData?.studentName}
+                loading={editLoading}
+      />
       {isValidSeverity && (
         <Snackbar
           open={notification.open}

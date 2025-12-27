@@ -44,6 +44,7 @@ import homeWorkService from "services/homeWorkService";
 import { ImageOutlined } from "@mui/icons-material";
 import { useSpeechRecognition } from "react-speech-kit";
 import student_vocabularyService from "services/student_vocabulary";
+import fileService from "services/fileService";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 const genderOptions = [
@@ -64,6 +65,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   const [resultSTT, setResultSTT] = useState("");
   const [isManualRecording, setIsManualRecording] = useState(false);
   const [isManualRecordingCreate, setIsManualRecordingCreate] = useState(false);
+
+  // Track per-vocabulary student definition input
+  const [studentDefinitions, setStudentDefinitions] = useState({});
   const [form] = Form.useForm();
   const [textToSpeech, setTextToSpeech] = useState("");
   const [gender, setGender] = useState(1);
@@ -326,44 +330,33 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   const addVocabulary = async (values) => {
     try {
       setLoadingAddVocabulary(true);
-      const formDataForVocabulary = new FormData();
-      formDataForVocabulary.append("textToSpeech", values.word);
-      formDataForVocabulary.append("imageUrl", imageUrl || undefined);
-      formDataForVocabulary.append("homeworkId", selectedHomeWorkId);
-      formDataForVocabulary.append("studentId", studentId);
-      // const vocabularies = [];
-      // const newVocab = {
-      //   // id: Date.now(),
-      //   textToSpeech: values.word,
-      //   // meaning: values.meaning,
-      //   imageUrl: null,
-      //   // audioUrl: mp3Url || null,
-      //   // audioFile: mp3file || null,
-      //   homeworkId: selectedHomeWorkId,
-      //   isStudent: 1,
-      //   // isNew: true,
-      // };
-      // vocabularies.push(newVocab);
+
+      // Build JSON payload (backend expects JSON body for create)
+      const payload = {
+        textToSpeech: values.word,
+        definition: values.definition,
+        imageUrl: imageUrl || null,
+        audioUrl: null,
+        homeworkId: selectedHomeWorkId,
+        studentId: studentId,
+      };
+
+      // If there's an mp3 blob, upload it first and set audioUrl
       if (mp3file) {
-        formDataForVocabulary.append(
-          "mp3File",
-          new File([mp3file], "audio.mp3", { type: "audio/mp3" })
-        );
+        try {
+          const fileName = `vocab_audio_${Date.now()}.mp3`;
+          const audioFile = new File([mp3file], fileName, { type: "audio/mp3" });
+          const uploadedAudioUrl = await fileService.upload(audioFile, fileName);
+          if (uploadedAudioUrl) {
+            payload.audioUrl = uploadedAudioUrl;
+          }
+        } catch (uploadErr) {
+          console.error("Audio upload failed:", uploadErr);
+          // continue without audioUrl
+        }
       }
-      // let fileToAppend;
-      // if (mp3file) {
-      //   fileToAppend = new File([mp3file], "audio.mp3", { type: "audio/mp3" });
-      // } else {
-      //   // 👇 Tạo file rỗng nếu không có audio
-      //   const emptyBlob = new Blob([], { type: "audio/mp3" });
-      //   fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
-      // }
-      // formDataForVocabulary.append("mp3Files", fileToAppend);
-      // formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
-      // const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
-      //   formDataForVocabulary
-      // );
-      const vocabularyResponse = await vocabularyService.createVocabulary(formDataForVocabulary);
+
+      const vocabularyResponse = await vocabularyService.createVocabulary(payload);
       setVocabularyItems([...vocabularyItems, vocabularyResponse]);
       message.success(`Từ "${values.word}" đã được thêm vào danh sách`);
       form.resetFields();
@@ -373,7 +366,8 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       setMp3file(null);
     } catch (error) {
       console.log("Error adding vocabulary:", error);
-      message.error("Có lỗi xảy ra khi thêm từ vựng. Vui lòng thử lại.");
+      const errMsg = error?.response?.data?.message || error?.message || "Có lỗi xảy ra khi thêm từ vựng. Vui lòng thử lại.";
+      message.error(errMsg);
     } finally {
       setLoadingAddVocabulary(false);
     }
@@ -485,7 +479,9 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       stop();
       setActiveRecordingId(null);
       setIsManualRecording(false);
-      handleAddOrUpdateStudentVocabulary(itemId, selectedHomeWorkId, studentId, resultSTT);
+      // Use speech result as student's answer text; include any typed definition
+      const def = studentDefinitions[itemId] || undefined;
+      handleAddOrUpdateStudentVocabulary(itemId, selectedHomeWorkId, studentId, resultSTT, def);
       setResultSTT("");
       // speechResults = [];
     } else {
@@ -494,7 +490,13 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       setIsManualRecording(true);
     }
   };
-  const handleAddOrUpdateStudentVocabulary = async (vocabularyId, homeworkId, studentId, text) => {
+  const handleAddOrUpdateStudentVocabulary = async (
+    vocabularyId,
+    homeworkId,
+    studentId,
+    text,
+    definition,
+  ) => {
     try {
       const data = {
         vocabularyId,
@@ -502,7 +504,14 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
         studentId,
         text,
       };
+      if (definition !== undefined) data.definition = definition;
       const res = await student_vocabularyService.createStudent_vocabulary(data);
+
+      // If saved successfully, give feedback
+      message.success("Câu trả lời đã được lưu");
+
+      // Optionally clear the typed definition for this vocab
+      setStudentDefinitions((prev) => ({ ...prev, [vocabularyId]: definition || "" }));
     } catch (err) {
       message.error("failed to add or update student vocabulary " + err);
     }
@@ -962,6 +971,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
             />
           </div>
 
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Text style={{ width: "50px", color: colors.deepGreen }}>Định nghĩa</Text>
+            <TextArea
+              rows={2}
+              value={item.definition || ""}
+              readOnly
+              placeholder="Không có định nghĩa"
+              style={{ flex: 1, borderRadius: "6px" }}
+            />
+          </div>
+
           {item.audioUrl && (
             <div style={{ display: "flex", alignItems: "center" }}>
               <audio ref={(el) => (audioRefs.current[index] = el)} controls style={{ flex: 1 }}>
@@ -972,31 +992,62 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
           )}
 
           {/* Speech to text */}
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <TextArea
-              placeholder="Luyện nói"
-              readOnly
-              value={(isManualRecording && activeRecordingId === item.id && resultSTT) || ""}
-              autoSize={{ minRows: 1, maxRows: 6 }}
-              style={{
-                flex: 1,
-                borderRadius: "6px",
-                borderColor: colors.inputBorder,
-              }}
-            />
-            <Button
-              type={isManualRecording && activeRecordingId === item.id ? "primary" : "default"}
-              danger={isManualRecording && activeRecordingId === item.id}
-              icon={
-                isManualRecording && activeRecordingId === item.id ? (
-                  <AudioMutedOutlined />
-                ) : (
-                  <AudioOutlined />
-                )
-              }
-              disabled={!supported}
-              onClick={() => handleSpeechForMeaning(item.id)}
-            />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+              <TextArea
+                placeholder="Luyện nói"
+                readOnly
+                value={(isManualRecording && activeRecordingId === item.id && resultSTT) || ""}
+                autoSize={{ minRows: 1, maxRows: 2 }}
+                style={{
+                  flex: 1,
+                  borderRadius: "6px",
+                  borderColor: colors.inputBorder,
+                }}
+              />
+              <Button
+                type={isManualRecording && activeRecordingId === item.id ? "primary" : "default"}
+                danger={isManualRecording && activeRecordingId === item.id}
+                icon={
+                  isManualRecording && activeRecordingId === item.id ? (
+                    <AudioMutedOutlined />
+                  ) : (
+                    <AudioOutlined />
+                  )
+                }
+                disabled={!supported}
+                onClick={() => handleSpeechForMeaning(item.id)}
+              />
+            </div>
+
+            {/* Student's definition input + save */}
+            <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+              <Text style={{ width: "50px", color: colors.deepGreen }}>Định nghĩa</Text>
+              <TextArea
+                placeholder="Viết định nghĩa của bạn (tùy chọn)"
+                value={studentDefinitions[item.id] || ""}
+                onChange={(e) =>
+                  setStudentDefinitions((prev) => ({ ...prev, [item.id]: e.target.value }))
+                }
+                autoSize={{ minRows: 1, maxRows: 4 }}
+                style={{ flex: 1, borderRadius: "6px", marginRight: 8 }}
+              />
+              <Button
+                type="primary"
+                onClick={() =>
+                  handleAddOrUpdateStudentVocabulary(
+                    item.id,
+                    selectedHomeWorkId,
+                    studentId,
+                    // keep current speech result as text if any
+                    isManualRecording && activeRecordingId === item.id ? resultSTT : undefined,
+                    studentDefinitions[item.id] || undefined,
+                  )
+                }
+              >
+                Lưu
+              </Button>
+            </div>
           </div>
 
           {/* Swipe instruction hint */}
@@ -1109,6 +1160,18 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               icon={audioLoading ? <LoadingOutlined /> : <SoundOutlined />}
               onClick={() => handleTextToSpeech(item.textToSpeech)}
               style={{ color: colors.deepGreen }}
+            />
+          </div>
+
+          {/* Definition (student-created or saved) */}
+          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+            <Text style={{ width: "50px", color: colors.deepGreen }}>Định nghĩa</Text>
+            <TextArea
+              rows={2}
+              value={item.definition || ""}
+              readOnly
+              placeholder="Không có định nghĩa"
+              style={{ flex: 1, borderRadius: "6px" }}
             />
           </div>
 
@@ -1763,7 +1826,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               <Form.Item
                 name="word"
                 label="Từ/Câu hỏi"
-                // rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
+                rules={[{ required: true, message: "Vui lòng nhập từ mới" }]}
               >
                 <Input
                   placeholder="Nhập từ/câu hỏi"
@@ -1776,7 +1839,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               <Form.Item name="definition" label="Định nghĩa">
                 <TextArea
                   rows={2}
-                  placeholder="Nhập định nghĩa hoặc ý nghĩa của từ"
+                  placeholder="Nhập định nghĩa hoặc ý nghĩa của từ (tùy chọn)"
                   style={{ borderRadius: "6px" }}
                 />
               </Form.Item>

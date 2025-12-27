@@ -1726,6 +1726,12 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
           const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
             formDataForVocabulary
           );
+          // Notify other components (e.g., study view) that vocabularies changed for this homework
+          try {
+            window.dispatchEvent(new CustomEvent("vocabulary:changed", { detail: { homeworkId: HomeWorkdata.id } }));
+          } catch (e) {
+            console.warn("Could not dispatch vocabulary:changed event", e);
+          }
         }
         // Lưu danh sách câu hỏi mới
         if (questionList.length > 0) {

@@ -837,6 +837,15 @@ const VocabularyCreateComponent = ({
                               {item?.word || item?.textToSpeech}
                             </Text>
 
+                            {item?.definition && (
+                              <Text
+                                type="secondary"
+                                style={{ display: "block", marginBottom: "8px", fontSize: "12px" }}
+                              >
+                                Định nghĩa: {item.definition}
+                              </Text>
+                            )}
+
                             {item?.audioUrl && (
                               <div style={{ marginTop: "auto", paddingTop: "8px" }}>
                                 <audio
@@ -900,9 +909,18 @@ const VocabularyCreateComponent = ({
                         Từ: {item?.vocabulary?.textToSpeech}
                       </Text>
                       <br />
-                      <Text type="secondary" style={{ fontSize: isMobile ? 14 : 18 }}>
-                        Câu trả lời: {item?.text}
-                      </Text>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: isMobile ? 14 : 18 }}>
+                          Câu trả lời: {item?.text}
+                        </Text>
+                        {item?.definition && (
+                          <div>
+                            <Text type="secondary" style={{ fontSize: isMobile ? 14 : 18 }}>
+                              Định nghĩa: {item.definition}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </Card>
                 </List.Item>

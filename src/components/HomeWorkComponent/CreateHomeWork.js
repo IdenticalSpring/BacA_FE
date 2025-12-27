@@ -582,6 +582,8 @@ export default function CreateHomeWork({
           // Gọi service bulkCreateVocabulary với dữ liệu JSON
           // Backend của bạn cần được cập nhật để nhận một mảng JSON như thế này
           await vocabularyService.bulkCreateVocabulary(newVocabularies);
+          // Notify other components that vocabularies have changed
+          try { window.dispatchEvent(new CustomEvent('vocabulary:changed', { detail: { homeworkId: homeworkData.id } })); } catch (e) { console.warn('Failed to dispatch vocabulary:changed', e); }
         }
       }
 
