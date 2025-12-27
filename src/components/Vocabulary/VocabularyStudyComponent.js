@@ -973,13 +973,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
           <div style={{ display: "flex", alignItems: "center" }}>
             <Text style={{ width: "50px", color: colors.deepGreen }}>Định nghĩa</Text>
-            <TextArea
-              rows={2}
-              value={item.definition || ""}
-              readOnly
-              placeholder="Không có định nghĩa"
-              style={{ flex: 1, borderRadius: "6px" }}
-            />
+            <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+              <TextArea
+                rows={2}
+                value={item.definition || ""}
+                readOnly
+                placeholder="Không có định nghĩa"
+                style={{ flex: 1, borderRadius: "6px"}}
+              />
+              {/* spacer to align with play button width */}
+              <div style={{ width: 32, height: 32 }} />
+            </div>
           </div>
 
           {item.audioUrl && (
@@ -1166,13 +1170,17 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
           {/* Definition (student-created or saved) */}
           <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
             <Text style={{ width: "50px", color: colors.deepGreen }}>Định nghĩa</Text>
-            <TextArea
-              rows={2}
-              value={item.definition || ""}
-              readOnly
-              placeholder="Không có định nghĩa"
-              style={{ flex: 1, borderRadius: "6px" }}
-            />
+            <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+              <TextArea
+                rows={2}
+                value={item.definition || ""}
+                readOnly
+                placeholder="Không có định nghĩa"
+                style={{ flex: 1, borderRadius: "6px"}}
+              />
+              {/* spacer to align with play button width */}
+              <div style={{ width: 32, height: 32 }} />
+            </div>
           </div>
 
           {item.audioUrl && (
