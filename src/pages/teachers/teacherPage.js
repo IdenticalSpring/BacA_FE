@@ -2361,6 +2361,7 @@ const TeacherPage = () => {
           lessonByScheduleData={lessonByScheduleData}
           daysOfWeek={daysOfWeek}
           isMobile={isMobile}
+          classId={selectedClass}
         />
       </Modal>
 

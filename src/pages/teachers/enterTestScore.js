@@ -196,7 +196,12 @@ const EnterTestScore = () => {
     try {
       setLoading(true);
       const scheduleData = await classTestScheduleService.getAllClassTestSchedule();
-      setClassTestSchedules(scheduleData.filter((schedule) => schedule.classID === classId));
+      // Check both classID and class.id for the filter
+      const filteredSchedules = scheduleData.filter((schedule) => {
+        const scheduleClassId = schedule.classID || schedule.classId || schedule.class?.id;
+        return Number(scheduleClassId) === Number(classId);
+      });
+      setClassTestSchedules(filteredSchedules);
     } catch (error) {
       console.error("Error fetching class test schedules:", error);
       notification.error({
@@ -230,17 +235,30 @@ const EnterTestScore = () => {
         detailsData,
       });
 
-      setClassTestSchedules(scheduleData.filter((schedule) => schedule.classID === classId));
+      // Convert to numbers for consistent comparison
+      console.log("classId from location.state:", classId, "type:", typeof classId);
+      console.log("First schedule item structure:", scheduleData[0]);
+      console.log("All scheduleData classIDs:", scheduleData.map(s => ({ 
+        id: s.id, 
+        classID: s.classID, 
+        classId: s.classId,
+        class: s.class,
+        classIdFromClass: s.class?.id
+      })));
+      
+      // Note: setClassTestSchedules will be called after processing scores
+      // to show only schedules that students actually have scores for
+      
       setStudents(studentData);
       setTestSkills(skillData);
       setAssessments(assessmentData);
 
       const studentScores = scoreData
-        .filter((score) => studentData.some((student) => student.id === score.studentID))
+        .filter((score) => studentData.some((student) => Number(student.id) === Number(score.studentID)))
         .map((score) => {
-          const student = studentData.find((s) => s.id === score.studentID);
-          const schedule = scheduleData.find((s) => s.id === score.classTestScheduleID);
-          const assessment = assessmentData.find((a) => a.id === score.assessmentID);
+          const student = studentData.find((s) => Number(s.id) === Number(score.studentID));
+          const schedule = scheduleData.find((s) => Number(s.id) === Number(score.classTestScheduleID));
+          const assessment = assessmentData.find((a) => Number(a.id) === Number(score.assessmentID));
           const detail = detailsData.find((d) => d.studentScoreID === score.studentScoreID);
 
           // Tính toán lại avgScore một cách chủ động
@@ -263,6 +281,16 @@ const EnterTestScore = () => {
 
       console.log("Processed previous scores:", studentScores);
       setPreviousScores(studentScores);
+      
+      // Lấy danh sách schedules từ các scores thực tế của students
+      // Thay vì lọc theo classId (có thể không khớp nếu students được chuyển lớp)
+      const scheduleIdsFromScores = [...new Set(studentScores.map(s => s.testScheduleID).filter(Boolean))];
+      const schedulesForFilter = scheduleData.filter(s => scheduleIdsFromScores.includes(s.id));
+      
+      console.log("Schedule IDs from scores:", scheduleIdsFromScores);
+      console.log("Schedules for filter dropdown (from scores):", schedulesForFilter);
+      
+      setClassTestSchedules(schedulesForFilter);
     } catch (error) {
       console.error("Error fetching initial data:", error);
       setError("Failed to load initial data. Please try again.");
@@ -505,7 +533,7 @@ const EnterTestScore = () => {
   const filteredScores = useMemo(() => {
     const result = previousScores.filter((score) => {
       const nameMatch = score.studentName.toLowerCase().includes(filterName.toLowerCase());
-      const scheduleMatch = filterTestSchedule ? score.testScheduleID === filterTestSchedule : true;
+      const scheduleMatch = filterTestSchedule ? Number(score.testScheduleID) === Number(filterTestSchedule) : true;
       return nameMatch && scheduleMatch;
     });
     console.log("Filtered scores:", result);

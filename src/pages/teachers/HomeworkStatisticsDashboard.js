@@ -84,7 +84,7 @@ const getStatusTag = (status) => {
 const dayssOfWeek = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
 let countLesson = 0;
 let countHomework = 0;
-const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWeek, isMobile }) => {
+const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWeek, isMobile, classId }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingSchedule, setLoadingSchedule] = useState(true);
@@ -701,6 +701,7 @@ const HomeworkStatisticsDashboard = ({ students, lessonByScheduleData, daysOfWee
                 children: (
                   <TestScoresTab
                     students={students}
+                    classId={classId}
                     cardStyle={cardStyle}
                     headerStyle={headerStyle}
                   />
@@ -840,4 +841,5 @@ HomeworkStatisticsDashboard.propTypes = {
   lessonByScheduleData: PropTypes.array.isRequired,
   daysOfWeek: PropTypes.array.isRequired,
   isMobile: PropTypes.array.isRequired,
+  classId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
