@@ -437,7 +437,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
                       color: getScoreColor(recentScores[`${skill.name.toLowerCase()}Score`]),
                       fontWeight: "bold",
                     }}
-                    suffix="/9"
+                    suffix="/10"
                   />
                 </Card>
               </Col>
@@ -527,7 +527,7 @@ const StudentScoreTab = ({ studentId, colors }) => {
                     label: (context) => {
                       const label = context.label || "";
                       const value = context.raw || 0;
-                      return `${label}: ${value}/9`;
+                      return `${label}: ${value}/10`;
                     },
                   },
                 },

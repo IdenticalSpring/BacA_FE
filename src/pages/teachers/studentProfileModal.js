@@ -671,7 +671,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
                           color: getScoreColor(recentScores[`${skill.name.toLowerCase()}Score`]),
                           fontWeight: "bold",
                         }}
-                        suffix="/9"
+                        suffix="/10"
                       />
                     </Card>
                   </Col>
@@ -762,7 +762,7 @@ const StudentProfileModal = ({ visible, onClose, student }) => {
                         label: (context) => {
                           const label = context.label || "";
                           const value = context.raw || 0;
-                          return `${label}: ${value}/9`;
+                          return `${label}: ${value}/10`;
                         },
                       },
                     },

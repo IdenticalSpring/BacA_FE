@@ -15,9 +15,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
-import { Table, Button as AntButton } from "antd";
-import { DeleteOutlined, DownOutlined, RightOutlined, EditOutlined } from "@ant-design/icons";
+import { Table, Button as AntButton, Modal, Descriptions, Tag } from "antd";
+import { DeleteOutlined, DownOutlined, RightOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import studentService from "services/studentService";
@@ -63,6 +65,13 @@ const TableScoreTest = ({ onError }) => {
   const [previousScores, setPreviousScores] = useState([]);
   // Expanded Keys for Ant Design Table
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  // View detail modal for mobile
+  const [viewDetailModalVisible, setViewDetailModalVisible] = useState(false);
+  const [viewDetailData, setViewDetailData] = useState(null);
+  
+  // Responsive hook
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -244,10 +253,14 @@ const TableScoreTest = ({ onError }) => {
         }, {});
 
         const testScheduleMap = classTestSchedules.reduce((acc, schedule) => {
+          const classInfo = classData.find((cls) => cls.id === schedule.classID);
           acc[schedule.id] = {
             date: schedule.date ? new Date(schedule.date).toISOString().split("T")[0] : "-",
             classID: schedule.classID,
-            teacherID: classData.find((cls) => cls.id === schedule.classID)?.teacherID,
+            // Lấy teacherID từ teacher object hoặc trực tiếp từ teacherID field
+            teacherID: classInfo?.teacher?.id || classInfo?.teacherID || null,
+            // Lưu trực tiếp tên giáo viên nếu có trong class data
+            teacherNameDirect: classInfo?.teacher?.name || null,
           };
           return acc;
         }, {});
@@ -266,6 +279,12 @@ const TableScoreTest = ({ onError }) => {
               scoreDetails.find((d) => d.studentScoreID === score.studentScoreID) || {};
             const schedule = testScheduleMap[score.classTestScheduleID] || {};
             
+            // Ưu tiên lấy tên từ teacherMap, nếu không có thì lấy từ teacherNameDirect
+            const resolvedTeacherName = 
+              teacherMap[schedule.teacherID] || 
+              schedule.teacherNameDirect || 
+              "Không xác định";
+            
             return {
               key: score.studentScoreID,
               studentScoreID: score.studentScoreID,
@@ -275,7 +294,7 @@ const TableScoreTest = ({ onError }) => {
               studentName: studentMap[score.studentID] || "Không xác định",
               testDate: schedule.date || "-",
               className: classMap[schedule.classID] || "Không xác định",
-              teacherName: teacherMap[schedule.teacherID] || "Không xác định",
+              teacherName: resolvedTeacherName,
               skillScores: detail.scores || {},
               scores: detail.scores || {},
               avgScore: calculateAvgScore(detail.scores || {}),
@@ -306,8 +325,29 @@ const TableScoreTest = ({ onError }) => {
     new Set(dataSource.flatMap((item) => Object.keys(item.skillScores || {})))
   ).sort();
 
-  // Cấu hình cột cho Ant Design Table
-  const columns = [
+  // Helper function to get score color
+  const getScoreColor = (score) => {
+    const numScore = parseFloat(score);
+    if (isNaN(numScore)) return "default";
+    if (numScore >= 8.5) return "success";
+    if (numScore >= 7) return "processing";
+    if (numScore >= 5) return "warning";
+    return "error";
+  };
+
+  // Handle view detail click
+  const handleViewDetailClick = (record) => {
+    setViewDetailData(record);
+    setViewDetailModalVisible(true);
+  };
+
+  const handleViewDetailClose = () => {
+    setViewDetailModalVisible(false);
+    setViewDetailData(null);
+  };
+
+  // Cấu hình cột cho Desktop (đầy đủ thông tin)
+  const desktopColumns = [
     {
       title: "Tên Học Sinh",
       dataIndex: "studentName",
@@ -351,7 +391,7 @@ const TableScoreTest = ({ onError }) => {
     {
       title: "Actions",
       key: "actions",
-      width: 80,
+      width: 120,
       align: "center",
       fixed: "right",
       render: (_, record) => (
@@ -371,6 +411,64 @@ const TableScoreTest = ({ onError }) => {
       ),
     },
   ];
+
+  // Cấu hình cột cho Mobile (rút gọn với nút Xem chi tiết)
+  const mobileColumns = [
+    {
+      title: "Học Sinh",
+      dataIndex: "studentName",
+      key: "studentName",
+      width: 120,
+      render: (text) => <MDTypography variant="caption" fontWeight="bold">{text}</MDTypography>,
+    },
+    {
+      title: "Điểm TB",
+      dataIndex: "avgScore",
+      key: "avgScore",
+      width: 80,
+      align: "center",
+      render: (value) => (
+        <Tag color={getScoreColor(value)} style={{ fontWeight: "bold" }}>
+          {value}
+        </Tag>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 120,
+      align: "center",
+      render: (_, record) => (
+        <MDBox display="flex" gap={0.5} justifyContent="center" flexWrap="wrap">
+          <AntButton
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetailClick(record)}
+            style={{ backgroundColor: colors.midGreen, borderColor: colors.midGreen }}
+          >
+            Xem
+          </AntButton>
+          <AntButton
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEditClick(record)}
+          />
+          <AntButton
+            type="text"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteClick(record)}
+          />
+        </MDBox>
+      ),
+    },
+  ];
+
+  // Chọn columns dựa trên responsive
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
   const handleDeleteClick = (row) => {
     setScoreToDelete(row);
@@ -617,6 +715,59 @@ const TableScoreTest = ({ onError }) => {
                 studentName={editScoreData?.studentName}
                 loading={editLoading}
       />
+
+      {/* View Detail Modal for Mobile */}
+      <Modal
+        title={
+          <MDTypography variant="h6" fontWeight="bold" style={{ color: colors.darkGreen }}>
+            Chi tiết điểm số
+          </MDTypography>
+        }
+        open={viewDetailModalVisible}
+        onCancel={handleViewDetailClose}
+        footer={[
+          <Button key="edit" onClick={() => { handleViewDetailClose(); handleEditClick(viewDetailData); }} style={{ marginRight: 8 }}>
+            Sửa điểm
+          </Button>,
+          <Button key="close" type="primary" onClick={handleViewDetailClose} style={{ backgroundColor: colors.midGreen, borderColor: colors.midGreen }}>
+            Đóng
+          </Button>,
+        ]}
+        width={400}
+      >
+        {viewDetailData && (
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="Học sinh">
+              <strong>{viewDetailData.studentName}</strong>
+            </Descriptions.Item>
+            <Descriptions.Item label="Lớp">
+              {viewDetailData.className}
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày kiểm tra">
+              {viewDetailData.testDate}
+            </Descriptions.Item>
+            <Descriptions.Item label="Giáo viên">
+              {viewDetailData.teacherName || "N/A"}
+            </Descriptions.Item>
+            {Object.entries(viewDetailData.skillScores || {}).map(([skill, score]) => (
+              <Descriptions.Item key={skill} label={skill}>
+                <Tag color={getScoreColor(score)} style={{ fontWeight: "bold" }}>
+                  {score || "-"}/10
+                </Tag>
+              </Descriptions.Item>
+            ))}
+            <Descriptions.Item label="Điểm trung bình">
+              <Tag color={getScoreColor(viewDetailData.avgScore)} style={{ fontWeight: "bold", fontSize: "14px" }}>
+                {viewDetailData.avgScore}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Nhận xét">
+              {viewDetailData.teacherComment || "Chưa có nhận xét"}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
+
       {isValidSeverity && (
         <Snackbar
           open={notification.open}
