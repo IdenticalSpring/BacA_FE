@@ -1023,35 +1023,6 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                 onClick={() => handleSpeechForMeaning(item.id)}
               />
             </div>
-
-            {/* Student's definition input + save */}
-            <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
-              <Text style={{ width: "50px", color: colors.deepGreen }}>Định nghĩa</Text>
-              <TextArea
-                placeholder="Viết định nghĩa của bạn (tùy chọn)"
-                value={studentDefinitions[item.id] || ""}
-                onChange={(e) =>
-                  setStudentDefinitions((prev) => ({ ...prev, [item.id]: e.target.value }))
-                }
-                autoSize={{ minRows: 1, maxRows: 4 }}
-                style={{ flex: 1, borderRadius: "6px", marginRight: 8 }}
-              />
-              <Button
-                type="primary"
-                onClick={() =>
-                  handleAddOrUpdateStudentVocabulary(
-                    item.id,
-                    selectedHomeWorkId,
-                    studentId,
-                    // keep current speech result as text if any
-                    isManualRecording && activeRecordingId === item.id ? resultSTT : undefined,
-                    studentDefinitions[item.id] || undefined,
-                  )
-                }
-              >
-                Lưu
-              </Button>
-            </div>
           </div>
 
           {/* Swipe instruction hint */}
