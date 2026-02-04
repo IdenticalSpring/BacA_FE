@@ -124,6 +124,7 @@ const TestScoresTab = ({ students, classId, cardStyle, headerStyle }) => {
             studentID: score.studentID,
             studentName: student ? student.name : "Unknown",
             testScheduleID: score.classTestScheduleID,
+            testName: schedule?.test?.name || "Không xác định",
             testScheduleName: schedule ? schedule.date : "Unknown", // Đảm bảo lấy schedule.date
             assessmentName: assessment ? assessment.name : "Unknown",
             scores: detail ? detail.scores : {},
@@ -163,12 +164,17 @@ const TestScoresTab = ({ students, classId, cardStyle, headerStyle }) => {
     {
       Header: "Học sinh",
       accessor: "studentName",
+      width: "12%",
+    },
+    {
+      Header: "Tên bài kiểm tra",
+      accessor: "testName",
       width: "15%",
     },
     {
-      Header: "Buổi Kiễm tra",
+      Header: "Ngày kiểm tra",
       accessor: "testScheduleName",
-      width: "15%",
+      width: "12%",
     },
     {
       Header: "Đánh giá",

@@ -257,6 +257,8 @@ const TableScoreTest = ({ onError }) => {
           acc[schedule.id] = {
             date: schedule.date ? new Date(schedule.date).toISOString().split("T")[0] : "-",
             classID: schedule.classID,
+            // Lấy tên bài kiểm tra từ test entity
+            testName: schedule.test?.name || "Không xác định",
             // Lấy teacherID từ teacher object hoặc trực tiếp từ teacherID field
             teacherID: classInfo?.teacher?.id || classInfo?.teacherID || null,
             // Lưu trực tiếp tên giáo viên nếu có trong class data
@@ -292,6 +294,7 @@ const TableScoreTest = ({ onError }) => {
               assessmentID: score.assessmentID || null,
               classTestScheduleID: score.classTestScheduleID,
               studentName: studentMap[score.studentID] || "Không xác định",
+              testName: schedule.testName || "Không xác định",
               testDate: schedule.date || "-",
               className: classMap[schedule.classID] || "Không xác định",
               teacherName: resolvedTeacherName,
@@ -346,36 +349,54 @@ const TableScoreTest = ({ onError }) => {
     setViewDetailData(null);
   };
 
-  // Cấu hình cột cho Desktop (đầy đủ thông tin)
+  // Cấu hình cột cho Desktop (đầy đủ thông tin) - Responsive với percentage width
   const desktopColumns = [
     {
       title: "Tên Học Sinh",
       dataIndex: "studentName",
       key: "studentName",
-      width: 200,
-      fixed: "left",
-      render: (text) => <MDTypography variant="caption" fontWeight="bold">{text}</MDTypography>,
+      width: '14%',
+      render: (text) => (
+        <MDTypography variant="caption" fontWeight="bold" sx={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {text}
+        </MDTypography>
+      ),
     },
     {
       title: "Tên Lớp",
       dataIndex: "className",
       key: "className",
-      width: 150,
-      render: (text) => <MDTypography variant="caption" fontWeight="medium">{text}</MDTypography>,
+      width: '10%',
+      render: (text) => (
+        <MDTypography variant="caption" fontWeight="medium" sx={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {text}
+        </MDTypography>
+      ),
+    },
+    {
+      title: "Tên Bài Kiểm Tra",
+      dataIndex: "testName",
+      key: "testName",
+      width: '12%',
+      render: (text) => (
+        <MDTypography variant="caption" fontWeight="medium" sx={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {text}
+        </MDTypography>
+      ),
     },
     {
       title: "Ngày Kiểm Tra",
       dataIndex: "testDate",
       key: "testDate",
-      width: 120,
+      width: '10%',
       render: (text) => <MDTypography variant="caption">{text}</MDTypography>,
     },
-    // Tạo cột động cho các kỹ năng
+    // Tạo cột động cho các kỹ năng - tự động chia đều phần còn lại
     ...uniqueSkills.map((skill) => ({
       title: skill,
       dataIndex: ["skillScores", skill],
       key: skill,
-      width: 100,
+      width: `${Math.floor(36 / Math.max(uniqueSkills.length, 1))}%`,
       align: "center",
       render: (value) => <MDTypography variant="caption">{value || "-"}</MDTypography>,
     })),
@@ -383,17 +404,15 @@ const TableScoreTest = ({ onError }) => {
       title: "Điểm TB",
       dataIndex: "avgScore",
       key: "avgScore",
-      width: 100,
+      width: '8%',
       align: "center",
-      fixed: "right",
       render: (value) => <MDTypography variant="caption" fontWeight="bold">{value}</MDTypography>,
     },
     {
       title: "Actions",
       key: "actions",
-      width: 120,
+      width: '10%',
       align: "center",
-      fixed: "right",
       render: (_, record) => (
         <MDBox display="flex" gap={1} justifyContent="center">
           <AntButton
@@ -629,8 +648,9 @@ const TableScoreTest = ({ onError }) => {
               dataSource={dataSource}
               loading={loading}
               rowKey="key"
-              scroll={{ x: 'max-content' }}
+              scroll={isMobile ? { x: 'max-content' } : undefined}
               pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [5, 10, 15, 20] }}
+              tableLayout={isMobile ? 'auto' : 'fixed'}
               expandable={{
                 expandedRowRender: (record) => (
                   <MDBox 
@@ -742,6 +762,9 @@ const TableScoreTest = ({ onError }) => {
             </Descriptions.Item>
             <Descriptions.Item label="Lớp">
               {viewDetailData.className}
+            </Descriptions.Item>
+            <Descriptions.Item label="Tên bài kiểm tra">
+              {viewDetailData.testName || "Không xác định"}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày kiểm tra">
               {viewDetailData.testDate}
