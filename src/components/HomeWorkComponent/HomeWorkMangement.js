@@ -475,26 +475,20 @@ export default function HomeWorkManagement({
       // }
       // =================== PHẦN THAY ĐỔI LỚN ===================
       if (vocabularyList.length > 0) {
-        // Lọc ra các từ vựng MỚI cần TẠO
         const newVocabularies = vocabularyList
-          .filter((item) => item.isNew) // Chỉ lấy những item được thêm mới
+          .filter((item) => item.isNew)
           .map((item) => ({
-            textToSpeech: item.word,
+            textToSpeech: item.word || item.textToSpeech,
+            definition: item.definition || null,
             imageUrl: item.imageUrl || null,
-            audioUrl: item.audioUrl || null, // URL đã có sẵn từ VocabularyCreateComponent
+            audioUrl: item.audioUrl || null,
             homeworkId: homeWorkId,
           }));
 
         if (newVocabularies.length > 0) {
-          // Gửi mảng JSON đến backend
           await vocabularyService.bulkCreateVocabulary(newVocabularies);
-          // Notify other components that vocabularies have changed
           try { window.dispatchEvent(new CustomEvent('vocabulary:changed', { detail: { homeworkId: homeWorkId } })); } catch (e) { console.warn('Failed to dispatch vocabulary:changed', e); }
         }
-
-        // XỬ LÝ CẬP NHẬT TỪ VỰNG CŨ (Nếu bạn cho phép sửa)
-        // Hiện tại component VocabularyCreateComponent chỉ cho phép thêm/xóa.
-        // Nếu bạn muốn sửa từ vựng cũ, bạn sẽ cần thêm logic ở đây để gọi service `editvocabulary`.
       }
       // =========================================================
 
@@ -586,10 +580,11 @@ export default function HomeWorkManagement({
         const newVocabularies = vocabularyList
           .filter((item) => item.isNew)
           .map((item) => ({
-            textToSpeech: item.word,
+            textToSpeech: item.word || item.textToSpeech,
+            definition: item.definition || null,
             imageUrl: item.imageUrl || null,
             audioUrl: item.audioUrl || null,
-            homeworkId: homeWorkId, // homeWorkId đã được lấy từ bước cập nhật homework ở trên
+            homeworkId: homeWorkId,
           }));
 
         if (newVocabularies.length > 0) {

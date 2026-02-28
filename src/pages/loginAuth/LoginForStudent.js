@@ -8,7 +8,7 @@ import {
   EyeInvisibleOutlined,
 } from "@ant-design/icons";
 import { colors } from "assets/theme/color";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import authService from "services/authService";
 const { Title, Text } = Typography;
 
@@ -17,10 +17,20 @@ const LoginForStudent = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );
   const [passwordVisible, setPasswordVisible] = useState(false);
+
+  // Đọc từ URL query params (khi redirect từ DoHomework)
+  const prefilledUsername = searchParams.get("username") || "";
+  const prefilledName = searchParams.get("name") || "";
+  const [step, setStep] = useState(prefilledUsername ? 2 : 1);
+  const [checkedUsername, setCheckedUsername] = useState(prefilledUsername);
+  const [requiresPassword, setRequiresPassword] = useState(!!prefilledUsername);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -29,26 +39,81 @@ const LoginForStudent = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Bước 1: Kiểm tra username
+  const handleCheckUsername = async () => {
+    try {
+      await form.validateFields(["username"]);
+    } catch {
+      return;
+    }
+
+    const username = form.getFieldValue("username");
+    setCheckingUsername(true);
+    setError("");
+
+    try {
+      const result = await authService.checkStudentPassword(username);
+      setCheckedUsername(username);
+
+      if (result.requiresPassword) {
+        // Tài khoản đã đặt mật khẩu → chuyển sang bước 2
+        setRequiresPassword(true);
+        setStep(2);
+      } else {
+        // Tài khoản chưa đặt mật khẩu → đăng nhập luôn
+        setLoading(true);
+        await authService.loginStudent(username);
+        navigate("/studentpage");
+        message.success("Đăng nhập thành công");
+      }
+    } catch (err) {
+      message.error(err || "Tài khoản không tồn tại");
+      setError(err || "Tài khoản không tồn tại");
+    } finally {
+      setCheckingUsername(false);
+      setLoading(false);
+    }
+  };
+
+  // Bước 2: Đăng nhập với mật khẩu
   const onFinish = async (values) => {
     setLoading(true);
     setError("");
 
     try {
-      let data;
-      // Login cho học sinh
-      data = await authService.loginStudent(values.username, values.password);
+      await authService.loginStudent(checkedUsername, values.password);
       navigate("/studentpage");
-      message.success("Login successful");
+      message.success("Đăng nhập thành công");
     } catch (err) {
       console.log(err);
-      message.error(err || "Login failed");
-      setError(err || "Login failed");
+      message.error(err || "Sai mật khẩu");
+      setError(err || "Sai mật khẩu");
     } finally {
       setLoading(false);
     }
   };
+
+  // Quay lại bước 1 hoặc trang trước
+  const handleBackToUsername = () => {
+    // Nếu đến từ DoHomework (có query param username), quay lại /do-homework
+    if (searchParams.get("username")) {
+      navigate("/do-homework");
+      return;
+    }
+    setStep(1);
+    setCheckedUsername("");
+    setRequiresPassword(false);
+    setError("");
+    form.setFieldsValue({ password: "" });
+  };
+
   const handleBack = () => {
-    navigate("/");
+    if (step === 2) {
+      handleBackToUsername();
+    } else {
+      navigate("/");
+    }
   };
   const isMobile = windowWidth < 768;
   return (
@@ -145,171 +210,228 @@ const LoginForStudent = () => {
             form={form}
             name="login_form"
             initialValues={{ remember: true }}
-            onFinish={onFinish}
+            onFinish={step === 2 ? onFinish : undefined}
             layout="vertical"
             size="large"
           >
-            <Form.Item
-              name="username"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập tên đăng nhập để tiếp tục!",
-                },
-                {
-                  whitespace: false,
-                  message: "Tên đăng nhập không được chứa khoảng trắng!",
-                },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined style={{ color: colors.deepGreen }} />}
-                placeholder="Tên đăng nhập"
-                style={{
-                  borderRadius: "8px",
-                  borderColor: colors.lightGreen,
-                  padding: "12px 16px",
-                  height: "auto",
-                }}
-                onChange={(e) => {
-                  const cleanValue = e.target.value.replace(/\s/g, "");
-                  form.setFieldsValue({ username: cleanValue });
-                }}
-                onPaste={(e) => {
-                  e.preventDefault();
-                  const pastedText = e.clipboardData.getData("text");
-                  const cleanText = pastedText.replace(/\s/g, "");
-                  form.setFieldsValue({ username: cleanText });
-                }}
-              />
-            </Form.Item>
+            {/* Step 1: Username */}
+            {step === 1 && (
+              <>
+                <Form.Item
+                  name="username"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập tên đăng nhập để tiếp tục!",
+                    },
+                    {
+                      whitespace: false,
+                      message: "Tên đăng nhập không được chứa khoảng trắng!",
+                    },
+                  ]}
+                >
+                  <Input
+                    prefix={<UserOutlined style={{ color: colors.deepGreen }} />}
+                    placeholder="Tên đăng nhập"
+                    style={{
+                      borderRadius: "8px",
+                      borderColor: colors.lightGreen,
+                      padding: "12px 16px",
+                      height: "auto",
+                    }}
+                    onChange={(e) => {
+                      const cleanValue = e.target.value.replace(/\s/g, "");
+                      form.setFieldsValue({ username: cleanValue });
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pastedText = e.clipboardData.getData("text");
+                      const cleanText = pastedText.replace(/\s/g, "");
+                      form.setFieldsValue({ username: cleanText });
+                    }}
+                    onPressEnter={handleCheckUsername}
+                  />
+                </Form.Item>
 
-            <Form.Item
-              name="password"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập mật khẩu!",
-                },
-                {
-                  whitespace: false,
-                  message: "Mật khẩu không được chứa khoảng trắng!",
-                },
-                {
-                  pattern: /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]*$/,
-                  message:
-                    "Mật khẩu chỉ được dùng ký tự tiếng Anh (chữ cái, số và ký tự đặc biệt cơ bản)!",
-                },
-              ]}
-            >
-              <div style={{ position: "relative" }}>
-                <Input
-                  prefix={<LockOutlined style={{ color: colors.deepGreen }} />}
-                  type={passwordVisible ? "text" : "password"}
-                  placeholder="***************"
+                <Form.Item style={{ marginBottom: "12px" }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                  </div>
+                </Form.Item>
+
+                <Form.Item>
+                  <div className="signin-button">
+                    <Button
+                      type="primary"
+                      loading={checkingUsername || loading}
+                      block
+                      onClick={handleCheckUsername}
+                      style={{
+                        backgroundColor: colors.deepGreen,
+                        borderColor: colors.deepGreen,
+                        borderRadius: "8px",
+                        height: "48px",
+                        fontWeight: 600,
+                        fontSize: "16px",
+                        boxShadow: "0 4px 12px rgba(54, 138, 104, 0.3)",
+                        transition: "all 0.2s ease",
+                      }}
+                      className="hover-scale"
+                    >
+                      Tiếp tục
+                    </Button>
+                  </div>
+                </Form.Item>
+              </>
+            )}
+
+            {/* Step 2: Password */}
+            {step === 2 && (
+              <>
+                <div
                   style={{
+                    backgroundColor: colors.paleGreen || "#f0f9f4",
                     borderRadius: "8px",
-                    borderColor: colors.lightGreen,
                     padding: "12px 16px",
-                    height: "auto",
-                  }}
-                  onChange={(e) => {
-                    // Loại bỏ ký tự tiếng Việt và khoảng trắng
-                    const cleanValue = e.target.value
-                      .normalize("NFKD") // Phân tách ký tự có dấu
-                      .replace(/[\u0300-\u036f]/g, "") // Loại bỏ dấu
-                      .replace(/đ/g, "d") // Thay đ thành d
-                      .replace(/Đ/g, "D") // Thay Đ thành D
-                      .replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/g, ""); // Chỉ giữ ký tự tiếng Anh
-                    form.setFieldsValue({ password: cleanValue });
-                  }}
-                  onPaste={(e) => {
-                    e.preventDefault();
-                    const pastedText = e.clipboardData.getData("text");
-                    // Loại bỏ ký tự tiếng Việt và khoảng trắng khi paste
-                    const cleanText = pastedText
-                      .normalize("NFKD")
-                      .replace(/[\u0300-\u036f]/g, "")
-                      .replace(/đ/g, "d")
-                      .replace(/Đ/g, "D")
-                      .replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/g, "");
-                    form.setFieldsValue({ password: cleanText });
-                  }}
-                />
-                <Button
-                  type="text"
-                  onClick={() => setPasswordVisible(!passwordVisible)}
-                  style={{
-                    position: "absolute",
-                    right: "8px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 1,
-                    color: passwordVisible ? colors.deepGreen : colors.darkGray,
-                    padding: "0 8px",
-                    borderRadius: "4px",
+                    marginBottom: "16px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    background: passwordVisible ? "rgba(142, 209, 176, 0.15)" : "transparent",
-                    border: "none",
-                    height: "32px",
-                    transition: "all 0.2s",
+                    justifyContent: "space-between",
                   }}
                 >
-                  {passwordVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                </Button>
-              </div>
-            </Form.Item>
+                  <div>
+                    <Text style={{ color: colors.darkGray, fontSize: "13px" }}>
+                      {prefilledName
+                        ? `Xin chào, ${prefilledName}!`
+                        : "Đăng nhập với tài khoản"}
+                    </Text>
+                    <br />
+                    <Text strong style={{ color: colors.deepGreen, fontSize: "15px" }}>
+                      {checkedUsername}
+                    </Text>
+                  </div>
+                  {/* Chỉ hiện "Đổi tài khoản" khi không bị redirect từ DoHomework */}
+                  {!searchParams.get("username") && (
+                    <Button
+                      type="link"
+                      onClick={handleBackToUsername}
+                      style={{ color: colors.deepGreen, padding: 0, fontSize: "13px" }}
+                    >
+                      Đổi tài khoản
+                    </Button>
+                  )}
+                </div>
 
-            <Form.Item style={{ marginBottom: "12px" }}>
-              <div
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-              >
-                {/* <Checkbox
-                  onChange={(e) => {
-                    setRemember(e.target.checked);
-                  }}
-                  style={{ color: colors.darkGray }}
-                  defaultChecked
+                <Form.Item
+                  name="password"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập mật khẩu!",
+                    },
+                    {
+                      whitespace: false,
+                      message: "Mật khẩu không được chứa khoảng trắng!",
+                    },
+                    {
+                      pattern: /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]*$/,
+                      message:
+                        "Mật khẩu chỉ được dùng ký tự tiếng Anh (chữ cái, số và ký tự đặc biệt cơ bản)!",
+                    },
+                  ]}
                 >
-                  Ghi nhớ đăng nhập
-                </Checkbox> */}
-                {/* <a
-                  href="#forgot"
-                  style={{
-                    color: colors.deepGreen,
-                    fontWeight: 500,
-                  }}
-                >
-                  Forgot password?
-                </a> */}
-              </div>
-            </Form.Item>
+                  <div style={{ position: "relative" }}>
+                    <Input
+                      prefix={<LockOutlined style={{ color: colors.deepGreen }} />}
+                      type={passwordVisible ? "text" : "password"}
+                      placeholder="Nhập mật khẩu"
+                      autoFocus
+                      style={{
+                        borderRadius: "8px",
+                        borderColor: colors.lightGreen,
+                        padding: "12px 16px",
+                        height: "auto",
+                      }}
+                      onChange={(e) => {
+                        const cleanValue = e.target.value
+                          .normalize("NFKD")
+                          .replace(/[\u0300-\u036f]/g, "")
+                          .replace(/đ/g, "d")
+                          .replace(/Đ/g, "D")
+                          .replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/g, "");
+                        form.setFieldsValue({ password: cleanValue });
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData("text");
+                        const cleanText = pastedText
+                          .normalize("NFKD")
+                          .replace(/[\u0300-\u036f]/g, "")
+                          .replace(/đ/g, "d")
+                          .replace(/Đ/g, "D")
+                          .replace(/[^a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/g, "");
+                        form.setFieldsValue({ password: cleanText });
+                      }}
+                    />
+                    <Button
+                      type="text"
+                      onClick={() => setPasswordVisible(!passwordVisible)}
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        zIndex: 1,
+                        color: passwordVisible ? colors.deepGreen : colors.darkGray,
+                        padding: "0 8px",
+                        borderRadius: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: passwordVisible ? "rgba(142, 209, 176, 0.15)" : "transparent",
+                        border: "none",
+                        height: "32px",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {passwordVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                    </Button>
+                  </div>
+                </Form.Item>
 
-            <Form.Item>
-              <div className="signin-button">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  block
-                  style={{
-                    backgroundColor: colors.deepGreen,
-                    borderColor: colors.deepGreen,
-                    borderRadius: "8px",
-                    height: "48px",
-                    fontWeight: 600,
-                    fontSize: "16px",
-                    boxShadow: "0 4px 12px rgba(54, 138, 104, 0.3)",
-                    transition: "all 0.2s ease",
-                  }}
-                  className="hover-scale"
-                >
-                  Đăng nhập
-                </Button>
-              </div>
-            </Form.Item>
+                <Form.Item style={{ marginBottom: "12px" }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                  </div>
+                </Form.Item>
+
+                <Form.Item>
+                  <div className="signin-button">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={loading}
+                      block
+                      style={{
+                        backgroundColor: colors.deepGreen,
+                        borderColor: colors.deepGreen,
+                        borderRadius: "8px",
+                        height: "48px",
+                        fontWeight: 600,
+                        fontSize: "16px",
+                        boxShadow: "0 4px 12px rgba(54, 138, 104, 0.3)",
+                        transition: "all 0.2s ease",
+                      }}
+                      className="hover-scale"
+                    >
+                      Đăng nhập
+                    </Button>
+                  </div>
+                </Form.Item>
+              </>
+            )}
 
             {/* <div style={{ textAlign: "center", margin: "20px 0" }}>
               <Divider plain style={{ color: colors.darkGray, opacity: 0.5 }}>

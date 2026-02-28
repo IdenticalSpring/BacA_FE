@@ -15,23 +15,27 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import studentService from "services/studentService"; // Import studentService
-import { message } from "antd"; // Để hiển thị thông báo (nếu bạn dùng antd)
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import studentService from "services/studentService";
+import { message } from "antd";
 
 const StudentProfileModal = ({ open, onClose, student, onStudentUpdated }) => {
-  // Nếu không có student, trả về null
   if (!student) return null;
 
-  const [editMode, setEditMode] = useState(false); // Trạng thái chỉnh sửa
-  const [showPassword, setShowPassword] = useState(false); // Toggle hiển thị mật khẩu
+  const [editMode, setEditMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: student.name || "",
     username: student.username || "",
-    password: student.password || "",
     imgUrl: student.imgUrl || "",
-    file: null, // Để lưu file upload mới
+    file: null,
   });
-  const [previewImage, setPreviewImage] = useState(student.imgUrl || ""); // Hiển thị ảnh preview
+  const [previewImage, setPreviewImage] = useState(student.imgUrl || "");
   const fileInputRef = React.useRef(null);
 
   // Xử lý thay đổi input
@@ -53,13 +57,12 @@ const StudentProfileModal = ({ open, onClose, student, onStudentUpdated }) => {
     }
   };
 
-  // Xử lý lưu thay đổi
+  // Xử lý lưu thay đổi profile (không bao gồm password)
   const handleSave = async () => {
     try {
       const updatedData = {
         name: formData.name,
         username: formData.username,
-        password: formData.password,
       };
 
       const updatedStudent = await studentService.editStudent(
@@ -70,20 +73,52 @@ const StudentProfileModal = ({ open, onClose, student, onStudentUpdated }) => {
       setFormData({
         name: updatedStudent.name || "",
         username: updatedStudent.username || "",
-        password: updatedStudent.password || "",
         imgUrl: updatedStudent.imgUrl || "",
         file: null,
       });
       setPreviewImage(updatedStudent.imgUrl || "");
       setEditMode(false);
-      message.success("Profile updated successfully!");
+      message.success("Cập nhật thông tin thành công!");
 
-      // Gọi callback để cập nhật dữ liệu ở parent component (nếu có)
       if (onStudentUpdated) {
         onStudentUpdated(updatedStudent);
       }
     } catch (error) {
-      message.error("Error updating profile: " + (error.message || "Unknown error"));
+      message.error("Lỗi cập nhật: " + (error.message || "Lỗi không xác định"));
+    }
+  };
+
+  // Xử lý đổi mật khẩu
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.trim() === "") {
+      message.error("Mật khẩu mới không được để trống!");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      message.error("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+    if (newPassword.length < 4) {
+      message.error("Mật khẩu phải có ít nhất 4 ký tự!");
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await studentService.changePassword(student.id, newPassword);
+      message.success("Đổi mật khẩu thành công! Lần đăng nhập sau bạn sẽ cần nhập mật khẩu.");
+      setShowChangePassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
+
+      // Cập nhật lại student data
+      if (onStudentUpdated) {
+        onStudentUpdated({ ...student, hasCustomPassword: true });
+      }
+    } catch (error) {
+      message.error("Lỗi đổi mật khẩu: " + (error || "Lỗi không xác định"));
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -98,7 +133,6 @@ const StudentProfileModal = ({ open, onClose, student, onStudentUpdated }) => {
     setFormData({
       name: student.name || "",
       username: student.username || "",
-      password: student.password || "",
       imgUrl: student.imgUrl || "",
       file: null,
     });
@@ -193,35 +227,107 @@ const StudentProfileModal = ({ open, onClose, student, onStudentUpdated }) => {
           }}
         />
 
-        {/* Password */}
-        <TextField
-          label="Password"
-          name="password"
-          fullWidth
-          margin="normal"
-          type={showPassword ? "text" : "password"}
-          value={formData.password}
-          onChange={handleInputChange}
-          InputProps={{
-            readOnly: !editMode,
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            "& .MuiInputBase-input.Mui-disabled": {
-              WebkitTextFillColor: "black",
-            },
-          }}
-        />
+        {/* Mật khẩu - Section đổi mật khẩu */}
+        <Box sx={{ mt: 2, mb: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {student.hasCustomPassword ? (
+                <LockIcon sx={{ color: colors.deepGreen, fontSize: 20 }} />
+              ) : (
+                <LockOpenIcon sx={{ color: colors.midGreen, fontSize: 20 }} />
+              )}
+              <Typography variant="body2" color="textSecondary">
+                {student.hasCustomPassword
+                  ? "Tài khoản đã đặt mật khẩu"
+                  : "Tài khoản chưa đặt mật khẩu (đăng nhập không cần mật khẩu)"}
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              onClick={() => setShowChangePassword(!showChangePassword)}
+              sx={{
+                color: colors.deepGreen,
+                textTransform: "none",
+                fontSize: "13px",
+                "&:hover": { color: colors.darkGreen },
+              }}
+            >
+              {showChangePassword
+                ? "Hủy"
+                : student.hasCustomPassword
+                ? "Đổi mật khẩu"
+                : "Đặt mật khẩu"}
+            </Button>
+          </Box>
+
+          {showChangePassword && (
+            <Box
+              sx={{
+                backgroundColor: "#f9f9f9",
+                borderRadius: "8px",
+                padding: "16px",
+                border: `1px solid ${colors.lightGreen || "#e0e0e0"}`,
+              }}
+            >
+              <TextField
+                label="Mật khẩu mới"
+                fullWidth
+                margin="dense"
+                size="small"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Xác nhận mật khẩu"
+                fullWidth
+                margin="dense"
+                size="small"
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+                sx={{
+                  mt: 1,
+                  backgroundColor: colors.deepGreen,
+                  "&:hover": { backgroundColor: colors.darkGreen },
+                  textTransform: "none",
+                }}
+              >
+                {changingPassword
+                  ? "Đang xử lý..."
+                  : student.hasCustomPassword
+                  ? "Cập nhật mật khẩu"
+                  : "Đặt mật khẩu"}
+              </Button>
+            </Box>
+          )}
+        </Box>
       </DialogContent>
       <DialogActions>
         {editMode ? (
@@ -269,13 +375,14 @@ StudentProfileModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   student: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired, // Thêm id
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     imgUrl: PropTypes.string,
     name: PropTypes.string,
     username: PropTypes.string,
     password: PropTypes.string,
-  }).isRequired, // student giờ là bắt buộc vì cần id để edit
-  onStudentUpdated: PropTypes.func, // Callback để cập nhật dữ liệu ở parent
+    hasCustomPassword: PropTypes.bool,
+  }).isRequired,
+  onStudentUpdated: PropTypes.func,
 };
 
 export default StudentProfileModal;

@@ -18,6 +18,7 @@ import {
   Empty,
   Row,
   Col,
+  Tabs,
 } from "antd";
 import {
   AudioOutlined,
@@ -41,6 +42,7 @@ import { useSpeechRecognition } from "react-speech-kit";
 import studentService from "services/studentService";
 import student_vocabularyService from "services/student_vocabulary";
 import fileService from "services/fileService";
+import VocabularyExcelImport from "./VocabularyExcelImport";
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
@@ -398,10 +400,15 @@ const VocabularyCreateComponent = ({
 
   return (
     <div style={{ maxWidth: "100%", margin: "0 auto" }}>
-      <Card
-        title={<Title level={3}>Tạo từ vựng và luyện nghe nói</Title>}
-        style={{ width: "100%", marginBottom: "20px" }}
-      >
+      <Card style={{ width: "100%", marginBottom: "20px" }}>
+        <Tabs
+          defaultActiveKey="manual"
+          type="card"
+          items={[
+            {
+              key: "manual",
+              label: "Tạo thủ công",
+              children: (
         <Form form={form} layout="vertical">
           <Form.Item>
             <Card
@@ -549,6 +556,22 @@ const VocabularyCreateComponent = ({
             </Button>
           </Form.Item>
         </Form>
+              ),
+            },
+            {
+              key: "excel",
+              label: "Import Excel",
+              children: (
+                <VocabularyExcelImport
+                  selectedHomeWorkId={selectedHomeWorkId}
+                  vocabularyList={vocabularyList}
+                  setVocabularyList={setVocabularyList}
+                  isMobile={isMobile}
+                />
+              ),
+            },
+          ]}
+        />
       </Card>
 
       {vocabularyList?.length > 0 && (

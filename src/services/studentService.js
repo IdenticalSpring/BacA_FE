@@ -176,6 +176,25 @@ const studentService = {
       throw error.response?.data?.message || "Error deleting student";
     }
   },
+
+  // Đổi mật khẩu học sinh
+  changePassword: async (id, newPassword) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/students/${id}/change-password`,
+        { newPassword },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Lỗi khi đổi mật khẩu";
+    }
+  },
 };
 
 export default studentService;

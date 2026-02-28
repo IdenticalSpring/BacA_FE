@@ -101,12 +101,13 @@ const authService = {
 
   loginStudent: async (username, password) => {
     try {
+      const body = { username };
+      if (password) {
+        body.password = password;
+      }
       const response = await axios.post(
         `${API_BASE_URL}/auth/student/login`,
-        {
-          username,
-          password,
-        },
+        body,
         {
           headers: {
             "ngrok-skip-browser-warning": "true",
@@ -123,6 +124,24 @@ const authService = {
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || "Lỗi đăng nhập";
+    }
+  },
+
+  // Kiểm tra học sinh có cần nhập mật khẩu không
+  checkStudentPassword: async (username) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/student/check-password`,
+        { username },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data; // { requiresPassword: boolean }
+    } catch (error) {
+      throw error.response?.data?.message || "Lỗi kiểm tra tài khoản";
     }
   },
 

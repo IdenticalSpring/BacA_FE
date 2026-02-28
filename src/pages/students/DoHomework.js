@@ -64,17 +64,25 @@ export default function DoHomework() {
 
   // Handle student selection
   const selectStudent = async (student) => {
-    // setSelectedStudent(student);
+    // Nếu học sinh đã đặt mật khẩu → chuyển sang trang nhập mật khẩu
+    if (student.hasCustomPassword) {
+      const params = new URLSearchParams({
+        username: student.username,
+        name: student.name,
+      });
+      navigate(`/login/student?${params.toString()}`);
+      return;
+    }
+
+    // Chưa đặt mật khẩu → đăng nhập luôn qua ID
     setLoading(true);
     setError("");
     try {
-      const res = await studentService.getStudentByIdAndLogin(student.id);
-      console.log(res);
+      await studentService.getStudentByIdAndLogin(student.id);
       navigate("/studentpage");
-      message.success("Login successful");
+      message.success("Đăng nhập thành công");
     } catch (err) {
-      //   setClassData(null);
-      setError("Mã lớp không tồn tại! Vui lòng nhập lại!");
+      setError("Đăng nhập thất bại! Vui lòng thử lại!");
     } finally {
       setLoading(false);
     }

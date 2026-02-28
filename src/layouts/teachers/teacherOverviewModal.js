@@ -1693,44 +1693,23 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       if (editingHomeWork) {
         const HomeWorkdata = await homeWorkService.editHomeWork(editingHomeWork.id, formData);
         if (vocabularyList.length > 0) {
-          const formDataForVocabulary = new FormData();
-          const vocabularies = [];
-          const mp3Files = [];
-          // console.log("vocabularyList", vocabularyList);
+          const newVocabularies = vocabularyList
+            .filter((item) => item?.isNew)
+            .map((item) => ({
+              textToSpeech: item.word || item.textToSpeech,
+              definition: item.definition || null,
+              imageUrl: item.imageUrl || null,
+              audioUrl: item.audioUrl || null,
+              homeworkId: HomeWorkdata.id,
+            }));
 
-          vocabularyList.forEach((item) => {
-            if (item?.isNew) {
-              const vocabulary = {
-                textToSpeech: item.word,
-                imageUrl: item.imageUrl,
-                homeworkId: HomeWorkdata.id,
-              };
-              vocabularies.push(vocabulary);
-              // mp3Files.push(mp3File);
-              // console.log(item, "aaaaa");
-              let fileToAppend;
-              if (item?.audioFile) {
-                fileToAppend = new File([item.audioFile], "audio.mp3", { type: "audio/mp3" });
-              } else {
-                // 👇 Tạo file rỗng nếu không có audio
-                // console.log(item, "eeee", fileToAppend);
-
-                const emptyBlob = new Blob([], { type: "audio/mp3" });
-                fileToAppend = new File([emptyBlob], "audio.mp3", { type: "audio/mp3" });
-              }
-              formDataForVocabulary.append("mp3Files", fileToAppend);
+          if (newVocabularies.length > 0) {
+            await vocabularyService.bulkCreateVocabulary(newVocabularies);
+            try {
+              window.dispatchEvent(new CustomEvent("vocabulary:changed", { detail: { homeworkId: HomeWorkdata.id } }));
+            } catch (e) {
+              console.warn("Could not dispatch vocabulary:changed event", e);
             }
-          });
-          formDataForVocabulary.append("vocabularies", JSON.stringify(vocabularies));
-          // formDataForVocabulary.append("mp3Files", mp3Files);
-          const vocabularyResponse = await vocabularyService.bulkCreateVocabulary(
-            formDataForVocabulary
-          );
-          // Notify other components (e.g., study view) that vocabularies changed for this homework
-          try {
-            window.dispatchEvent(new CustomEvent("vocabulary:changed", { detail: { homeworkId: HomeWorkdata.id } }));
-          } catch (e) {
-            console.warn("Could not dispatch vocabulary:changed event", e);
           }
         }
         // Lưu danh sách câu hỏi mới

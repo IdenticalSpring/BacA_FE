@@ -470,7 +470,7 @@ const StudentPage = () => {
   };
   const handleLogout = () => {
     sessionStorage.removeItem("token");
-    window.location.href = "/login/student";
+    window.location.href = "/do-homework";
   };
 
   const handleSelectLessonBySchedule = (lessonByScheduleId) => {
@@ -537,8 +537,6 @@ const StudentPage = () => {
       setScoreModalVisible(true);
     } else if (tab === "lessons" && lessonRef.current) {
       lessonRef.current.scrollIntoView({ behavior: "smooth" });
-    } else if (tab === "homework") {
-      setActiveTab("homework");
     }
   };
   // console.log(notifications);
@@ -756,11 +754,6 @@ const StudentPage = () => {
                       );
                     })}
                 </div>
-                <VocabularyStudyComponent
-                  selectedHomeWorkId={hw.id}
-                  isMobile={isMobile}
-                  studentId={studentId}
-                />
               </Card>
             )}
           />
@@ -817,6 +810,7 @@ const StudentPage = () => {
           Từ Vựng
         </Title>
         <VocabularyStudyComponent
+          key={homework[0]?.id}
           selectedHomeWorkId={homework[0]?.id}
           isMobile={isMobile}
           studentId={studentId}
@@ -1056,6 +1050,21 @@ const StudentPage = () => {
                 }}
               >
                 {screens.xs ? "" : "Điểm Thi"}
+              </Button>
+              <Button
+                type={"link"}
+                icon={<ReadOutlined />}
+                onClick={() => handleTabClick("vocabulary")}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: colors.borderGreen,
+                  fontSize: screens.xs ? "12px" : "14px",
+                  padding: screens.xs ? "0 8px" : "0 16px",
+                  height: screens.xs ? 32 : 40,
+                  minWidth: screens.xs ? 60 : 100,
+                }}
+              >
+                {screens.xs ? "" : "Bộ từ vựng"}
               </Button>
               {/* NÚT TRÒ CHUYỆN ĐÃ ĐƯỢC XÓA KHỎI ĐÂY */}
             </Space>
@@ -1319,6 +1328,7 @@ const StudentPage = () => {
       >
         <StudentScoreTab studentId={studentId} colors={colors} />
       </Modal>
+
       <Modal
         title="Wordwall Activity"
         open={isModalWordWallVisible}
