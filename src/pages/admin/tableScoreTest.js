@@ -60,9 +60,7 @@ const TableScoreTest = ({ onError }) => {
   const [editLoading, setEditLoading] = useState(false);
   // Test skills and assessments for edit modal
   const [testSkills, setTestSkills] = useState([]);
-  const [selectedTestSkills, setSelectedTestSkills] = useState([]);
   const [assessments, setAssessments] = useState([]);
-  const [previousScores, setPreviousScores] = useState([]);
   // Expanded Keys for Ant Design Table
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
   // View detail modal for mobile
@@ -595,40 +593,54 @@ const TableScoreTest = ({ onError }) => {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={3}>
-              <FormControl fullWidth disabled={!selectedClass}>
-                <InputLabel>Ngày Kiểm Tra</InputLabel>
-                <Select
-                  value={selectedTestDate}
-                  onChange={(e) => setSelectedTestDate(e.target.value)}
-                  label="Ngày Kiểm Tra"
-                  sx={{ height: "40px" }}
-                >
-                  <MenuItem value="">Tất Cả Ngày</MenuItem>
-                  {testDates.map((date) => (
-                    <MenuItem key={date} value={date}>
-                      {date}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <div
+                onClick={() => {
+                  if (!selectedClass)
+                    setNotification({ open: true, message: "Vui lòng chọn Lớp trước", severity: "warning" });
+                }}
+              >
+                <FormControl fullWidth disabled={!selectedClass}>
+                  <InputLabel>Ngày Kiểm Tra</InputLabel>
+                  <Select
+                    value={selectedTestDate}
+                    onChange={(e) => setSelectedTestDate(e.target.value)}
+                    label="Ngày Kiểm Tra"
+                    sx={{ height: "40px" }}
+                  >
+                    <MenuItem value="">Tất Cả Ngày</MenuItem>
+                    {testDates.map((date) => (
+                      <MenuItem key={date} value={date}>
+                        {date}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
             </Grid>
             <Grid item xs={12} sm={3}>
-              <FormControl fullWidth disabled={!selectedClass}>
-                <InputLabel>Học Sinh</InputLabel>
-                <Select
-                  value={selectedStudent}
-                  onChange={(e) => setSelectedStudent(e.target.value)}
-                  label="Học Sinh"
-                  sx={{ height: "40px" }}
-                >
-                  <MenuItem value="">Tất Cả Học Sinh</MenuItem>
-                  {students.map((student) => (
-                    <MenuItem key={student.id} value={student.id}>
-                      {student.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <div
+                onClick={() => {
+                  if (!selectedClass)
+                    setNotification({ open: true, message: "Vui lòng chọn Lớp trước", severity: "warning" });
+                }}
+              >
+                <FormControl fullWidth disabled={!selectedClass}>
+                  <InputLabel>Học Sinh</InputLabel>
+                  <Select
+                    value={selectedStudent}
+                    onChange={(e) => setSelectedStudent(e.target.value)}
+                    label="Học Sinh"
+                    sx={{ height: "40px" }}
+                  >
+                    <MenuItem value="">Tất Cả Học Sinh</MenuItem>
+                    {students.map((student) => (
+                      <MenuItem key={student.id} value={student.id}>
+                        {student.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
             </Grid>
           </Grid>
 
@@ -804,8 +816,16 @@ const TableScoreTest = ({ onError }) => {
             sx={{
               width: "100%",
               backgroundColor:
-                notification.severity === "success" ? colors.safeGreen : colors.errorRed,
-              color: colors.white,
+                notification.severity === "success"
+                  ? colors.safeGreen
+                  : notification.severity === "error"
+                  ? colors.errorRed
+                  : notification.severity === "warning"
+                  ? "#ed6c02"
+                  : undefined,
+              color: ["success", "error", "warning"].includes(notification.severity)
+                ? colors.white
+                : undefined,
             }}
           >
             {notification.message}

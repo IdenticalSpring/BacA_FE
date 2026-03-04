@@ -430,7 +430,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       }
     };
     fetchVocabulary();
-  }, []);
+  }, [selectedHomeWorkId]);
 
   // Handle speech to text
   // useEffect(() => {

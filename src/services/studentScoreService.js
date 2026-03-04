@@ -156,20 +156,17 @@ const StudentScoreService = {
   },
   getScoreDetailsByStudentScoreID: async (studentScoreID) => {
     try {
-      // Assuming an API call to fetch score details
-      const response = await fetch(
-        `${API_BASE_URL}/student-score-details/student/${studentScoreID}`,
+      const response = await axios.get(
+        `${API_BASE_URL}/student-score-details/score/${studentScoreID}`,
         {
-          method: "GET",
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            "ngrok-skip-browser-warning": "true",
           },
         }
       );
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch score details: ${error.message}`);
+      throw error.response?.data?.message || `Failed to fetch score details: ${error.message}`;
     }
   },
 

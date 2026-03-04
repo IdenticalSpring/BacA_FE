@@ -731,6 +731,38 @@ const StudentPage = () => {
                 <div
                   style={{
                     display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    margin: "16px 0",
+                    padding: "12px 16px",
+                    backgroundColor: "#f0f9f4",
+                    border: "1px solid #b7eb8f",
+                    borderRadius: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <ReadOutlined style={{ fontSize: 20, color: colors.deepGreen, flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: colors.darkGreen, fontSize: 14 }}>
+                    Danh sách từ vựng của bài tập này đã được chuyển sang tab{" "}
+                    <strong>Bộ từ vựng</strong>.
+                  </span>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<ReadOutlined />}
+                    onClick={() => handleTabClick("vocabulary")}
+                    style={{
+                      backgroundColor: colors.deepGreen,
+                      borderColor: colors.deepGreen,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {isMobile ? "Xem ngay" : "Đến Bộ từ vựng"}
+                  </Button>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
                     justifyContent: "flex-end",
                     gap: "10px",
                     flexDirection: isMobile ? "column" : "row",
@@ -1052,12 +1084,12 @@ const StudentPage = () => {
                 {screens.xs ? "" : "Điểm Thi"}
               </Button>
               <Button
-                type={"link"}
+                type={activeTab === "vocabulary" ? "primary" : "link"}
                 icon={<ReadOutlined />}
                 onClick={() => handleTabClick("vocabulary")}
                 style={{
-                  backgroundColor: "transparent",
-                  borderColor: colors.borderGreen,
+                  backgroundColor: activeTab === "vocabulary" ? colors.deepGreen : "transparent",
+                  borderColor: activeTab === "vocabulary" ? colors.deepGreen : colors.borderGreen,
                   fontSize: screens.xs ? "12px" : "14px",
                   padding: screens.xs ? "0 8px" : "0 16px",
                   height: screens.xs ? 32 : 40,

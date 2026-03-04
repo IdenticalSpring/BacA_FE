@@ -29,13 +29,15 @@ import StudentOverviewModal from "./studentOverviewModal";
 import InputAdornment from "@mui/material/InputAdornment";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { message } from "antd";
+import { message, Tabs } from "antd";
 import axios from "axios";
 import { AddPhotoAlternateOutlined } from "@mui/icons-material";
+import TableScoreTest from "pages/admin/tableScoreTest";
 
 function Students() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("students");
   const [levels, setLevels] = useState([]);
   const [columns, setColumns] = useState([
     { Header: "Name", accessor: "name", width: "20%" },
@@ -419,6 +421,20 @@ function Students() {
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          type="card"
+          size="large"
+          style={{ marginBottom: 0 }}
+          items={[
+            { key: "students", label: "Danh sách học sinh" },
+            { key: "scores", label: "Quản lý điểm số" },
+          ]}
+        />
+        {activeTab === "scores" ? (
+          <TableScoreTest />
+        ) : (
         <Grid container spacing={6}>
           <Grid item xs={12}>
             <Card>
@@ -496,6 +512,7 @@ function Students() {
             </Card>
           </Grid>
         </Grid>
+        )}
       </MDBox>
       <Footer />
 

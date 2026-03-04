@@ -38,9 +38,12 @@ const EditScoreModal = ({
           );
           console.log("Fetched details:", details);
           setExistingDetails(details);
+          // Reset trước để xóa dữ liệu của record trước đó
+          form.resetFields();
           const initialValues = {
             assessmentId: scoreData.assessmentID,
-            teacherComment: scoreData.teacherComment,
+            // Không set "-" vào form (giá trị mặc định khi chưa có comment)
+            teacherComment: scoreData.teacherComment === "-" ? "" : (scoreData.teacherComment || ""),
             ...Object.keys(scoreData.scores).reduce((acc, skillName) => {
               const skill = testSkills.find((s) => s.name === skillName);
               if (skill) {
