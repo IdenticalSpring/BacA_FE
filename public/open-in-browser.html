@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mở trong trình duyệt</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    .icon { font-size: 56px; margin-bottom: 16px; }
+    h1 { font-size: 20px; color: #1a1a1a; margin-bottom: 10px; }
+    p  { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+    .btn {
+      display: inline-block;
+      background: #1677ff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      width: 100%;
+    }
+    .btn:active { background: #0958d9; }
+    .note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🌐</div>
+    <h1>Mở trong Chrome / Safari</h1>
+    <p>
+      Tính năng âm thanh AI hoạt động tốt hơn trong trình duyệt bên ngoài.<br/>
+      Nhấn nút bên dưới để tiếp tục.
+    </p>
+    <button class="btn" id="openBtn">Mở trong trình duyệt</button>
+    <p class="note" id="note"></p>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var rawUrl = params.get("url") || "";
+      var ua = navigator.userAgent || "";
+      var btn = document.getElementById("openBtn");
+      var note = document.getElementById("note");
+
+      // ── Security: reject open-redirect attempts ────────────────────────────
+      // Only allow URLs that belong to the same origin (e.g. https://happyclass.com.vn).
+      // Anything pointing to a different host is rejected and we fall back to "/".
+      var target = "/";
+      try {
+        var parsed = new URL(rawUrl);
+        if (parsed.origin === window.location.origin) {
+          target = rawUrl;
+        } else {
+          note.textContent = "Link không hợp lệ.";
+          btn.disabled = true;
+        }
+      } catch (_) {
+        note.textContent = "Link không hợp lệ.";
+        btn.disabled = true;
+      }
+      // ───────────────────────────────────────────────────────────────────────
+
+      btn.addEventListener("click", function () {
+        if (/android/i.test(ua)) {
+          // Fallback for Android in case intent:// didn't work from App.js
+          var encoded = encodeURIComponent(target);
+          window.location.href =
+            "intent:" + target +
+            "#Intent;scheme=https;action=android.intent.action.VIEW;" +
+            "package=com.android.chrome;S.browser_fallback_url=" + encoded + ";end";
+        } else {
+          // iOS: open via window.open from a user-gesture (tap) — this works in most in-app browsers
+          var w = window.open(target, "_blank");
+          if (!w) {
+            // Popup blocked: show the URL so the user can copy-paste it
+            note.textContent = "Không mở được tự động. Hãy sao chép link và dán vào Safari/Chrome.";
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

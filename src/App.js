@@ -14,7 +14,6 @@ Coded by www.creative-tim.com
 */
 
 import { useState, useEffect, useMemo } from "react";
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
@@ -53,6 +52,64 @@ import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "co
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
 import PrivateRoute from "privateRoute";
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+// ─── In-app browser → redirect to system browser ────────────────────────────
+// Runs synchronously at module evaluation time (after all imports are
+// resolved, but before the App component renders anything) so there is no
+// flash of content inside the in-app browser.
+;(function redirectIfInAppBrowser() {
+  const ua = navigator.userAgent || "";
+
+  // 1. Known in-app browser signatures (covers the most common apps).
+  const knownInApp = [
+    /FBAN|FBAV/,          // Facebook
+    /Instagram/,          // Instagram
+    /Twitter/,            // Twitter / X
+    /ZaloApp|zalo\/[0-9]/,// Zalo (careful: "zalo" alone can appear in some hostnames)
+    /MicroMessenger/,     // WeChat
+    /Line\/[0-9]/,        // Line
+    /BytedanceWebview|TikTok|musical_ly/, // TikTok / ByteDance
+    /Snapchat/,           // Snapchat
+    /LinkedInApp/,        // LinkedIn
+    /GSA\//,              // Google Search App (iOS)
+    /Pinterest\//,        // Pinterest
+    /Viber/,              // Viber
+    /Telegram/,           // Telegram in-app
+  ];
+
+  const isKnownInApp = knownInApp.some((re) => re.test(ua));
+
+  // 2. Generic Android WebView: UA contains the "wv)" flag that the OS
+  //    injects for embedded WebViews.
+  const isAndroidWebView = /android/i.test(ua) && /wv\)/i.test(ua);
+
+  if (!isKnownInApp && !isAndroidWebView) return;
+
+  const url = window.location.href;
+
+  if (/android/i.test(ua)) {
+    // Android: intent:// scheme tells the OS to open the URL in Chrome.
+    // S.browser_fallback_url falls back to the system default browser
+    // when Chrome is not installed.
+    const encodedFallback = encodeURIComponent(url);
+    window.location.replace(
+      `intent:${url}#Intent;scheme=https;` +
+      `action=android.intent.action.VIEW;` +
+      `package=com.android.chrome;` +
+      `S.browser_fallback_url=${encodedFallback};end`
+    );
+  } else {
+    // iOS: programmatic Safari opens require a user gesture.
+    // Redirect to a lightweight interstitial with a single tap button.
+    const interstitial =
+      `${window.location.origin}/open-in-browser.html` +
+      `?url=${encodeURIComponent(url)}`;
+    window.location.replace(interstitial);
+  }
+})();
+// ──────────────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();

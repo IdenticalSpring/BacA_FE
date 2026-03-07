@@ -11,6 +11,7 @@ import {
   Card,
   Divider,
   message,
+  notification,
   Tooltip,
   Upload,
   Image,
@@ -44,6 +45,10 @@ const { Text, Title } = Typography;
 const timeZone = "Asia/Ho_Chi_Minh";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+// --- Autoplay unlock helper ---
+// Tracks whether we've already notified the user that autoplay is blocked.
+let _audioBlockedNotified = false;
+
 // --- Helpers & Sub-components ---
 const createLocalTimestamp = () => new Date().toISOString();
 const pickAudioMime = () => {
@@ -72,8 +77,62 @@ const extFromMime = (mime) => {
   if (mime.includes("mpeg")) return "mp3";
   return "webm";
 };
+// DEV: add ?testAutoplayBlock=1 to URL to simulate Zalo WebView autoplay block
+const _devSimulateBlock =
+  process.env.NODE_ENV !== "production" &&
+  new URLSearchParams(window.location.search).get("testAutoplayBlock") === "1";
+
+// --- In-app browser helpers (mirrors logic in App.js) ---
+const isInAppBrowser = () => {
+  const ua = navigator.userAgent || "";
+  const knownInApp = [
+    /FBAN|FBAV/, /Instagram/, /Twitter/, /ZaloApp|zalo\/[0-9]/,
+    /MicroMessenger/, /Line\/[0-9]/, /BytedanceWebview|TikTok|musical_ly/,
+    /Snapchat/, /LinkedInApp/, /GSA\//, /Pinterest\//, /Viber/, /Telegram/,
+  ];
+  return knownInApp.some((re) => re.test(ua)) ||
+    (/android/i.test(ua) && /wv\)/i.test(ua));
+};
+
+/**
+ * Mở trang hiện tại trong trình duyệt bên ngoài:
+ *   Android → intent:// scheme (mở Chrome)
+ *   iOS     → copy link vào clipboard (Zalo iOS không cho redirect trực tiếp)
+ */
+const openInExternalBrowser = () => {
+  const url = window.location.href;
+  const ua = navigator.userAgent || "";
+
+  if (/android/i.test(ua)) {
+    // Android: redirect thẳng vào Chrome, nếu không có Chrome thì dùng trình duyệt mặc định
+    window.location.href = `intent:${url}#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+  } else {
+    // iOS / other: không thể redirect trực tiếp → copy link
+    (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(
+      () => {
+        notification.success({
+          message: "Đã sao chép link",
+          description: "Mở Chrome hoặc Safari rồi dán link vào để nghe audio.",
+          placement: "top",
+          duration: 6,
+        });
+      },
+      () => {
+        notification.warning({
+          message: "Mở link trong Chrome",
+          description: `Sao chép link sau rồi dán vào Chrome: ${url}`,
+          placement: "top",
+          duration: 12,
+        });
+      }
+    );
+  }
+};
+
 const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  // needsInteraction: true khi trình duyệt block autoplay (Zalo WebView, v.v.)
+  const [needsInteraction, setNeedsInteraction] = useState(false);
   const audioRef = useRef(new Audio(audioUrl));
 
   useEffect(() => {
@@ -82,7 +141,39 @@ const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
     audio.addEventListener("ended", handleEnded);
 
     if (isLastChat && !isMyMessage) {
-      audio.play().catch((error) => console.error("Audio play error:", error));
+      // DEV: simulate NotAllowedError khi có query param testAutoplayBlock=1
+      const playPromise = _devSimulateBlock
+        ? Promise.reject(Object.assign(new Error("Simulated NotAllowedError"), { name: "NotAllowedError" }))
+        : audio.play();
+
+      playPromise.catch((error) => {
+        if (error.name === "NotAllowedError") {
+          // Trình duyệt (Zalo in-app, WebView, v.v.) chặn autoplay vì thiếu user gesture
+          setNeedsInteraction(true);
+          if (!_audioBlockedNotified) {
+            _audioBlockedNotified = true;
+            const inZalo = isInAppBrowser() || _devSimulateBlock;
+            notification.info({
+              message: "🔊 Nhấn để nghe phản hồi AI",
+              description:
+                "Trình duyệt của bạn chặn tự động phát âm thanh. Nhấn nút ▶ đang nhấp nháy bên cạnh tin nhắn để nghe.",
+              btn: inZalo ? (
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={openInExternalBrowser}
+                >
+                  🌐 Mở trong Chrome
+                </Button>
+              ) : null,
+              placement: "top",
+              duration: 12,
+            });
+          }
+        } else {
+          console.error("Audio play error:", error);
+        }
+      });
     }
 
     return () => {
@@ -96,20 +187,34 @@ const PlayAudioButton = React.memo(({ audioUrl, isLastChat, isMyMessage }) => {
     const audio = audioRef.current;
     if (isPlaying) {
       audio.pause();
+      setIsPlaying(false);
     } else {
-      audio.play().catch((error) => console.error("Audio play error:", error));
+      audio
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setNeedsInteraction(false);
+        })
+        .catch((error) => console.error("Audio play error:", error));
     }
-    setIsPlaying(!isPlaying);
   };
 
   return (
-    <Tooltip title="Nghe lại ghi âm">
+    <Tooltip title={needsInteraction ? "Nhấn đây để nghe tin nhắn" : "Nghe lại ghi âm"}>
       <Button
-        type="text"
+        type={needsInteraction ? "primary" : "text"}
         shape="circle"
         icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
         onClick={togglePlay}
-        style={{ color: "inherit", opacity: 0.8, marginLeft: 8 }}
+        style={{
+          marginLeft: 8,
+          ...(needsInteraction
+            ? {
+                animation: "audioNudge 0.9s ease-in-out 5",
+                boxShadow: "0 0 0 3px rgba(24, 144, 255, 0.45)",
+              }
+            : { color: "inherit", opacity: 0.8 }),
+        }}
       />
     </Tooltip>
   );
@@ -650,6 +755,10 @@ const ChatInterface = React.memo(
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 79, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }
+          }
+          @keyframes audioNudge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
           }
           .message-row.my-message .message-card { border-bottom-right-radius: 4px; }
           .message-row.their-message .message-card { border-bottom-left-radius: 4px; }
