@@ -31,6 +31,7 @@ import testSkillService from "services/testSkillService";
 import assessmentService from "services/assessmentService";
 import { colors } from "assets/theme/color";
 import EditScoreModal from "../teachers/EditScoreModal";
+import CreateScoreModal from "./CreateScoreModal";
 
 const TableScoreTest = ({ onError }) => {
   const [dataSource, setDataSource] = useState([]);
@@ -66,6 +67,8 @@ const TableScoreTest = ({ onError }) => {
   // View detail modal for mobile
   const [viewDetailModalVisible, setViewDetailModalVisible] = useState(false);
   const [viewDetailData, setViewDetailData] = useState(null);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Responsive hook
   const theme = useTheme();
@@ -320,7 +323,7 @@ const TableScoreTest = ({ onError }) => {
     };
 
     fetchData();
-  }, [selectedStudent, selectedTestDate, selectedClass, selectedTeacher, onError]);
+  }, [selectedStudent, selectedTestDate, selectedClass, selectedTeacher, onError, refreshKey]);
 
   const uniqueSkills = Array.from(
     new Set(dataSource.flatMap((item) => Object.keys(item.skillScores || {})))
@@ -554,6 +557,16 @@ const TableScoreTest = ({ onError }) => {
     setNotification({ ...notification, open: false });
   };
 
+  const handleCreateModalSuccess = () => {
+    setCreateModalVisible(false);
+    setRefreshKey((prev) => prev + 1);
+    setNotification({
+      open: true,
+      message: "Đã thêm điểm mới thành công",
+      severity: "success",
+    });
+  };
+
   const isValidSeverity = ["success", "error", "warning", "info"].includes(notification.severity);
 
   return (
@@ -566,11 +579,21 @@ const TableScoreTest = ({ onError }) => {
           px={2}
           variant="gradient"
           borderRadius="lg"
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
           sx={{ backgroundColor: colors.deepGreen }}
         >
           <MDTypography variant="h6" sx={{ color: colors.white }}>
             Điểm Học Sinh
           </MDTypography>
+          <AntButton
+            type="primary"
+            style={{ backgroundColor: colors.midGreen, borderColor: colors.midGreen }}
+            onClick={() => setCreateModalVisible(true)}
+          >
+            Nhập điểm mới
+          </AntButton>
         </MDBox>
         <MDBox pt={3} px={3}>
           <Grid container spacing={2} mb={3}>
@@ -746,6 +769,15 @@ const TableScoreTest = ({ onError }) => {
                 assessments={assessments}
                 studentName={editScoreData?.studentName}
                 loading={editLoading}
+      />
+
+      <CreateScoreModal
+        visible={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        onSuccess={handleCreateModalSuccess}
+        classes={classes}
+        testSkills={testSkills}
+        assessments={assessments}
       />
 
       {/* View Detail Modal for Mobile */}
