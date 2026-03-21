@@ -1,6 +1,13 @@
 import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+const isValidHomeworkId = (homeworkId) => {
+  if (homeworkId === null || homeworkId === undefined) return false;
+  if (homeworkId === "" || homeworkId === "null" || homeworkId === "undefined") return false;
+  return !Number.isNaN(Number(homeworkId));
+};
+
 const vocabularyService = {
   getAllVocabulary: async () => {
     try {
@@ -15,6 +22,9 @@ const vocabularyService = {
     }
   },
   getVocabularyByHomworkId: async (homeworkId) => {
+    if (!isValidHomeworkId(homeworkId)) {
+      return [];
+    }
     try {
       const response = await axios.get(
         `${API_BASE_URL}/vocabularies/student/homework/${homeworkId}`,
@@ -54,6 +64,9 @@ const vocabularyService = {
     }
   },
   getVocabularyByHomworkIdForStudent: async (homeworkId) => {
+    if (!isValidHomeworkId(homeworkId)) {
+      return [];
+    }
     try {
       const response = await axios.get(
         `${API_BASE_URL}/vocabularies/student/homework/${homeworkId}`,
