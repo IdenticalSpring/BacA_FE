@@ -70,7 +70,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   const [studentDefinitions, setStudentDefinitions] = useState({});
   const [form] = Form.useForm();
   const [textToSpeech, setTextToSpeech] = useState("");
-  const [gender, setGender] = useState(1);
+  const [gender, setGender] = useState(null);
   const [mp3Url, setMp3Url] = useState("");
   const [mp3file, setMp3file] = useState(null);
   const [loadingTTS, setLoadingTTS] = useState(false);
@@ -87,9 +87,12 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
     const fetchVoices = async () => {
       try {
         const resData = await homeWorkService.voices();
-        setVoices(resData);
-        setGender(resData ? resData[0] : null);
+        const safeVoices = Array.isArray(resData) ? resData : [];
+        setVoices(safeVoices);
+        setGender(safeVoices.length ? safeVoices[0] : null);
       } catch (error) {
+        setVoices([]);
+        setGender(null);
         message.error("voices fetch failed");
       }
     };
@@ -269,51 +272,51 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
     try {
       const modifiedText = textToSpeech.replace(/\n/g, "..");
+
       const response = await homeWorkService.textToSpeech({
         textToSpeech: modifiedText,
-        voice: gender,
+        voice: typeof gender === "string" ? gender : undefined,
       });
 
-      let base64String = response;
-      // console.log(response);
+      const responseValue =
+        typeof response === "object" && response !== null
+          ? response.audioData || response.url || response.audio_url || response.audioUrl
+          : response;
 
-      // base64String = btoa(
-      //   new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), "")
-      // );
-      // console.log(base64String);
-
-      // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
-      function base64ToBlob(base64, mimeType) {
-        let byteCharacters = atob(base64); // Giải mã base64
-        let byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        let byteArray = new Uint8Array(byteNumbers);
-        return new Blob([byteArray], { type: mimeType });
+      if (typeof responseValue !== "string" || !responseValue.trim()) {
+        throw new Error("TTS response is empty");
       }
 
-      // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
-      let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
-      setMp3file(audioBlob);
-      // console.log(audioBlob);
+      if (/^https?:\/\//i.test(responseValue)) {
+        setMp3file(null);
+        setMp3Url(responseValue);
+      } else {
+        let base64String = responseValue;
 
-      // if (mp3Url) {
-      //   const audioElement = document.getElementById("audio-player");
-      //   if (audioElement) {
-      //     audioElement.src = ""; // Xóa src trước khi revoke
-      //     audioElement.load(); // Yêu cầu cập nhật
-      //   }
-      //   URL.revokeObjectURL(mp3Url);
-      // }
-      // console.log("mémaeseaseas");
+        // Bước 2: Chuyển Base64 về mảng nhị phân (binary)
+        function base64ToBlob(base64, mimeType) {
+          let byteCharacters = atob(base64); // Giải mã base64
+          let byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          let byteArray = new Uint8Array(byteNumbers);
+          return new Blob([byteArray], { type: mimeType });
+        }
 
-      let audioUrl = URL.createObjectURL(audioBlob);
-      setMp3Url(audioUrl);
+        // Bước 3: Tạo URL từ Blob và truyền vào thẻ <audio>
+        let audioBlob = base64ToBlob(base64String, "audio/mp3"); // Hoặc "audio/wav"
+        setMp3file(audioBlob);
+
+        let audioUrl = URL.createObjectURL(audioBlob);
+        setMp3Url(audioUrl);
+      }
     } catch (error) {
       console.error("Lỗi chuyển văn bản thành giọng nói:", error);
+      message.error("Không thể tạo audio. Vui lòng thử lại.");
+    } finally {
+      setLoadingTTS(false);
     }
-    setLoadingTTS(false);
   };
   // console.log(mp3Url);
   useEffect(() => {
