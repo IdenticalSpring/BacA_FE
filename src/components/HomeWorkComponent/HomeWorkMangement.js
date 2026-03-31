@@ -885,7 +885,7 @@ export default function HomeWorkManagement({
       width: "30%",
       render: (text) => (
         <Typography.Paragraph
-          ellipsis={{ rows: 2, expandable: true, symbol: "more" }}
+          ellipsis={{ rows: 2, expandable: "collapsible", symbol: (expanded) => (expanded ? "less" : "more") }}
           style={{ textOverflow: "ellipsis", maxWidth: "100px", width: "100px" }}
         >
           {text?.replace(/<[^>]*>?/gm, "") || ""}

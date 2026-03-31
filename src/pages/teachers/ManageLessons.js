@@ -236,7 +236,7 @@ const ManageLessons = () => {
       key: "description",
       width: "25%",
       render: (text) => (
-        <Typography.Paragraph ellipsis={{ rows: 2, expandable: true, symbol: "more" }}>
+        <Typography.Paragraph ellipsis={{ rows: 2, expandable: "collapsible", symbol: (expanded) => (expanded ? "less" : "more") }}>
           {text?.replace(/<[^>]*>?/gm, "") || ""}
         </Typography.Paragraph>
       ),
