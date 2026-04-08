@@ -57,7 +57,7 @@ import notificationService from "services/notificationService";
 import user_notificationService from "services/user_notificationService";
 import student_homework_countService from "services/student_homework_countService";
 import student_lesson_countService from "services/student_lesson_countService";
-// import EvaluationStudent from "./evaluationStudent"; // Thêm import
+import EvaluationStudent from "./evaluationStudent"; // Thêm import
 import { Collapse } from "antd";
 import ConvertTTS from "./ConvertTTS";
 import ProfileModal from "./profileModal";
@@ -672,10 +672,10 @@ const StudentPage = () => {
           />
         )}
       </div>
-      {/* <Divider />
+      <Divider />
       <div ref={progressRef}>
         <EvaluationStudent studentId={studentId} colors={colors} />
-      </div> */}
+      </div>
     </>
   );
 
