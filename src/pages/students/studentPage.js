@@ -36,9 +36,10 @@ import {
   UpOutlined,
   CopyOutlined,
   MessageOutlined,
-  CloseCircleFilled,
   ReadOutlined,
   TeamOutlined,
+  LockOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import Sidebar from "./sidebar";
 import { io } from "socket.io-client";
@@ -68,6 +69,7 @@ import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyCompo
 import AnswerQuestionComponent from "components/QuestionComponent/AnswerQuestionComponet";
 import ChatComponent from "components/ChatComponent/ChatComponent";
 import messageService from "services/messageService";
+import sidebarLinkService from "services/sidebarLinkService";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -157,6 +159,30 @@ const StudentPage = () => {
   const [hasNewGroupMessage, setHasNewGroupMessage] = useState(false);
   const [isGroupChatDrawerVisible, setIsGroupChatDrawerVisible] = useState(false);
 
+  // PIN Lock states
+  const [isPinVerified, setIsPinVerified] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [loadingPin, setLoadingPin] = useState(false);
+
+  // Floating Links states
+  const [floatingLinks, setFloatingLinks] = useState([]);
+  const [showFloatingLinks, setShowFloatingLinks] = useState(false);
+
+  const fetchFloatingLinks = async () => {
+    try {
+      const data = await sidebarLinkService.getAllSidebars();
+      setFloatingLinks(data.filter((link) => link.type === 2));
+    } catch (error) {
+      console.error("Error fetching floating links:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFloatingLinks();
+  }, []);
+
   useEffect(() => {
     if (isMobile) {
       setSidebarVisible(true);
@@ -182,6 +208,52 @@ const StudentPage = () => {
 
     fetchStudentAndClassInfo();
   }, [studentId]);
+
+  // Check if class is locked and show PIN modal
+  useEffect(() => {
+    if (classData) {
+      if (classData.isLocked) {
+        // Check if already verified in this session
+        const verified = sessionStorage.getItem(`pin_verified_${classData.id}`);
+        if (verified === "true") {
+          setIsPinVerified(true);
+          setShowPinModal(false);
+        } else {
+          setShowPinModal(true);
+          setIsPinVerified(false);
+        }
+      } else {
+        setIsPinVerified(true);
+        setShowPinModal(false);
+      }
+    }
+  }, [classData]);
+
+  // Handle PIN verification
+  const handleVerifyPin = async () => {
+    if (!pinInput || pinInput.length !== 4) {
+      setPinError("Vui lòng nhập đủ 4 chữ số");
+      return;
+    }
+    try {
+      setLoadingPin(true);
+      setPinError("");
+      const result = await classService.verifyClassPin(classData.id, pinInput);
+      if (result.success) {
+        setIsPinVerified(true);
+        setShowPinModal(false);
+        sessionStorage.setItem(`pin_verified_${classData.id}`, "true");
+        message.success("Xác nhận mã PIN thành công!");
+      } else {
+        setPinError("Mã PIN không đúng. Vui lòng thử lại.");
+        setPinInput("");
+      }
+    } catch (error) {
+      setPinError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+      setLoadingPin(false);
+    }
+  };
 
   useEffect(() => {
     if (!classData?.id) return;
@@ -520,7 +592,9 @@ const StudentPage = () => {
     return `${hours}:${minutes < 10 ? "0" + minutes : minutes} ${ampm}`;
   };
 
-  const SidebarComponent = () => (
+  // Render Sidebar directly instead of wrapping in an inline function component
+  // to prevent unmount/remount on every state change (which resets scroll position)
+  const sidebarContent = (
     <Sidebar
       lessonsBySchedule={lessonsBySchedule}
       selectedLessonBySchedule={selectedLessonBySchedule}
@@ -872,7 +946,7 @@ const StudentPage = () => {
       </style>
       {!isMobile && (
         <div style={{ width: "260px", height: "100%", position: "fixed" }}>
-          <SidebarComponent />
+          {sidebarContent}
         </div>
       )}
       {isMobile && (
@@ -885,7 +959,7 @@ const StudentPage = () => {
           bodyStyle={{ padding: 0 }}
           headerStyle={{ display: "none" }}
         >
-          <SidebarComponent />
+          {sidebarContent}
         </Drawer>
       )}
       <Layout style={{ marginLeft: isMobile ? 0 : 260 }}>
@@ -1102,7 +1176,7 @@ const StudentPage = () => {
             </Space>
             {/* END: XÓA NÚT CHAT CŨ */}
 
-            {/* Social Buttons */}
+            {/* Floating Links & Social Buttons - Hợp nhất toàn bộ Link, FB, Zalo */}
             <div
               style={{
                 display: "flex",
@@ -1113,58 +1187,91 @@ const StudentPage = () => {
                 bottom: "60px",
                 right: "20px",
                 flexDirection: "column",
+                zIndex: 1000,
               }}
             >
-              <div
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  background: "transparent",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  transform: socialHover.facebook
-                    ? "scale(1.1) rotate(5deg)"
-                    : "scale(1) rotate(0deg)",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={() => setSocialHover({ ...socialHover, facebook: true })}
-                onMouseLeave={() => setSocialHover({ ...socialHover, facebook: false })}
-                onClick={() => window.open(contentData?.linkFacebook)}
-              >
-                {contentData?.img1 ? (
-                  <img
-                    src={contentData.img1}
-                    alt="Image 1"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span style={{ color: "white", fontSize: "24px" }}>?</span>
-                )}
-              </div>
-              <div
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  background: "transparent",
-                  cursor: "pointer",
-                  transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
-                  transition: "all 0.3s ease",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={() => setSocialHover({ ...socialHover, zalo: true })}
-                onMouseLeave={() => setSocialHover({ ...socialHover, zalo: false })}
-                onClick={() => window.open(contentData?.linkZalo || "https://zalo.me/happyclass")}
-              >
-                {contentData?.img2 ? (
-                  <img
-                    src={contentData.img2}
-                    alt="Image 2"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span style={{ color: "white", fontSize: "24px" }}>?</span>
-                )}
-              </div>
+              {!showFloatingLinks ? (
+                <div
+                  style={{
+                    width: "50px",
+                    height: "50px",
+                    background: "white",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                    border: `1px solid ${colors.deepGreen}`,
+                  }}
+                  onClick={() => setShowFloatingLinks(true)}
+                  title="Hiện các link tham khảo"
+                >
+                  <UpOutlined style={{ fontSize: "20px", color: colors.deepGreen }} />
+                </div>
+              ) : (
+                <>
+                  {(() => {
+                    const linksArray = [
+                      ...floatingLinks.map(l => ({ type: 'custom', data: l }))
+                    ];
+                    const cols = [];
+                    for (let i = 0; i < linksArray.length; i += 3) {
+                      cols.push(linksArray.slice(i, i + 3));
+                    }
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: '10px', alignItems: 'flex-end', marginBottom: '0px' }}>
+                        {cols.map((col, colIndex) => (
+                          <div key={colIndex} style={{ display: 'flex', flexDirection: 'column-reverse', gap: '10px' }}>
+                            {col.map((item, itemIndex) => {
+                              const link = item.data;
+                              return (
+                                <div
+                                  key={link.id}
+                                  style={{
+                                    width: "50px", height: "50px", background: "transparent", cursor: "pointer",
+                                    overflow: "hidden", borderRadius: "8px"
+                                  }}
+                                  onClick={() => window.open(link.link)}
+                                  title={link.name}
+                                >
+                                  {link.imgUrl ? (
+                                    <img src={link.imgUrl} alt={link.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  ) : (
+                                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: colors.deepGreen, color: "white", borderRadius: "8px" }}>
+                                      <LinkOutlined style={{ fontSize: "24px" }} />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Nút Collapse */}
+                  <div
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      background: "white",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                      border: `1px solid ${colors.deepGreen}`,
+                    }}
+                    onClick={() => setShowFloatingLinks(false)}
+                    title="Thu gọn"
+                  >
+                    <DownOutlined style={{ fontSize: "20px", color: colors.deepGreen }} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -1423,6 +1530,85 @@ const StudentPage = () => {
             margin: "0 auto",
           }}
         ></img>
+      </Modal>
+      {/* PIN Verification Modal */}
+      <Modal
+        title={null}
+        open={showPinModal}
+        closable={false}
+        maskClosable={false}
+        footer={null}
+        centered
+        width={400}
+        styles={{ mask: { backgroundColor: "rgba(0, 0, 0, 0.75)" } }}
+      >
+        <div style={{ textAlign: "center", padding: "30px 20px" }}>
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              backgroundColor: colors.paleGreen,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+            }}
+          >
+            <LockOutlined style={{ fontSize: 36, color: colors.deepGreen }} />
+          </div>
+          <Title level={4} style={{ color: colors.darkGreen, marginBottom: 8 }}>
+            Lớp học đang bị khóa
+          </Title>
+          <Text style={{ display: "block", marginBottom: 24, color: colors.darkGray }}>
+            Vui lòng nhập mã PIN 4 số để vào lớp học
+          </Text>
+          <Input
+            placeholder="● ● ● ●"
+            maxLength={4}
+            value={pinInput}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              setPinInput(val);
+              setPinError("");
+            }}
+            onPressEnter={handleVerifyPin}
+            style={{
+              width: 200,
+              textAlign: "center",
+              fontSize: 28,
+              letterSpacing: 16,
+              fontWeight: "bold",
+              height: 56,
+              borderRadius: 12,
+              border: `2px solid ${pinError ? "#ff4d4f" : colors.borderGreen}`,
+            }}
+            autoFocus
+          />
+          {pinError && (
+            <Text style={{ display: "block", marginTop: 12, color: "#ff4d4f", fontWeight: 500 }}>
+              {pinError}
+            </Text>
+          )}
+          <Button
+            type="primary"
+            size="large"
+            loading={loadingPin}
+            onClick={handleVerifyPin}
+            disabled={!pinInput || pinInput.length !== 4}
+            style={{
+              marginTop: 24,
+              width: 200,
+              height: 44,
+              borderRadius: 12,
+              backgroundColor: colors.deepGreen,
+              borderColor: colors.deepGreen,
+              fontWeight: 600,
+            }}
+          >
+            Xác nhận
+          </Button>
+        </div>
       </Modal>
     </Layout>
   );

@@ -39,6 +39,12 @@ import {
   MenuUnfoldOutlined,
   EditOutlined,
   DeleteOutlined,
+  LinkOutlined,
+  PlusOutlined,
+  UpOutlined,
+  DownOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import "react-quill/dist/quill.snow.css";
 import axios from "axios";
@@ -71,6 +77,7 @@ import ChatComponent from "components/ChatComponent/ChatComponent";
 import { io } from "socket.io-client"; // Thêm import này
 import messageService from "services/messageService";
 import classScheduleService from "services/classScheduleService";
+import sidebarLinkService from "services/sidebarLinkService";
 import toolbar from "utils/teacherPageToolBar";
 import quillFormats from "utils/teacherPageQuillFormat";
 import daysOfWeek from "utils/dayofWeek";
@@ -207,6 +214,87 @@ const TeacherPage = () => {
   const [selectedSchedules, setSelectedSchedules] = useState(null);
   const [loadingUpdateSchedule, setLoadingUpdateSchedule] = useState(false);
 
+  // Class PIN Lock states
+  const [isLockModalVisible, setIsLockModalVisible] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [loadingLock, setLoadingLock] = useState(false);
+
+  // Floating Links states
+  const [floatingLinks, setFloatingLinks] = useState([]);
+  const [showFloatingLinks, setShowFloatingLinks] = useState(false);
+  const [isCreateFloatingLinkOpen, setIsCreateFloatingLinkOpen] = useState(false);
+  const [loadingCreateFloatingLink, setLoadingCreateFloatingLink] = useState(false);
+  const [newFloatingLinkData, setNewFloatingLinkData] = useState({ name: "", link: "", type: 2 });
+  const fileInputRefFloatingLink = useRef(null);
+  const [previewUrlFloatingLink, setPreviewUrlFloatingLink] = useState("");
+  const [imageLoadingFloatingLink, setImageLoadingFloatingLink] = useState(false);
+
+  const handleFileChangeFloatingLink = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setImageLoadingFloatingLink(true);
+    const fileReader = new FileReader();
+    fileReader.onload = () => setPreviewUrlFloatingLink(fileReader.result);
+    fileReader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/files/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      if (response.status === 201 && response.data.url) {
+        setNewFloatingLinkData((prev) => ({ ...prev, imgUrl: response.data.url }));
+        setImageLoadingFloatingLink(false);
+        message.success("Đã tải ảnh lên thành công");
+      } else {
+        setImageLoadingFloatingLink(false);
+        message.error("Tải ảnh lên thất bại");
+      }
+    } catch (error) {
+      setImageLoadingFloatingLink(false);
+      message.error(`Lỗi tải ảnh: ${error.message}`);
+    }
+  };
+
+  const fetchFloatingLinks = async () => {
+    try {
+      const data = await sidebarLinkService.getAllSidebars();
+      setFloatingLinks(data.filter((link) => link.type === 2));
+    } catch (error) {
+      console.error("Error fetching floating links:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFloatingLinks();
+  }, []);
+
+  const handleCreateFloatingLink = async () => {
+    if (!newFloatingLinkData.name || !newFloatingLinkData.link) {
+      message.error("Vui lòng nhập đầy đủ tên mục và link!");
+      return;
+    }
+    try {
+      setLoadingCreateFloatingLink(true);
+      await sidebarLinkService.createSidebar(newFloatingLinkData);
+      message.success("Thêm mục link thành công!");
+      setIsCreateFloatingLinkOpen(false);
+      setNewFloatingLinkData({ name: "", link: "", type: 2, imgUrl: "" });
+      setPreviewUrlFloatingLink("");
+      fetchFloatingLinks();
+    } catch (error) {
+      message.error("Lỗi khi thêm link: " + error.message);
+    } finally {
+      setLoadingCreateFloatingLink(false);
+    }
+  };
+
   const refreshClasses = async () => {
     try {
       const data = await classService.getAllClassesByTeacher(teacherId);
@@ -214,6 +302,54 @@ const TeacherPage = () => {
     } catch (error) {
       console.error("Lỗi khi lấy danh sách lớp học:", error);
     }
+  };
+
+  // Handle lock class with PIN
+  const handleLockClass = async () => {
+    if (!pinInput || !/^\d{4}$/.test(pinInput)) {
+      message.error("Mã PIN phải là 4 chữ số!");
+      return;
+    }
+    try {
+      setLoadingLock(true);
+      await classService.lockClass(selectedClass, pinInput);
+      message.success("Đã khóa lớp thành công!");
+      setIsLockModalVisible(false);
+      setPinInput("");
+      // Refresh class data
+      const data = await classService.getClassById(selectedClass);
+      setClassData(data);
+      await refreshClasses();
+    } catch (error) {
+      message.error("Lỗi khi khóa lớp: " + (error || "Unknown error"));
+    } finally {
+      setLoadingLock(false);
+    }
+  };
+
+  // Handle unlock class
+  const handleUnlockClass = async () => {
+    Modal.confirm({
+      title: "Xác nhận mở khóa lớp",
+      content: "Bạn có chắc chắn muốn mở khóa lớp này? Học sinh sẽ vào lớp mà không cần nhập mã PIN.",
+      okText: "Mở khóa",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          setLoadingLock(true);
+          await classService.unlockClass(selectedClass);
+          message.success("Đã mở khóa lớp thành công!");
+          // Refresh class data
+          const data = await classService.getClassById(selectedClass);
+          setClassData(data);
+          await refreshClasses();
+        } catch (error) {
+          message.error("Lỗi khi mở khóa lớp: " + (error || "Unknown error"));
+        } finally {
+          setLoadingLock(false);
+        }
+      },
+    });
   };
 
   const studentContextMenu = (student) => (
@@ -1406,10 +1542,32 @@ const TeacherPage = () => {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             {selectedClass && (
-              <Tag color="green" bordered={false} style={{ fontSize: isMobile ? "12px" : "16px" }}>
-                {"Mã lớp: "}
-                {classes.find((cls) => cls.id === selectedClass)?.accessId}
-              </Tag>
+              <>
+                <Tag color="green" bordered={false} style={{ fontSize: isMobile ? "12px" : "16px" }}>
+                  {"Mã lớp: "}
+                  {classes.find((cls) => cls.id === selectedClass)?.accessId}
+                </Tag>
+                <Button
+                  type="text"
+                  size="small"
+                  loading={loadingLock}
+                  icon={classData?.isLocked ? <LockOutlined style={{ color: "#ff4d4f" }} /> : <UnlockOutlined style={{ color: colors.deepGreen }} />}
+                  onClick={() => {
+                    if (classData?.isLocked) {
+                      handleUnlockClass();
+                    } else {
+                      setPinInput("");
+                      setIsLockModalVisible(true);
+                    }
+                  }}
+                  title={classData?.isLocked ? `Lớp đang khóa (PIN: ${classData?.classPin || "****"}) - Click để mở khóa` : "Khóa lớp bằng mã PIN"}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginRight: 4,
+                  }}
+                />
+              </>
             )}
             <Dropdown
               trigger={["click"]}
@@ -1910,7 +2068,7 @@ const TeacherPage = () => {
               // setIsLessonCreate = {setIsLessonCreate}
             />
 
-            {/* Social Buttons */}
+            {/* Floating Links & Social Buttons */}
             <div
               style={{
                 display: "flex",
@@ -1921,83 +2079,99 @@ const TeacherPage = () => {
                 bottom: "60px",
                 right: "20px",
                 flexDirection: "column",
+                zIndex: 1000,
               }}
             >
-              <div
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  // background: socialHover.facebook
-                  //   ? "linear-gradient(145deg, #166FE5, #1877F2)"
-                  //   : "linear-gradient(145deg, #1877F2, #166FE5)",
-                  background: "transparent",
-                  // borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "24px",
-                  // boxShadow: socialHover.facebook
-                  //   ? "0 6px 15px rgba(24, 119, 242, 0.4)"
-                  //   : "0 4px 10px rgba(24, 119, 242, 0.3)",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  transform: socialHover.facebook
-                    ? "scale(1.1) rotate(5deg)"
-                    : "scale(1) rotate(0deg)",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={() => setSocialHover({ ...socialHover, facebook: true })}
-                onMouseLeave={() => setSocialHover({ ...socialHover, facebook: false })}
-                onClick={() => window.open(contentData?.linkFacebook)}
-              >
-                {contentData?.img1 ? (
-                  <img
-                    src={contentData.img1}
-                    alt="Image 1"
+              {/* Floating Links Area - Hợp nhất toàn bộ Link, FB, Zalo */}
+              {!showFloatingLinks ? (
+                <div
+                  style={{
+                    width: "50px",
+                    height: "50px",
+                    background: "white",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                    border: `1px solid ${colors.deepGreen}`,
+                  }}
+                  onClick={() => setShowFloatingLinks(true)}
+                  title="Hiện các link tham khảo"
+                >
+                  <UpOutlined style={{ fontSize: "20px", color: colors.deepGreen }} />
+                </div>
+              ) : (
+                <>
+                  {(() => {
+                    const linksArray = [
+                      ...floatingLinks.map(l => ({ type: 'custom', data: l }))
+                    ];
+                    const cols = [];
+                    for (let i = 0; i < linksArray.length; i += 3) {
+                      cols.push(linksArray.slice(i, i + 3));
+                    }
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: '10px', alignItems: 'flex-end', marginBottom: '0px' }}>
+                        {cols.map((col, colIndex) => (
+                          <div key={colIndex} style={{ display: 'flex', flexDirection: 'column-reverse', gap: '10px' }}>
+                            {col.map((item, itemIndex) => {
+                              const link = item.data;
+                              return (
+                                <div
+                                  key={link.id}
+                                  style={{
+                                    width: "50px", height: "50px", background: "transparent", cursor: "pointer",
+                                    overflow: "hidden", borderRadius: "8px"
+                                  }}
+                                  onClick={() => window.open(link.link)}
+                                  title={link.name}
+                                >
+                                  {link.imgUrl ? (
+                                    <img src={link.imgUrl} alt={link.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  ) : (
+                                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: colors.deepGreen, color: "white", borderRadius: "8px" }}>
+                                      <LinkOutlined style={{ fontSize: "24px" }} />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {colIndex === 0 && (
+                              <div
+                                key="create"
+                                style={{
+                                  width: "50px", height: "50px", background: "white", borderRadius: "50%",
+                                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)", border: `2px dashed ${colors.deepGreen}`
+                                }}
+                                onClick={() => setIsCreateFloatingLinkOpen(true)}
+                                title="Thêm mục link tham khảo mới"
+                              >
+                                <PlusOutlined style={{ fontSize: "24px", color: colors.deepGreen }} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Nút Collapse */}
+                  <div
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
+                      width: "50px", height: "50px", background: "white", borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", boxShadow: "0 4px 10px rgba(0,0,0,0.1)", border: `1px solid ${colors.deepGreen}`
                     }}
-                  />
-                ) : (
-                  <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
-                )}
-              </div>
-              <div
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  background: "transparent",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "24px",
-                  cursor: "pointer",
-                  transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
-                  transition: "all 0.3s ease",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={() => setSocialHover({ ...socialHover, zalo: true })}
-                onMouseLeave={() => setSocialHover({ ...socialHover, zalo: false })}
-                onClick={() => window.open(contentData?.linkZalo || "https://zalo.me/happyclass")}
-              >
-                {contentData?.img2 ? (
-                  <img
-                    src={contentData.img2}
-                    alt="Image 2"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                    }}
-                  />
-                ) : (
-                  <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
-                )}
-              </div>
+                    onClick={() => setShowFloatingLinks(false)}
+                    title="Thu gọn"
+                  >
+                    <DownOutlined style={{ fontSize: "20px", color: colors.deepGreen }} />
+                  </div>
+                </>
+              )}
               <style>
                 {`
                   @keyframes bounce {
@@ -2454,6 +2628,125 @@ const TeacherPage = () => {
           </Drawer>
         </>
       )} */}
+      {/* Class PIN Lock Modal */}
+      <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <LockOutlined style={{ color: colors.deepGreen }} />
+            <span>Khóa lớp bằng mã PIN</span>
+          </div>
+        }
+        open={isLockModalVisible}
+        onCancel={() => {
+          setIsLockModalVisible(false);
+          setPinInput("");
+        }}
+        onOk={handleLockClass}
+        okText="Khóa lớp"
+        cancelText="Hủy"
+        confirmLoading={loadingLock}
+        okButtonProps={{
+          style: { backgroundColor: colors.deepGreen, borderColor: colors.deepGreen },
+          disabled: !pinInput || !/^\d{4}$/.test(pinInput),
+        }}
+      >
+        <div style={{ textAlign: "center", padding: "20px 0" }}>
+          <Text style={{ display: "block", marginBottom: 16, color: colors.darkGray }}>
+            Nhập mã PIN 4 số để khóa lớp. Học sinh sẽ cần nhập đúng mã này để vào lớp.
+          </Text>
+          <Input
+            placeholder="Nhập mã PIN 4 số"
+            maxLength={4}
+            value={pinInput}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, ""); // Only allow digits
+              setPinInput(val);
+            }}
+            style={{
+              width: 200,
+              textAlign: "center",
+              fontSize: 24,
+              letterSpacing: 12,
+              fontWeight: "bold",
+              height: 50,
+            }}
+          />
+          {pinInput && pinInput.length === 4 && (
+            <Text style={{ display: "block", marginTop: 8, color: colors.deepGreen }}>
+              ✓ Mã PIN hợp lệ
+            </Text>
+          )}
+          {pinInput && pinInput.length > 0 && pinInput.length < 4 && (
+            <Text style={{ display: "block", marginTop: 8, color: "#ff4d4f" }}>
+              Cần nhập đủ 4 chữ số
+            </Text>
+          )}
+        </div>
+      </Modal>
+
+      {/* Create Floating Link Modal */}
+      <Modal
+        title="Thêm mục link tham khảo"
+        open={isCreateFloatingLinkOpen}
+        onCancel={() => {
+          setIsCreateFloatingLinkOpen(false);
+          setNewFloatingLinkData({ name: "", link: "", type: 2, imgUrl: "" });
+          setPreviewUrlFloatingLink("");
+        }}
+        onOk={handleCreateFloatingLink}
+        confirmLoading={loadingCreateFloatingLink}
+        okText="Tạo"
+        cancelText="Hủy"
+        okButtonProps={{ style: { background: colors.deepGreen, borderColor: colors.deepGreen } }}
+      >
+        <Input
+          placeholder="Tên hiển thị (VD: Google Drive)"
+          value={newFloatingLinkData.name}
+          onChange={(e) => setNewFloatingLinkData({ ...newFloatingLinkData, name: e.target.value })}
+          style={{ marginBottom: "16px" }}
+        />
+        <Input
+          placeholder="Đường dẫn URL (VD: https://drive...)"
+          value={newFloatingLinkData.link}
+          onChange={(e) => setNewFloatingLinkData({ ...newFloatingLinkData, link: e.target.value })}
+          style={{ marginBottom: "16px" }}
+        />
+        <div
+          style={{
+            border: "1px dashed #ccc",
+            borderRadius: "8px",
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            cursor: "pointer",
+            background: "#fafafa"
+          }}
+          onClick={() => fileInputRefFloatingLink.current.click()}
+        >
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRefFloatingLink}
+            style={{ display: "none" }}
+            onChange={handleFileChangeFloatingLink}
+          />
+          {previewUrlFloatingLink ? (
+            <img
+              src={previewUrlFloatingLink}
+              alt="Avatar preview"
+              style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px", marginBottom: "8px" }}
+            />
+          ) : (
+            <div style={{ padding: "20px" }}>
+              <PlusOutlined style={{ fontSize: 30, color: colors.midGreen }} />
+            </div>
+          )}
+          <span style={{ color: "#888" }}>
+            {imageLoadingFloatingLink ? "Đang tải ảnh..." : "Click để chọn ảnh đại diện (Tùy chọn)"}
+          </span>
+        </div>
+      </Modal>
     </Layout>
   );
 };

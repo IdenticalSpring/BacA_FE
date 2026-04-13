@@ -145,6 +145,8 @@ function CreateSidebarLink() {
                 >
                   <MenuItem value={0}>Công cụ giảng dạy</MenuItem>
                   <MenuItem value={1}>Công cụ giao bài</MenuItem>
+                  <MenuItem value={2}>Link bong bóng</MenuItem>
+                  <MenuItem value={3}>Mục trang chủ</MenuItem>
                 </Select>
               </FormControl>
               <TextField
@@ -154,60 +156,62 @@ function CreateSidebarLink() {
                 value={sidebarData.link}
                 onChange={(e) => setSidebarData({ ...sidebarData, link: e.target.value })}
               />
-              <Box
-                sx={{
-                  mt: 2,
-                  mb: 2,
-                  border: "1px dashed #ccc",
-                  borderRadius: "8px",
-                  p: 2,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  cursor: "pointer",
-                }}
-                onClick={() => fileInputRef.current.click()}
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                />
-                {previewUrl ? (
-                  <Box sx={{ mb: 2, textAlign: "center" }}>
-                    <img
-                      src={previewUrl}
-                      alt="Avatar preview"
-                      style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
-                    />
-                  </Box>
-                ) : (
-                  <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
-                )}
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  {imageLoading
-                    ? "Đang tải ảnh..."
-                    : selectedFile
-                    ? selectedFile.name
-                    : "Click để upload ảnh"}
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<CloudUploadIcon />}
+              {sidebarData.type !== 3 && (
+                <Box
                   sx={{
-                    color: colors.midGreen,
-                    borderColor: colors.midGreen,
-                    "&:hover": {
-                      borderColor: colors.darkGreen,
-                      backgroundColor: "rgba(0, 128, 0, 0.04)",
-                    },
+                    mt: 2,
+                    mb: 2,
+                    border: "1px dashed #ccc",
+                    borderRadius: "8px",
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    cursor: "pointer",
                   }}
+                  onClick={() => fileInputRef.current.click()}
                 >
-                  Upload Image
-                </Button>
-              </Box>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                  />
+                  {previewUrl ? (
+                    <Box sx={{ mb: 2, textAlign: "center" }}>
+                      <img
+                        src={previewUrl}
+                        alt="Avatar preview"
+                        style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
+                      />
+                    </Box>
+                  ) : (
+                    <AddPhotoAlternateIcon sx={{ fontSize: 60, color: colors.midGreen, mb: 1 }} />
+                  )}
+                  <Typography variant="body1" sx={{ mb: 1 }}>
+                    {imageLoading
+                      ? "Đang tải ảnh..."
+                      : selectedFile
+                      ? selectedFile.name
+                      : "Click để upload ảnh"}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<CloudUploadIcon />}
+                    sx={{
+                      color: colors.midGreen,
+                      borderColor: colors.midGreen,
+                      "&:hover": {
+                        borderColor: colors.darkGreen,
+                        backgroundColor: "rgba(0, 128, 0, 0.04)",
+                      },
+                    }}
+                  >
+                    Upload Image
+                  </Button>
+                </Box>
+              )}
               <MDBox display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="text"

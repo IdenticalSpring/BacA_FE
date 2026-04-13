@@ -22,6 +22,8 @@ import {
   StarOutlined,
   LikeOutlined,
   UpOutlined,
+  DownOutlined,
+  LinkOutlined,
   FacebookFilled,
 } from "@ant-design/icons";
 import StatCard from "components/LandingPageComponent/StatCard";
@@ -39,6 +41,7 @@ import contentPageService from "services/contentpageService";
 import "./Homepage.css"; // Tạo file này nếu chưa có
 import pagevisitService from "services/pagevisitService";
 import ShareButtons from "components/theme/ShareButton";
+import sidebarLinkService from "services/sidebarLinkService";
 let count = 0;
 export default function Homepage() {
   const [visible, setVisible] = useState({
@@ -60,6 +63,9 @@ export default function Homepage() {
     global: false,
   });
   const [contentData, setContentData] = useState(null);
+  const [homepageLinks, setHomepageLinks] = useState([]);
+  const [floatingLinks, setFloatingLinks] = useState([]);
+  const [showFloatingLinks, setShowFloatingLinks] = useState(false);
   const navigate = useNavigate();
   const [buttonHover, setButtonHover] = useState({
     student: false,
@@ -177,6 +183,20 @@ export default function Homepage() {
       }
     };
     fetchContentData();
+  }, []);
+
+  // Fetch homepage links (type 3) and floating links (type 2)
+  useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const data = await sidebarLinkService.getAllSidebars();
+        setHomepageLinks(data.filter((link) => link.type === 3));
+        setFloatingLinks(data.filter((link) => link.type === 2));
+      } catch (error) {
+        console.error("Error fetching links:", error);
+      }
+    };
+    fetchLinks();
   }, []);
 
   // Increment visit count when Homepage is loaded
@@ -373,6 +393,18 @@ export default function Homepage() {
                     Liên hệ
                   </a>
                 </li>
+                {homepageLinks.map((link) => (
+                  <li key={link.id}>
+                    <a
+                      href={link.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: colors.darkGray, textDecoration: "none" }}
+                    >
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -524,6 +556,18 @@ export default function Homepage() {
                         Liên hệ
                       </a>
                     </li>
+                    {homepageLinks.map((link) => (
+                      <li key={link.id} style={{ marginBottom: "1rem" }}>
+                        <a
+                          href={link.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: colors.darkGray, textDecoration: "none" }}
+                        >
+                          {link.name}
+                        </a>
+                      </li>
+                    ))}
                   </ul>
                 </nav>
                 {/* <button
@@ -1590,6 +1634,13 @@ export default function Homepage() {
                   Đánh giá
                 </a>
               </li>
+              {homepageLinks && homepageLinks.map(link => (
+                <li key={link.id} style={{ marginBottom: "0.75rem" }}>
+                  <a href={link.link} target="_blank" rel="noopener noreferrer" style={{ color: colors.white, textDecoration: "none" }}>
+                    {link.name}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -1679,90 +1730,45 @@ export default function Homepage() {
               : "none",
           }}
         />
-        <div
-          style={{
-            width: "50px",
-            height: "50px",
-            // background: socialHover.facebook
-            //   ? "linear-gradient(145deg, #166FE5, #1877F2)"
-            //   : "linear-gradient(145deg, #1877F2, #166FE5)",
-            // borderRadius: "50%",
-            background: "transparent",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontSize: "24px",
-            // boxShadow: socialHover.facebook
-            //   ? "0 6px 15px rgba(24, 119, 242, 0.4)"
-            //   : "0 4px 10px rgba(24, 119, 242, 0.3)",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-            transform: socialHover.facebook ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
-            overflow: "hidden",
-            // padding: "calc(5vw +1vw)",
-          }}
-          onMouseEnter={() => setSocialHover({ ...socialHover, facebook: true })}
-          onMouseLeave={() => setSocialHover({ ...socialHover, facebook: false })}
-          onClick={() => window.open(contentData?.linkFacebook)}
-        >
-          {contentData?.img1 ? (
-            <img
-              src={contentData.img1}
-              alt="Image 1"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                // borderRadius: "50%", // Giữ hình tròn
-              }}
-            />
-          ) : (
-            <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
-          )}
-        </div>
-        <div
-          style={{
-            width: "50px",
-            height: "50px",
-            // background: socialHover.zalo
-            //   ? "linear-gradient(145deg, #0077EE, #0088FF)"
-            //   : "linear-gradient(145deg, #0088FF, #0077EE)",
-            background: "transparent",
-            // borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontSize: "24px",
-            // boxShadow: socialHover.zalo
-            //   ? "0 6px 15px rgba(0, 136, 255, 0.4)"
-            //   : "0 4px 10px rgba(0, 136, 255, 0.3)",
-            cursor: "pointer",
-            transform: socialHover.zalo ? "scale(1.1) rotate(5deg)" : "scale(1) rotate(0deg)",
-            transition: "all 0.3s ease",
-            overflow: "hidden",
-            padding: "calc(5vw +1vw)",
-          }}
-          onMouseEnter={() => setSocialHover({ ...socialHover, zalo: true })}
-          onMouseLeave={() => setSocialHover({ ...socialHover, zalo: false })}
-          onClick={() => window.open(contentData?.linkZalo || "https://zalo.me/happyclass")}
-        >
-          {contentData?.img2 ? (
-            <img
-              src={contentData.img2}
-              alt="Image 2"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover", // Đảm bảo ảnh lấp đầy div mà không bị méo
-                // borderRadius: "50%", // Giữ hình tròn
-              }}
-            />
-          ) : (
-            <span style={{ color: "white", fontSize: "24px" }}>?</span> // Hiển thị ký tự mặc định nếu không có ảnh
-          )}
-        </div>
+        {(() => {
+          const linksArray = [
+            ...floatingLinks.map(l => ({ type: 'custom', data: l }))
+          ];
+          const cols = [];
+          for (let i = 0; i < linksArray.length; i += 3) {
+            cols.push(linksArray.slice(i, i + 3));
+          }
+          return (
+            <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: '10px', alignItems: 'flex-end' }}>
+              {cols.map((col, colIndex) => (
+                <div key={colIndex} style={{ display: 'flex', flexDirection: 'column-reverse', gap: '10px' }}>
+                  {col.map((item, itemIndex) => {
+                    const link = item.data;
+                    return (
+                      <div
+                        key={link.id}
+                        style={{
+                          width: "50px", height: "50px", background: "transparent", cursor: "pointer",
+                          overflow: "hidden", borderRadius: "8px"
+                        }}
+                        onClick={() => window.open(link.link)}
+                        title={link.name}
+                      >
+                        {link.imgUrl ? (
+                          <img src={link.imgUrl} alt={link.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#115E40", color: "white", borderRadius: "8px" }}>
+                            <LinkOutlined style={{ fontSize: "24px" }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
         <style>
           {`
           @keyframes bounce {

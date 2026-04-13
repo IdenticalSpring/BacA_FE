@@ -28,3 +28,5 @@ yarn.lock
 commit.sh
 .vercel
 .env
+/.env.*
+.env.*

@@ -109,6 +109,62 @@ const classService = {
       throw error.response?.data?.message || "Error deleting class";
     }
   },
+
+  // Lock a class with a 4-digit PIN
+  lockClass: async (id, classPin) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/classes/lock/${id}`,
+        { classPin },
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error locking class";
+    }
+  },
+
+  // Unlock a class (remove PIN)
+  unlockClass: async (id) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/classes/unlock/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error unlocking class";
+    }
+  },
+
+  // Verify PIN for student access
+  verifyClassPin: async (id, classPin) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/classes/verify-pin/${id}`,
+        { classPin },
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Error verifying PIN";
+    }
+  },
 };
 
 export default classService;
