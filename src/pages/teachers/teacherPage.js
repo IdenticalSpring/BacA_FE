@@ -2138,7 +2138,7 @@ const TeacherPage = () => {
                                 </div>
                               );
                             })}
-                            {colIndex === 0 && (
+                            {colIndex === 0 && userId.role === 'admin' && (
                               <div
                                 key="create"
                                 style={{

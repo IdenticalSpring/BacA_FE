@@ -205,10 +205,12 @@ function Students() {
 
   const dayNames = ["", "CN", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
 
+  const normalizeStr = (str) => (str || "").replace(/\s+/g, " ").trim().toLowerCase();
+
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
-      const nameMatch = (row.name || "").toLowerCase().includes(searchName.toLowerCase());
-      const scheduleMatch = (row.note || "").toLowerCase().includes(searchSchedule.toLowerCase());
+      const nameMatch = normalizeStr(row.name).includes(normalizeStr(searchName));
+      const scheduleMatch = normalizeStr(row.note).includes(normalizeStr(searchSchedule));
       return nameMatch && scheduleMatch;
     });
   }, [rows, searchName, searchSchedule]);

@@ -13,6 +13,7 @@ import {
   Table,
   Typography,
   Tooltip,
+  Popover,
 } from "antd";
 import {
   SaveOutlined,
@@ -20,6 +21,7 @@ import {
   SendOutlined,
   UploadOutlined,
   SwapOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -37,6 +39,7 @@ import Compressor from "compressorjs";
 import SpeechToTextComponent from "./SpeechToTextComponent";
 import fileService from "services/fileService";
 import { Calendar } from "lucide-react";
+import sidebarLinkService from "services/sidebarLinkService";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -187,6 +190,23 @@ export default function CreateLesson({
   const [swapHtmlLessonPlanMode, setSwapHtmlLessonPlanMode] = useState(false);
   const [voices, setVoices] = useState(null);
   const [linkSpeech, setLinkSpeech] = useState("");
+  const [geminiGuideLink, setGeminiGuideLink] = useState("");
+  const [geminiExtendedLink, setGeminiExtendedLink] = useState("");
+
+  useEffect(() => {
+    const fetchGeminiLinks = async () => {
+      try {
+        const data = await sidebarLinkService.getAllSidebars();
+        const guideLink = data.find((l) => l.type === 4);
+        const extendedLink = data.find((l) => l.type === 5);
+        if (guideLink) setGeminiGuideLink(guideLink.link);
+        if (extendedLink) setGeminiExtendedLink(extendedLink.link);
+      } catch (error) {
+        console.error("Error fetching gemini links:", error);
+      }
+    };
+    fetchGeminiLinks();
+  }, []);
 
   useEffect(() => {
     const fetchVoices = async () => {
@@ -1358,7 +1378,72 @@ export default function CreateLesson({
             >
               Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
             </Button>
-            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
+            <Form.Item
+              name="lessonPlan"
+              label={
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>Kế hoạch bài học</span>
+                  <Popover
+                    title="Hướng dẫn Gemini - Cấu trúc Prompt"
+                    trigger="click"
+                    placement="rightTop"
+                    overlayStyle={{ maxWidth: "520px", maxHeight: "70vh", overflow: "auto" }}
+                    content={
+                      <div style={{ fontSize: "13px", lineHeight: "1.7" }}>
+                        <p><strong>Cấu trúc Prompt &quot;chuẩn chỉnh&quot; (framework)</strong></p>
+                        <p>Bạn nên luôn viết prompt theo 5 phần:</p>
+                        <p><strong>◆ (1) Vai trò AI</strong><br/>
+                        Ví dụ: You are an experienced ESL teacher specializing in communicative language teaching…</p>
+                        <p><strong>◆ (2) Thông tin lớp học (input)</strong><br/>
+                        Level (hoặc mixed-level)<br/>
+                        Độ tuổi<br/>
+                        Số lượng học viên<br/>
+                        Thời lượng</p>
+                        <p><strong>◆ (3) Mục tiêu bài học</strong><br/>
+                        <em>Ngữ pháp / từ vựng / kỹ năng</em><br/>
+                        Outcome cụ thể (học xong làm được gì)</p>
+                        <p><strong>◆ (4) Yêu cầu phương pháp PPP</strong><br/>
+                        Presentation<br/>
+                        Practice (controlled + semi-controlled)<br/>
+                        Production (communicative)</p>
+                        <p><strong>◆ (5) Cá nhân hóa</strong><br/>
+                        <em>Phần này là phần &quot;hack&quot; AI – thêm chi tiết cá nhân hóa để prompt chất lượng hơn.</em></p>
+                        {geminiGuideLink && (
+                          <Button
+                            type="primary"
+                            block
+                            icon={<RobotOutlined />}
+                            style={{
+                              marginTop: "12px",
+                              backgroundColor: colors.emerald,
+                              borderColor: colors.emerald,
+                              borderRadius: "6px",
+                            }}
+                            onClick={() => window.open(geminiGuideLink, "_blank")}
+                          >
+                            Mở link hướng dẫn Gemini
+                          </Button>
+                        )}
+                      </div>
+                    }
+                  >
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<InfoCircleOutlined />}
+                      style={{
+                        backgroundColor: colors.emerald,
+                        borderColor: colors.emerald,
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Hướng dẫn Gemini
+                    </Button>
+                  </Popover>
+                </div>
+              }
+            >
               {
                 <ReactQuill
                   id="lessonPlanCreate"
@@ -1366,7 +1451,6 @@ export default function CreateLesson({
                   modules={modulesLessonPlan}
                   formats={quillFormats}
                   ref={quillRefLessonPlan}
-                  placeholder={placeholderLessonPlan}
                   style={{
                     height: "250px",
                     marginBottom: "60px", // Consider reducing this
@@ -1412,14 +1496,12 @@ export default function CreateLesson({
             <Form.Item>
               <Button
                 icon={<RobotOutlined />}
-                // onClick={enhanceLessonPlan}
-                onClick={() => window.open("https://gemini.google.com/app?hl=vi")}
-                // loading={loadingEnhanceLessonPlan}
+                onClick={() => {
+                  const url = geminiExtendedLink || "https://gemini.google.com/app?hl=vi";
+                  window.open(url, "_blank");
+                }}
                 style={{
                   alignSelf: "flex-start",
-                  // marginTop: isMobile ? "100px" : "40px",
-                  marginTop: "5px",
-                  marginBottom: "20px",
                   borderRadius: "6px",
                   backgroundColor: colors.emerald,
                   borderColor: colors.emerald,

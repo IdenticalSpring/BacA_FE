@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Avatar, Typography, Button, Modal, Dropdown, message } from "antd";
+import { Layout, Menu, Avatar, Typography, Button, Modal, Dropdown, message, Input } from "antd";
 import {
   BookOutlined,
   TeamOutlined,
@@ -7,6 +7,7 @@ import {
   EditOutlined,
   CloseOutlined,
   PlusCircleOutlined,
+  FormOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import sidebarLinkService from "services/sidebarLinkService";
@@ -44,6 +45,10 @@ const Sidebar = ({
   const [sidebarLinks, setSidebarLinks] = useState([]);
   const [isCreateClassModalVisible, setIsCreateClassModalVisible] = useState(false);
   const [deleteRequestedClassIds, setDeleteRequestedClassIds] = useState([]);
+  const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
+  const [renameClassItem, setRenameClassItem] = useState(null);
+  const [newClassName, setNewClassName] = useState("");
+  const [renameRequestedClassIds, setRenameRequestedClassIds] = useState([]);
 
   useEffect(() => {
     const fetchSidebarLinks = async () => {
@@ -117,14 +122,60 @@ const Sidebar = ({
     });
   };
 
+  const handleRequestRenameClass = (classItem) => {
+    setRenameClassItem(classItem);
+    setNewClassName("");
+    setIsRenameModalVisible(true);
+  };
+
+  const handleSubmitRenameRequest = async () => {
+    if (!newClassName.trim()) {
+      message.warning("Vui lòng nhập tên lớp mới.");
+      return;
+    }
+
+    if (renameRequestedClassIds.includes(renameClassItem.id)) {
+      message.info("Bạn đã gửi yêu cầu đổi tên lớp này rồi.");
+      setIsRenameModalVisible(false);
+      return;
+    }
+
+    try {
+      const notificationPayload = {
+        title: `Yêu cầu đổi tên lớp: ${renameClassItem.name}`,
+        general: true,
+        type: true,
+        detail: `Giáo viên ${teacherName} yêu cầu admin đổi tên lớp ID ${renameClassItem.id} - "${renameClassItem.name}" thành "${newClassName.trim()}".`,
+        classID: renameClassItem.id,
+      };
+
+      await notificationService.createNotification(notificationPayload);
+
+      setRenameRequestedClassIds((prev) => [...prev, renameClassItem.id]);
+      message.success("Đã gửi yêu cầu đổi tên lớp tới admin.");
+    } catch (err) {
+      console.error(err);
+      message.error("Gửi yêu cầu đổi tên lớp thất bại.");
+    } finally {
+      setIsRenameModalVisible(false);
+      setRenameClassItem(null);
+      setNewClassName("");
+    }
+  };
+
   const getClassContextMenu = (classItem) => (
     <Menu
       onClick={({ key }) => {
         if (key === "delete-class") {
           handleRequestDeleteClass(classItem);
+        } else if (key === "rename-class") {
+          handleRequestRenameClass(classItem);
         }
       }}
     >
+      <Menu.Item key="rename-class" icon={<FormOutlined />}>
+        Yêu cầu đổi tên lớp
+      </Menu.Item>
       <Menu.Item key="delete-class" danger icon={<DeleteOutlined />}>
         Yêu cầu xóa lớp
       </Menu.Item>
@@ -432,6 +483,56 @@ const Sidebar = ({
         onClose={() => setIsCreateClassModalVisible(false)}
         refreshClasses={refreshClasses}
       />
+
+      <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <FormOutlined />
+            <span>Yêu cầu đổi tên lớp</span>
+          </div>
+        }
+        open={isRenameModalVisible}
+        onCancel={() => {
+          setIsRenameModalVisible(false);
+          setRenameClassItem(null);
+          setNewClassName("");
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setIsRenameModalVisible(false);
+              setRenameClassItem(null);
+              setNewClassName("");
+            }}
+          >
+            Hủy
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            style={{
+              backgroundColor: colors.deepGreen,
+              borderColor: colors.deepGreen,
+            }}
+            onClick={handleSubmitRenameRequest}
+          >
+            Gửi yêu cầu
+          </Button>,
+        ]}
+        centered
+      >
+        <div style={{ marginBottom: "12px" }}>
+          <Typography.Text>Tên lớp hiện tại: <strong>{renameClassItem?.name}</strong></Typography.Text>
+        </div>
+        <Input
+          placeholder="Nhập tên lớp mới muốn đổi"
+          value={newClassName}
+          onChange={(e) => setNewClassName(e.target.value)}
+          onPressEnter={handleSubmitRenameRequest}
+          size="large"
+        />
+      </Modal>
     </>
   );
 };

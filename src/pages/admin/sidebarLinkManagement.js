@@ -57,6 +57,7 @@ function SidebarLinkManagement() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("");
 
   useEffect(() => {
     fetchSidebarLinks();
@@ -69,7 +70,7 @@ function SidebarLinkManagement() {
       const formattedRows = data.map((sidebar) => ({
         id: sidebar.id,
         name: sidebar.name,
-        type: sidebar.type === 0 ? "Công cụ giảng dạy" : sidebar.type === 1 ? "Công cụ giao bài" : sidebar.type === 2 ? "Link bong bóng" : "Mục trang chủ",
+        type: sidebar.type === 0 ? "Công cụ giảng dạy" : sidebar.type === 1 ? "Công cụ giao bài" : sidebar.type === 2 ? "Link bong bóng" : sidebar.type === 3 ? "Mục trang chủ" : sidebar.type === 4 ? "Link Hướng dẫn Gemini" : "Link Gemini mở rộng",
         link: (
           <a href={sidebar.link} target="_blank" rel="noopener noreferrer">
             {sidebar.link}
@@ -200,7 +201,7 @@ function SidebarLinkManagement() {
               ? {
                   ...row,
                   name: updatedSidebar.name,
-                  type: updatedSidebar.type === 0 ? "Công cụ giảng dạy" : updatedSidebar.type === 1 ? "Công cụ giao bài" : updatedSidebar.type === 2 ? "Link bong bóng" : "Mục trang chủ",
+                  type: updatedSidebar.type === 0 ? "Công cụ giảng dạy" : updatedSidebar.type === 1 ? "Công cụ giao bài" : updatedSidebar.type === 2 ? "Link bong bóng" : updatedSidebar.type === 3 ? "Mục trang chủ" : updatedSidebar.type === 4 ? "Link Hướng dẫn Gemini" : "Link Gemini mở rộng",
                   link: (
                     <a href={updatedSidebar.link} target="_blank" rel="noopener noreferrer">
                       {updatedSidebar.link}
@@ -232,10 +233,22 @@ function SidebarLinkManagement() {
     }
   };
 
+  const typeLabels = {
+    0: "Công cụ giảng dạy",
+    1: "Công cụ giao bài",
+    2: "Link bong bóng",
+    3: "Mục trang chủ",
+    4: "Link Hướng dẫn Gemini",
+    5: "Link Gemini mở rộng",
+  };
+
   const filteredRows = useMemo(() => {
-    if (!searchTerm) return rows;
-    return rows.filter((row) => row.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [rows, searchTerm]);
+    return rows.filter((row) => {
+      const nameMatch = !searchTerm || row.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const typeMatch = filterType === "" || row.type === typeLabels[filterType];
+      return nameMatch && typeMatch;
+    });
+  }, [rows, searchTerm, filterType]);
 
   return (
     <DashboardLayout>
@@ -281,7 +294,26 @@ function SidebarLinkManagement() {
                 display="flex"
                 justifyContent="right"
                 alignItems="center"
+                gap={2}
               >
+                <FormControl size="small" sx={{ minWidth: 180, backgroundColor: "white", borderRadius: "4px" }}>
+                  <InputLabel id="filter-type-label">Filter by Type</InputLabel>
+                  <Select
+                    labelId="filter-type-label"
+                    value={filterType}
+                    label="Filter by Type"
+                    onChange={(e) => setFilterType(e.target.value)}
+                    sx={{ height: "40px" }}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    <MenuItem value={0}>Công cụ giảng dạy</MenuItem>
+                    <MenuItem value={1}>Công cụ giao bài</MenuItem>
+                    <MenuItem value={2}>Link bong bóng</MenuItem>
+                    <MenuItem value={3}>Mục trang chủ</MenuItem>
+                    <MenuItem value={4}>Link Hướng dẫn Gemini</MenuItem>
+                    <MenuItem value={5}>Link Gemini mở rộng</MenuItem>
+                  </Select>
+                </FormControl>
                 <TextField
                   label="Search by name"
                   variant="outlined"
@@ -341,6 +373,8 @@ function SidebarLinkManagement() {
               <MenuItem value={1}>Công cụ giao bài</MenuItem>
               <MenuItem value={2}>Link bong bóng</MenuItem>
               <MenuItem value={3}>Mục trang chủ</MenuItem>
+              <MenuItem value={4}>Link Hướng dẫn Gemini</MenuItem>
+              <MenuItem value={5}>Link Gemini mở rộng</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -350,7 +384,7 @@ function SidebarLinkManagement() {
             value={sidebarData.link}
             onChange={(e) => setSidebarData({ ...sidebarData, link: e.target.value })}
           />
-          {sidebarData.type !== 3 && (
+          {sidebarData.type !== 3 && sidebarData.type !== 4 && sidebarData.type !== 5 && (
             <Box
               sx={{
                 mt: 2,

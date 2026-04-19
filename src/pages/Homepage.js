@@ -66,6 +66,7 @@ export default function Homepage() {
   const [homepageLinks, setHomepageLinks] = useState([]);
   const [floatingLinks, setFloatingLinks] = useState([]);
   const [showFloatingLinks, setShowFloatingLinks] = useState(false);
+  const [activeSection, setActiveSection] = useState("#home");
   const navigate = useNavigate();
   const [buttonHover, setButtonHover] = useState({
     student: false,
@@ -223,6 +224,36 @@ export default function Homepage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.scrollY + 100; // Offset for header height
+      let currentSection = "#home";
+
+      for (const link of homepageLinks) {
+        if (link.link && link.link.startsWith("#")) {
+          const sectionId = link.link.replace("#", "");
+          const element = document.getElementById(sectionId);
+          if (element && element.offsetTop <= currentScrollPos) {
+            currentSection = link.link;
+          }
+        }
+      }
+
+      // If reached the bottom of the page, activate the last internal link
+      if (window.innerHeight + Math.round(window.scrollY) >= document.body.offsetHeight - 50) {
+        const internalLinks = homepageLinks.filter(l => l.link && l.link.startsWith("#"));
+        if (internalLinks.length > 0) {
+          currentSection = internalLinks[internalLinks.length - 1].link;
+        }
+      }
+
+      setActiveSection(currentSection);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [homepageLinks]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -370,41 +401,26 @@ export default function Homepage() {
                   gap: "2rem",
                 }}
               >
-                <li>
-                  <a href="#home" style={{ color: colors.deepGreen, textDecoration: "none" }}>
-                    Trang chủ
-                  </a>
-                </li>
-                <li>
-                  <a href="#features" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Tính năng
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#testimonials"
-                    style={{ color: colors.darkGray, textDecoration: "none" }}
-                  >
-                    Đánh giá
-                  </a>
-                </li>
-                <li>
-                  <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                    Liên hệ
-                  </a>
-                </li>
-                {homepageLinks.map((link) => (
-                  <li key={link.id}>
-                    <a
-                      href={link.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: colors.darkGray, textDecoration: "none" }}
-                    >
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
+                {homepageLinks.map((link) => {
+                  const isExternal = link.link && !link.link.startsWith("#");
+                  const isActive = activeSection === link.link;
+                  return (
+                    <li key={link.id}>
+                      <a
+                        href={link.link}
+                        target={isExternal ? "_blank" : undefined}
+                        rel={isExternal ? "noopener noreferrer" : undefined}
+                        style={{
+                          color: isActive ? colors.deepGreen : colors.darkGray,
+                          textDecoration: "none",
+                          fontWeight: isActive ? "bold" : "normal",
+                        }}
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -523,51 +539,26 @@ export default function Homepage() {
                       padding: 0,
                     }}
                   >
-                    <li style={{ marginBottom: "1rem" }}>
-                      <a
-                        href="#home"
-                        style={{
-                          color: colors.deepGreen,
-                          textDecoration: "none",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Trang chủ
-                      </a>
-                    </li>
-                    <li style={{ marginBottom: "1rem" }}>
-                      <a
-                        href="#features"
-                        style={{ color: colors.darkGray, textDecoration: "none" }}
-                      >
-                        Tính năng
-                      </a>
-                    </li>
-                    <li style={{ marginBottom: "1rem" }}>
-                      <a
-                        href="#testimonials"
-                        style={{ color: colors.darkGray, textDecoration: "none" }}
-                      >
-                        Đánh giá
-                      </a>
-                    </li>
-                    <li style={{ marginBottom: "1rem" }}>
-                      <a href="#contact" style={{ color: colors.darkGray, textDecoration: "none" }}>
-                        Liên hệ
-                      </a>
-                    </li>
-                    {homepageLinks.map((link) => (
-                      <li key={link.id} style={{ marginBottom: "1rem" }}>
-                        <a
-                          href={link.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ color: colors.darkGray, textDecoration: "none" }}
-                        >
-                          {link.name}
-                        </a>
-                      </li>
-                    ))}
+                    {homepageLinks.map((link) => {
+                      const isExternal = link.link && !link.link.startsWith("#");
+                      const isActive = activeSection === link.link;
+                      return (
+                        <li key={link.id} style={{ marginBottom: "1rem" }}>
+                          <a
+                            href={link.link}
+                            target={isExternal ? "_blank" : undefined}
+                            rel={isExternal ? "noopener noreferrer" : undefined}
+                            style={{
+                              color: isActive ? colors.deepGreen : colors.darkGray,
+                              textDecoration: "none",
+                              fontWeight: isActive ? "bold" : "normal",
+                            }}
+                          >
+                            {link.name}
+                          </a>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </nav>
                 {/* <button
@@ -1619,28 +1610,21 @@ export default function Homepage() {
               Về chúng tôi
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#home" style={{ color: colors.white, textDecoration: "none" }}>
-                  Trang chủ
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#features" style={{ color: colors.white, textDecoration: "none" }}>
-                  Tính năng
-                </a>
-              </li>
-              <li style={{ marginBottom: "0.75rem" }}>
-                <a href="#testimonials" style={{ color: colors.white, textDecoration: "none" }}>
-                  Đánh giá
-                </a>
-              </li>
-              {homepageLinks && homepageLinks.map(link => (
-                <li key={link.id} style={{ marginBottom: "0.75rem" }}>
-                  <a href={link.link} target="_blank" rel="noopener noreferrer" style={{ color: colors.white, textDecoration: "none" }}>
-                    {link.name}
-                  </a>
-                </li>
-              ))}
+              {homepageLinks && homepageLinks.map(link => {
+                const isExternal = link.link && !link.link.startsWith("#");
+                return (
+                  <li key={link.id} style={{ marginBottom: "0.75rem" }}>
+                    <a
+                      href={link.link}
+                      target={isExternal ? "_blank" : undefined}
+                      rel={isExternal ? "noopener noreferrer" : undefined}
+                      style={{ color: colors.white, textDecoration: "none" }}
+                    >
+                      {link.name}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -1679,7 +1663,7 @@ export default function Homepage() {
         </div>
       </footer>
 
-      {/* Social Buttons */}
+      {/* Floating Links & Scroll to Top */}
       <div
         style={{
           display: "flex",
@@ -1690,6 +1674,7 @@ export default function Homepage() {
           bottom: "20px",
           right: "20px",
           flexDirection: "column",
+          zIndex: 1000,
         }}
       >
         <Button
@@ -1730,45 +1715,87 @@ export default function Homepage() {
               : "none",
           }}
         />
-        {(() => {
-          const linksArray = [
-            ...floatingLinks.map(l => ({ type: 'custom', data: l }))
-          ];
-          const cols = [];
-          for (let i = 0; i < linksArray.length; i += 3) {
-            cols.push(linksArray.slice(i, i + 3));
-          }
-          return (
-            <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: '10px', alignItems: 'flex-end' }}>
-              {cols.map((col, colIndex) => (
-                <div key={colIndex} style={{ display: 'flex', flexDirection: 'column-reverse', gap: '10px' }}>
-                  {col.map((item, itemIndex) => {
-                    const link = item.data;
-                    return (
-                      <div
-                        key={link.id}
-                        style={{
-                          width: "50px", height: "50px", background: "transparent", cursor: "pointer",
-                          overflow: "hidden", borderRadius: "8px"
-                        }}
-                        onClick={() => window.open(link.link)}
-                        title={link.name}
-                      >
-                        {link.imgUrl ? (
-                          <img src={link.imgUrl} alt={link.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        ) : (
-                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#115E40", color: "white", borderRadius: "8px" }}>
-                            <LinkOutlined style={{ fontSize: "24px" }} />
+        {!showFloatingLinks ? (
+          <div
+            style={{
+              width: "50px",
+              height: "50px",
+              background: "white",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              border: `1px solid ${colors.deepGreen}`,
+            }}
+            onClick={() => setShowFloatingLinks(true)}
+            title="Hiện các link tham khảo"
+          >
+            <UpOutlined style={{ fontSize: "20px", color: colors.deepGreen }} />
+          </div>
+        ) : (
+          <>
+            {(() => {
+              const linksArray = [
+                ...floatingLinks.map(l => ({ type: 'custom', data: l }))
+              ];
+              const cols = [];
+              for (let i = 0; i < linksArray.length; i += 3) {
+                cols.push(linksArray.slice(i, i + 3));
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: '10px', alignItems: 'flex-end' }}>
+                  {cols.map((col, colIndex) => (
+                    <div key={colIndex} style={{ display: 'flex', flexDirection: 'column-reverse', gap: '10px' }}>
+                      {col.map((item) => {
+                        const link = item.data;
+                        return (
+                          <div
+                            key={link.id}
+                            style={{
+                              width: "50px", height: "50px", background: "transparent", cursor: "pointer",
+                              overflow: "hidden", borderRadius: "8px"
+                            }}
+                            onClick={() => window.open(link.link)}
+                            title={link.name}
+                          >
+                            {link.imgUrl ? (
+                              <img src={link.imgUrl} alt={link.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#115E40", color: "white", borderRadius: "8px" }}>
+                                <LinkOutlined style={{ fontSize: "24px" }} />
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              );
+            })()}
+            {/* Nút Thu gọn */}
+            <div
+              style={{
+                width: "50px",
+                height: "50px",
+                background: "white",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                border: `1px solid ${colors.deepGreen}`,
+              }}
+              onClick={() => setShowFloatingLinks(false)}
+              title="Thu gọn"
+            >
+              <DownOutlined style={{ fontSize: "20px", color: colors.deepGreen }} />
             </div>
-          );
-        })()}
+          </>
+        )}
         <style>
           {`
           @keyframes bounce {

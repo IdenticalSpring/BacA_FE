@@ -147,6 +147,8 @@ function CreateSidebarLink() {
                   <MenuItem value={1}>Công cụ giao bài</MenuItem>
                   <MenuItem value={2}>Link bong bóng</MenuItem>
                   <MenuItem value={3}>Mục trang chủ</MenuItem>
+                  <MenuItem value={4}>Link Hướng dẫn Gemini</MenuItem>
+                  <MenuItem value={5}>Link Gemini mở rộng</MenuItem>
                 </Select>
               </FormControl>
               <TextField
@@ -156,7 +158,7 @@ function CreateSidebarLink() {
                 value={sidebarData.link}
                 onChange={(e) => setSidebarData({ ...sidebarData, link: e.target.value })}
               />
-              {sidebarData.type !== 3 && (
+              {sidebarData.type !== 3 && sidebarData.type !== 4 && sidebarData.type !== 5 && (
                 <Box
                   sx={{
                     mt: 2,
