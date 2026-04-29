@@ -13,7 +13,6 @@ import {
   Table,
   Typography,
   Tooltip,
-  Popover,
 } from "antd";
 import {
   SaveOutlined,
@@ -21,7 +20,6 @@ import {
   SendOutlined,
   UploadOutlined,
   SwapOutlined,
-  InfoCircleOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -207,6 +205,15 @@ export default function CreateLesson({
     };
     fetchGeminiLinks();
   }, []);
+
+  const openGeminiGuideLink = useCallback(() => {
+    if (!geminiGuideLink) {
+      message.warning("Chưa có link hướng dẫn Gemini.");
+      return;
+    }
+
+    window.open(geminiGuideLink, "_blank", "noopener,noreferrer");
+  }, [geminiGuideLink]);
 
   useEffect(() => {
     const fetchVoices = async () => {
@@ -1383,64 +1390,20 @@ export default function CreateLesson({
               label={
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <span>Kế hoạch bài học</span>
-                  <Popover
-                    title="Hướng dẫn Gemini - Cấu trúc Prompt"
-                    trigger="click"
-                    placement="rightTop"
-                    overlayStyle={{ maxWidth: "520px", maxHeight: "70vh", overflow: "auto" }}
-                    content={
-                      <div style={{ fontSize: "13px", lineHeight: "1.7" }}>
-                        <p><strong>Cấu trúc Prompt &quot;chuẩn chỉnh&quot; (framework)</strong></p>
-                        <p>Bạn nên luôn viết prompt theo 5 phần:</p>
-                        <p><strong>◆ (1) Vai trò AI</strong><br/>
-                        Ví dụ: You are an experienced ESL teacher specializing in communicative language teaching…</p>
-                        <p><strong>◆ (2) Thông tin lớp học (input)</strong><br/>
-                        Level (hoặc mixed-level)<br/>
-                        Độ tuổi<br/>
-                        Số lượng học viên<br/>
-                        Thời lượng</p>
-                        <p><strong>◆ (3) Mục tiêu bài học</strong><br/>
-                        <em>Ngữ pháp / từ vựng / kỹ năng</em><br/>
-                        Outcome cụ thể (học xong làm được gì)</p>
-                        <p><strong>◆ (4) Yêu cầu phương pháp PPP</strong><br/>
-                        Presentation<br/>
-                        Practice (controlled + semi-controlled)<br/>
-                        Production (communicative)</p>
-                        <p><strong>◆ (5) Cá nhân hóa</strong><br/>
-                        <em>Phần này là phần &quot;hack&quot; AI – thêm chi tiết cá nhân hóa để prompt chất lượng hơn.</em></p>
-                        {geminiGuideLink && (
-                          <Button
-                            type="primary"
-                            block
-                            icon={<RobotOutlined />}
-                            style={{
-                              marginTop: "12px",
-                              backgroundColor: colors.emerald,
-                              borderColor: colors.emerald,
-                              borderRadius: "6px",
-                            }}
-                            onClick={() => window.open(geminiGuideLink, "_blank")}
-                          >
-                            Mở link hướng dẫn Gemini
-                          </Button>
-                        )}
-                      </div>
-                    }
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    style={{
+                      backgroundColor: colors.emerald,
+                      borderColor: colors.emerald,
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                    }}
+                    onClick={openGeminiGuideLink}
                   >
-                    <Button
-                      type="primary"
-                      size="small"
-                      icon={<InfoCircleOutlined />}
-                      style={{
-                        backgroundColor: colors.emerald,
-                        borderColor: colors.emerald,
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      Hướng dẫn Gemini
-                    </Button>
-                  </Popover>
+                    Hướng dẫn Gemini
+                  </Button>
                 </div>
               }
             >
