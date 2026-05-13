@@ -200,8 +200,10 @@ export default function CreateHomeWork({
   const [questionList, setQuestionList] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
-  const getShareUrl = (hwId) =>
-    `${process.env.REACT_APP_API_BASE_URL}/homeworks/share/${hwId}`;
+  const getShareUrl = (hwId) => {
+    const frontendDomain = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+    return `${frontendDomain}/share/${hwId}`;
+  };
   const copyToClipboard = () => {
     if (!lastCreatedHomeworkId) return;
     navigator.clipboard.writeText(getShareUrl(lastCreatedHomeworkId)).then(() => {

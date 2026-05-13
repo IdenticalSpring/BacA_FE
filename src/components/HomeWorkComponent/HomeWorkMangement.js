@@ -186,8 +186,10 @@ export default function HomeWorkManagement({
   const [loadingClass, setLoadingClass] = useState(false);
   const [questionList, setQuestionList] = useState([]);
   const [copySuccess, setCopySuccess] = useState(false);
-  const getShareUrl = (hwId) =>
-    `${process.env.REACT_APP_API_BASE_URL}/homeworks/share/${hwId}`;
+  const getShareUrl = (hwId) => {
+    const frontendDomain = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+    return `${frontendDomain}/share/${hwId}`;
+  };
   const [gameLinks, setGameLinks] = useState([]);
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
