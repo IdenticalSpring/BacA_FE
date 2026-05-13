@@ -64,7 +64,8 @@ const LoginForStudent = () => {
         // Tài khoản chưa đặt mật khẩu → đăng nhập luôn
         setLoading(true);
         await authService.loginStudent(username);
-        navigate("/studentpage");
+        const hwId = searchParams.get("hwId");
+        navigate(hwId ? `/studentpage?hwId=${hwId}` : "/studentpage");
         message.success("Đăng nhập thành công");
       }
     } catch (err) {
@@ -83,7 +84,8 @@ const LoginForStudent = () => {
 
     try {
       await authService.loginStudent(checkedUsername, values.password);
-      navigate("/studentpage");
+      const hwId = searchParams.get("hwId");
+      navigate(hwId ? `/studentpage?hwId=${hwId}` : "/studentpage");
       message.success("Đăng nhập thành công");
     } catch (err) {
       console.log(err);
@@ -98,7 +100,8 @@ const LoginForStudent = () => {
   const handleBackToUsername = () => {
     // Nếu đến từ DoHomework (có query param username), quay lại /do-homework
     if (searchParams.get("username")) {
-      navigate("/do-homework");
+      const hwId = searchParams.get("hwId");
+      navigate(hwId ? `/do-homework?hwId=${hwId}` : "/do-homework");
       return;
     }
     setStep(1);

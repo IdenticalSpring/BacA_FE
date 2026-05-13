@@ -177,8 +177,8 @@ export default function CreateHomeWork({
   const [showAccessId, setShowAccessId] = useState(false);
   const [accessId, setAccessId] = useState("");
   const [loadingClass, setLoadingClass] = useState(false);
-  const homeworkLink = "https://happyclass.com.vn/do-homework";
   const [copySuccess, setCopySuccess] = useState(false);
+  const [lastCreatedHomeworkId, setLastCreatedHomeworkId] = useState(null);
   const [gender, setGender] = useState(1);
   const [openSend, setOpenSend] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
@@ -191,7 +191,6 @@ export default function CreateHomeWork({
   const [gameLinks, setGameLinks] = useState([]);
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
-
   const [youtubeLinks, setYoutubeLinks] = useState([]);
   const [currentYoutubeLink, setCurrentYoutubeLink] = useState("");
   const [editYoutubeIndex, setEditYoutubeIndex] = useState(null);
@@ -201,8 +200,11 @@ export default function CreateHomeWork({
   const [questionList, setQuestionList] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
+  const getShareUrl = (hwId) =>
+    `${process.env.REACT_APP_API_BASE_URL}/homeworks/share/${hwId}`;
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(homeworkLink).then(() => {
+    if (!lastCreatedHomeworkId) return;
+    navigator.clipboard.writeText(getShareUrl(lastCreatedHomeworkId)).then(() => {
       setCopySuccess(true);
       message.success("Copied to clipboard!"); // Hiển thị thông báo
 
@@ -613,6 +615,7 @@ export default function CreateHomeWork({
       }
       if (status !== true) {
         message.success("Homework created successfully!");
+        setLastCreatedHomeworkId(homeworkData?.id);
       }
       if (status === true) {
         const data = await lessonByScheduleService.updateSendingHomeworkStatus(
@@ -662,6 +665,7 @@ export default function CreateHomeWork({
         });
         message.success("Đã gửi bài tập thành công!");
         setShowAccessId(true);
+        setLastCreatedHomeworkId(homeworkData?.id);
       }
       form.resetFields();
       setSelected(new Set());
@@ -1547,13 +1551,18 @@ export default function CreateHomeWork({
               <Text strong style={{ fontSize: 16 }}>
                 Mã lớp của bạn là: <Text type="danger">{accessId}</Text>
               </Text>
-              <Input value={homeworkLink} readOnly style={{ textAlign: "center", width: "100%" }} />
+              <Input
+                value={lastCreatedHomeworkId ? getShareUrl(lastCreatedHomeworkId) : ""}
+                readOnly
+                style={{ textAlign: "center", width: "100%" }}
+              />
 
               {/* Nút Copy với hiệu ứng */}
               <Button
                 icon={<CopyOutlined />}
                 onClick={copyToClipboard}
                 type={copySuccess ? "default" : "primary"}
+                disabled={!lastCreatedHomeworkId}
               >
                 {copySuccess ? "Copied!" : "Copy Link bài tập"}
               </Button>

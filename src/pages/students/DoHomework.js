@@ -30,7 +30,7 @@ import {
 import classService from "services/classService";
 import { colors } from "assets/theme/color";
 import studentService from "services/studentService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -45,6 +45,8 @@ export default function DoHomework() {
   const [error, setError] = useState("");
   const [homeworkList, setHomeworkList] = useState([]);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const hwId = searchParams.get("hwId"); // Lấy hwId từ share link redirect
   // Verify class ID
   const verifyClass = async () => {
     setLoading(true);
@@ -69,6 +71,7 @@ export default function DoHomework() {
       const params = new URLSearchParams({
         username: student.username,
         name: student.name,
+        ...(hwId && { hwId }), // Truyền hwId qua login nếu có
       });
       navigate(`/login/student?${params.toString()}`);
       return;
@@ -79,7 +82,7 @@ export default function DoHomework() {
     setError("");
     try {
       await studentService.getStudentByIdAndLogin(student.id);
-      navigate("/studentpage");
+      navigate(hwId ? `/studentpage?hwId=${hwId}` : "/studentpage");
       message.success("Đăng nhập thành công");
     } catch (err) {
       setError("Đăng nhập thất bại! Vui lòng thử lại!");

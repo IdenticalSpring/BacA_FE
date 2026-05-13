@@ -185,8 +185,9 @@ export default function HomeWorkManagement({
   const [accessId, setAccessId] = useState("");
   const [loadingClass, setLoadingClass] = useState(false);
   const [questionList, setQuestionList] = useState([]);
-  const homeworkLink = "https://happyclass.com.vn/do-homework";
   const [copySuccess, setCopySuccess] = useState(false);
+  const getShareUrl = (hwId) =>
+    `${process.env.REACT_APP_API_BASE_URL}/homeworks/share/${hwId}`;
   const [gameLinks, setGameLinks] = useState([]);
   const [currentLink, setCurrentLink] = useState("");
   const [editIndex, setEditIndex] = useState(null);
@@ -228,7 +229,8 @@ export default function HomeWorkManagement({
   }, [selectedHomeWorkId, editingHomeWork]);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(homeworkLink).then(() => {
+    if (!selectedHomeWorkId) return;
+    navigator.clipboard.writeText(getShareUrl(selectedHomeWorkId)).then(() => {
       setCopySuccess(true);
       message.success("Copied to clipboard!");
       setTimeout(() => setCopySuccess(false), 2000);
@@ -1367,11 +1369,16 @@ export default function HomeWorkManagement({
               <Text strong style={{ fontSize: 16 }}>
                 Mã lớp của bạn là: <Text type="danger">{accessId}</Text>
               </Text>
-              <Input value={homeworkLink} readOnly style={{ textAlign: "center", width: "100%" }} />
+              <Input
+                value={selectedHomeWorkId ? getShareUrl(selectedHomeWorkId) : ""}
+                readOnly
+                style={{ textAlign: "center", width: "100%" }}
+              />
               <Button
                 icon={<CopyOutlined />}
                 onClick={copyToClipboard}
                 type={copySuccess ? "default" : "primary"}
+                disabled={!selectedHomeWorkId}
               >
                 {copySuccess ? "Copied!" : "Copy Link bài tập"}
               </Button>

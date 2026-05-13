@@ -48,6 +48,7 @@ import classService from "services/classService";
 import studentService from "services/studentService";
 import { jwtDecode } from "jwt-decode";
 import lessonByScheduleService from "services/lessonByScheduleService";
+import { useSearchParams } from "react-router-dom";
 import lessonService from "services/lessonService";
 import StudentScoreTab from "./studentScoreTab";
 import homeWorkService from "services/homeWorkService";
@@ -436,6 +437,31 @@ const StudentPage = () => {
     }
   }, [student]);
   // console.log(isHomeWorkSent, isLessonSent);
+
+  // === Task 3: Auto-select bài tập từ share link ===
+  const [searchParams] = useSearchParams();
+  const hwIdFromUrl = searchParams.get("hwId");
+  const [hwIdHandled, setHwIdHandled] = useState(false);
+
+  useEffect(() => {
+    if (!hwIdFromUrl || !lessonsBySchedule?.length || hwIdHandled) return;
+
+    // Tìm lesson_by_schedule nào chứa homeWorkId trùng hwId
+    const targetSchedule = lessonsBySchedule.find(
+      (lbs) => lbs.homeWorkId === Number(hwIdFromUrl) && lbs.isHomeWorkSent
+    );
+
+    if (targetSchedule) {
+      // Auto-select ngày đó
+      setSelectedLessonBySchedule(targetSchedule.id);
+      // Auto-switch sang tab homework
+      setActiveTab("homework");
+      // Đánh dấu đã xử lý để không lặp lại
+      setHwIdHandled(true);
+      // Xóa hwId khỏi URL (clean up)
+      window.history.replaceState({}, "", "/studentpage");
+    }
+  }, [hwIdFromUrl, lessonsBySchedule, hwIdHandled]);
 
   useEffect(() => {
     const findSelectedLessonBySchedule = lessonsBySchedule?.find(
