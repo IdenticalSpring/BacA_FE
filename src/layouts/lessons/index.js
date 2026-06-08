@@ -1192,7 +1192,7 @@ function Lessons() {
               color: colors.white,
             }}
           >
-            Làm nhiều hơn với Gemini
+            Làm nhiều hơn với AI
           </Button>
         </DialogContent>
         <DialogActions>

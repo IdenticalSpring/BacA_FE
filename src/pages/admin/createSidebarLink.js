@@ -147,8 +147,8 @@ function CreateSidebarLink() {
                   <MenuItem value={1}>Công cụ giao bài</MenuItem>
                   <MenuItem value={2}>Link bong bóng</MenuItem>
                   <MenuItem value={3}>Mục trang chủ</MenuItem>
-                  <MenuItem value={4}>Link Hướng dẫn Gemini</MenuItem>
-                  <MenuItem value={5}>Link Gemini mở rộng</MenuItem>
+                  <MenuItem value={4}>Link Hướng dẫn AI</MenuItem>
+                  <MenuItem value={5}>Link AI mở rộng</MenuItem>
                 </Select>
               </FormControl>
               <TextField

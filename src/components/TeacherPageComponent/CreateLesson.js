@@ -208,7 +208,7 @@ export default function CreateLesson({
 
   const openGeminiGuideLink = useCallback(() => {
     if (!geminiGuideLink) {
-      message.warning("Chưa có link hướng dẫn Gemini.");
+      message.warning("Chưa có link hướng dẫn AI.");
       return;
     }
 
@@ -1402,7 +1402,7 @@ export default function CreateLesson({
                     }}
                     onClick={openGeminiGuideLink}
                   >
-                    Hướng dẫn Gemini
+                    Hướng dẫn AI
                   </Button>
                 </div>
               }
@@ -1471,7 +1471,7 @@ export default function CreateLesson({
                   color: colors.white,
                 }}
               >
-                Làm nhiều hơn với Gemini
+                Làm nhiều hơn với AI
               </Button>
             </Form.Item>
             <Form.Item label="Văn bản thành giọng nói">

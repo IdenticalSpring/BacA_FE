@@ -21,6 +21,7 @@ import {
   Modal,
   Avatar,
   Select,
+  InputNumber,
 } from "antd";
 import {
   AudioOutlined,
@@ -101,6 +102,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   // Swipe animation states
   const [cardIndex, setCardIndex] = useState(0);
   const [cardIndexForStudent, setCardIndexForStudent] = useState(0);
+  const [dailyJumpValue, setDailyJumpValue] = useState(1);
   const [animation, setAnimation] = useState("");
   const [animationForStudent, setAnimationForStudent] = useState("");
   const audioRefs = useRef([]);
@@ -134,8 +136,55 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   });
 
   const currentItems = sortedArray;
+  const dailyVocabularyMax = currentItems.filter((item) => !item.student).length;
   const countStudentNull = vocabularyItems?.filter((item) => !item.student).length;
   const firstStudent = sortedArray?.findIndex((item) => item.student !== null);
+
+  useEffect(() => {
+    if (dailyVocabularyMax === 0) {
+      setDailyJumpValue(null);
+      return;
+    }
+
+    if (cardIndex > dailyVocabularyMax - 1) {
+      setCardIndex(dailyVocabularyMax - 1);
+      return;
+    }
+
+    setDailyJumpValue(cardIndex + 1);
+  }, [cardIndex, dailyVocabularyMax]);
+
+  const commitDailyJump = useCallback(
+    (rawValue = dailyJumpValue) => {
+      if (dailyVocabularyMax === 0) {
+        setDailyJumpValue(null);
+        return;
+      }
+
+      const parsedValue = Number(rawValue);
+      if (!Number.isFinite(parsedValue)) {
+        setDailyJumpValue(cardIndex + 1);
+        return;
+      }
+
+      const targetNumber = Math.min(
+        Math.max(Math.round(parsedValue), 1),
+        dailyVocabularyMax
+      );
+      const targetIndex = targetNumber - 1;
+
+      setDailyJumpValue(targetNumber);
+      if (targetIndex === cardIndex) return;
+
+      setAnimation(targetIndex > cardIndex ? "slide-from-right" : "slide-from-left");
+      setTimeout(() => {
+        setCardIndex(targetIndex);
+        setAnimation("");
+      }, 300);
+    },
+    [cardIndex, dailyJumpValue, dailyVocabularyMax]
+  );
+
   const handleMouseDown = (e) => {
     mouseStartX.current = e.clientX;
     isMouseDown.current = true;
@@ -919,9 +968,31 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
           {/* Card counter indicator */}
           <div style={{ textAlign: "center", marginBottom: "10px" }}>
-            <Text style={{ color: colors.midGreen, fontWeight: "500" }}>
-              {index + 1} / {currentItems.filter((item) => !item.student).length}
-            </Text>
+            <Space
+              size={6}
+              align="center"
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <InputNumber
+                min={1}
+                max={dailyVocabularyMax}
+                value={dailyJumpValue}
+                controls={false}
+                size="small"
+                style={{ width: 54, textAlign: "center" }}
+                onChange={(value) => setDailyJumpValue(value)}
+                onBlur={() => commitDailyJump()}
+                onPressEnter={(e) => {
+                  e.preventDefault();
+                  commitDailyJump();
+                  e.currentTarget.blur();
+                }}
+              />
+              <Text style={{ color: colors.midGreen, fontWeight: "500" }}>
+                / {dailyVocabularyMax}
+              </Text>
+            </Space>
           </div>
 
           {/* Image area */}

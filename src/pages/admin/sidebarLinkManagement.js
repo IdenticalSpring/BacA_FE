@@ -70,7 +70,7 @@ function SidebarLinkManagement() {
       const formattedRows = data.map((sidebar) => ({
         id: sidebar.id,
         name: sidebar.name,
-        type: sidebar.type === 0 ? "Công cụ giảng dạy" : sidebar.type === 1 ? "Công cụ giao bài" : sidebar.type === 2 ? "Link bong bóng" : sidebar.type === 3 ? "Mục trang chủ" : sidebar.type === 4 ? "Link Hướng dẫn Gemini" : "Link Gemini mở rộng",
+        type: sidebar.type === 0 ? "Công cụ giảng dạy" : sidebar.type === 1 ? "Công cụ giao bài" : sidebar.type === 2 ? "Link bong bóng" : sidebar.type === 3 ? "Mục trang chủ" : sidebar.type === 4 ? "Link Hướng dẫn AI" : "Link AI mở rộng",
         link: (
           <a href={sidebar.link} target="_blank" rel="noopener noreferrer">
             {sidebar.link}
@@ -201,7 +201,7 @@ function SidebarLinkManagement() {
               ? {
                   ...row,
                   name: updatedSidebar.name,
-                  type: updatedSidebar.type === 0 ? "Công cụ giảng dạy" : updatedSidebar.type === 1 ? "Công cụ giao bài" : updatedSidebar.type === 2 ? "Link bong bóng" : updatedSidebar.type === 3 ? "Mục trang chủ" : updatedSidebar.type === 4 ? "Link Hướng dẫn Gemini" : "Link Gemini mở rộng",
+                  type: updatedSidebar.type === 0 ? "Công cụ giảng dạy" : updatedSidebar.type === 1 ? "Công cụ giao bài" : updatedSidebar.type === 2 ? "Link bong bóng" : updatedSidebar.type === 3 ? "Mục trang chủ" : updatedSidebar.type === 4 ? "Link Hướng dẫn AI" : "Link AI mở rộng",
                   link: (
                     <a href={updatedSidebar.link} target="_blank" rel="noopener noreferrer">
                       {updatedSidebar.link}
@@ -238,8 +238,8 @@ function SidebarLinkManagement() {
     1: "Công cụ giao bài",
     2: "Link bong bóng",
     3: "Mục trang chủ",
-    4: "Link Hướng dẫn Gemini",
-    5: "Link Gemini mở rộng",
+    4: "Link Hướng dẫn AI",
+    5: "Link AI mở rộng",
   };
 
   const filteredRows = useMemo(() => {
@@ -310,8 +310,8 @@ function SidebarLinkManagement() {
                     <MenuItem value={1}>Công cụ giao bài</MenuItem>
                     <MenuItem value={2}>Link bong bóng</MenuItem>
                     <MenuItem value={3}>Mục trang chủ</MenuItem>
-                    <MenuItem value={4}>Link Hướng dẫn Gemini</MenuItem>
-                    <MenuItem value={5}>Link Gemini mở rộng</MenuItem>
+                    <MenuItem value={4}>Link Hướng dẫn AI</MenuItem>
+                    <MenuItem value={5}>Link AI mở rộng</MenuItem>
                   </Select>
                 </FormControl>
                 <TextField
@@ -373,8 +373,8 @@ function SidebarLinkManagement() {
               <MenuItem value={1}>Công cụ giao bài</MenuItem>
               <MenuItem value={2}>Link bong bóng</MenuItem>
               <MenuItem value={3}>Mục trang chủ</MenuItem>
-              <MenuItem value={4}>Link Hướng dẫn Gemini</MenuItem>
-              <MenuItem value={5}>Link Gemini mở rộng</MenuItem>
+              <MenuItem value={4}>Link Hướng dẫn AI</MenuItem>
+              <MenuItem value={5}>Link AI mở rộng</MenuItem>
             </Select>
           </FormControl>
           <TextField
