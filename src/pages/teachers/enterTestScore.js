@@ -47,6 +47,13 @@ const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
+const normalizeId = (value) => {
+  const normalized = Number(value);
+  return Number.isNaN(normalized) ? value : normalized;
+};
+
+const sameId = (left, right) => normalizeId(left) === normalizeId(right);
+
 // Component for rendering ScoreCell
 const ScoreCell = ({ value }) => {
   return value || "-";
@@ -174,20 +181,20 @@ const EnterTestScore = () => {
 
     // Lọc ra những học sinh đã có điểm cho lịch thi này
     const studentIdsWithScores = previousScores
-      .filter((score) => score.testScheduleID === selectedClassTest)
-      .map((score) => score.studentID);
+      .filter((score) => sameId(score.testScheduleID, selectedClassTest))
+      .map((score) => normalizeId(score.studentID));
 
     setStudentsWithScores(studentIdsWithScores); // <-- CẬP NHẬT STATE
 
     // Kiểm tra xem tất cả học sinh đã có điểm chưa
     // (Chúng ta sẽ dùng studentIdsWithScores để kiểm tra điều này sau)
     const allSelectedStudentsHaveScores = selectedStudents.every((id) =>
-      studentIdsWithScores.includes(id)
+      studentIdsWithScores.some((studentId) => sameId(studentId, id))
     );
 
     // Nếu tất cả học sinh trong lớp đã có điểm thì disable toàn bộ form
     const allStudentsInClassHaveScores = students.every((student) =>
-      studentIdsWithScores.includes(student.id)
+      studentIdsWithScores.some((studentId) => sameId(studentId, student.id))
     );
     setIsEntryFormDisabled(allStudentsInClassHaveScores && students.length > 0);
   }, [selectedClassTest, previousScores, students, selectedStudents]); // Thêm dependencies
@@ -318,7 +325,7 @@ const EnterTestScore = () => {
   const handleScoreChange = (studentId) => {
     const values = form.getFieldsValue();
     const scores = selectedTestSkills.reduce((acc, skillId) => {
-      const skill = testSkills.find((s) => s.id === skillId);
+      const skill = testSkills.find((s) => sameId(s.id, skillId));
       acc[skill.name] = values[`${studentId}_score_${skillId}`];
       return acc;
     }, {});
@@ -331,13 +338,17 @@ const EnterTestScore = () => {
       setLoading(true);
       setError("");
 
+      const studentIdsWithScoresForSchedule = previousScores
+        .filter((score) => sameId(score.testScheduleID, selectedClassTest))
+        .map((score) => normalizeId(score.studentID));
+
       const studentsAlreadyScored = selectedStudents.filter((id) =>
-        studentsWithScores.includes(id)
+        studentIdsWithScoresForSchedule.some((studentId) => sameId(studentId, id))
       );
 
       if (studentsAlreadyScored.length > 0) {
         const studentNames = studentsAlreadyScored
-          .map((id) => students.find((s) => s.id === id)?.name)
+          .map((id) => students.find((s) => sameId(s.id, id))?.name)
           .join(", ");
         notification.error({
           message: "Submission Blocked",
@@ -357,26 +368,28 @@ const EnterTestScore = () => {
       }
       const promises = selectedStudents.map(async (studentId) => {
         const scoreData = {
-          studentID: studentId,
-          classTestScheduleID: selectedClassTest,
-          teacherID: teacherId,
+          studentID: normalizeId(studentId),
+          classTestScheduleID: normalizeId(selectedClassTest),
+          teacherID: normalizeId(teacherId),
           teacherComment: values[`${studentId}_teacherComment`],
-          assessmentID: values[`${studentId}_assessmentId`],
+          assessmentID: values[`${studentId}_assessmentId`]
+            ? normalizeId(values[`${studentId}_assessmentId`])
+            : null,
         };
         const scoreResponse = await studentScoreService.createScoreStudent(scoreData);
         const studentScoreId = scoreResponse.id;
 
         const avgScore = parseFloat(values[`${studentId}_avgScore`]);
         const scores = selectedTestSkills.reduce((acc, skillId) => {
-          const skill = testSkills.find((s) => s.id === skillId);
+          const skill = testSkills.find((s) => sameId(s.id, skillId));
           acc[skill.name] = values[`${studentId}_score_${skillId}`];
           return acc;
         }, {});
 
         const scoreDetailsPromises = selectedTestSkills.map((skillId) =>
           studentScoreService.createScoreStudentDetails({
-            studentID: studentId,
-            testSkillID: skillId,
+            studentID: normalizeId(studentId),
+            testSkillID: normalizeId(skillId),
             score: values[`${studentId}_score_${skillId}`],
             avgScore: avgScore,
             studentScoreID: studentScoreId,
@@ -385,9 +398,11 @@ const EnterTestScore = () => {
 
         await Promise.all(scoreDetailsPromises);
 
-        const student = students.find((s) => s.id === studentId);
-        const schedule = classTestSchedules.find((s) => s.id === selectedClassTest);
-        const assessment = assessments.find((a) => a.id === values[`${studentId}_assessmentId`]);
+        const student = students.find((s) => sameId(s.id, studentId));
+        const schedule = classTestSchedules.find((s) => sameId(s.id, selectedClassTest));
+        const assessment = assessments.find((a) =>
+          sameId(a.id, values[`${studentId}_assessmentId`])
+        );
 
         return {
           key: studentScoreId,
@@ -414,11 +429,16 @@ const EnterTestScore = () => {
       form.resetFields();
       setSelectedTestSkills([]);
     } catch (error) {
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : error?.message || "Failed to save test scores. Please try again.";
+
       console.error("Error saving test scores:", error);
-      setError("Failed to save test scores. Please try again.");
+      setError(errorMessage);
       notification.error({
         message: "Error",
-        description: "Failed to save test scores. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -445,7 +465,7 @@ const EnterTestScore = () => {
     // Lọc ra ID của những học sinh CHƯA có điểm cho lịch thi này
     const availableStudentIds = students
       .map((student) => student.id) // Lấy tất cả ID học sinh trong lớp
-      .filter((id) => !studentsWithScores.includes(id)); // Loại bỏ những ID đã có trong danh sách `studentsWithScores`
+      .filter((id) => !studentsWithScores.some((studentId) => sameId(studentId, id))); // Loại bỏ những ID đã có trong danh sách `studentsWithScores`
 
     if (availableStudentIds.length === 0) {
       message.info("All students in this class already have scores for this test schedule.");
@@ -663,7 +683,9 @@ const EnterTestScore = () => {
                         <Option
                           key={student.id}
                           value={student.id}
-                          disabled={studentsWithScores.includes(student.id)}
+                          disabled={studentsWithScores.some((studentId) =>
+                            sameId(studentId, student.id)
+                          )}
                         >
                           {student.name}
                         </Option>
@@ -709,12 +731,12 @@ const EnterTestScore = () => {
                     {selectedStudents.map((studentId) => (
                       <Card
                         key={studentId}
-                        title={`Scores for ${students.find((s) => s.id === studentId)?.name}`}
+                        title={`Scores for ${students.find((s) => sameId(s.id, studentId))?.name}`}
                         style={{ marginBottom: 16 }}
                       >
                         <Row gutter={[24, 16]}>
                           {selectedTestSkills.map((skillId) => {
-                            const skill = testSkills.find((s) => s.id === skillId);
+                            const skill = testSkills.find((s) => sameId(s.id, skillId));
                             return (
                               <Col xs={24} sm={12} md={6} key={skillId}>
                                 <Form.Item
