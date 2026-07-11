@@ -16,6 +16,7 @@ import {
 } from "antd";
 import {
   SaveOutlined,
+  FilePptOutlined,
   RobotOutlined,
   SendOutlined,
   UploadOutlined,
@@ -992,11 +993,8 @@ export default function CreateLesson({
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
       formData.append("linkSpeech", linkSpeech);
-      formData.append(
-        "description",
-        quillRefDescription.current?.getEditor()?.root.innerHTML || ""
-      ); // Lấy nội dung từ description
-      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || ""); // Lấy nội dung từ lessonPlan
+      formData.append("description", ""); // Lấy nội dung từ description
+      formData.append("lessonPlan", ""); // PPT replaces the old text lesson plan field
       formData.append("teacherId", teacherId);
 
       // if (mp3file) {
@@ -1301,7 +1299,9 @@ export default function CreateLesson({
                 color: colors.white,
                 margin: "10px 0",
               }}
+              hidden
               icon={<SwapOutlined />}
+              disabled
               onClick={() => {
                 if (!swapHtmlMode) {
                   const html = quillRefDescription.current?.getEditor()?.root?.innerHTML || "";
@@ -1318,6 +1318,7 @@ export default function CreateLesson({
               Swap to {swapHtmlMode ? "Quill" : "HTML"}
             </Button>
             <Form.Item
+              hidden
               // name="description"
               label="Mô tả"
             >
@@ -1354,6 +1355,8 @@ export default function CreateLesson({
             </Form.Item>
 
             <Button
+              hidden
+              disabled
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
@@ -1385,7 +1388,28 @@ export default function CreateLesson({
             >
               Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
             </Button>
+            <Form.Item label="PPT bài học">
+              <div
+                style={{
+                  border: `1px solid ${colors.lightGreen || colors.emerald}`,
+                  borderRadius: "8px",
+                  padding: "16px",
+                  backgroundColor: colors.paleGreen || "#f6fffb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Text strong>Lưu bài học trước, sau đó mở PPT ở danh sách bài học.</Text>
+                <Button icon={<FilePptOutlined />} disabled>
+                  Mở PPT sau khi lưu
+                </Button>
+              </div>
+            </Form.Item>
             <Form.Item
+              hidden
               name="lessonPlan"
               label={
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1438,7 +1462,7 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item>
+            <Form.Item hidden>
               <Button
                 icon={<RobotOutlined />}
                 onClick={enhanceLessonPlan}
@@ -1456,7 +1480,7 @@ export default function CreateLesson({
                 Gợi ý kế hoạch bài học
               </Button>
             </Form.Item>
-            <Form.Item>
+            <Form.Item hidden>
               <Button
                 icon={<RobotOutlined />}
                 onClick={() => {

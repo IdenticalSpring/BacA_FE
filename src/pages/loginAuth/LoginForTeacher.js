@@ -8,7 +8,7 @@ import {
   EyeInvisibleOutlined,
 } from "@ant-design/icons";
 import { colors } from "assets/theme/color";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import authService from "services/authService";
 const { Title, Text } = Typography;
 
@@ -18,6 +18,7 @@ const LoginForTeacher = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );
@@ -37,6 +38,11 @@ const LoginForTeacher = () => {
       let data;
       // Login cho học sinh
       data = await authService.loginTeacher(values.username, values.password);
+      const returnTo = new URLSearchParams(location.search).get("returnTo");
+      if (returnTo && returnTo.startsWith("/ppt") && !returnTo.startsWith("//")) {
+        window.location.assign(returnTo);
+        return;
+      }
       navigate("/teacherpage");
       message.success("Login successful");
     } catch (err) {

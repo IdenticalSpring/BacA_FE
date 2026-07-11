@@ -24,6 +24,7 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
   EditOutlined,
+  FilePptOutlined,
   RobotOutlined,
   SearchOutlined,
   SwapOutlined,
@@ -31,6 +32,8 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import lessonService from "services/lessonService";
+import presentationService from "services/presentationService";
+import { openPptWindow } from "services/pptLaunch";
 import { jwtDecode } from "jwt-decode";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
@@ -404,8 +407,8 @@ export default function LessonMangement({
       formData.append("linkSpeech", linkSpeech);
 
       formData.append("textToSpeech", textToSpeech);
-      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
-      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
+      formData.append("description", editingLesson?.description || "");
+      formData.append("lessonPlan", editingLesson?.lessonPlan || "");
       formData.append("teacherId", teacherId);
       // if (mp3file) {
       //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -460,8 +463,8 @@ export default function LessonMangement({
       formData.append("textToSpeech", textToSpeech);
       formData.append("linkSpeech", linkSpeech);
 
-      formData.append("description", quillRef.current?.getEditor()?.root?.innerHTML || "");
-      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
+      formData.append("description", editingLesson?.description || "");
+      formData.append("lessonPlan", editingLesson?.lessonPlan || "");
       formData.append("teacherId", teacherId);
       // if (mp3file) {
       //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -1033,6 +1036,21 @@ export default function LessonMangement({
       },
     },
   };
+  const openPptEditor = async (lesson) => {
+    try {
+      const presentations = await presentationService.getPresentationsByLesson(lesson.id);
+      const latestPresentation = Array.isArray(presentations) ? presentations[0] : null;
+      openPptWindow({
+        lessonId: lesson.id,
+        presentationId: latestPresentation?.id,
+        title: lesson.name,
+        language: "vi",
+      });
+    } catch (error) {
+      console.error("Failed to prepare PPT editor:", error);
+      message.error("Unable to open PPT. Please check your connection and try again.");
+    }
+  };
   const columns = [
     {
       title: "Tên bài học",
@@ -1178,6 +1196,15 @@ export default function LessonMangement({
             style={{
               backgroundColor: colors.deepGreen,
               borderColor: colors.deepGreen,
+            }}
+          />
+          <Button
+            icon={<FilePptOutlined />}
+            title="Mở PPT"
+            onClick={() => openPptEditor(record)}
+            style={{
+              borderColor: colors.emerald,
+              color: colors.emerald,
             }}
           />
           {/* <Popconfirm
@@ -1331,6 +1358,8 @@ export default function LessonMangement({
             Tải audio lên
           </Button>
           <Button
+            hidden
+            disabled
             style={{
               backgroundColor: colors.emerald,
               borderColor: colors.emerald,
@@ -1352,6 +1381,7 @@ export default function LessonMangement({
             Swap to {swapHtmlMode ? "Quill" : "HTML"}
           </Button>
           <Form.Item
+            hidden
             // name="description"
             label="Mô tả"
             // rules={[{ required: true, message: "Please enter a description" }]}
@@ -1388,6 +1418,8 @@ export default function LessonMangement({
             )}
           </Form.Item>
           <Button
+            hidden
+            disabled
             style={{
               backgroundColor: colors.emerald,
               borderColor: colors.emerald,
@@ -1419,7 +1451,37 @@ export default function LessonMangement({
           >
             Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
           </Button>
+          <Form.Item label="PPT bài học">
+            <div
+              style={{
+                border: `1px solid ${colors.lightGreen || colors.emerald}`,
+                borderRadius: "8px",
+                padding: "16px",
+                backgroundColor: colors.paleGreen || "#f6fffb",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <Text strong>Slide bài học sẽ được tạo và chỉnh sửa bằng PPT.</Text>
+              <Button
+                type="primary"
+                icon={<FilePptOutlined />}
+                disabled={!editingLesson?.id}
+                onClick={() => openPptEditor(editingLesson)}
+                style={{
+                  backgroundColor: colors.emerald,
+                  borderColor: colors.emerald,
+                }}
+              >
+                Mở PPT bài học
+              </Button>
+            </div>
+          </Form.Item>
           <Form.Item
+            hidden
             name="lessonPlan"
             label={
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1472,7 +1534,7 @@ export default function LessonMangement({
               }}
             />
           </Form.Item>
-          <Form.Item>
+          <Form.Item hidden>
             <Button
               icon={<RobotOutlined />}
               onClick={enhanceLessonPlan}
@@ -1490,7 +1552,7 @@ export default function LessonMangement({
               Gợi ý kế hoạch bài học
             </Button>
           </Form.Item>
-          <Form.Item>
+          <Form.Item hidden>
             <Button
               icon={<RobotOutlined />}
               onClick={() => {

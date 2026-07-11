@@ -16,6 +16,8 @@ import MDTypography from "components/MDTypography";
 import DataTable from "examples/Tables/DataTable";
 import classService from "services/classService";
 import lessonService from "services/lessonService";
+import presentationService from "services/presentationService";
+import { openPptWindow } from "services/pptLaunch";
 import homeWorkService from "services/homeWorkService";
 import teacherFeedbackService from "services/teacherFeedbackService";
 import { colors } from "assets/theme/color";
@@ -32,6 +34,7 @@ import link from "assets/theme/components/link";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  FilePptOutlined,
   RobotOutlined,
   SwapOutlined,
   SyncOutlined,
@@ -1088,11 +1091,8 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
-      formData.append(
-        "description",
-        quillRefLessonDescription.current?.getEditor()?.root?.innerHTML || ""
-      );
-      formData.append("lessonPlan", quillRefLessonPlan.current?.getEditor()?.root.innerHTML || "");
+      formData.append("description", editingLesson?.description || "");
+      formData.append("lessonPlan", editingLesson?.lessonPlan || "");
       formData.append("teacherId", teacher.id);
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -1565,6 +1565,22 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
         redo: redoHandlerLessonPlan,
       },
     },
+  };
+
+  const openPptEditor = async (lesson) => {
+    try {
+      const presentations = await presentationService.getPresentationsByLesson(lesson.id);
+      const latestPresentation = Array.isArray(presentations) ? presentations[0] : null;
+      openPptWindow({
+        lessonId: lesson.id,
+        presentationId: latestPresentation?.id,
+        title: lesson.name,
+        language: "vi",
+      });
+    } catch (error) {
+      console.error("Failed to prepare PPT editor:", error);
+      message.error("Unable to open PPT. Please check your connection and try again.");
+    }
   };
 
   const handleDeleteHomework = async (id) => {
@@ -2365,6 +2381,8 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               Tải audio lên
             </Button>
             <Button
+              hidden
+              disabled
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
@@ -2389,6 +2407,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               Swap to {swapHtmlMode ? "Quill" : "HTML"}
             </Button>
             <Form.Item
+              hidden
               // name="description"
               label="Mô tả"
               // rules={[{ required: true, message: "Please enter a description" }]}
@@ -2424,6 +2443,8 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               )}
             </Form.Item>
             <Button
+              hidden
+              disabled
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
@@ -2455,7 +2476,36 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
             >
               Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
             </Button>
-            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
+            <Form.Item label="PPT bài học">
+              <div
+                style={{
+                  border: `1px solid ${colors.lightGreen || colors.emerald}`,
+                  borderRadius: "8px",
+                  padding: "16px",
+                  backgroundColor: colors.paleGreen || "#f6fffb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>Slide bài học sẽ được tạo và chỉnh sửa bằng PPT.</span>
+                <Button
+                  type="primary"
+                  icon={<FilePptOutlined />}
+                  disabled={!editingLesson?.id}
+                  onClick={() => openPptEditor(editingLesson)}
+                  style={{
+                    backgroundColor: colors.emerald,
+                    borderColor: colors.emerald,
+                  }}
+                >
+                  Mở PPT bài học
+                </Button>
+              </div>
+            </Form.Item>
+            <Form.Item hidden name="lessonPlan" label="Kế hoạch bài học">
               {
                 <ReactQuill
                   id="lessonPlanUpdate"
@@ -2488,7 +2538,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 }}
               />
             </Form.Item>
-            <Form.Item>
+            <Form.Item hidden>
               <Button
                 icon={<RobotOutlined />}
                 onClick={enhanceLessonPlan}
@@ -2506,7 +2556,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 Gợi ý kế hoạch bài học
               </Button>
             </Form.Item>
-            <Form.Item>
+            <Form.Item hidden>
               <Button
                 icon={<RobotOutlined />}
                 // onClick={enhanceLessonPlan}

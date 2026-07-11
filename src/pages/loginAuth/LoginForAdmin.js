@@ -7,7 +7,7 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import authService from "services/authService";
 import { ShieldOutlined } from "@mui/icons-material";
 import { colors } from "assets/theme/color";
@@ -18,6 +18,7 @@ const LoginForAdmin = () => {
   const [error, setError] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );
@@ -39,6 +40,11 @@ const LoginForAdmin = () => {
       let data;
       // Login cho admin
       data = await authService.loginAdmin(values.username, values.password);
+      const returnTo = new URLSearchParams(location.search).get("returnTo");
+      if (returnTo && returnTo.startsWith("/ppt") && !returnTo.startsWith("//")) {
+        window.location.assign(returnTo);
+        return;
+      }
       navigate("/dashboard");
       message.success("Login successful");
     } catch (err) {

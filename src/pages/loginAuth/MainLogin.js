@@ -11,7 +11,7 @@ import {
   FacebookFilled,
 } from "@ant-design/icons";
 import { colors } from "assets/theme/color";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "assets/images/logos/logo.png";
 import contentPageService from "services/contentpageService";
 
@@ -33,6 +33,7 @@ export default function MainLogin() {
     typeof window !== "undefined" ? window.innerWidth : 0
   );
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -62,15 +63,18 @@ export default function MainLogin() {
   }, []);
 
   // Navigation handlers
+  const withReturnTo = (path) => path + location.search;
+
   const navigateToStudentLogin = () => {
-    navigate("/login/student");
+    navigate(withReturnTo("/login/student"));
   };
 
   const navigateToTeacherLogin = () => {
-    navigate("/login/teacher");
+    navigate(withReturnTo("/login/teacher"));
   };
+
   const navigateToAdminLogin = () => {
-    navigate("/login/admin");
+    navigate(withReturnTo("/login/admin"));
   };
 
   // Animations keyframes CSS
