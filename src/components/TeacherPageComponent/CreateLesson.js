@@ -271,7 +271,7 @@ export default function CreateLesson({
   //             formData.append("file", compressedFile);
 
   //             axios
-  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //               .then((response) => {
   //                 if (response.status === 201) {
   //                   const range = quill.getSelection(true);
@@ -514,7 +514,7 @@ export default function CreateLesson({
 
   //     try {
   //       const response = await axios.post(
-  //         process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+  //         process.env.REACT_APP_API_BASE_URL + "/files/upload",
   //         formData
   //       );
   //       if (response.status === 201 && quillRefDescription.current) {
@@ -544,7 +544,7 @@ export default function CreateLesson({
   //     //       formData.append("file", compressedFile);
 
   //     //       axios
-  //     //         .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //     //         .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //     //         .then((response) => {
   //     //           if (response.status === 201 && quillRefDescription.current) {
   //     //             const editor = quillRefDescription.current?.getEditor();
@@ -654,7 +654,7 @@ export default function CreateLesson({
 
   //     // try {
   //     //   const response = await axios.post(
-  //     //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+  //     //     process.env.REACT_APP_API_BASE_URL + "/files/upload",
   //     //     formData
   //     //   );
   //     //   if (response.status === 201 && quillRefDescription.current) {
@@ -677,7 +677,7 @@ export default function CreateLesson({
   //     formData.append("file", file);
 
   //     axios
-  //       .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //       .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //       .then((response) => {
   //         if (response.status === 201 && quillRefLessonPlan.current) {
   //           const editor = quillRefLessonPlan.current?.getEditor();
@@ -794,7 +794,7 @@ export default function CreateLesson({
 
   //     try {
   //       const response = await axios.post(
-  //         process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+  //         process.env.REACT_APP_API_BASE_URL + "/files/upload",
   //         formData
   //       );
 
@@ -968,6 +968,11 @@ export default function CreateLesson({
     }
   };
 
+  const getLessonPlanContent = () => {
+    if (swapHtmlLessonPlanMode) return htmlLessonPlanContent;
+    return quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
+  };
+
   const handleSubmit = async (values, status) => {
     try {
       if (selected.size === 0) {
@@ -994,7 +999,7 @@ export default function CreateLesson({
       formData.append("textToSpeech", textToSpeech);
       formData.append("linkSpeech", linkSpeech);
       formData.append("description", ""); // Lấy nội dung từ description
-      formData.append("lessonPlan", ""); // PPT replaces the old text lesson plan field
+      formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacherId);
 
       // if (mp3file) {
@@ -1355,8 +1360,6 @@ export default function CreateLesson({
             </Form.Item>
 
             <Button
-              hidden
-              disabled
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
@@ -1409,7 +1412,6 @@ export default function CreateLesson({
               </div>
             </Form.Item>
             <Form.Item
-              hidden
               name="lessonPlan"
               label={
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1462,7 +1464,7 @@ export default function CreateLesson({
                 }}
               />
             </Form.Item>
-            <Form.Item hidden>
+            <Form.Item>
               <Button
                 icon={<RobotOutlined />}
                 onClick={enhanceLessonPlan}
@@ -1480,7 +1482,7 @@ export default function CreateLesson({
                 Gợi ý kế hoạch bài học
               </Button>
             </Form.Item>
-            <Form.Item hidden>
+            <Form.Item>
               <Button
                 icon={<RobotOutlined />}
                 onClick={() => {

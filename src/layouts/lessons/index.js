@@ -307,7 +307,7 @@ function Lessons() {
   //             formData.append("file", compressedFile);
 
   //             axios
-  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //               .then((response) => {
   //                 if (response.status === 201) {
   //                   const range = quill.getSelection(true);
@@ -377,7 +377,7 @@ function Lessons() {
 
       try {
         const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          process.env.REACT_APP_API_BASE_URL + "/files/upload",
           formData
         );
         if (response.status === 201 && quillRef.current) {
@@ -406,7 +406,7 @@ function Lessons() {
       //       formData.append("file", compressedFile);
 
       //       axios
-      //         .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+      //         .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
       //         .then((response) => {
       //           if (response.status === 201 && quillRef.current) {
       //             const editor = quillRef.current?.getEditor();
@@ -443,7 +443,7 @@ function Lessons() {
 
       // try {
       //   const response = await axios.post(
-      //     process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+      //     process.env.REACT_APP_API_BASE_URL + "/files/upload",
       //     formData
       //   );
       //   if (response.status === 201 && quillRef.current) {
@@ -466,7 +466,7 @@ function Lessons() {
       formData.append("file", file);
 
       axios
-        .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+        .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
         .then((response) => {
           if (response.status === 201 && quillRefLessonPlan.current) {
             const editor = quillRefLessonPlan.current?.getEditor();
@@ -509,7 +509,7 @@ function Lessons() {
 
       try {
         const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          process.env.REACT_APP_API_BASE_URL + "/files/upload",
           formData
         );
 

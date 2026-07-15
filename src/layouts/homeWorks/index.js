@@ -297,7 +297,7 @@ function HomeWorks() {
 
       try {
         const response = await axios.post(
-          process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary",
+          process.env.REACT_APP_API_BASE_URL + "/files/upload",
           formData
         );
 

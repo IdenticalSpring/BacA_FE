@@ -390,6 +390,16 @@ export default function LessonMangement({
       }
     }
   }, [mp3Url]);
+
+  const getLessonPlanContent = () => {
+    if (swapHtmlLessonPlanMode) return htmlLessonPlanContent;
+    return (
+      quillRefLessonPlan.current?.getEditor()?.root?.innerHTML ??
+      editingLesson?.lessonPlan ??
+      ""
+    );
+  };
+
   const handleSave = async () => {
     try {
       setLoadingUpdate(true);
@@ -408,7 +418,7 @@ export default function LessonMangement({
 
       formData.append("textToSpeech", textToSpeech);
       formData.append("description", editingLesson?.description || "");
-      formData.append("lessonPlan", editingLesson?.lessonPlan || "");
+      formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacherId);
       // if (mp3file) {
       //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -464,7 +474,7 @@ export default function LessonMangement({
       formData.append("linkSpeech", linkSpeech);
 
       formData.append("description", editingLesson?.description || "");
-      formData.append("lessonPlan", editingLesson?.lessonPlan || "");
+      formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacherId);
       // if (mp3file) {
       //   formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -577,7 +587,7 @@ export default function LessonMangement({
   //             formData.append("file", compressedFile);
 
   //             axios
-  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //               .then((response) => {
   //                 if (response.status === 201) {
   //                   const range = quill.getSelection(true);
@@ -1418,8 +1428,6 @@ export default function LessonMangement({
             )}
           </Form.Item>
           <Button
-            hidden
-            disabled
             style={{
               backgroundColor: colors.emerald,
               borderColor: colors.emerald,
@@ -1481,7 +1489,6 @@ export default function LessonMangement({
             </div>
           </Form.Item>
           <Form.Item
-            hidden
             name="lessonPlan"
             label={
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1534,7 +1541,7 @@ export default function LessonMangement({
               }}
             />
           </Form.Item>
-          <Form.Item hidden>
+          <Form.Item>
             <Button
               icon={<RobotOutlined />}
               onClick={enhanceLessonPlan}
@@ -1552,7 +1559,7 @@ export default function LessonMangement({
               Gợi ý kế hoạch bài học
             </Button>
           </Form.Item>
-          <Form.Item hidden>
+          <Form.Item>
             <Button
               icon={<RobotOutlined />}
               onClick={() => {

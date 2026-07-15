@@ -1076,6 +1076,15 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       }
     }
   }, [mp3Url]);
+  const getLessonPlanContent = () => {
+    if (swapHtmlLessonPlanMode) return htmlLessonPlanContent;
+    return (
+      quillRefLessonPlan.current?.getEditor()?.root?.innerHTML ??
+      editingLesson?.lessonPlan ??
+      ""
+    );
+  };
+
   const handleSaveLesson = async () => {
     try {
       setLoadingUpdateLesson(true);
@@ -1092,7 +1101,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
       formData.append("description", editingLesson?.description || "");
-      formData.append("lessonPlan", editingLesson?.lessonPlan || "");
+      formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacher.id);
       if (mp3file) {
         formData.append("mp3File", new File([mp3file], "audio.mp3", { type: "audio/mp3" }));
@@ -1164,7 +1173,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   //             formData.append("file", compressedFile);
 
   //             axios
-  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //               .then((response) => {
   //                 if (response.status === 201) {
   //                   const range = quill.getSelection(true);
@@ -2443,8 +2452,6 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               )}
             </Form.Item>
             <Button
-              hidden
-              disabled
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
@@ -2505,7 +2512,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 </Button>
               </div>
             </Form.Item>
-            <Form.Item hidden name="lessonPlan" label="Kế hoạch bài học">
+            <Form.Item name="lessonPlan" label="Kế hoạch bài học">
               {
                 <ReactQuill
                   id="lessonPlanUpdate"
@@ -2538,7 +2545,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 }}
               />
             </Form.Item>
-            <Form.Item hidden>
+            <Form.Item>
               <Button
                 icon={<RobotOutlined />}
                 onClick={enhanceLessonPlan}
@@ -2556,7 +2563,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 Gợi ý kế hoạch bài học
               </Button>
             </Form.Item>
-            <Form.Item hidden>
+            <Form.Item>
               <Button
                 icon={<RobotOutlined />}
                 // onClick={enhanceLessonPlan}
@@ -2986,17 +2993,6 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
                 </div>
               </Form.Item>
             ))} */}
-            {/* <div style={{ marginBottom: "16px" }}>
-            <audio controls style={{ width: "100%" }}>
-              <source
-                src={
-                  "https://res.cloudinary.com/ddd1hxsx0/video/upload/v1742718873/o7o1ouv3el4w72s4rxnc.mp3"
-                }
-                type="audio/mp3"
-              />
-              Your browser does not support the audio element.
-            </audio>
-          </div> */}
             {/* <Form.Item
             name="linkYoutube"
             label="Link Youtube Bài tập"

@@ -288,7 +288,7 @@ export default function CreateHomeWork({
   //             formData.append("file", compressedFile);
 
   //             axios
-  //               .post(process.env.REACT_APP_API_BASE_URL + "/upload/cloudinary", formData)
+  //               .post(process.env.REACT_APP_API_BASE_URL + "/files/upload", formData)
   //               .then((response) => {
   //                 if (response.status === 201) {
   //                   const range = quill.getSelection(true);
@@ -1191,17 +1191,6 @@ export default function CreateHomeWork({
                 setQuestionList={setQuestionList}
               />
             </Form.Item> */}
-            {/* <div style={{ marginBottom: "16px" }}>
-            <audio controls style={{ width: "100%" }}>
-              <source
-                src={
-                  "https://res.cloudinary.com/ddd1hxsx0/video/upload/v1742718873/o7o1ouv3el4w72s4rxnc.mp3"
-                }
-                type="audio/mp3"
-              />
-              Your browser does not support the audio element.
-            </audio>
-          </div> */}
             {/* <Form.Item
               name="linkYoutube"
               label="Link Youtube bài tập"
