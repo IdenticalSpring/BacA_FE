@@ -253,6 +253,8 @@ export default function LessonMangement({
   const handleEdit = (lesson) => {
     setSelectedLessonId(lesson.id);
     setEditingLesson(lesson);
+    setHtmlContent(lesson.description || "");
+    setSwapHtmlMode(false);
     form.setFieldsValue({
       name: lesson.name,
       linkGame: lesson.linkGame,
@@ -391,6 +393,15 @@ export default function LessonMangement({
     }
   }, [mp3Url]);
 
+  const getDescriptionContent = () => {
+    if (swapHtmlMode) return htmlContent;
+    return (
+      quillRef.current?.getEditor()?.root?.innerHTML ??
+      editingLesson?.description ??
+      ""
+    );
+  };
+
   const getLessonPlanContent = () => {
     if (swapHtmlLessonPlanMode) return htmlLessonPlanContent;
     return (
@@ -417,7 +428,7 @@ export default function LessonMangement({
       formData.append("linkSpeech", linkSpeech);
 
       formData.append("textToSpeech", textToSpeech);
-      formData.append("description", editingLesson?.description || "");
+      formData.append("description", getDescriptionContent());
       formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacherId);
       // if (mp3file) {
@@ -473,7 +484,7 @@ export default function LessonMangement({
       formData.append("textToSpeech", textToSpeech);
       formData.append("linkSpeech", linkSpeech);
 
-      formData.append("description", editingLesson?.description || "");
+      formData.append("description", getDescriptionContent());
       formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacherId);
       // if (mp3file) {
@@ -1284,6 +1295,8 @@ export default function LessonMangement({
           setModalUpdateLessonVisible(false);
           form.resetFields();
           setEditingLesson(null);
+          setHtmlContent("");
+          setSwapHtmlMode(false);
         }}
         footer={[
           <Button
@@ -1298,6 +1311,8 @@ export default function LessonMangement({
               setEditYoutubeIndex(null);
               setTextToSpeech("");
               setLinkSpeech("");
+              setHtmlContent("");
+              setSwapHtmlMode(false);
             }}
           >
             Hủy
@@ -1368,8 +1383,6 @@ export default function LessonMangement({
             Tải audio lên
           </Button>
           <Button
-            hidden
-            disabled
             style={{
               backgroundColor: colors.emerald,
               borderColor: colors.emerald,
@@ -1391,7 +1404,6 @@ export default function LessonMangement({
             Swap to {swapHtmlMode ? "Quill" : "HTML"}
           </Button>
           <Form.Item
-            hidden
             // name="description"
             label="Mô tả"
             // rules={[{ required: true, message: "Please enter a description" }]}

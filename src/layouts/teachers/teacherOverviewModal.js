@@ -942,6 +942,8 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
   const handleEditLesson = (lesson) => {
     setSelectedLessonId(lesson.id);
     setEditingLesson(lesson);
+    setHtmlContent(lesson.description || "");
+    setSwapHtmlMode(false);
     formLesson.setFieldsValue({
       name: lesson.name,
       linkGame: lesson.linkGame,
@@ -1076,6 +1078,15 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       }
     }
   }, [mp3Url]);
+  const getDescriptionContent = () => {
+    if (swapHtmlMode) return htmlContent;
+    return (
+      quillRefLessonDescription.current?.getEditor()?.root?.innerHTML ??
+      editingLesson?.description ??
+      ""
+    );
+  };
+
   const getLessonPlanContent = () => {
     if (swapHtmlLessonPlanMode) return htmlLessonPlanContent;
     return (
@@ -1100,7 +1111,7 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
       // formData.append("linkGame", values.linkGame);
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
-      formData.append("description", editingLesson?.description || "");
+      formData.append("description", getDescriptionContent());
       formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacher.id);
       if (mp3file) {
@@ -2351,6 +2362,8 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
           setTextToSpeech("");
           setModalUpdateLessonVisible(false);
           setEditingLesson(null);
+          setHtmlContent("");
+          setSwapHtmlMode(false);
         }}
         fullWidth
         maxWidth="xl"
@@ -2390,8 +2403,6 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               Tải audio lên
             </Button>
             <Button
-              hidden
-              disabled
               style={{
                 backgroundColor: colors.emerald,
                 borderColor: colors.emerald,
@@ -2416,7 +2427,6 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               Swap to {swapHtmlMode ? "Quill" : "HTML"}
             </Button>
             <Form.Item
-              hidden
               // name="description"
               label="Mô tả"
               // rules={[{ required: true, message: "Please enter a description" }]}
@@ -2767,6 +2777,8 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
               setCurrentYoutubeLink("");
               setEditYoutubeIndex(null);
               setTextToSpeech("");
+              setHtmlContent("");
+              setSwapHtmlMode(false);
             }}
           >
             Cancel

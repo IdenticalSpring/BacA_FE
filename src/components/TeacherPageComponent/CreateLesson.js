@@ -968,6 +968,11 @@ export default function CreateLesson({
     }
   };
 
+  const getDescriptionContent = () => {
+    if (swapHtmlMode) return htmlContent;
+    return quillRefDescription.current?.getEditor()?.root?.innerHTML || "";
+  };
+
   const getLessonPlanContent = () => {
     if (swapHtmlLessonPlanMode) return htmlLessonPlanContent;
     return quillRefLessonPlan.current?.getEditor()?.root?.innerHTML || "";
@@ -998,7 +1003,7 @@ export default function CreateLesson({
       formData.append("linkGame", "meomeo");
       formData.append("textToSpeech", textToSpeech);
       formData.append("linkSpeech", linkSpeech);
-      formData.append("description", ""); // Lấy nội dung từ description
+      formData.append("description", getDescriptionContent());
       formData.append("lessonPlan", getLessonPlanContent());
       formData.append("teacherId", teacherId);
 
@@ -1304,9 +1309,7 @@ export default function CreateLesson({
                 color: colors.white,
                 margin: "10px 0",
               }}
-              hidden
               icon={<SwapOutlined />}
-              disabled
               onClick={() => {
                 if (!swapHtmlMode) {
                   const html = quillRefDescription.current?.getEditor()?.root?.innerHTML || "";
@@ -1323,7 +1326,6 @@ export default function CreateLesson({
               Swap to {swapHtmlMode ? "Quill" : "HTML"}
             </Button>
             <Form.Item
-              hidden
               // name="description"
               label="Mô tả"
             >
