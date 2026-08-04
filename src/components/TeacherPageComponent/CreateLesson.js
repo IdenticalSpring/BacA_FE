@@ -39,6 +39,7 @@ import SpeechToTextComponent from "./SpeechToTextComponent";
 import fileService from "services/fileService";
 import { Calendar } from "lucide-react";
 import sidebarLinkService from "services/sidebarLinkService";
+import { normalizeYouTubeEmbedUrl } from "utils/youtube";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -91,7 +92,7 @@ class CustomVideo extends BlockEmbed {
   static create(value) {
     const node = super.create();
 
-    const src = typeof value === "string" ? value : value.src;
+    const src = normalizeYouTubeEmbedUrl(typeof value === "string" ? value : value.src);
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");

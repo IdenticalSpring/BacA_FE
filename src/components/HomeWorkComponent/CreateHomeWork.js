@@ -45,6 +45,7 @@ import questionService from "services/questionService";
 import QuestionCreateComponent from "./QuestionCreateComponent";
 import teacherService from "services/teacherService";
 import { Calendar } from "lucide-react";
+import { normalizeYouTubeEmbedUrl } from "utils/youtube";
 
 const { Title } = Typography;
 const { Text } = Typography;
@@ -95,7 +96,7 @@ class CustomVideo extends BlockEmbed {
   static create(value) {
     const node = super.create();
 
-    const src = typeof value === "string" ? value : value.src;
+    const src = normalizeYouTubeEmbedUrl(typeof value === "string" ? value : value.src);
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");

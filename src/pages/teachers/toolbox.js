@@ -2,6 +2,7 @@ import React from "react";
 import { Button, Space, Dropdown, Menu } from "antd";
 import {
   BookOutlined,
+  FilePptOutlined,
   FormOutlined,
   BarChartOutlined,
   EditOutlined,
@@ -24,6 +25,8 @@ export const colors = {
 const Toolbox = ({
   onHomework,
   onAssignment,
+  onCreatePpt,
+  showClassTools,
   onClassReview,
   onEnterScores,
   onAttendanceCheck,
@@ -43,6 +46,8 @@ const Toolbox = ({
       }}
     >
       <Space size={12} wrap style={{ justifyContent: "center" }}>
+        {showClassTools && (
+          <>
         <Button
           type="primary"
           icon={<BookOutlined />}
@@ -67,6 +72,22 @@ const Toolbox = ({
         >
           <span className="button-text">Bài về nhà</span>
         </Button>
+          </>
+        )}
+        <Button
+          type="primary"
+          icon={<FilePptOutlined />}
+          onClick={onCreatePpt}
+          style={{
+            backgroundColor: colors.deepGreen,
+            borderColor: colors.deepGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">{"T\u1ea1o PPT"}</span>
+        </Button>
+        {showClassTools && (
+          <>
         <Button
           type="primary"
           icon={<PieChartOutlined />}
@@ -116,6 +137,8 @@ const Toolbox = ({
         >
           <span className="button-text">Tình hình lớp học</span>
         </Button>
+          </>
+        )}
       </Space>
 
       <style>{`
@@ -133,6 +156,8 @@ const Toolbox = ({
 Toolbox.propTypes = {
   onHomework: PropTypes.func.isRequired,
   onAssignment: PropTypes.func.isRequired,
+  onCreatePpt: PropTypes.func.isRequired,
+  showClassTools: PropTypes.bool.isRequired,
   onClassReview: PropTypes.func.isRequired,
   onEnterScores: PropTypes.func.isRequired,
   onAttendanceCheck: PropTypes.func.isRequired,

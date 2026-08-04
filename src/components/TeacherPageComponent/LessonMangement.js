@@ -44,6 +44,7 @@ import axios from "axios";
 import Compressor from "compressorjs";
 import SpeechToTextComponent from "./SpeechToTextComponent";
 import sidebarLinkService from "services/sidebarLinkService";
+import { normalizeYouTubeEmbedUrl } from "utils/youtube";
 const { Text } = Typography;
 const genderOptions = [
   { label: "Giọng nam", value: 1 },
@@ -91,7 +92,7 @@ class CustomVideo extends BlockEmbed {
   static create(value) {
     const node = super.create();
 
-    const src = typeof value === "string" ? value : value.src;
+    const src = normalizeYouTubeEmbedUrl(typeof value === "string" ? value : value.src);
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");

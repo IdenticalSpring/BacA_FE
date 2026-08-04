@@ -18,6 +18,7 @@ import classService from "services/classService";
 import lessonService from "services/lessonService";
 import presentationService from "services/presentationService";
 import { openPptWindow } from "services/pptLaunch";
+import { normalizeYouTubeEmbedUrl } from "utils/youtube";
 import homeWorkService from "services/homeWorkService";
 import teacherFeedbackService from "services/teacherFeedbackService";
 import { colors } from "assets/theme/color";
@@ -114,7 +115,7 @@ class CustomVideo extends BlockEmbed {
   static create(value) {
     const node = super.create();
 
-    const src = typeof value === "string" ? value : value.src;
+    const src = normalizeYouTubeEmbedUrl(typeof value === "string" ? value : value.src);
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");

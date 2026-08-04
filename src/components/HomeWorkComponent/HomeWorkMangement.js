@@ -44,6 +44,7 @@ import VocabularyCreateComponent from "./VocabularyCreateComponent";
 import QuestionCreateComponent from "./QuestionCreateComponent";
 import vocabularyService from "services/vocabularyService";
 import questionService from "services/questionService";
+import { normalizeYouTubeEmbedUrl } from "utils/youtube";
 
 const { Title, Text } = Typography;
 const genderOptions = [
@@ -96,7 +97,7 @@ class CustomVideo extends BlockEmbed {
   static tagName = "iframe";
   static create(value) {
     const node = super.create();
-    const src = typeof value === "string" ? value : value.src;
+    const src = normalizeYouTubeEmbedUrl(typeof value === "string" ? value : value.src);
     node.setAttribute("src", src);
     node.setAttribute("frameborder", "0");
     node.setAttribute("allowfullscreen", "true");

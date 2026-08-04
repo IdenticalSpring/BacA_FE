@@ -7,6 +7,7 @@ import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
 import { Button, Grid, Box } from "@mui/material";
 import { PlayCircle, Youtube, Music, GamepadIcon } from "lucide-react";
+import { normalizeYouTubeIframesInHtml } from "utils/youtube";
 
 function extractYouTubeId(url) {
   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
@@ -197,7 +198,9 @@ function LessonDetailModal({ open, onClose, lesson }) {
                     Description
                   </MDTypography>
                   <div
-                    dangerouslySetInnerHTML={{ __html: lesson.description }}
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeYouTubeIframesInHtml(lesson.description),
+                    }}
                     style={{
                       maxHeight: "200px",
                       overflowY: "auto",

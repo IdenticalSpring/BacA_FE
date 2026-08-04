@@ -43,6 +43,9 @@ import pagevisitService from "services/pagevisitService";
 import ShareButtons from "components/theme/ShareButton";
 import sidebarLinkService from "services/sidebarLinkService";
 let count = 0;
+const ADSENSE_SCRIPT_ID = "happyclass-adsense-homepage";
+const ADSENSE_SCRIPT_SRC =
+  "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1467907056644443";
 export default function Homepage() {
   const [visible, setVisible] = useState({
     hero: false,
@@ -174,6 +177,17 @@ export default function Homepage() {
   };
   // Determine if we should show mobile or desktop layout
   const isMobile = window.innerWidth < 1150;
+  useEffect(() => {
+    if (document.getElementById(ADSENSE_SCRIPT_ID)) return;
+
+    const script = document.createElement("script");
+    script.id = ADSENSE_SCRIPT_ID;
+    script.async = true;
+    script.src = ADSENSE_SCRIPT_SRC;
+    script.crossOrigin = "anonymous";
+    document.head.appendChild(script);
+  }, []);
+
   useEffect(() => {
     const fetchContentData = async () => {
       try {

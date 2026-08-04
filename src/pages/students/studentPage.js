@@ -65,6 +65,7 @@ import ConvertTTS from "./ConvertTTS";
 import ProfileModal from "./profileModal";
 import StudentFeedbackModal from "./feedbackModal";
 import contentPageService from "services/contentpageService";
+import { normalizeYouTubeIframesInHtml } from "utils/youtube";
 import { Close } from "@mui/icons-material";
 import VocabularyStudyComponent from "components/Vocabulary/VocabularyStudyComponent";
 import AnswerQuestionComponent from "components/QuestionComponent/AnswerQuestionComponet";
@@ -722,7 +723,9 @@ const StudentPage = () => {
                 </div>
                 <div
                   style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
-                  dangerouslySetInnerHTML={{ __html: lesson.description || " " }}
+                  dangerouslySetInnerHTML={{
+                    __html: normalizeYouTubeIframesInHtml(lesson.description || " "),
+                  }}
                 />
                 {/* =================== PHẦN THÊM MỚI =================== */}
                 {/* Kiểm tra nếu có linkSpeech thì mới hiển thị trình phát audio */}
@@ -825,7 +828,7 @@ const StudentPage = () => {
                 <div
                   style={{ maxWidth: "100%", overflow: "auto", margin: "10px 0" }}
                   dangerouslySetInnerHTML={{
-                    __html: hw.description || "Chưa có mô tả cho bài tập này.",
+                    __html: normalizeYouTubeIframesInHtml(hw.description || "Ch\u01b0a c\u00f3 m\u00f4 t\u1ea3 cho b\u00e0i t\u1eadp n\u00e0y."),
                   }}
                 />
                 <div

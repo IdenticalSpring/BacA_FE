@@ -78,6 +78,7 @@ import { io } from "socket.io-client"; // Thêm import này
 import messageService from "services/messageService";
 import classScheduleService from "services/classScheduleService";
 import sidebarLinkService from "services/sidebarLinkService";
+import { openPptWindow } from "services/pptLaunch";
 import toolbar from "utils/teacherPageToolBar";
 import quillFormats from "utils/teacherPageQuillFormat";
 import daysOfWeek from "utils/dayofWeek";
@@ -818,6 +819,14 @@ const TeacherPage = () => {
     setAllStudentsSelected(false);
     setHomeworkModal(true);
     setIsLessonCreate(false);
+  };
+
+  const openStandalonePpt = () => {
+    try {
+      openPptWindow({ language: "vi" });
+    } catch (error) {
+      message.error(error?.message || "Kh\u00f4ng th\u1ec3 m\u1edf tr\u00ecnh so\u1ea1n PPT.");
+    }
   };
 
   const checkClassScheduleForToday = () => {
@@ -2012,8 +2021,7 @@ const TeacherPage = () => {
           />
         )}
 
-        {selectedClass && (
-          <div
+        <div
             style={{
               position: "fixed",
               bottom: 0,
@@ -2022,9 +2030,10 @@ const TeacherPage = () => {
               zIndex: 10,
             }}
           >
-            <div
-              style={{
-                display: "flex",
+            {selectedClass && (
+              <div
+                style={{
+                  display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "12px 0",
@@ -2057,10 +2066,13 @@ const TeacherPage = () => {
                   </Button>
                 </>
               )}
-            </div>
+              </div>
+            )}
             <Toolbox
               onHomework={openHomeworkModal}
               onAssignment={() => openAssignmentModal()}
+              onCreatePpt={openStandalonePpt}
+              showClassTools={Boolean(selectedClass)}
               onClassReview={handleOpenEvaluationModal}
               onEnterScores={handleEnterTestScores}
               onAttendanceCheck={handleAttendanceCheck}
@@ -2068,7 +2080,9 @@ const TeacherPage = () => {
               // setIsLessonCreate = {setIsLessonCreate}
             />
 
-            {/* Floating Links & Social Buttons */}
+            {selectedClass && (
+              <>
+                {/* Floating Links & Social Buttons */}
             <div
               style={{
                 display: "flex",
@@ -2187,8 +2201,9 @@ const TeacherPage = () => {
                 `}
               </style>
             </div>
-          </div>
-        )}
+              </>
+            )}
+        </div>
       </Layout>
       <Modal
         title="Nội dung bài học"
