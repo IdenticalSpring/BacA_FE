@@ -46,6 +46,18 @@ const Toolbox = ({
       }}
     >
       <Space size={12} wrap style={{ justifyContent: "center" }}>
+        <Button
+          type="primary"
+          icon={<FilePptOutlined />}
+          onClick={onCreatePpt}
+          style={{
+            backgroundColor: colors.deepGreen,
+            borderColor: colors.deepGreen,
+            color: colors.white,
+          }}
+        >
+          <span className="button-text">{"T\u1ea1o PPT"}</span>
+        </Button>
         {showClassTools && (
           <>
         <Button
@@ -74,18 +86,6 @@ const Toolbox = ({
         </Button>
           </>
         )}
-        <Button
-          type="primary"
-          icon={<FilePptOutlined />}
-          onClick={onCreatePpt}
-          style={{
-            backgroundColor: colors.deepGreen,
-            borderColor: colors.deepGreen,
-            color: colors.white,
-          }}
-        >
-          <span className="button-text">{"T\u1ea1o PPT"}</span>
-        </Button>
         {showClassTools && (
           <>
         <Button

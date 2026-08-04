@@ -1,20 +1,20 @@
 import { normalizeYouTubeEmbedUrl, normalizeYouTubeIframesInHtml } from "./youtube";
 
 describe("YouTube embed normalization", () => {
-  it("converts the customer test URL to an embeddable URL", () => {
+  it("converts a watch URL to an embeddable URL", () => {
     expect(
-      normalizeYouTubeEmbedUrl("https://www.youtube.com/watch?v=YTo1y9HCWIU")
-    ).toBe("https://www.youtube.com/embed/YTo1y9HCWIU");
+      normalizeYouTubeEmbedUrl("https://www.youtube.com/watch?v=AbCdEfGhI12")
+    ).toBe("https://www.youtube.com/embed/AbCdEfGhI12");
   });
 
   it.each([
-    "https://youtu.be/YTo1y9HCWIU",
-    "https://www.youtube.com/shorts/YTo1y9HCWIU",
-    "https://www.youtube.com/live/YTo1y9HCWIU",
-    "https://www.youtube.com/embed/YTo1y9HCWIU",
+    "https://youtu.be/AbCdEfGhI12",
+    "https://www.youtube.com/shorts/AbCdEfGhI12",
+    "https://www.youtube.com/live/AbCdEfGhI12",
+    "https://www.youtube.com/embed/AbCdEfGhI12",
   ])("supports another common YouTube URL form: %s", (url) => {
     expect(normalizeYouTubeEmbedUrl(url)).toBe(
-      "https://www.youtube.com/embed/YTo1y9HCWIU"
+      "https://www.youtube.com/embed/AbCdEfGhI12"
     );
   });
 
@@ -26,10 +26,10 @@ describe("YouTube embed normalization", () => {
 
   it("repairs YouTube iframe URLs in previously saved HTML", () => {
     const html =
-      '<p>Lesson video</p><iframe src="https://www.youtube.com/watch?v=YTo1y9HCWIU"></iframe>';
+      '<p>Lesson video</p><iframe src="https://www.youtube.com/watch?v=AbCdEfGhI12"></iframe>';
 
     expect(normalizeYouTubeIframesInHtml(html)).toContain(
-      'src="https://www.youtube.com/embed/YTo1y9HCWIU"'
+      'src="https://www.youtube.com/embed/AbCdEfGhI12"'
     );
   });
 });
