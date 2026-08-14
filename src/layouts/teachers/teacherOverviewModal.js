@@ -1590,10 +1590,14 @@ function TeacherOverViewModal({ open, onClose, teacher, placeholderLessonPlan })
 
   const openPptEditor = async (lesson) => {
     try {
-      const presentations = await presentationService.getPresentationsByLesson(lesson.id);
+      const presentations = await presentationService.getPresentationsByLesson(
+        lesson.id,
+        classID
+      );
       const latestPresentation = Array.isArray(presentations) ? presentations[0] : null;
       openPptWindow({
         lessonId: lesson.id,
+        classId: classID,
         presentationId: latestPresentation?.id,
         title: lesson.name,
         language: "vi",

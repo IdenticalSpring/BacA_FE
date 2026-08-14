@@ -21,7 +21,6 @@ import {
   Modal,
   Avatar,
   Select,
-  InputNumber,
 } from "antd";
 import {
   AudioOutlined,
@@ -102,7 +101,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
   // Swipe animation states
   const [cardIndex, setCardIndex] = useState(0);
   const [cardIndexForStudent, setCardIndexForStudent] = useState(0);
-  const [dailyJumpValue, setDailyJumpValue] = useState(1);
+  const [dailyJumpValue, setDailyJumpValue] = useState("1");
   const [animation, setAnimation] = useState("");
   const [animationForStudent, setAnimationForStudent] = useState("");
   const audioRefs = useRef([]);
@@ -142,7 +141,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
 
   useEffect(() => {
     if (dailyVocabularyMax === 0) {
-      setDailyJumpValue(null);
+      setDailyJumpValue("");
       return;
     }
 
@@ -151,29 +150,29 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
       return;
     }
 
-    setDailyJumpValue(cardIndex + 1);
+    setDailyJumpValue(String(cardIndex + 1));
   }, [cardIndex, dailyVocabularyMax]);
 
   const commitDailyJump = useCallback(
     (rawValue = dailyJumpValue) => {
       if (dailyVocabularyMax === 0) {
-        setDailyJumpValue(null);
+        setDailyJumpValue("");
         return;
       }
 
-      const parsedValue = Number(rawValue);
-      if (!Number.isFinite(parsedValue)) {
-        setDailyJumpValue(cardIndex + 1);
+      const parsedValue = Number(String(rawValue).trim());
+      if (!Number.isInteger(parsedValue)) {
+        setDailyJumpValue(String(cardIndex + 1));
         return;
       }
 
       const targetNumber = Math.min(
-        Math.max(Math.round(parsedValue), 1),
+        Math.max(parsedValue, 1),
         dailyVocabularyMax
       );
       const targetIndex = targetNumber - 1;
 
-      setDailyJumpValue(targetNumber);
+      setDailyJumpValue(String(targetNumber));
       if (targetIndex === cardIndex) return;
 
       setAnimation(targetIndex > cardIndex ? "slide-from-right" : "slide-from-left");
@@ -917,7 +916,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
     }, 700);
   }, [cardIndexForStudent, vocabularyItems]);
   // Vocabulary item card with swipe functionality
-  const VocabularyItemCard = ({ item, index }) => {
+  const renderVocabularyItemCard = (item, index) => {
     const isActive = index === cardIndex;
 
     const cardStyles = {
@@ -974,19 +973,22 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
-              <InputNumber
-                min={1}
-                max={dailyVocabularyMax}
+              <Input
+                aria-label="Chuyển đến thẻ từ vựng"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={dailyJumpValue}
-                controls={false}
                 size="small"
                 style={{ width: 54, textAlign: "center" }}
-                onChange={(value) => setDailyJumpValue(value)}
-                onBlur={() => commitDailyJump()}
-                onPressEnter={(e) => {
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) setDailyJumpValue(value);
+                }}
+                onBlur={() => setDailyJumpValue(String(cardIndex + 1))}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
                   e.preventDefault();
                   commitDailyJump();
-                  e.currentTarget.blur();
                 }}
               />
               <Text style={{ color: colors.midGreen, fontWeight: "500" }}>
@@ -1365,7 +1367,7 @@ const VocabularyStudyComponent = ({ selectedHomeWorkId, isMobile, studentId }) =
                     {currentItems.map(
                       (item, index) =>
                         !item.student && (
-                          <VocabularyItemCard key={item.id} item={item} index={index} />
+                          renderVocabularyItemCard(item, index)
                         )
                     )}
                   </div>

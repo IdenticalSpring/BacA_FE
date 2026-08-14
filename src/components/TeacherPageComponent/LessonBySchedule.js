@@ -1,6 +1,6 @@
 import { Empty, Modal, Pagination, Select } from "antd";
 import { colors } from "assets/theme/color";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import lessonByScheduleService from "services/lessonByScheduleService";
 const { Option } = Select;
 import PropTypes from "prop-types";
@@ -14,10 +14,55 @@ export default function LessonBySchedule({
   setSelected,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const visibleLessonByScheduleData = useMemo(() => {
+    const groupedSlots = new Map();
+
+    (lessonByScheduleData || []).forEach((item) => {
+      const dateOnly = String(item.date || "").split("T")[0];
+      const scheduleId = item.schedule?.id ?? "unknown";
+      const key = `${scheduleId}|${dateOnly}`;
+      const group = groupedSlots.get(key) || [];
+      group.push(item);
+      groupedSlots.set(key, group);
+    });
+
+    return Array.from(groupedSlots.values()).flatMap((group) => {
+      if (group.length === 1) return group;
+
+      const pickRepresentative = (items) =>
+        [...items].sort((left, right) => {
+          const leftHasHomework = Boolean(left.homeWorkId);
+          const rightHasHomework = Boolean(right.homeWorkId);
+          if (leftHasHomework !== rightHasHomework) {
+            return leftHasHomework ? -1 : 1;
+          }
+          return Number(left.id) - Number(right.id);
+        })[0];
+
+      // Never hide distinct lessons already assigned by a teacher. Empty
+      // duplicate rows are only collapsed in this picker; database rows and
+      // their homework/check-in links remain untouched.
+      const assignedLessons = group.filter((item) => item.lessonID);
+      if (assignedLessons.length > 0) {
+        const byLesson = new Map();
+        assignedLessons.forEach((item) => {
+          const items = byLesson.get(item.lessonID) || [];
+          items.push(item);
+          byLesson.set(item.lessonID, items);
+        });
+        return Array.from(byLesson.values())
+          .map(pickRepresentative)
+          .filter(Boolean);
+      }
+
+      const representative = pickRepresentative(group);
+      return representative ? [representative] : [];
+    });
+  }, [lessonByScheduleData]);
   const pageSize = 5; // số lượng hiển thị mỗi trang
 
   // Tính dữ liệu trang hiện tại
-  const paginatedData = lessonByScheduleData?.slice(
+  const paginatedData = visibleLessonByScheduleData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -58,11 +103,10 @@ export default function LessonBySchedule({
     >
       {paginatedData?.length > 0 ? (
         <>
-          {paginatedData.map((item, index) => {
-            const realIndex = (currentPage - 1) * pageSize + index;
+          {paginatedData.map((item) => {
             return !item.lessonID ? (
               <div
-                key={realIndex}
+                key={item.id}
                 style={
                   selected.has(item.id)
                     ? {
@@ -116,7 +160,7 @@ export default function LessonBySchedule({
               </div>
             ) : (
               <div
-                key={realIndex}
+                key={item.id}
                 style={{
                   padding: "16px",
                   marginBottom: "12px",
@@ -152,12 +196,12 @@ export default function LessonBySchedule({
           })}
 
           {/* Pagination */}
-          {lessonByScheduleData.length > pageSize && (
+          {visibleLessonByScheduleData.length > pageSize && (
             <Pagination
               size="small"
               current={currentPage}
               pageSize={pageSize}
-              total={lessonByScheduleData.length}
+              total={visibleLessonByScheduleData.length}
               onChange={(page) => setCurrentPage(page)}
               style={{ textAlign: "center", marginTop: 20 }}
               showSizeChanger={false}

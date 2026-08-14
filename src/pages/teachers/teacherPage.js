@@ -823,7 +823,7 @@ const TeacherPage = () => {
 
   const openStandalonePpt = () => {
     try {
-      openPptWindow({ language: "vi" });
+      openPptWindow({ classId: selectedClass, language: "vi" });
     } catch (error) {
       message.error(error?.message || "Kh\u00f4ng th\u1ec3 m\u1edf tr\u00ecnh so\u1ea1n PPT.");
     }

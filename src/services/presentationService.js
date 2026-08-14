@@ -33,8 +33,9 @@ const presentationService = {
     return response.data;
   },
 
-  getPresentationsByLesson: async (lessonId) => {
+  getPresentationsByLesson: async (lessonId, classId) => {
     const response = await axios.get(`${API_BASE_URL}/presentations/lesson/${lessonId}`, {
+      params: classId ? { classId } : {},
       headers: authHeaders(),
     });
     return response.data;

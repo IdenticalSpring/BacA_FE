@@ -12,7 +12,14 @@ const getPptBaseUrl = () => {
   return target;
 };
 
-export const openPptWindow = ({ lessonId, lessonByScheduleId, presentationId, title, language = "vi" } = {}) => {
+export const openPptWindow = ({
+  lessonId,
+  lessonByScheduleId,
+  classId,
+  presentationId,
+  title,
+  language = "vi",
+} = {}) => {
   const token = sessionStorage.getItem("token");
   if (!token) {
     throw new Error("Please sign in before opening PPT.");
@@ -21,6 +28,7 @@ export const openPptWindow = ({ lessonId, lessonByScheduleId, presentationId, ti
   const target = getPptBaseUrl();
   if (lessonId) target.searchParams.set("lessonId", String(lessonId));
   if (lessonByScheduleId) target.searchParams.set("lessonByScheduleId", String(lessonByScheduleId));
+  if (classId) target.searchParams.set("classId", String(classId));
   if (presentationId) target.searchParams.set("presentationId", String(presentationId));
   if (title) target.searchParams.set("title", title);
   target.searchParams.set("lang", language);
