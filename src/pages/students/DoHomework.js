@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Layout,
   Input,
@@ -34,6 +34,46 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
+
+const ADSENSE_CLIENT_ID = "ca-pub-1467907056644443";
+const CLASS_ENTRY_AD_SLOT_ID = "9659240974";
+
+function ClassEntryAd() {
+  const adRef = useRef(null);
+
+  useEffect(() => {
+    if (!adRef.current || adRef.current.dataset.adsbygoogleStatus) return;
+
+    try {
+      window.adsbygoogle = window.adsbygoogle || [];
+      window.adsbygoogle.push({});
+    } catch {
+      // Keep the class-entry flow usable when AdSense is blocked or unavailable.
+    }
+  }, []);
+
+  return (
+    <div
+      aria-label="Advertisement"
+      style={{
+        width: "100%",
+        minHeight: "100px",
+        marginTop: "24px",
+        overflow: "hidden",
+      }}
+    >
+      <ins
+        ref={adRef}
+        className="adsbygoogle"
+        style={{ display: "block" }}
+        data-ad-client={ADSENSE_CLIENT_ID}
+        data-ad-slot={CLASS_ENTRY_AD_SLOT_ID}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    </div>
+  );
+}
 
 // Color palette
 
@@ -261,6 +301,7 @@ export default function DoHomework() {
           ) : (
             renderStudentList()
           )}
+          {!classData && <ClassEntryAd />}
         </div>
       </Content>
 
