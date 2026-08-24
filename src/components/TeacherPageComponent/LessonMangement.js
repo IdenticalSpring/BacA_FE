@@ -24,7 +24,6 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
   EditOutlined,
-  FilePptOutlined,
   RobotOutlined,
   SearchOutlined,
   SwapOutlined,
@@ -32,8 +31,6 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import lessonService from "services/lessonService";
-import presentationService from "services/presentationService";
-import { openPptWindow } from "services/pptLaunch";
 import { jwtDecode } from "jwt-decode";
 import TextArea from "antd/es/input/TextArea";
 import homeWorkService from "services/homeWorkService";
@@ -1058,25 +1055,6 @@ export default function LessonMangement({
       },
     },
   };
-  const openPptEditor = async (lesson) => {
-    try {
-      const presentations = await presentationService.getPresentationsByLesson(
-        lesson.id,
-        classID
-      );
-      const latestPresentation = Array.isArray(presentations) ? presentations[0] : null;
-      openPptWindow({
-        lessonId: lesson.id,
-        classId: classID,
-        presentationId: latestPresentation?.id,
-        title: lesson.name,
-        language: "vi",
-      });
-    } catch (error) {
-      console.error("Failed to prepare PPT editor:", error);
-      message.error("Unable to open PPT. Please check your connection and try again.");
-    }
-  };
   const columns = [
     {
       title: "Tên bài học",
@@ -1222,15 +1200,6 @@ export default function LessonMangement({
             style={{
               backgroundColor: colors.deepGreen,
               borderColor: colors.deepGreen,
-            }}
-          />
-          <Button
-            icon={<FilePptOutlined />}
-            title="Mở PPT"
-            onClick={() => openPptEditor(record)}
-            style={{
-              borderColor: colors.emerald,
-              color: colors.emerald,
             }}
           />
           {/* <Popconfirm
@@ -1476,35 +1445,6 @@ export default function LessonMangement({
           >
             Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
           </Button>
-          <Form.Item label="PPT bài học">
-            <div
-              style={{
-                border: `1px solid ${colors.lightGreen || colors.emerald}`,
-                borderRadius: "8px",
-                padding: "16px",
-                backgroundColor: colors.paleGreen || "#f6fffb",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-                flexWrap: "wrap",
-              }}
-            >
-              <Text strong>Slide bài học sẽ được tạo và chỉnh sửa bằng PPT.</Text>
-              <Button
-                type="primary"
-                icon={<FilePptOutlined />}
-                disabled={!editingLesson?.id}
-                onClick={() => openPptEditor(editingLesson)}
-                style={{
-                  backgroundColor: colors.emerald,
-                  borderColor: colors.emerald,
-                }}
-              >
-                Mở PPT bài học
-              </Button>
-            </div>
-          </Form.Item>
           <Form.Item
             name="lessonPlan"
             label={

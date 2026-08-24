@@ -16,7 +16,6 @@ import {
 } from "antd";
 import {
   SaveOutlined,
-  FilePptOutlined,
   RobotOutlined,
   SendOutlined,
   UploadOutlined,
@@ -1394,26 +1393,6 @@ export default function CreateLesson({
             >
               Swap to {swapHtmlLessonPlanMode ? "Quill" : "HTML"}
             </Button>
-            <Form.Item label="PPT bài học">
-              <div
-                style={{
-                  border: `1px solid ${colors.lightGreen || colors.emerald}`,
-                  borderRadius: "8px",
-                  padding: "16px",
-                  backgroundColor: colors.paleGreen || "#f6fffb",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                }}
-              >
-                <Text strong>Lưu bài học trước, sau đó mở PPT ở danh sách bài học.</Text>
-                <Button icon={<FilePptOutlined />} disabled>
-                  Mở PPT sau khi lưu
-                </Button>
-              </div>
-            </Form.Item>
             <Form.Item
               name="lessonPlan"
               label={

@@ -1,6 +1,6 @@
 import { Empty, Modal, Pagination, Select } from "antd";
 import { colors } from "assets/theme/color";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import lessonByScheduleService from "services/lessonByScheduleService";
 const { Option } = Select;
 import PropTypes from "prop-types";
@@ -14,6 +14,7 @@ export default function LessonBySchedule({
   setSelected,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5; // số lượng hiển thị mỗi trang
   const visibleLessonByScheduleData = useMemo(() => {
     const groupedSlots = new Map();
 
@@ -59,7 +60,48 @@ export default function LessonBySchedule({
       return representative ? [representative] : [];
     });
   }, [lessonByScheduleData]);
-  const pageSize = 5; // số lượng hiển thị mỗi trang
+
+  const nearestSchedule = useMemo(() => {
+    if (visibleLessonByScheduleData.length === 0) return null;
+
+    const today = new Date();
+    const todayString = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, "0"),
+      String(today.getDate()).padStart(2, "0"),
+    ].join("-");
+
+    const datedSchedules = visibleLessonByScheduleData
+      .map((item, index) => ({
+        item,
+        index,
+        date: String(item.date || "").split("T")[0],
+      }))
+      .filter(({ date }) => /^\d{4}-\d{2}-\d{2}$/.test(date));
+
+    const todaySchedule = datedSchedules.find(({ date }) => date === todayString);
+    if (todaySchedule) return todaySchedule;
+
+    const nextSchedule = datedSchedules
+      .filter(({ date }) => date > todayString)
+      .sort((left, right) => left.date.localeCompare(right.date) || left.index - right.index)[0];
+    if (nextSchedule) return nextSchedule;
+
+    return datedSchedules
+      .filter(({ date }) => date < todayString)
+      .sort((left, right) => right.date.localeCompare(left.date) || left.index - right.index)[0];
+  }, [visibleLessonByScheduleData]);
+
+  const nearestSchedulePage = nearestSchedule
+    ? Math.floor(nearestSchedule.index / pageSize) + 1
+    : 1;
+  const nearestScheduleKey = nearestSchedule
+    ? `${nearestSchedule.item.id}|${nearestSchedule.date}|${nearestSchedule.index}`
+    : "empty";
+
+  useEffect(() => {
+    setCurrentPage(nearestSchedulePage);
+  }, [nearestScheduleKey, nearestSchedulePage]);
 
   // Tính dữ liệu trang hiện tại
   const paginatedData = visibleLessonByScheduleData.slice(
